@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Onion Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d18;
+    --bg-2: #161628;
+    --panel: rgba(20, 22, 38, 0.85);
+    --border: rgba(255,255,255,0.08);
+    --text: #e8e8f0;
+    --text-dim: #9090a8;
+    --l1: #c25555;
+    --l2: #c9a876;
+    --l3: #f5e6c8;
+    --l4: #fff8d4;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100vh; }
+
+  body {
+    font-family: 'Open Sans', sans-serif;
+    background: radial-gradient(ellipse at 30% 20%, #1f1f38 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, #2a1f3a 0%, transparent 50%),
+                #0a0a14;
+    color: var(--text);
+    padding: 30px 20px;
+  }
+
+  #app {
+    max-width: 1300px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  header { text-align: center; }
+
+  h1 {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #fff 0%, #b8b8d0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: fadeIn 0.6s ease-out backwards;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 8px;
+    animation: fadeIn 0.6s ease-out 0.1s backwards;
+  }
+
+  .pill-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    max-width: 700px;
+  }
+
+  .pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+    font-family: inherit;
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: slideDown 0.4s ease-out backwards;
+  }
+
+  .pill-1 { --accent: #e07070; animation-delay: 0.2s; }
+  .pill-2 { --accent: #e8c890; animation-delay: 0.28s; }
+  .pill-3 { --accent: #f5e6c8; animation-delay: 0.36s; }
+  .pill-4 { --accent: #fff8d4; animation-delay: 0.44s; }
+
+  .pill:hover { background: rgba(40,42,60,0.9); transform: translateY(-2px); }
+  .pill.active { background: rgba(60,60,90,0.95); box-shadow: 0 0 15px var(--accent); border-color: var(--accent); }
+
+  .pill-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #1a1a28;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 11px;
+  }
+
+  .main-grid {
+    display: grid;
+    grid-template-columns: minmax(400px, 1fr) minmax(380px, 1fr);
+    gap: 40px;
+    width: 100%;
+    align-items: start;
+  }
+
+  .onion-container {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    aspect-ratio: 1 / 1.15;
+    margin: 0 auto;
+    animation: float 4s ease-in-out 2s infinite;
+  }
+
+  .stem {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 70px;
+    background: linear-gradient(to bottom, #9bc34a 0%, #6abf4a 35%, #4a8b2a 70%, #2d5a1a 100%);
+    border-radius: 14px 14px 4px 4px;
+    z-index: 1;
+    box-shadow: inset -3px 0 6px rgba(0,0,0,0.3);
+    animation: slideDown 0.5s ease-out 0.8s backwards;
+  }
+
+  .stem::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 14px;
+    height: 14px;
+    background: #6abf4a;
+    border-radius: 50% 50% 0 0;
+  }
+
+  .layer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 50% 50% 50% 50% / 42% 42% 48% 48%;
+    box-shadow:
+      inset 0 -20px 30px rgba(0,0,0,0.32),
+      inset 0 20px 30px rgba(255,255,255,0.12),
+      0 8px 25px rgba(0,0,0,0.5);
+    z-index: 2;
+    cursor: pointer;
+    transform: translate(-50%, -50%) scale(var(--scale, 1));
+    transition: transform 0.35s ease, box-shadow 0.35s ease, filter 0.35s ease;
+  }
+
+  .layer-1 {
+    width: 84%; height: 76%;
+    background:
+      repeating-linear-gradient(180deg, rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 10px, rgba(0,0,0,0.08) 10px, rgba(0,0,0,0.08) 12px),
+      linear-gradient(135deg, #c25555 0%, #8b3a3a 45%, #4a1818 100%);
+    animation: layerIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s backwards;
+  }
+  .layer-2 {
+    width: 64%; height: 58%;
+    background:
+      repeating-linear-gradient(180deg, rgba(255,255,255,0.07) 0px, rgba(255,255,255,0.07) 8px, rgba(0,0,0,0.1) 8px, rgba(0,0,0,0.1) 10px),
+      linear-gradient(135deg, #d4b896 0%, #c9a876 45%, #6e5020 100%);
+    animation: layerIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.25s backwards;
+  }
+  .layer-3 {
+    width: 44%; height: 42%;
+    background:
+      repeating-linear-gradient(180deg, rgba(255,255,255,0.08) 0px, rgba(255,255,255,0.08) 7px, rgba(0,0,0,0.07) 7px, rgba(0,0,0,0.07) 9px),
+      linear-gradient(135deg, #faf0d8 0%, #f5e6c8 45%, #a88848 100%);
+    animation: layerIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s backwards;
+  }
+  .layer-4 {
+    width: 22%; height: 24%;
+    background:
+      repeating-linear-gradient(180deg, rgba(255,255,255,0.09) 0px, rgba(255,255,255,0.09) 5px, rgba(0,0,0,0.06) 5px, rgba(0,0,0,0.06) 7px),
+      linear-gradient(135deg, #fffce0 0%, #fff8d4 45%, #b8a040 100%);
+    box-shadow:
+      inset 0 -12px 20px rgba(0,0,0,0.2),
+      inset 0 12px 20px rgba(255,255,255,0.3),
+      0 0 25px rgba(255, 248, 180, 0.5),
+      0 4px 12px rgba(0,0,0,0.4);
+    animation: layerIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.55s backwards, coreGlow 3s ease-in-out 2s infinite;
+  }
+
+  @keyframes layerIn {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+  @keyframes coreGlow {
+    0%, 100% { box-shadow: inset 0 -12px 20px rgba(0,0,0,0.2), inset 0 12px 20px rgba(255,255,255,0.3), 0 0 20px rgba(255, 248, 180, 0.4), 0 4px 12px rgba(0,0,0,0.4); }
+    50%      { box-shadow: inset 0 -12px 20px rgba(0,0,0,0.2), inset 0 12px 20px rgba(255,255,255,0.3), 0 0 40px rgba(255, 248, 180, 0.85), 0 4px 12px rgba(0,0,0,0.4); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .layer:hover { --scale: 1.06; filter: brightness(1.08); }
+  .layer.active { --scale: 1.05; filter: brightness(1.12); }
+
+  .layer-badge {
+    position: absolute;
+    top: 4%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    z-index: 3;
+    border: 2px solid rgba(0,0,0,0.4);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .layer:hover .layer-badge, .layer.active .layer-badge { transform: translateX(-50%) scale(1.1); box-shadow: 0 0 12px rgba(255,255,255,0.5); }
+
+  .badge-1 { background: #c25555; color: #fff; }
+  .badge-2 { background: #c9a876; color: #3a2818; }
+  .badge-3 { background: #f5e6c8; color: #5a3a1a; }
+  .badge-4 { background: #fff8d4; color: #4a3a0a; box-shadow: 0 0 12px rgba(255, 248, 180, 0.8), 0 2px 6px rgba(0,0,0,0.4); }
+
+  .sprout {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 16px;
+    background: linear-gradient(to top, #3a7a1a, #8bc34a);
+    border-radius: 50% 50% 0 0;
+    z-index: 3;
+  }
+
+  .roots {
+    position: absolute;
+    bottom: 2%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50%;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 4px;
+    z-index: 1;
+  }
+
+  .root {
+    width: 2px;
+    background: linear-gradient(to bottom, transparent 0%, #8b6f47 40%, #6b4f27 100%);
+    border-radius: 0 0 50% 50%;
+    flex-shrink: 0;
+    transform: rotate(var(--rot, 0deg));
+    opacity: 0;
+    animation: rootFadeIn 0.5s ease-out forwards;
+  }
+  @keyframes rootFadeIn { to { opacity: 1; } }
+  .root-1 { height: 35px; --rot: 8deg;  animation-delay: 1.2s; }
+  .root-2 { height: 50px; --rot: 0deg;  animation-delay: 1.24s; }
+  .root-3 { height: 40px; --rot: -5deg; animation-delay: 1.28s; }
+  .root-4 { height: 55px; --rot: 0deg;  animation-delay: 1.32s; }
+  .root-5 { height: 45px; --rot: 3deg;  animation-delay: 1.36s; }
+  .root-6 { height: 38px; --rot: -7deg; animation-delay: 1.40s; }
+  .root-7 { height: 52px; --rot: 0deg;  animation-delay: 1.44s; }
+  .root-8 { height: 42px; --rot: 4deg;  animation-delay: 1.48s; }
+
+  .side-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: fadeIn 0.5s ease-out 0.6s backwards;
+  }
+
+  .detail-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    min-height: 280px;
+  }
+
+  .detail-panel.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--text-dim);
+    font-style: italic;
+    font-size: 13px;
+    border-style: dashed;
+  }
+
+  .detail-enter-active, .detail-leave-active { transition: opacity 0.3s, transform 0.3s; }
+  .detail-enter-from, .detail-leave-to { opacity: 0; transform: translateY(10px); }
+
+  .detail-panel .head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .detail-panel .head .num {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--accent); color: #1a1a28;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px;
+    box-shadow: 0 0 12px var(--accent);
+  }
+
+  .detail-panel .head h2 {
+    font-size: 18px; font-weight: 800;
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+
+  .detail-panel .head .close {
+    margin-left: auto;
+    background: none; border: 1px solid var(--border);
+    color: var(--text-dim);
+    width: 28px; height: 28px; border-radius: 50%;
+    cursor: pointer; font-size: 14px;
+    transition: all 0.2s;
+  }
+  .detail-panel .head .close:hover { color: #fff; border-color: #fff; }
+
+  .detail-panel .tagline {
+    font-size: 12px; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 2px;
+    margin-bottom: 10px; font-weight: 700;
+  }
+
+  .detail-panel .desc {
+    font-size: 13px; line-height: 1.6;
+    color: var(--text); margin-bottom: 14px;
+  }
+
+  .detail-panel .section-title {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 2px; color: var(--text-dim);
+    margin-bottom: 6px; margin-top: 12px; font-weight: 700;
+  }
+
+  .detail-panel ul {
+    list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;
+  }
+
+  .detail-panel ul li {
+    background: rgba(255,255,255,0.06);
+    padding: 3px 10px; border-radius: 12px;
+    font-size: 11px; color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .detail-panel .deps {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px;
+  }
+
+  .detail-panel .dep-box {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 10px;
+  }
+
+  .detail-panel .dep-box .lbl {
+    font-size: 9px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--text-dim); margin-bottom: 3px;
+  }
+
+  .detail-panel .dep-box .val {
+    font-size: 12px; font-weight: 700; color: var(--accent);
+  }
+
+  .detail-panel pre {
+    background: #050510; border: 1px solid var(--border);
+    border-radius: 6px; padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: #c8c8d8;
+    overflow-x: auto; margin-top: 6px; line-height: 1.5;
+  }
+  .detail-panel pre .kw { color: #e8c890; }
+  .detail-panel pre .ty { color: #e07070; }
+  .detail-panel pre .cm { color: #6a6a7a; font-style: italic; }
+
+  .flow-section {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: fadeIn 0.6s ease-out 1.0s backwards;
+  }
+
+  .flow-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 16px; flex-wrap: wrap; gap: 12px;
+  }
+
+  .flow-head h2 {
+    font-size: 18px; font-weight: 800;
+    letter-spacing: 3px; text-transform: uppercase;
+  }
+
+  .flow-head .sub {
+    font-size: 11px; color: var(--text-dim);
+    letter-spacing: 1.5px; text-transform: uppercase;
+  }
+
+  .graph-legend {
+    display: flex; gap: 18px; font-size: 11px;
+    color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase;
+    flex-wrap: wrap;
+  }
+
+  .graph-legend .ln {
+    display: inline-block; width: 24px; height: 0;
+    border-top: 2px solid rgba(255,255,255,0.7);
+    margin-right: 6px; vertical-align: middle;
+  }
+  .graph-legend .ln.dashed { border-top-style: dashed; border-color: rgba(255,255,255,0.35); }
+  .graph-legend .ln.db { border-color: #ff7070; }
+  .graph-legend .ln.api { border-color: #7090ff; }
+
+  .graph-svg { width: 100%; height: auto; display: block; }
+
+  .g-node rect {
+    transition: filter 0.3s, stroke 0.3s, stroke-width 0.3s;
+    cursor: pointer;
+  }
+  .g-node:hover rect { filter: brightness(1.15); stroke: rgba(255,255,255,0.5); stroke-width: 2; }
+  .g-node.active rect { stroke: #fff; stroke-width: 2.5; filter: brightness(1.2); }
+
+  .g-node-label {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 13px; font-weight: 800;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    pointer-events: none;
+  }
+  .g-node-sub {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 10px; font-weight: 400; pointer-events: none;
+  }
+  .g-node.dark .g-node-label, .g-node.dark .g-node-sub { fill: #fff; }
+  .g-node.light .g-node-label, .g-node.light .g-node-sub { fill: #1a1a28; }
+
+  .g-edge { fill: none; stroke: rgba(255,255,255,0.7); stroke-width: 1.5; }
+  .g-edge.req { stroke: rgba(255,255,255,0.7); }
+  .g-edge.res { stroke: rgba(255,255,255,0.45); stroke-dasharray: 5 4; }
+
+  .g-edge-label {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 10px; font-weight: 600;
+    fill: var(--text-dim); letter-spacing: 0.5px;
+  }
+
+  .g-packet { stroke-width: 2; filter: drop-shadow(0 0 6px currentColor); }
+  .g-packet-db { fill: #ff7070; color: #ff7070; }
+  .g-packet-api { fill: #7090ff; color: #7090ff; }
+
+  .center-label {
+    font-size: 22px; font-weight: 800; text-align: center;
+    letter-spacing: 4px; padding: 12px 30px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-radius: 8px; background: rgba(0,0,0,0.4);
+    animation: fadeIn 0.5s ease-out 2s backwards;
+  }
+
+  .footer {
+    font-size: 13px; text-align: center;
+    color: var(--text-dim); font-style: italic;
+    max-width: 600px; line-height: 1.5;
+    animation: fadeIn 0.5s ease-out 2.2s backwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  @media (max-width: 1000px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .onion-container { max-width: 400px; }
+  }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 24px; letter-spacing: 3px; }
+    .onion-container { max-width: 320px; }
+    .center-label { font-size: 16px; padding: 10px 20px; letter-spacing: 2px; }
+  }
+</style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Onion Architecture</h1>
+      <div class="subtitle">Clean Architecture &middot; Dependency Inversion</div>
+    </header>
+
+    <div class="pill-row">
+      <button v-for="(layer, i) in layers" :key="i"
+              :class="['pill', 'pill-' + (i+1), { active: selected === (i+1) }]"
+              @click="select(i + 1)">
+        <span class="pill-num">{{ i + 1 }}</span>
+        <span>{{ layer.name }}</span>
+      </button>
+    </div>
+
+    <div class="main-grid">
+      <div class="onion-container">
+        <div class="stem"></div>
+        <div class="layer layer-1" :class="{ active: selected === 1 }" @click="select(1)">
+          <div class="layer-badge badge-1">1</div>
+        </div>
+        <div class="layer layer-2" :class="{ active: selected === 2 }" @click="select(2)">
+          <div class="layer-badge badge-2">2</div>
+        </div>
+        <div class="layer layer-3" :class="{ active: selected === 3 }" @click="select(3)">
+          <div class="layer-badge badge-3">3</div>
+        </div>
+        <div class="layer layer-4" :class="{ active: selected === 4 }" @click="select(4)">
+          <div class="layer-badge badge-4">4</div>
+          <div class="sprout"></div>
+        </div>
+        <div class="roots">
+          <div class="root root-1"></div><div class="root root-2"></div>
+          <div class="root root-3"></div><div class="root root-4"></div>
+          <div class="root root-5"></div><div class="root root-6"></div>
+          <div class="root root-7"></div><div class="root root-8"></div>
+        </div>
+      </div>
+
+      <div class="side-stack">
+        <transition name="detail" mode="out-in">
+          <div class="detail-panel" v-if="selected && layerDetails[selected]"
+               :key="selected"
+               :style="{ '--accent': layerDetails[selected].color }">
+            <div class="head">
+              <div class="num">{{ selected }}</div>
+              <h2>{{ layerDetails[selected].name }}</h2>
+              <button class="close" @click="selected = null" aria-label="Close">×</button>
+            </div>
+            <div class="tagline">{{ layerDetails[selected].tagline }}</div>
+            <div class="desc">{{ layerDetails[selected].desc }}</div>
+            <div class="section-title">Contains</div>
+            <ul>
+              <li v-for="(c, i) in layerDetails[selected].contains" :key="'c'+i">{{ c }}</li>
+            </ul>
+            <div class="deps">
+              <div class="dep-box">
+                <div class="lbl">Depends on &rarr;</div>
+                <div class="val">{{ layerDetails[selected].dependsOn }}</div>
+              </div>
+              <div class="dep-box">
+                <div class="lbl">&larr; Depended by</div>
+                <div class="val">{{ layerDetails[selected].dependedBy }}</div>
+              </div>
+            </div>
+            <div class="section-title">Example</div>
+            <pre v-html="layerDetails[selected].example"></pre>
+          </div>
+          <div class="detail-panel placeholder" v-else key="placeholder">
+            &larr; Click any pill, layer, or graph node to inspect it
+          </div>
+        </transition>
+      </div>
+    </div>
+
+    <div class="flow-section">
+      <div class="flow-head">
+        <div>
+          <h2>How a request flows</h2>
+          <div class="sub">Two closed cycles — request leaves, response returns to User</div>
+        </div>
+        <div class="graph-legend">
+          <span><span class="ln"></span>Request</span>
+          <span><span class="ln dashed"></span>Response</span>
+          <span><span class="ln db"></span>DB cycle</span>
+          <span><span class="ln api"></span>API cycle</span>
+        </div>
+      </div>
+
+      <svg class="graph-svg" viewBox="0 0 820 480" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arr-req" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L8,3 z" fill="rgba(255,255,255,0.8)" />
+          </marker>
+          <marker id="arr-res" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L8,3 z" fill="rgba(255,255,255,0.45)" />
+          </marker>
+        </defs>
+
+        <path :d="dbPath"   id="db-path"   fill="none" stroke="none" />
+        <path :d="apiPath"  id="api-path"  fill="none" stroke="none" />
+
+        <g class="g-edges">
+          <path v-for="(edge, i) in flowEdges" :key="'e'+i"
+                :d="getEdgePath(edge)"
+                :class="['g-edge', edge.type === 'request' ? 'req' : 'res']"
+                :marker-end="edge.type === 'request' ? 'url(#arr-req)' : 'url(#arr-res)'" />
+        </g>
+
+        <g class="g-edge-labels">
+          <text v-for="(edge, i) in flowEdges.filter(e => e.label)" :key="'l'+i"
+                :x="getEdgeLabelPos(edge).x"
+                :y="getEdgeLabelPos(edge).y"
+                class="g-edge-label"
+                text-anchor="middle">{{ edge.label }}</text>
+        </g>
+
+        <g class="g-nodes">
+          <g v-for="(node, i) in flowNodes" :key="'n'+i"
+             :transform="`translate(${node.x}, ${node.y})`"
+             class="g-node"
+             :class="[isLightNode(node.id) ? 'light' : 'dark', { active: selected === node.layerId }]"
+             @click="node.layerId && select(node.layerId)">
+            <rect :width="node.w" :height="node.h" rx="8"
+                  :fill="node.color"
+                  stroke="rgba(255,255,255,0.2)" stroke-width="1.5" />
+            <text :x="node.w/2" :y="20" text-anchor="middle" class="g-node-label">{{ node.label }}</text>
+            <text :x="node.w/2" :y="38" text-anchor="middle" class="g-node-sub">{{ node.sub }}</text>
+          </g>
+        </g>
+
+        <circle r="7" class="g-packet g-packet-db">
+          <animateMotion dur="9s" repeatCount="indefinite" rotate="auto">
+            <mpath href="#db-path" />
+          </animateMotion>
+        </circle>
+
+        <circle r="7" class="g-packet g-packet-api">
+          <animateMotion dur="9s" begin="-4.5s" repeatCount="indefinite" rotate="auto">
+            <mpath href="#api-path" />
+          </animateMotion>
+        </circle>
+      </svg>
+    </div>
+
+    <div class="center-label">&larr; DEPENDENCIES POINT INWARD &rarr;</div>
+    <div class="footer">The Dependency Rule: source-code dependencies point only inward.</div>
+  </div>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          selected: null,
+          layers: [
+            { name: 'Presentation' },
+            { name: 'Infrastructure' },
+            { name: 'Application' },
+            { name: 'Domain' }
+          ],
+          layerDetails: {
+            1: { name: 'Presentation', color: '#e07070', tagline: 'The outer shell — transport & UI',
+              desc: 'Receives HTTP requests, validates input shape, renders views, returns responses. Knows about transport (HTTP, JSON, HTML) but knows nothing about business rules. The most volatile layer — swap a web framework, nothing else should break.',
+              contains: ['REST/GraphQL Controllers', 'Web/Mobile Views', 'DTOs', 'Validators (shape only)', 'Middleware', 'API contracts'],
+              dependsOn: 'Application layer (via DI)', dependedBy: 'User / external clients',
+              example: '<span class="cm">// Presentation/OrderController.ts</span>\n<span class="kw">class</span> <span class="ty">OrderController</span> {\n  <span class="kw">constructor</span>(\n    <span class="kw">private</span> createOrder: <span class="ty">CreateOrderUseCase</span>\n  ) {}\n\n  <span class="kw">async</span> <span class="ty">create</span>(req: <span class="ty">Request</span>, res: <span class="ty">Response</span>) {\n    <span class="kw">const</span> dto = <span class="ty">CreateOrderDto</span>.from(req.body)\n    <span class="kw">const</span> result = <span class="kw">await</span> <span class="kw">this</span>.createOrder.execute(dto)\n    res.status(<span class="ty">201</span>).json(result)\n  }\n}' },
+            2: { name: 'Infrastructure', color: '#e8c890', tagline: 'The "how" — pluggable implementations',
+              desc: 'Holds the concrete implementations of the ports (interfaces) declared by the Domain. Database drivers, email senders, file storage, third-party API clients. Swappable without touching the inside of the onion.',
+              contains: ['SQL/NoSQL Repositories', 'DB context & migrations', 'Email/SMS gateways', 'HTTP clients', 'Cache adapters', 'File system'],
+              dependsOn: 'Domain (implements its ports)', dependedBy: 'Application (via DI)',
+              example: '<span class="cm">// Infrastructure/Persistence/SqlOrderRepository.ts</span>\n<span class="kw">class</span> <span class="ty">SqlOrderRepository</span>\n  <span class="kw">implements</span> <span class="ty">IOrderRepository</span> {\n\n  <span class="kw">async</span> <span class="ty">findById</span>(id: <span class="ty">OrderId</span>): <span class="ty">Promise</span>&lt;<span class="ty">Order</span> | <span class="kw">null</span>&gt; {\n    <span class="kw">const</span> row = <span class="kw">await</span> db.orders.where({ id }).first()\n    <span class="kw">return</span> row ? <span class="ty">Order</span>.rehydrate(row) : <span class="kw">null</span>\n  }\n\n  <span class="kw">async</span> <span class="ty">save</span>(order: <span class="ty">Order</span>): <span class="ty">Promise</span>&lt;<span class="kw">void</span>&gt; {\n    <span class="kw">await</span> db.orders.upsert(order.toRow())\n  }\n}' },
+            3: { name: 'Application', color: '#f5e6c8', tagline: 'Use cases — orchestrates the flow',
+              desc: 'Contains application-specific business rules: use cases and application services. Orchestrates data flow between the outer layers and the Domain. Translates between DTOs and domain entities. No framework, no transport.',
+              contains: ['Use cases (interactors)', 'Application services', 'DTO ↔ Entity mappers', 'Transaction scripts', 'Authorization rules'],
+              dependsOn: 'Domain', dependedBy: 'Presentation',
+              example: '<span class="cm">// Application/Orders/CreateOrderUseCase.ts</span>\n<span class="kw">class</span> <span class="ty">CreateOrderUseCase</span> {\n  <span class="kw">constructor</span>(\n    <span class="kw">private</span> orders: <span class="ty">IOrderRepository</span>,\n    <span class="kw">private</span> events: <span class="ty">IDomainEventBus</span>\n  ) {}\n\n  <span class="kw">async</span> <span class="ty">execute</span>(input: <span class="ty">CreateOrderDto</span>)\n    : <span class="ty">Promise</span>&lt;<span class="ty">OrderDto</span>&gt; {\n    <span class="kw">const</span> order = <span class="ty">Order</span>.create(input)\n    <span class="kw">await</span> <span class="kw">this</span>.orders.save(order)\n    <span class="kw">await</span> <span class="kw">this</span>.events.publish(order.events)\n    <span class="kw">return</span> <span class="ty">OrderMapper</span>.toDto(order)\n  }\n}' },
+            4: { name: 'Domain', color: '#fff8d4', tagline: 'The heart — pure business logic',
+              desc: 'The most stable and important layer. Pure business rules, framework-free, technology-free. Entities, value objects, aggregates, domain events. Changes here ripple outward — protect it. Zero dependencies on anything outside.',
+              contains: ['Entities', 'Value Objects', 'Aggregates', 'Domain Events', 'Domain Services', 'Specifications'],
+              dependsOn: 'Nothing (the inward rule)', dependedBy: 'Application, Infrastructure (via ports)',
+              example: '<span class="cm">// Domain/Orders/Order.ts</span>\n<span class="kw">class</span> <span class="ty">Order</span> {\n  <span class="kw">private</span> <span class="kw">readonly</span> events: <span class="ty">DomainEvent</span>[] = []\n\n  <span class="kw">private constructor</span>(\n    <span class="kw">public readonly</span> id: <span class="ty">OrderId</span>,\n    <span class="kw">public readonly</span> customerId: <span class="ty">CustomerId</span>,\n    <span class="kw">public readonly</span> lines: <span class="ty">OrderLine</span>[]\n  ) {}\n\n  <span class="kw">static</span> <span class="ty">create</span>(input: <span class="ty">CreateOrderInput</span>): <span class="ty">Order</span> {\n    <span class="kw">if</span> (input.lines.length === <span class="ty">0</span>)\n      <span class="kw">throw new</span> <span class="ty">DomainError</span>(<span class="cm">\'empty order\'</span>)\n    <span class="kw">const</span> order = <span class="kw">new</span> <span class="ty">Order</span>(\n      <span class="ty">OrderId</span>.generate(),\n      input.customerId, input.lines\n    )\n    order.events.push(<span class="kw">new</span> <span class="ty">OrderCreated</span>(order.id))\n    <span class="kw">return</span> order\n  }\n}' }
+          },
+          flowNodes: [
+            { id: 'user',   label: 'User',           sub: 'Browser / Client', x: 50,  y: 20,  w: 130, h: 50, color: '#3a3a55', layerId: null },
+            { id: 'pres',   label: 'Presentation',   sub: 'Controller',       x: 50,  y: 160, w: 160, h: 55, color: '#8b4a3a', layerId: 1 },
+            { id: 'app',    label: 'Application',    sub: 'Use case',         x: 290, y: 160, w: 160, h: 55, color: '#a88848', layerId: 3 },
+            { id: 'domain', label: 'Domain',         sub: 'Entity · Rule',    x: 530, y: 160, w: 160, h: 55, color: '#b8a040', layerId: 4 },
+            { id: 'infra',  label: 'Infrastructure', sub: 'Repository',       x: 290, y: 380, w: 170, h: 55, color: '#c9a876', layerId: 2 },
+            { id: 'db',     label: 'Database',       sub: 'SQL / NoSQL',      x: 530, y: 380, w: 160, h: 55, color: '#5a5a78', layerId: null },
+            { id: 'api',    label: 'External API',   sub: '3rd party',        x: 50,  y: 380, w: 160, h: 55, color: '#5a5a78', layerId: null }
+          ],
+          dbCycle: [
+            { from: 'user',   to: 'pres',   label: 'HTTP request', type: 'request' },
+            { from: 'pres',   to: 'app',    label: 'invoke',       type: 'request' },
+            { from: 'app',    to: 'domain', label: 'execute',      type: 'request' },
+            { from: 'domain', to: 'infra',  label: 'port',         type: 'request' },
+            { from: 'infra',  to: 'db',     label: 'SQL query',    type: 'request' },
+            { from: 'db',     to: 'infra',  type: 'response' },
+            { from: 'infra',  to: 'domain', type: 'response' },
+            { from: 'domain', to: 'app',    type: 'response' },
+            { from: 'app',    to: 'pres',   type: 'response' },
+            { from: 'pres',   to: 'user',   label: 'HTTP response', type: 'response' }
+          ],
+          apiCycle: [
+            { from: 'user',   to: 'pres',   type: 'request' },
+            { from: 'pres',   to: 'app',    type: 'request' },
+            { from: 'app',    to: 'domain', type: 'request' },
+            { from: 'domain', to: 'infra',  type: 'request' },
+            { from: 'infra',  to: 'api',    label: 'HTTP call',   type: 'request' },
+            { from: 'api',    to: 'infra',  type: 'response' },
+            { from: 'infra',  to: 'domain', type: 'response' },
+            { from: 'domain', to: 'app',    type: 'response' },
+            { from: 'app',    to: 'pres',   type: 'response' },
+            { from: 'pres',   to: 'user',   type: 'response' }
+          ]
+        };
+      },
+      computed: {
+        flowEdges() { return [...this.dbCycle, ...this.apiCycle]; },
+        dbPath()  { return this.dbCycle.map(e => this.getEdgePath(e)).join(' '); },
+        apiPath() { return this.apiCycle.map(e => this.getEdgePath(e)).join(' '); }
+      },
+      methods: {
+        isLightNode(id) { return ['app','domain','infra','api'].includes(id); },
+        getEdgePath(edge) {
+          const from = this.flowNodes.find(n => n.id === edge.from);
+          const to   = this.flowNodes.find(n => n.id === edge.to);
+          if (!from || !to) return '';
+          const fx = from.x + from.w/2, fy = from.y + from.h/2;
+          const tx = to.x   + to.w/2,   ty = to.y   + to.h/2;
+          if (Math.abs(fx - tx) < 5 || Math.abs(fy - ty) < 5) {
+            return `M ${fx} ${fy} L ${tx} ${ty}`;
+          }
+          const mx = (fx + tx) / 2;
+          return `M ${fx} ${fy} L ${mx} ${fy} L ${mx} ${ty} L ${tx} ${ty}`;
+        },
+        getEdgeLabelPos(edge) {
+          const from = this.flowNodes.find(n => n.id === edge.from);
+          const to   = this.flowNodes.find(n => n.id === edge.to);
+          if (!from || !to) return { x: 0, y: 0 };
+          return {
+            x: (from.x + from.w/2 + to.x + to.w/2) / 2,
+            y: (from.y + from.h/2 + to.y + to.h/2) / 2 - 6
+          };
+        },
+        select(i) { this.selected = this.selected === i ? null : i; }
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
