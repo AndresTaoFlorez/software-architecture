@@ -6,6 +6,20 @@
 
 ---
 
+## Table of Contents
+
+1. [Introduction & Purpose](#1-introduction--purpose)
+2. [Core Principle: The Dependency Rule](#2-core-principle-the-dependency-rule)
+3. [The Four Layers](#3-the-four-layers)
+4. [Dependency Direction in Practice](#4-dependency-direction-in-practice)
+5. [Testing the Layers](#5-testing-the-layers)
+6. [Why This Architecture](#6-why-this-architecture)
+7. [Naming & Conventions](#7-naming--conventions-portable-defaults)
+8. [Appendix — Advanced Patterns](#8-appendix--advanced-patterns-bonus)
+9. [References](#9-references)
+
+---
+
 ## 1. Introduction & Purpose
 
 This document describes a frontend architecture organized into **four concentric layers** —
@@ -40,28 +54,15 @@ a backend. The same layering that protects server-side business rules protects c
 The four layers are best visualized as concentric rings. The innermost ring is the most abstract and the
 most stable; the outermost rings are the most concrete and the most volatile.
 
-```
-                ┌─────────────────────────────────────────────┐
-                │            PRESENTATION (detail)             │
-                │   views · components · stores · router       │
-                │   ┌───────────────────────────────────┐     │
-                │   │      INFRASTRUCTURE (detail)        │     │
-                │   │   http client · repositories ·      │     │
-                │   │   realtime · storage  (adapters)    │     │
-                │   │   ┌─────────────────────────────┐   │     │
-                │   │   │       APPLICATION           │   │     │
-                │   │   │   use cases · ports         │   │     │
-                │   │   │   ┌─────────────────────┐   │   │     │
-                │   │   │   │       DOMAIN        │   │   │     │
-                │   │   │   │  entities · value   │   │   │     │
-                │   │   │   │  objects · errors   │   │   │     │
-                │   │   │   └─────────────────────┘   │   │     │
-                │   │   └─────────────────────────────┘   │     │
-                │   └───────────────────────────────────┘     │
-                └─────────────────────────────────────────────┘
+![Clean Architecture Diagram by Robert C. Martin (Uncle Bob)](https://blog.cleancoder.com/uncle-bob/images/2012-08-13-the-clean-architecture/CleanArchitecture.jpg)
 
-                  ───────────────►  dependencies point INWARD
-```
+*Image source: "The Clean Code Blog" by Robert C. Martin (Uncle Bob), August 13, 2012.*  
+*This is the canonical Clean Architecture model diagram that inspired the frontend adaptation in this document.*  
+*Original article: [The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)*
+
+**Dependencies flow inward:** Domain → Application → Infrastructure & Presentation. Nothing in an inner layer may know about an outer layer.
+
+---
 
 A clarification on placement: in the canonical model, **Infrastructure and Presentation are both *outer
 details***. Infrastructure does not sit "above" the Application layer as a privileged middle tier — it is
