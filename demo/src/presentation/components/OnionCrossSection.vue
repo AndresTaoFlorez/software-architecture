@@ -111,6 +111,17 @@ const colorOf = Object.fromEntries(LAYERS.map((l) => [l.id, l.color])) as Record
           <stop offset="100%" stop-color="#000" stop-opacity="0" />
         </radialGradient>
 
+        <!-- Shadow along the cut edge (x=300). Painted on a thin rect that
+             straddles the cut line: a soft shadow on the sphere-skin side
+             that peaks at the cut and falls off onto the cut surface, so the
+             transition between the 3D skin and the flat cut face reads as a
+             real cut rather than a paint job. -->
+        <linearGradient id="g-cut" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#000" stop-opacity="0.35" />
+          <stop offset="50%" stop-color="#000" stop-opacity="0.6" />
+          <stop offset="100%" stop-color="#000" stop-opacity="0" />
+        </linearGradient>
+
         <!-- Soft blur for the wisp tendrils -->
         <filter id="blur" x="-30%" y="-30%" width="160%" height="160%">
           <feGaussianBlur stdDeviation="2.5" />
@@ -122,6 +133,14 @@ const colorOf = Object.fromEntries(LAYERS.map((l) => [l.id, l.color])) as Record
 
       <!-- 3D sphere (the outside of the onion, lit from top-left) -->
       <circle cx="300" cy="300" :r="SPHERE_R" fill="url(#g-skin)" />
+
+      <!-- Shadow along the cut edge. Sits on top of the sphere, under the
+           layer half-discs, so the cut reads as a real edge. -->
+      <rect
+        x="293" y="60" width="14" height="480"
+        fill="url(#g-cut)"
+        pointer-events="none"
+      />
 
       <!-- The four model layers, drawn as half-discs on the right (the cut).
            Each gets hover/click/focus; CSS dims siblings of the spotlit one. -->
