@@ -18,10 +18,10 @@ independent of any framework, transport, or storage. This is the layer that woul
 every technical choice around it were replaced.
 
 **What lives here.**
-- **Entities** — objects with identity and behavior (a `User`, an `Order`, an `Application`).
-- **Value objects** — objects defined solely by their attributes (a `Money`, a `DateRange`).
-- **Domain errors** — named violations of business rules.
-- **Invariants** — rules that must always hold, enforced inside the entity.
+- **Entities**: objects with identity and behavior (a `User`, an `Order`, an `Application`).
+- **Value objects**: objects defined solely by their attributes (a `Money`, a `DateRange`).
+- **Domain errors**: named violations of business rules.
+- **Invariants**: rules that must always hold, enforced inside the entity.
 
 **What it must not do.** Import a framework, perform I/O, reference HTTP, touch `localStorage`, or know
 that a UI exists. It must not import from any other layer.
@@ -75,14 +75,14 @@ export class User {
 ```
 
 **Spotlight: a richer entity.** Not every entity is a flat bag of getters. `src/domain/entities/WorkWindow.js`
-shows what *enterprise-critical business knowledge* [Martin 2017] looks like when it lives at the center —
+shows what *enterprise-critical business knowledge* [Martin 2017] looks like when it lives at the center,
 its rules about when a scheduling window may still be edited are expressed entirely as derived state, with no
 framework and no I/O:
 
 ```js
-// src/domain/entities/WorkWindow.js (excerpt — business rules as getters)
+// src/domain/entities/WorkWindow.js (excerpt: business rules as getters)
 // Two-tier "seal": the start freezes once it passes; the whole window freezes once it ends.
-// "Timeline" is the SERVER clock, synced via GET /work-windows/timeline — never the browser's.
+// "Timeline" is the SERVER clock, synced via GET /work-windows/timeline, never the browser's.
 get isSealed() {                         // starts_at <= timeline → start is frozen
   if (!this.startsAt) return false
   return WorkWindow.timelineNow() >= new Date(this.startsAt).getTime()
@@ -97,12 +97,12 @@ get canToggle()    { return !this.isEnded }    // can activate/deactivate? until
 ```
 
 Those `canEdit*` getters *are* the business rules. A component that disables a drag handle, a use case that
-rejects an illegal reschedule, and a test that asserts the rule all read the same single source of truth —
-the entity — instead of re-deriving it. That is the payoff of a rich domain model [Evans 2003].
+rejects an illegal reschedule, and a test that asserts the rule all read the same single source of truth,
+the entity, instead of re-deriving it. That is the payoff of a rich domain model [Evans 2003].
 
 A note on **value objects**: §"What lives here" lists them, but this codebase models that behavior directly
 on entities (getters and small static helpers such as `WorkWindow.toTimestampTz`) rather than introducing
-standalone `Money`/`DateRange` classes. That is a legitimate choice — the point is that the *behavior* lives
+standalone `Money`/`DateRange` classes. That is a legitimate choice, the point is that the *behavior* lives
 in the Domain, whatever shape holds it.
 
 **Domain errors** live alongside entities in `src/domain/errors/DomainErrors.js`, giving business-rule
@@ -126,39 +126,39 @@ export class UserInactiveError extends DomainError {
 ```
 
 Because these are real types, an outer layer can `catch (e) { if (e instanceof UserInactiveError) … }` and
-react precisely — exactly what the Presentation store does in [§3.4](#34-presentation-outermost). The richer
+react precisely, exactly what the Presentation store does in [§3.4](#34-presentation-outermost). The richer
 `WorkWindowError` (which maps backend failures back to domain language) is shown at the boundary in
 [§3.3](#33-infrastructure).
 
 **Justification.** Entities are "the least likely to change when something external changes" and should
 contain "enterprise-wide critical business rules" [Martin 2017]. A rich domain model placed at the center
 of the system is the core recommendation of Domain-Driven Design [Evans 2003]. Keeping this layer free of
-I/O is what allows it to be unit-tested with no mocks and reused unchanged across transports — the
+I/O is what allows it to be unit-tested with no mocks and reused unchanged across transports, the
 mechanism is detailed in [§5.4](2-testing.md#54-per-layer-testing).
 
 ---
 
 ### 3.2 Application
 
-**Responsibility.** Orchestrate the steps of a single business operation — a *use case*. The Application
+**Responsibility.** Orchestrate the steps of a single business operation, a *use case*. The Application
 layer coordinates entities and the ports it needs, but contains no UI logic and no knowledge of how data
 physically travels.
 
 **What lives here.**
-- **Use cases** — one operation per unit (log in, create user, fetch orders).
-- **Ports** — interfaces describing the capabilities the use cases require (e.g. a repository contract).
-- **Application-level mapping** — translating input shapes into the form entities and ports expect.
+- **Use cases**: one operation per unit (log in, create user, fetch orders).
+- **Ports**: interfaces describing the capabilities the use cases require (e.g. a repository contract).
+- **Application-level mapping**: translating input shapes into the form entities and ports expect.
 
 **What it must not do.** Render anything, read framework-reactive state, call an HTTP client directly, or
 depend on a concrete Infrastructure class. It depends on the Domain and on *ports*, not on adapters.
 
 **Dependency direction.** Depends inward on the Domain (and on ports it declares).
 
-**Generic example — prescribed, port-based form.** The use case receives its dependency through a port,
+**Generic example, prescribed, port-based form.** The use case receives its dependency through a port,
 so it never names a concrete adapter:
 
 A port is a *contract*, not an implementation. In TypeScript it is an `interface`; in plain JavaScript the
-honest equivalent is a JSDoc `@typedef` — a description the use case is typed against, with no runtime stub
+honest equivalent is a JSDoc `@typedef`, a description the use case is typed against, with no runtime stub
 pretending to be the real thing:
 
 ```js
@@ -183,7 +183,7 @@ export function makeCreateUserUseCase({ userRepository }) {
 The use case is now testable with a fake `userRepository` and is unaware of HTTP entirely.
 
 **Real example.** `src/application/use-cases/users/CreateUserUseCase.js` performs exactly the orchestration
-role — it maps a form into the API payload and delegates persistence to a repository:
+role, it maps a form into the API payload and delegates persistence to a repository:
 
 ```js
 // src/application/use-cases/users/CreateUserUseCase.js
@@ -207,7 +207,7 @@ export async function createUserUseCase({ firstName, firstSurname, email, passwo
 ```
 
 Note the first line: the use case currently imports a *concrete* repository. That is the one deviation
-from the canonical model, addressed deliberately in [§4.3](README.md#43-the-inversion-gap) — and, as
+from the canonical model, addressed deliberately in [§4.3](README.md#43-the-inversion-gap), and, as
 [§5.4](2-testing.md#54-per-layer-testing) shows, it has a measurable cost the moment you try to test this file.
 
 **Orchestration is more than delegation.** `CreateUserUseCase` is deliberately thin, but a use case is also
@@ -220,7 +220,7 @@ makes both moves explicit:
 import { WorkWindowRepository } from '@/infrastructure/repositories/WorkWindowRepository'
 import { WorkWindowError } from '@/domain/errors/WorkWindowError'
 
-// 1. Validate application-level rules — fail with a DOMAIN error, not a generic one:
+// 1. Validate application-level rules, fail with a DOMAIN error, not a generic one:
 if (!item.startTime) throw new WorkWindowError(`Hora de inicio requerida${label}.`)
 if (date < today)    throw new WorkWindowError(`No se pueden crear ventanas en fechas pasadas${label}.`)
 
@@ -232,7 +232,7 @@ try {
 }
 ```
 
-Presentation never sees a raw Axios error or an HTTP status — only a `WorkWindowError` it can show to the
+Presentation never sees a raw Axios error or an HTTP status, only a `WorkWindowError` it can show to the
 user. The mapping function itself lives at the Infrastructure boundary, shown in [§3.3](#33-infrastructure).
 
 **Justification.** Use cases hold "application-specific business rules" and orchestrate the flow of data
@@ -244,15 +244,15 @@ of the Dependency Inversion Principle [Martin 2003].
 
 ### 3.3 Infrastructure
 
-**Responsibility.** Provide concrete implementations — *adapters* — for the ports the inner layers
+**Responsibility.** Provide concrete implementations, *adapters*, for the ports the inner layers
 declare. This is where the application meets the outside world: HTTP, WebSocket, browser storage, and
 third-party SDKs. It is the layer most expected to change.
 
 **What lives here.**
-- **HTTP client** — a configured transport with interceptors and cross-cutting concerns.
-- **Repositories** — adapters that fetch raw data and **map it into Domain entities**.
-- **Realtime / messaging clients** — WebSocket or SSE adapters.
-- **Storage** — caches and persistence over `localStorage`, IndexedDB, etc.
+- **HTTP client**: a configured transport with interceptors and cross-cutting concerns.
+- **Repositories**: adapters that fetch raw data and **map it into Domain entities**.
+- **Realtime / messaging clients**: WebSocket or SSE adapters.
+- **Storage**: caches and persistence over `localStorage`, IndexedDB, etc.
 
 **What it must not do.** Contain business rules. An adapter translates and transports; it does not decide.
 It may depend on the Domain (to construct entities) but must not depend on Presentation.
@@ -346,18 +346,18 @@ API's.
 turns user actions into use-case calls and turns the resulting domain data into pixels.
 
 **What lives here.**
-- **Views / pages** — route-level components.
-- **Components** — reusable UI building blocks.
-- **Stores** — reactive UI state that calls use cases and exposes results to components.
-- **Router** — navigation and route guards.
-- **Styles** — design tokens and component styles.
+- **Views / pages**: route-level components.
+- **Components**: reusable UI building blocks.
+- **Stores**: reactive UI state that calls use cases and exposes results to components.
+- **Router**: navigation and route guards.
+- **Styles**: design tokens and component styles.
 
 **What it must not do.** Call the HTTP client directly, embed business rules, or construct entities from
 raw API data. It speaks to inner layers only through use cases.
 
 **Dependency direction.** Depends inward on the Application layer (and, through it, on the Domain).
 
-**Generic example.** A store that delegates to a use case and exposes reactive state — it knows nothing of
+**Generic example.** A store that delegates to a use case and exposes reactive state, it knows nothing of
 HTTP:
 
 ```js
@@ -391,13 +391,13 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const profile = ref(null)
 
-  // Derived UI state — memoized by Vue, recomputed only when dependencies change:
+  // Derived UI state, memoized by Vue, recomputed only when dependencies change:
   const isAuthenticated = computed(() => !!user.value && !!localStorage.getItem(TOKEN_KEY))
   const isAdmin = computed(() =>
     (profile.value?.roleNames || []).map(r => r.toLowerCase()).includes('admin'))
 
   async function login(email, password) {
-    user.value = await loginUseCase(email, password)   // delegate inward — no HTTP here
+    user.value = await loginUseCase(email, password)   // delegate inward, no HTTP here
     await fetchProfile()
   }
 
@@ -421,12 +421,12 @@ View  →  Store  →  UseCase  →  Repository  →  HTTP Client  →  API
 Route guards in `src/router/` enforce authentication and authorization at the Presentation boundary,
 reading derived state (such as `isAuthenticated`) rather than implementing auth logic themselves.
 
-**An honest boundary note.** The real store also imports two Infrastructure symbols directly — `TOKEN_KEY`
+**An honest boundary note.** The real store also imports two Infrastructure symbols directly, `TOKEN_KEY`
 (to read the token from `localStorage`) and `wsClient` (to open/close the realtime connection on login and
 logout). That is a small, deliberate leak of the Dependency Rule: a store reaching into Infrastructure rather
 than going through a port. It is tolerated because both are *cross-cutting session concerns* with no business
 logic, and isolating them behind ports would add ceremony for little gain at this project's size. Naming the
-leak is the point — it is the same kind of pragmatic deviation catalogued in [§4.3](README.md#43-the-inversion-gap),
+leak is the point, it is the same kind of pragmatic deviation catalogued in [§4.3](README.md#43-the-inversion-gap),
 and [§9](4-scaling.md#9-scaling-from-startup-to-enterprise) revisits when a growing codebase should pay to close it.
 
 **Justification.** Frameworks belong in the outermost ring as a "detail" [Martin 2017]. Keeping data
@@ -434,6 +434,6 @@ access out of components and behind a store/use-case boundary is consistent with
 treat stores as the place that coordinates state and side-effect-bearing actions [Vue/Pinia docs]. The
 benefit is concrete: the entire UI can be replaced without touching a single business rule, because the UI
 only ever consumes use cases. Conventions for organizing components by feature are covered in
-[§8.5](3-advanced-patterns.md#85-feature-based-component-organization--presentation); placing their styles and animations is covered
+[§8.5](3-advanced-patterns.md#85-feature-based-component-organization-presentation); placing their styles and animations is covered
 in the companion document [styling-and-animation.md](5-styling-and-animation.md).
 
