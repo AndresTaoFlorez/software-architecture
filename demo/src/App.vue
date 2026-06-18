@@ -55,7 +55,7 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
 
 <style scoped>
 .page {
-  max-width: 1200px;
+  max-width: 1024px;
   margin: 0 auto;
   padding: 72px 40px 80px;
 }
@@ -122,23 +122,22 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
 .lede a { color: var(--text); }
 
 .explore {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-  gap: 88px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 48px 0 56px;
+  gap: 64px;
+  padding: 56px 0 64px;
 }
 
 .onion-card {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Let the onion bleed a little outside the column on the right. */
-  padding-right: 16px;
 }
 
 .details-card {
-  /* No card. Whitespace is the structure. */
+  width: 100%;
+  max-width: 560px;
 }
 
 .foot {
@@ -164,7 +163,7 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
 }
 
 @media (max-width: 900px) {
-  .explore { grid-template-columns: 1fr; gap: 24px; padding: 24px 0 40px; }
+  .explore { gap: 40px; padding: 32px 0 48px; }
   .head { margin-bottom: 32px; }
   .page { padding: 48px 24px 56px; }
 }
