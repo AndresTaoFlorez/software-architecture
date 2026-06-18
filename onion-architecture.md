@@ -16,7 +16,8 @@
 6. [Why This Architecture](#6-why-this-architecture)
 7. [Naming & Conventions](#7-naming--conventions-portable-defaults)
 8. [Appendix — Advanced Patterns](#8-appendix--advanced-patterns-bonus)
-9. [References](#9-references)
+9. [Scaling: From Startup to Enterprise](#9-scaling-from-startup-to-enterprise)
+10. [References](#10-references)
 
 ---
 
@@ -195,8 +196,61 @@ export class User {
 }
 ```
 
-Domain errors live alongside entities in `src/domain/errors/DomainErrors.js`, giving business-rule
-violations explicit, catchable types rather than anonymous strings.
+**Spotlight: a richer entity.** Not every entity is a flat bag of getters. `src/domain/entities/WorkWindow.js`
+shows what *enterprise-critical business knowledge* [Martin 2017] looks like when it lives at the center —
+its rules about when a scheduling window may still be edited are expressed entirely as derived state, with no
+framework and no I/O:
+
+```js
+// src/domain/entities/WorkWindow.js (excerpt — business rules as getters)
+// Two-tier "seal": the start freezes once it passes; the whole window freezes once it ends.
+// "Timeline" is the SERVER clock, synced via GET /work-windows/timeline — never the browser's.
+get isSealed() {                         // starts_at <= timeline → start is frozen
+  if (!this.startsAt) return false
+  return WorkWindow.timelineNow() >= new Date(this.startsAt).getTime()
+}
+get isEnded() {                          // ends_at < timeline → fully immutable
+  if (!this.endsAt) return false
+  return WorkWindow.timelineNow() > new Date(this.endsAt).getTime()
+}
+get canEditStart() { return this.isFuture }   // can move the start? only before it begins
+get canEditEnd()   { return !this.isEnded }    // can extend the end? until the window ends
+get canToggle()    { return !this.isEnded }    // can activate/deactivate? until it ends
+```
+
+Those `canEdit*` getters *are* the business rules. A component that disables a drag handle, a use case that
+rejects an illegal reschedule, and a test that asserts the rule all read the same single source of truth —
+the entity — instead of re-deriving it. That is the payoff of a rich domain model [Evans 2003].
+
+A note on **value objects**: §"What lives here" lists them, but this codebase models that behavior directly
+on entities (getters and small static helpers such as `WorkWindow.toTimestampTz`) rather than introducing
+standalone `Money`/`DateRange` classes. That is a legitimate choice — the point is that the *behavior* lives
+in the Domain, whatever shape holds it.
+
+**Domain errors** live alongside entities in `src/domain/errors/DomainErrors.js`, giving business-rule
+violations explicit, catchable types rather than anonymous strings:
+
+```js
+// src/domain/errors/DomainErrors.js
+export class DomainError extends Error {
+  constructor(message) {
+    super(message)
+    this.name = 'DomainError'
+  }
+}
+
+export class UserInactiveError extends DomainError {
+  constructor(message = 'Tu cuenta está inactiva. Contacta al soporte.') {
+    super(message)
+    this.name = 'UserInactiveError'
+  }
+}
+```
+
+Because these are real types, an outer layer can `catch (e) { if (e instanceof UserInactiveError) … }` and
+react precisely — exactly what the Presentation store does in [§3.4](#34-presentation-outermost). The richer
+`WorkWindowError` (which maps backend failures back to domain language) is shown at the boundary in
+[§3.3](#33-infrastructure).
 
 **Justification.** Entities are "the least likely to change when something external changes" and should
 contain "enterprise-wide critical business rules" [Martin 2017]. A rich domain model placed at the center
@@ -225,15 +279,21 @@ depend on a concrete Infrastructure class. It depends on the Domain and on *port
 **Generic example — prescribed, port-based form.** The use case receives its dependency through a port,
 so it never names a concrete adapter:
 
+A port is a *contract*, not an implementation. In TypeScript it is an `interface`; in plain JavaScript the
+honest equivalent is a JSDoc `@typedef` — a description the use case is typed against, with no runtime stub
+pretending to be the real thing:
+
 ```js
 // application/ports/UserRepository.js
-// A port: the contract the application needs. Infrastructure must satisfy it.
-export const UserRepositoryPort = {
-  fetchAll: () => Promise.resolve(/* User[] */),
-  create:   (payload) => Promise.resolve(/* User */),
-}
+/**
+ * A PORT: the contract the application needs. Infrastructure must satisfy it.
+ * @typedef {Object} UserRepository
+ * @property {() => Promise<import('@/domain/entities/User').User[]>} fetchAll
+ * @property {(payload: object) => Promise<import('@/domain/entities/User').User>} create
+ */
 
 // application/use-cases/CreateUserUseCase.js
+/** @param {{ userRepository: UserRepository }} deps */
 export function makeCreateUserUseCase({ userRepository }) {
   return async function createUser(form) {
     const payload = toCreatePayload(form)   // map input → entity-friendly shape
@@ -271,6 +331,31 @@ export async function createUserUseCase({ firstName, firstSurname, email, passwo
 Note the first line: the use case currently imports a *concrete* repository. That is the one deviation
 from the canonical model, addressed deliberately in [§4.3](#43-the-inversion-gap) — and, as
 [§5.4](#54-per-layer-testing) shows, it has a measurable cost the moment you try to test this file.
+
+**Orchestration is more than delegation.** `CreateUserUseCase` is deliberately thin, but a use case is also
+where *application-level* validation lives and where infrastructure failures are translated back into the
+domain's language before they can leak outward. `src/application/use-cases/work-windows/CreateWorkWindowUseCase.js`
+makes both moves explicit:
+
+```js
+// src/application/use-cases/work-windows/CreateWorkWindowUseCase.js (excerpt)
+import { WorkWindowRepository } from '@/infrastructure/repositories/WorkWindowRepository'
+import { WorkWindowError } from '@/domain/errors/WorkWindowError'
+
+// 1. Validate application-level rules — fail with a DOMAIN error, not a generic one:
+if (!item.startTime) throw new WorkWindowError(`Hora de inicio requerida${label}.`)
+if (date < today)    throw new WorkWindowError(`No se pueden crear ventanas en fechas pasadas${label}.`)
+
+// 2. Delegate persistence, mapping any transport failure back into the domain at the edge:
+try {
+  return await WorkWindowRepository.create(normalized)
+} catch (e) {
+  throw WorkWindowError.fromHttp(e, 'Error al crear la ventana de trabajo.')
+}
+```
+
+Presentation never sees a raw Axios error or an HTTP status — only a `WorkWindowError` it can show to the
+user. The mapping function itself lives at the Infrastructure boundary, shown in [§3.3](#33-infrastructure).
 
 **Justification.** Use cases hold "application-specific business rules" and orchestrate the flow of data
 to and from entities [Martin 2017]. The pattern of a thin coordinating layer above the domain is Fowler's
@@ -364,6 +449,11 @@ client.interceptors.response.use(
 Because this concern is isolated in Infrastructure, no use case and no component ever handles token
 refresh; they are unaware it happens.
 
+The same boundary is the right place to translate *errors* back into the domain's vocabulary. The
+`WorkWindowError.fromHttp(error)` helper used by the use case in [§3.2](#32-application) lives here, in
+Infrastructure terms: it inspects the raw HTTP failure and returns a domain `WorkWindowError` with a
+human-readable message, so that everything inward of this line speaks the domain's language, never the API's.
+
 **Justification.** The **Repository** mediates between the domain and data-mapping layers, "acting like an
 in-memory collection of domain objects" [Fowler 2002]. Treating HTTP, storage, and SDKs as replaceable
 adapters behind a port is the essence of Hexagonal Architecture [Cockburn 2005]. Mapping external shapes
@@ -407,9 +497,44 @@ export const useOrderStore = defineStore('orders', () => {
 })
 ```
 
-**Real example.** The application's stores (`useAuthStore`, `useUserStore`) call use cases and never touch
-the HTTP client. A view such as `LoginView.vue` calls `authStore.login(...)`, which calls a login use case,
-which uses the transport. The canonical flow is a straight line inward:
+**Real example.** `src/presentation/stores/useAuthStore.js` is a Pinia store that exposes reactive auth state
+and *only* ever calls use cases. It never imports the HTTP client, never constructs a `User` from raw JSON,
+and catches the domain error raised inward to react precisely:
+
+```js
+// src/presentation/stores/useAuthStore.js (excerpt)
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import { loginUseCase } from '@/application/use-cases/auth/LoginUseCase'
+import { fetchMeUseCase } from '@/application/use-cases/users/FetchMeUseCase'
+import { UserInactiveError } from '@/domain/errors/DomainErrors'
+
+export const useAuthStore = defineStore('auth', () => {
+  const user = ref(null)
+  const profile = ref(null)
+
+  // Derived UI state — memoized by Vue, recomputed only when dependencies change:
+  const isAuthenticated = computed(() => !!user.value && !!localStorage.getItem(TOKEN_KEY))
+  const isAdmin = computed(() =>
+    (profile.value?.roleNames || []).map(r => r.toLowerCase()).includes('admin'))
+
+  async function login(email, password) {
+    user.value = await loginUseCase(email, password)   // delegate inward — no HTTP here
+    await fetchProfile()
+  }
+
+  async function fetchProfile() {
+    const me = await fetchMeUseCase()
+    if (!me.isActive) { logout(); throw new UserInactiveError() }   // catch the domain rule
+    profile.value = me
+  }
+
+  return { user, profile, isAuthenticated, isAdmin, login, fetchProfile, logout }
+})
+```
+
+A view such as `LoginView.vue` calls `authStore.login(...)` and renders `isAuthenticated` / `isAdmin`; it
+has no idea a network exists. The canonical flow is a straight line inward:
 
 ```
 View  →  Store  →  UseCase  →  Repository  →  HTTP Client  →  API
@@ -417,6 +542,14 @@ View  →  Store  →  UseCase  →  Repository  →  HTTP Client  →  API
 
 Route guards in `src/router/` enforce authentication and authorization at the Presentation boundary,
 reading derived state (such as `isAuthenticated`) rather than implementing auth logic themselves.
+
+**An honest boundary note.** The real store also imports two Infrastructure symbols directly — `TOKEN_KEY`
+(to read the token from `localStorage`) and `wsClient` (to open/close the realtime connection on login and
+logout). That is a small, deliberate leak of the Dependency Rule: a store reaching into Infrastructure rather
+than going through a port. It is tolerated because both are *cross-cutting session concerns* with no business
+logic, and isolating them behind ports would add ceremony for little gain at this project's size. Naming the
+leak is the point — it is the same kind of pragmatic deviation catalogued in [§4.3](#43-the-inversion-gap),
+and [§9](#9-scaling-from-startup-to-enterprise) revisits when a growing codebase should pay to close it.
 
 **Justification.** Frameworks belong in the outermost ring as a "detail" [Martin 2017]. Keeping data
 access out of components and behind a store/use-case boundary is consistent with the official guidance to
@@ -1019,13 +1152,186 @@ docs].
 
 ---
 
-## 9. References
+## 9. Scaling: From Startup to Enterprise
+
+The preceding sections describe an architecture that is correct at *any* size. This section is about what
+changes as the organization around the code grows from one founder to a Figma- or Anthropic-sized engineering
+org. The reassuring thesis first:
+
+> **The four layers never change. What changes is how dependencies are *wired* and how the code is
+> *partitioned* — and both change in response to headcount and codebase size, not to taste.**
+
+Domain, Application, Infrastructure, and Presentation remain exactly as defined in [§3](#3-the-four-layers) at
+every phase below. A 500-engineer company and a solo founder draw the same four rings. The difference is
+purely mechanical: how the adapter gets injected into the use case, and where the folder boundaries fall.
+
+A second idea governs the whole section — **Conway's Law**: "organizations design systems that mirror their
+own communication structure" [Conway 1968]. As teams multiply, the architecture *will* come to mirror the org
+chart whether you plan it or not. Each phase below is really about choosing those seams deliberately before
+the org forces accidental ones.
+
+### 9.1 The four growth phases
+
+| Phase | Team | Codebase | Wiring mechanism | Partitioning |
+|-------|------|----------|------------------|--------------|
+| 1 · Startup | 1–10 | <50k LOC | Manual DI in a bootstrap file | Folders by layer |
+| 2 · Scale-Up | 10–50 | 50k–500k | DI container | Folders by layer |
+| 3 · Growth | 50–200 | 500k–2M | DI container per feature | Folders by **feature** (monorepo) |
+| 4 · Enterprise | 200+ | 2M+ | Per-context composition | **Bounded contexts** / micro-frontends |
+
+The boundaries are signals, not thresholds — a disciplined 30-person team may stay happily in Phase 1. Use
+the decision tree in [§9.6](#96-the-scaling-decision-tree) and the red flags in
+[§9.7](#97-red-flags-youve-outgrown-your-phase) to locate yourself, not the headcount alone.
+
+### 9.2 Phase 1 — Startup: manual dependency injection
+
+**This document is written for Phase 1.** Dependencies are assembled by hand in a single composition file —
+the only place in the system that names both a concrete adapter and the use case it feeds:
+
+```js
+// presentation/bootstrap.js — the one place Infrastructure meets Application
+import { HttpUserRepository } from '@/infrastructure/repositories/HttpUserRepository'
+import { makeCreateUserUseCase } from '@/application/use-cases/CreateUserUseCase'
+
+const userRepository = new HttpUserRepository()
+export const createUser = makeCreateUserUseCase({ userRepository })
+```
+
+Everything inward of `bootstrap.js` depends only on ports; everything is testable with fakes. This is the
+**Composition Root** pattern — wire the object graph once, at the outermost edge [Martin 2017]. It is simple,
+explicit, and entirely sufficient until the wiring file itself becomes a bottleneck.
+
+**Graduate when:** the team passes ~10 engineers; `bootstrap.js` grows past ~100 dependencies and manual
+ordering becomes error-prone; or "where does this go?" starts costing real minutes per feature.
+
+### 9.3 Phase 2 — Scale-Up: a dependency-injection container
+
+The layers and folders are unchanged. The only thing that changes is that wiring becomes *declarative* — a
+container resolves the graph instead of you hand-assembling it in order:
+
+```js
+// composition/container.js
+const container = new Container()
+container.register('UserRepository', () => new HttpUserRepository())
+container.register('createUser', (c) =>
+  makeCreateUserUseCase({ userRepository: c.resolve('UserRepository') }))
+
+// anywhere in Presentation:
+const createUser = container.resolve('createUser')
+```
+
+Mature ecosystems formalize this with libraries (InversifyJS, tsyringe in TypeScript), but the principle is
+identical to the hand-written version above — it is still the Composition Root, just automated. The win is
+that a hundred bindings no longer need a human to topologically sort them, and swapping an adapter for a test
+double becomes a one-line container override.
+
+**Graduate when:** multiple teams start colliding inside one `src/` tree; the container config itself grows
+unwieldy (>500 lines); or one layer balloons to many times the size of the others — the sign that "by layer"
+is no longer the right primary partition.
+
+### 9.4 Phase 3 — Growth: feature slices in a monorepo
+
+At this size the dominant axis of change is the **feature**, not the layer. Partition by feature first; let
+each feature own its own four-layer slice; reserve a `shared/` space for the genuinely cross-cutting:
+
+```
+libs/
+├── features/
+│   ├── auth/
+│   │   ├── domain/  ├── application/  ├── infrastructure/  └── presentation/
+│   └── work-windows/
+│       ├── domain/  ├── application/  ├── infrastructure/  └── presentation/
+└── shared/
+    ├── domain/        (cross-feature entities, value objects)
+    └── http/          (the one Axios client, interceptors)
+apps/
+├── web/    └── admin/
+```
+
+A monorepo tool (Nx, Turborepo) makes the boundaries *enforceable*: `auth` can be forbidden by lint rule from
+importing `work-windows/infrastructure`, so the Dependency Rule is checked by CI rather than by reviewer
+goodwill. This is the Feature-Sliced Design methodology [Feature-Sliced Design] applied on top of the same
+onion — each slice is a small onion, and the build graph guards the seams.
+
+**Graduate when:** teams own whole features end-to-end rather than horizontal layers; feature boundaries start
+to blur; or inter-feature communication degrades into reaching directly into each other's stores instead of
+going through explicit contracts.
+
+### 9.5 Phase 4 — Enterprise: bounded contexts and micro-frontends
+
+Past a couple hundred engineers the bottleneck is no longer code — it is **coordination**. The architecture's
+job becomes minimizing how often teams must synchronize. Each domain team owns a complete **bounded context**
+[Evans 2003]: its own onion, its own deploy cadence, its own data, communicating with other contexts only
+through explicit contracts — typed APIs or published events, never shared internal state.
+
+```
+┌─ Scheduling context ─┐   events / typed API   ┌─ Billing context ─┐
+│  (own 4-layer onion) │ ─────────────────────► │ (own 4-layer onion)│
+│  team-owned, deployed│ ◄───────────────────── │  team-owned        │
+└──────────────────────┘                        └───────────────────┘
+```
+
+On the frontend this often materializes as **micro-frontends**: independently built and deployed UIs composed
+at runtime, each owned by the team that owns its domain [Geers 2020]. This is exactly how large product orgs
+organize — Spotify around squads-per-domain, Figma and Netflix around domain-owned surfaces. The matching
+organizational design is **Team Topologies**: stream-aligned teams own a context end-to-end, with platform
+teams providing the shared `http`/design-system substrate [Skelton & Pais 2019].
+
+The critical discipline: contracts between contexts are the *only* coupling. Inside a context, the four onion
+layers still apply unchanged — the enterprise is, recursively, a collection of Phase-1 onions with hardened
+borders.
+
+### 9.6 The scaling decision tree
+
+```
+Are you 1–10 engineers with <50k LOC, and is hand-wiring still painless?
+  └─ YES → Phase 1. Keep the manual Composition Root. Do not add a container yet.
+  └─ NO ↓
+Are you 10–50 engineers, one shared codebase, wiring getting unwieldy?
+  └─ YES → Phase 2. Introduce a DI container. Keep folders by layer.
+  └─ NO ↓
+Are you 50–200 engineers, teams owning features, layers fighting each other?
+  └─ YES → Phase 3. Re-partition by feature in a monorepo with enforced boundaries.
+  └─ NO ↓
+Are you 200+ engineers where coordination — not code — is the bottleneck?
+  └─ YES → Phase 4. Bounded contexts + micro-frontends, contracts as the only coupling.
+```
+
+Resist skipping ahead. A DI container in a three-person startup, or micro-frontends at fifty engineers, buys
+coordination machinery you are not yet paying the cost that would justify — premature scaling is its own
+failure mode.
+
+### 9.7 Red flags: you've outgrown your phase
+
+Concrete signals that you are operating in one phase but need the next phase's tools:
+
+- **Leaving Phase 1:** the bootstrap/wiring file is hundreds of lines; ordering dependencies by hand causes
+  bugs; new hires can't find where things are wired.
+- **Leaving Phase 2:** container config exceeds ~500 lines; one "god layer" (usually `domain/` or a shared
+  `services/`) is many times larger than the rest; teams routinely break each other's tests in one `src/`.
+- **Leaving Phase 3:** feature boundaries are blurry; features import each other's internals instead of
+  contracts; the monorepo's task graph is slow because nothing is truly isolated.
+- **Leaving Phase 4 (the org, not the code):** coordination overhead exceeds ~30% of a sprint; shipping slows
+  as headcount rises. The fix here is organizational design, not another architectural layer — the clearest
+  sign that you have reached the limit of what architecture alone can solve.
+
+The honest boundary leak named in [§3.4](#34-presentation-outermost) — a store importing `TOKEN_KEY` and
+`wsClient` straight from Infrastructure — is a Phase-1 trade-off. It is invisible at ten engineers and
+intolerable at two hundred; closing it behind a port is precisely the kind of debt each phase transition pays
+down deliberately rather than all at once.
+
+---
+
+## 10. References
 
 - **Beck, K.** (2002). *Test-Driven Development: By Example*. Addison-Wesley. (Tests as a design tool.)
 - **Cockburn, A.** (2005). *Hexagonal Architecture (Ports and Adapters)*.
   https://alistair.cockburn.us/hexagonal-architecture/
 - **Cohn, M.** (2009). *Succeeding with Agile: Software Development Using Scrum*. Addison-Wesley.
   (The Test Pyramid.)
+- **Conway, M. E.** (1968). *How Do Committees Invent?* Datamation. (Conway's Law: systems mirror the
+  communication structure of the organizations that build them.)
+  https://www.melconway.com/Home/Committees_Paper.html
 - **Dodds, K. C.** (2019). *Colocation*. (Place code as close as possible to where it is relevant.)
   https://kentcdodds.com/blog/colocation
 - **Evans, E.** (2003). *Domain-Driven Design: Tackling Complexity in the Heart of Software*.
@@ -1036,6 +1342,8 @@ docs].
   (Repository; Service Layer.) https://martinfowler.com/eaaCatalog/repository.html
 - **Fowler, M.** (2007). *Mocks Aren't Stubs*. (Stubs vs. mocks; classicist vs. mockist testing.)
   https://martinfowler.com/articles/mocksArentStubs.html
+- **Geers, M.** (2020). *Micro Frontends in Action*. Manning. (Independently built and deployed UIs composed
+  at runtime, each owned by the team that owns its domain.) https://www.microfrontends.com/
 - **GreenSock (GSAP).** *GSAP Documentation.* (Imperative, timeline-based animation.)
   https://gsap.com/docs/
 - **Khorikov, V.** (2020). *Unit Testing Principles, Practices, and Patterns*. Manning. (What makes a test
@@ -1050,10 +1358,15 @@ docs].
   ch. 28.)
 - **Meszaros, G.** (2007). *xUnit Test Patterns: Refactoring Test Code*. Addison-Wesley. (The Test Double
   taxonomy: dummy, stub, spy, mock, fake.)
+- **Nx & Turborepo documentation.** *Monorepo build systems with enforced project boundaries.* (Module-
+  boundary lint rules that make the Dependency Rule checkable in CI.) https://nx.dev/ · https://turborepo.com/
 - **Palermo, J.** (2008). *The Onion Architecture* (Parts 1–4).
   https://jeffreypalermo.com/2008/07/the-onion-architecture-part-1/
 - **Shapiro, M., Preguiça, N., Baquero, C., & Zawirski, M.** (2011). *Conflict-free Replicated Data Types*.
   INRIA Research Report RR-7687. https://hal.inria.fr/inria-00609399
+- **Skelton, M. & Pais, M.** (2019). *Team Topologies: Organizing Business and Technology Teams for Fast
+  Flow*. IT Revolution. (Stream-aligned vs. platform teams; org structure as an architectural force.)
+  https://teamtopologies.com/book
 - **Vocke, H.** (2018). *The Practical Test Pyramid*. martinfowler.com.
   https://martinfowler.com/articles/practical-test-pyramid.html
 - **Vue.js, Pinia & Vue Test Utils documentation.** https://vuejs.org/ · https://pinia.vuejs.org/ ·
