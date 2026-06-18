@@ -46,7 +46,7 @@ export const LAYERS: Layer[] = [
     num: '04',
     kicker: 'The core',
     name: 'Domain',
-    desc: 'Business rules and entities. No framework, no I/O, true with no UI or server.',
+    desc: 'Where the business actually lives — entities, value objects, and the rules that make a valid order, a valid invoice, a valid anything. Pure code: no framework, no I/O, no awareness of UI or server. The only layer that stays the same whether it ships behind a React app, a CLI, or a unit test.',
     code: 'class Order {\n  confirm() { … }\n}',
     color: '#f3c878',
   },

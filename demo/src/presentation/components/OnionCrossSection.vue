@@ -218,7 +218,7 @@ const colorOf = Object.fromEntries(LAYERS.map((l) => [l.id, l.color])) as Record
 
 .onion {
   width: 100%;
-  max-width: 460px;
+  max-width: 640px;
   height: auto;
   display: block;
   overflow: visible;
