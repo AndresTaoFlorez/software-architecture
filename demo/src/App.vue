@@ -4,17 +4,10 @@ import OnionDiagram from './presentation/components/OnionCrossSection.vue'
 import LayerDetails from './presentation/components/LayerDetails.vue'
 import type { LayerId } from './presentation/data/layers'
 
-// The peeled layer is the single source of truth. The LayerDetails panel
-// mirrors it (so clicking a layer both peels the onion AND swaps the
-// right-side text). Default to 'domain' so the page loads with the core
-// already peeled, which doubles as a hint that the interaction exists.
 const peeled = ref<LayerId | null>('domain')
-
 const selected = computed(() => peeled.value)
 
 function onLayerClick(id: LayerId) {
-  // Toggle: clicking the already-peeled layer closes it; clicking a
-  // different layer moves the peel.
   peeled.value = peeled.value === id ? null : id
 }
 
@@ -24,62 +17,155 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
 <template>
   <div class="page">
     <header class="head">
-      <div class="badge mono">Onion Architecture · interactive</div>
-      <h1>Peel the onion.</h1>
+      <div class="meta">
+        <span class="kicker">Onion Architecture</span>
+        <span class="rule" aria-hidden="true"></span>
+        <span class="kicker subtle">An interactive field guide</span>
+      </div>
+
+      <h1 class="title">
+        <span class="upright">Peel</span>
+        <span class="italic">the</span>
+        <span class="upright accent">onion.</span>
+      </h1>
+
       <p class="lede">
-        Frontend Onion Architecture, made tangible. Click a layer to peel it open and learn what
-        it does. Built straight from the
+        Frontend Onion Architecture, made tangible. Click a layer to peel it open and see what it
+        does — from the skin of the view all the way down to the core of the domain. Companion
+        to the
         <a :href="GUIDE" target="_blank" rel="noopener">architecture guide</a>.
       </p>
     </header>
 
     <section class="explore">
-      <div class="card onion-card">
+      <div class="onion-card">
         <OnionDiagram :peeled="peeled" @select="onLayerClick" />
       </div>
-      <div class="card details-card">
+      <div class="details-card">
         <LayerDetails :selected="selected" />
       </div>
     </section>
 
     <footer class="foot">
-      <span>Vue 3 + Pinia + Vite, bundled by Bun.</span>
-      <a :href="GUIDE" target="_blank" rel="noopener">Read the architecture guide →</a>
+      <span class="mono">Vue 3 + Pinia + Vite · Bundled by Bun</span>
+      <a :href="GUIDE" target="_blank" rel="noopener">Read the full guide →</a>
     </footer>
   </div>
 </template>
 
 <style scoped>
-.page { max-width: 1100px; margin: 0 auto; padding: 48px 22px 64px; }
-
-.head { margin-bottom: 32px; max-width: 730px; }
-.badge {
-  display: inline-block; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--domain); border: 1px solid rgba(255,212,121,0.3); border-radius: 999px;
-  padding: 5px 13px; margin-bottom: 18px; background: rgba(255,212,121,0.05);
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 72px 40px 80px;
 }
-h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 800; letter-spacing: -0.02em; color: #fff; line-height: 1.08; }
-.lede { margin-top: 14px; color: var(--text-dim); font-size: 1.02rem; }
 
-.explore { display: grid; grid-template-columns: 0.85fr 1fr; gap: 18px; align-items: stretch; }
-.onion-card { display: flex; align-items: center; justify-content: center; min-height: 540px; }
+.head {
+  margin-bottom: 56px;
+  max-width: 820px;
+}
 
-.card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 24px;
-  backdrop-filter: blur(8px);
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 32px;
+}
+
+.meta .rule {
+  flex: 0 0 36px;
+  height: 1px;
+  background: var(--rule);
+}
+
+.meta .subtle { color: var(--text-faint); opacity: 0.75; }
+
+.title {
+  font-size: clamp(3rem, 7.4vw, 5.6rem);
+  line-height: 0.95;
+  margin: 0 0 28px;
+  font-variation-settings: 'opsz' 144, 'SOFT' 30;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.18em;
+}
+
+.title .italic {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--text-dim);
+  font-variation-settings: 'opsz' 144, 'SOFT' 80;
+}
+
+.title .accent {
+  color: var(--accent);
+  font-style: italic;
+  font-weight: 500;
+  font-variation-settings: 'opsz' 144, 'SOFT' 60;
+}
+
+.lede {
+  font-family: var(--sans);
+  font-size: 1.18rem;
+  line-height: 1.55;
+  color: var(--text-dim);
+  max-width: 600px;
+  font-weight: 400;
+}
+
+.lede a { color: var(--text); }
+
+.explore {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 88px;
+  align-items: center;
+  padding: 48px 0 56px;
+}
+
+.onion-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Let the onion bleed a little outside the column on the right. */
+  padding-right: 16px;
+}
+
+.details-card {
+  /* No card. Whitespace is the structure. */
 }
 
 .foot {
-  margin-top: 38px; padding-top: 20px; border-top: 1px solid var(--border);
-  display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap;
-  font-size: 0.82rem; color: var(--text-faint);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 24px;
+  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
+  padding-top: 28px;
+  margin-top: 16px;
+  border-top: 1px solid var(--rule);
 }
 
-@media (max-width: 820px) {
-  .explore { grid-template-columns: 1fr; }
-  .onion-card { min-height: 420px; }
+.foot a {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  color: var(--text);
+}
+
+@media (max-width: 900px) {
+  .explore { grid-template-columns: 1fr; gap: 24px; padding: 24px 0 40px; }
+  .head { margin-bottom: 32px; }
+  .page { padding: 48px 24px 56px; }
 }
 </style>

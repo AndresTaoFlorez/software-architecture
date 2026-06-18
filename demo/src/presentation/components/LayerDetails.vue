@@ -1,7 +1,6 @@
 <script setup lang="ts">
-// Panel to the right of the onion. Reads which layer is currently selected
-// (pinned by click) and shows its kicker, name, description, and a small
-// code snippet. When nothing is selected, falls back to a hint.
+// Editorial details panel. Mirrors the kicker + italic name + description
+// style of the page header. No card, no border, no background — just type.
 
 import { computed } from 'vue'
 import { LAYERS, type LayerId } from '../data/layers'
@@ -18,14 +17,25 @@ const layer = computed(() =>
 <template>
   <div class="details">
     <div v-if="layer" class="entry" :style="{ '--accent': layer.color }">
-      <span class="num mono">{{ layer.num }}</span>
-      <span class="kicker mono">{{ layer.kicker }}</span>
+      <div class="meta">
+        <span class="num">{{ layer.num }}</span>
+        <span class="rule" aria-hidden="true"></span>
+        <span class="kicker">{{ layer.kicker }}</span>
+      </div>
+
       <h2 class="name">{{ layer.name }}</h2>
+
       <p class="desc">{{ layer.desc }}</p>
     </div>
+
     <div v-else class="placeholder">
-      <span class="kicker mono">Pick a layer</span>
-      <p>Hover or click any ring of the onion to see what that layer does.</p>
+      <div class="meta">
+        <span class="num">—</span>
+        <span class="rule" aria-hidden="true"></span>
+        <span class="kicker">Pick a layer</span>
+      </div>
+      <h2 class="name">No layer selected.</h2>
+      <p class="desc">Hover or click any ring of the onion to see what that layer does.</p>
     </div>
   </div>
 </template>
@@ -36,75 +46,77 @@ const layer = computed(() =>
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 220px;
+  min-height: 340px;
 }
 
 .entry {
-  --accent: var(--domain);
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 12px;
-  row-gap: 8px;
-  align-items: baseline;
+  --accent: var(--accent, #8a2350);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
 }
 
 .num {
-  grid-row: 1;
-  grid-column: 1;
-  font-size: 0.78rem;
-  letter-spacing: 0.12em;
   color: var(--accent);
-  font-weight: 700;
-  text-transform: uppercase;
-  align-self: start;
-  padding-top: 2px;
+  font-weight: 500;
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+}
+
+.rule {
+  flex: 0 0 36px;
+  height: 1px;
+  background: var(--accent);
 }
 
 .kicker {
-  grid-row: 1;
-  grid-column: 2;
+  color: var(--text-faint);
   font-size: 0.7rem;
-  letter-spacing: 0.14em;
-  color: var(--accent);
-  text-transform: uppercase;
-  opacity: 0.85;
+  letter-spacing: 0.18em;
 }
 
 .name {
-  grid-row: 2;
-  grid-column: 1 / -1;
-  font-size: 1.6rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
+  font-family: var(--display);
+  font-size: clamp(2.6rem, 4.6vw, 3.8rem);
+  font-weight: 400;
+  font-style: italic;
+  line-height: 0.95;
+  letter-spacing: -0.025em;
   color: var(--text);
   margin: 0;
-  line-height: 1.1;
+  font-variation-settings: 'opsz' 144, 'SOFT' 50;
 }
 
 .desc {
-  grid-row: 3;
-  grid-column: 1 / -1;
+  font-family: var(--sans);
+  font-size: 1.1rem;
+  line-height: 1.55;
   color: var(--text-dim);
-  font-size: 0.96rem;
+  max-width: 480px;
   margin: 0;
+  font-weight: 400;
 }
 
 .placeholder {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 22px;
 }
 
-.placeholder .kicker {
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
+.placeholder .name {
   color: var(--text-faint);
-  text-transform: uppercase;
-}
-
-.placeholder p {
-  color: var(--text-dim);
-  font-size: 0.94rem;
-  margin: 0;
+  font-style: italic;
+  font-weight: 300;
 }
 </style>
