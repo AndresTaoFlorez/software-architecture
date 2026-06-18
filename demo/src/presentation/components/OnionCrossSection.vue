@@ -161,9 +161,10 @@ const colorOf = Object.fromEntries(LAYERS.map((l) => [l.id, l.color])) as Record
       <!-- Rim shadow on the sphere edges -->
       <circle cx="300" cy="300" r="240" fill="url(#g-rim)" pointer-events="none" />
 
-      <!-- Core glow on the cut -->
-      <circle cx="300" cy="300" r="55" fill="url(#g-core)" pointer-events="none" />
-      <circle cx="300" cy="300" r="6" fill="#fff7df" pointer-events="none" />
+      <!-- Core glow, clipped to the cutaway so it doesn't bleed through
+           the un-cut left half of the sphere. -->
+      <path :d="halfDisc(55)" fill="url(#g-core)" pointer-events="none" />
+      <path :d="halfDisc(6)" fill="#fff7df" pointer-events="none" />
 
       <!-- Top wisps (a few soft tendrils above the onion) -->
       <g class="wisps" stroke="#8a2350" stroke-width="2" fill="none" opacity="0.5"
