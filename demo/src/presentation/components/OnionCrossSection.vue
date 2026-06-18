@@ -92,19 +92,19 @@ const colorOf = Object.fromEntries(LAYERS.map((l) => [l.id, l.color])) as Record
 
         <!-- Outer sphere rim shadow, drawn on top of the sphere -->
         <radialGradient id="g-rim" cx="50%" cy="50%" r="50%">
-          <stop offset="78%" stop-color="#000" stop-opacity="0" />
-          <stop offset="100%" stop-color="#000" stop-opacity="0.55" />
+          <stop offset="80%" stop-color="#000" stop-opacity="0" />
+          <stop offset="100%" stop-color="#000" stop-opacity="0.25" />
         </radialGradient>
 
         <!-- Specular highlight on the top-left of the sphere -->
         <radialGradient id="g-spec" cx="28%" cy="22%" r="22%">
-          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.45" />
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.4" />
           <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
         </radialGradient>
 
         <!-- Drop shadow on the ground -->
         <radialGradient id="g-ground" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#000" stop-opacity="0.55" />
+          <stop offset="0%" stop-color="#000" stop-opacity="0.22" />
           <stop offset="100%" stop-color="#000" stop-opacity="0" />
         </radialGradient>
 
