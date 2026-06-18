@@ -1,65 +1,53 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=DM+Sans:opsz,wght@9..40,300..600&family=JetBrains+Mono:wght@400;500&display=swap');
-
 :root {
-  /* Warm paper background, deep ink for text, single accent borrowed from
-     the onion's own burgundy so the page and the illustration rhyme. */
-  --bg: #f3f3f1;
-  --bg-soft: #ebe9e3;
-  --text: #1a1816;
-  --text-dim: #5a554f;
-  --text-faint: #8c857c;
-  --rule: #d8d3c7;
-  --accent: #8a2350;
-  --domain: #b88a3a;
+  /* Geist (Vercel) for display + body, with the Apple system stack as the
+     fallback. One neutral grotesque used at every size, Apple/Vercel style. */
+  --display: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --mono: 'Geist Mono', ui-monospace, 'SF Mono', monospace;
 
-  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-  --sans: 'DM Sans', -apple-system, system-ui, sans-serif;
-  --display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --bg: #0a070c;
+  --text: #f3ebf0;
+  --text-dim: #c3b3bf;
+  --text-faint: #8a7886;
+  --rule: rgba(255, 255, 255, 0.12);
+  --accent: #e2618f;
+
+  color-scheme: dark;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; }
 
-html, body { min-height: 100vh; }
+html,
+body,
+#app {
+  margin: 0;
+  height: 100%;
+  width: 100%;
+}
 
 body {
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--sans);
-  font-weight: 400;
-  color: var(--text);
-  background-color: var(--bg);
-  /* Faint warm wash at the corners, like sunlight falling on a page. */
-  background-image:
-    radial-gradient(ellipse at 12% 0%, rgba(138, 35, 80, 0.04) 0%, transparent 45%),
-    radial-gradient(ellipse at 90% 100%, rgba(184, 138, 58, 0.05) 0%, transparent 50%);
-  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
   text-rendering: optimizeLegibility;
-}
-
-h1, h2, h3 {
-  font-family: var(--display);
-  font-weight: 400;
-  letter-spacing: -0.02em;
-  color: var(--text);
+  overflow: hidden;
 }
 
 a {
-  color: var(--text);
-  text-decoration: none;
-  background-image: linear-gradient(currentColor, currentColor);
-  background-size: 100% 1px;
-  background-repeat: no-repeat;
-  background-position: 0 100%;
-  transition: color 160ms ease, background-size 200ms ease;
-}
-a:hover {
   color: var(--accent);
-  background-size: 100% 2px;
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
+button {
+  font: inherit;
+  color: inherit;
 }
 
-code, .mono { font-family: var(--mono); }
-
-::selection {
-  background: rgba(138, 35, 80, 0.18);
-  color: var(--text);
+/* Thin scrollbars for the overlay panels */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
 }
