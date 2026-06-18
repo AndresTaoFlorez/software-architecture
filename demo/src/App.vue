@@ -4,7 +4,7 @@ import OnionDiagram from './presentation/components/OnionCrossSection.vue'
 import LayerDetails from './presentation/components/LayerDetails.vue'
 import type { LayerId } from './presentation/data/layers'
 
-const peeled = ref<LayerId | null>('domain')
+const peeled = ref<LayerId | null>(null)
 const selected = computed(() => peeled.value)
 
 function onLayerClick(id: LayerId) {
