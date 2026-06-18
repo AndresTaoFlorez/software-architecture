@@ -1,39 +1,14 @@
-// PRESENTATION edge — the COMPOSITION ROOT.
-// This is the one and only place where a concrete adapter meets the use cases.
-// Everything inward of here depends on the port, never on a concrete repository.
+// PRESENTATION/composition — the composition root. Wires the port to an
+// adapter and the use case to the port. UI stores import from here; the
+// stores themselves never instantiate the adapter directly (dependency rule).
 
-import { InMemoryUserRepository } from '../../infrastructure/InMemoryUserRepository'
-import { LocalStorageUserRepository } from '../../infrastructure/LocalStorageUserRepository'
-import { makeListUsersUseCase } from '../../application/use-cases/ListUsersUseCase'
-import { makeCreateUserUseCase } from '../../application/use-cases/CreateUserUseCase'
-import { makeToggleUserStatusUseCase } from '../../application/use-cases/ToggleUserStatusUseCase'
-import type { UserRepository, NewUserPayload } from '../../application/ports/UserRepository'
+import { InMemoryOrderRepo } from '../../infrastructure/InMemoryOrderRepo'
+import { makePlaceOrder } from '../../application/use-cases/placeOrder'
 
-export type AdapterName = 'in-memory' | 'localStorage'
+const orderRepo = new InMemoryOrderRepo()
+const placeOrder = makePlaceOrder(orderRepo)
 
-// Two adapters, one port. Swapping between them is the demo's whole thesis.
-const adapters: Record<AdapterName, UserRepository> = {
-  'in-memory': new InMemoryUserRepository(),
-  'localStorage': new LocalStorageUserRepository(),
-}
-
-let active: AdapterName = 'in-memory'
-
-export function setAdapter(name: AdapterName): void {
-  active = name
-}
-export function activeAdapter(): AdapterName {
-  return active
-}
-
-function repository(): UserRepository {
-  return adapters[active]
-}
-
-// Use cases are wired to whichever adapter is active *right now*. Because they
-// only ever touch the port, this rewiring is invisible to them.
-export const useCases = {
-  listUsers: () => makeListUsersUseCase(repository())(),
-  createUser: (payload: NewUserPayload) => makeCreateUserUseCase(repository())(payload),
-  toggleStatus: (id: string) => makeToggleUserStatusUseCase(repository())(id),
+export const container = {
+  orderRepo,
+  placeOrder,
 }

@@ -1,81 +1,53 @@
-// Explanatory content for each ring of the onion, distilled from the guide.
-// Kept as data so the interactive diagram and the detail panel share one source.
+// Content for the four layers, matching the exported design (the "Order" example).
+// Listed outer to inner: 01 Presentation (skin) down to 04 Domain (core).
 
-export type LayerId = 'domain' | 'application' | 'infrastructure' | 'presentation'
+export type LayerId = 'presentation' | 'infrastructure' | 'application' | 'domain'
 
-export interface LayerInfo {
+export interface Layer {
   id: LayerId
+  num: string
+  kicker: string
   name: string
-  oneLiner: string
-  dependsOn: string
-  lives: string[]
-  mustNot: string
-  example: string
-  inThisDemo: string
+  desc: string
+  code: string
+  color: string
 }
 
-export const LAYERS: Record<LayerId, LayerInfo> = {
-  domain: {
-    id: 'domain',
-    name: 'Domain',
-    oneLiner: 'Business concepts and rules, in their purest form. The part that would still be true with no UI and no server.',
-    dependsOn: 'Nothing at all',
-    lives: ['Entities', 'Value objects', 'Domain errors', 'Invariants'],
-    mustNot: 'Import a framework, do I/O, touch HTTP or localStorage, or know a UI exists.',
-    example: `class User {
-  get fullName() {
-    return \`\${this.firstName} \${this.lastName}\`
-  }
-  get statusLabel() {
-    return this.isActive ? 'ACTIVE' : 'INACTIVE'
-  }
-}`,
-    inThisDemo: 'src/domain/ — the User entity and DomainErrors.',
-  },
-  application: {
-    id: 'application',
-    name: 'Application',
-    oneLiner: 'Orchestrates one business operation: a use case. It coordinates the domain and the ports it needs.',
-    dependsOn: 'Domain + its own ports',
-    lives: ['Use cases', 'Ports (interfaces)'],
-    mustNot: 'Render anything, read reactive state, call an HTTP client, or depend on a concrete adapter.',
-    example: `function makeCreateUserUseCase(repo: UserRepository) {
-  return (payload) => {
-    // validate, then delegate to the PORT
-    return repo.create(payload)
-  }
-}`,
-    inThisDemo: 'src/application/ — use cases + the UserRepository port.',
-  },
-  infrastructure: {
-    id: 'infrastructure',
-    name: 'Infrastructure',
-    oneLiner: 'Adapters that talk to the outside world and map raw data into entities. The most replaceable ring.',
-    dependsOn: 'Domain + the ports it implements',
-    lives: ['HTTP client', 'Repositories', 'Realtime', 'Storage'],
-    mustNot: 'Contain business rules, or depend on Presentation.',
-    example: `class LocalStorageUserRepository
-  implements UserRepository {
-  async fetchAll() {
-    return this.read().map(r => new User(r))
-  }
-}`,
-    inThisDemo: 'src/infrastructure/ — two adapters for one port. Swap them with the toggle below.',
-  },
-  presentation: {
+export const LAYERS: Layer[] = [
+  {
     id: 'presentation',
+    num: '01',
+    kicker: 'Outer skin',
     name: 'Presentation',
-    oneLiner: 'Renders the UI, holds reactive state, and turns user intent into use-case calls.',
-    dependsOn: 'Application (and, through it, the Domain)',
-    lives: ['Views', 'Components', 'Stores', 'Router'],
-    mustNot: 'Call the HTTP client directly, embed business rules, or build entities from raw JSON.',
-    example: `const useUserStore = defineStore('users', () => {
-  async function load() {
-    users.value = await useCases.listUsers()
-  }
-})`,
-    inThisDemo: 'src/presentation/ — the Pinia stores and Vue components you are using right now.',
+    desc: 'UI, components and stores call use cases, and never touch HTTP directly.',
+    code: 'store.placeOrder()\n  → useCase.run(cmd)',
+    color: '#e26da0',
   },
-}
-
-export const ORDER: LayerId[] = ['presentation', 'infrastructure', 'application', 'domain']
+  {
+    id: 'infrastructure',
+    num: '02',
+    kicker: 'Replaceable ring',
+    name: 'Infrastructure',
+    desc: 'Adapters (HTTP, storage, repositories) implement the ports.',
+    code: 'class HttpOrderRepo\n  implements OrderPort',
+    color: '#c272a0',
+  },
+  {
+    id: 'application',
+    num: '03',
+    kicker: 'Orchestration',
+    name: 'Application',
+    desc: 'Use cases and ports orchestrate one operation, depending only on the domain.',
+    code: 'placeOrder(cmd, ports)\n  → order.confirm()',
+    color: '#e0b3cf',
+  },
+  {
+    id: 'domain',
+    num: '04',
+    kicker: 'The core',
+    name: 'Domain',
+    desc: 'Business rules and entities. No framework, no I/O, true with no UI or server.',
+    code: 'class Order {\n  confirm() { … }\n}',
+    color: '#f3c878',
+  },
+]
