@@ -1,14 +1,14 @@
-// PRESENTATION/composition — the composition root. Wires the port to an
-// adapter and the use case to the port. UI stores import from here; the
-// stores themselves never instantiate the adapter directly (dependency rule).
+// PRESENTATION / composition root. The one place allowed to know every layer.
+// It wires the concrete adapter to the port and the use case to the port, then
+// hands the rest of the UI a ready-to-call function. Components import from
+// here; they never instantiate an adapter themselves (the dependency rule).
 
-import { InMemoryOrderRepo } from '../../infrastructure/InMemoryOrderRepo'
-import { makePlaceOrder } from '../../application/use-cases/placeOrder'
+import { StaticLayerContent } from '../../infrastructure/StaticLayerContent'
+import { makeGetLayers } from '../../application/use-cases/getLayers'
 
-const orderRepo = new InMemoryOrderRepo()
-const placeOrder = makePlaceOrder(orderRepo)
+const content = new StaticLayerContent()
+const getLayers = makeGetLayers(content)
 
 export const container = {
-  orderRepo,
-  placeOrder,
+  getLayers,
 }
