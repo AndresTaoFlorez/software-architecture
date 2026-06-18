@@ -1,0 +1,72 @@
+:root {
+  --bg: #0a0a14;
+  --bg-2: #12121f;
+  --panel: rgba(22, 24, 40, 0.7);
+  --panel-solid: #161628;
+  --border: rgba(255, 255, 255, 0.09);
+  --border-bright: rgba(255, 255, 255, 0.18);
+  --text: #e8e8f0;
+  --text-dim: #9090a8;
+  --text-faint: #62627a;
+
+  /* One colour per layer, inner (warm) to outer (cool). */
+  --domain: #ffd479;
+  --application: #f0a868;
+  --infrastructure: #e0738f;
+  --presentation: #6ea8d8;
+
+  --good: #5ed3a0;
+  --bad: #ff6b7d;
+
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { min-height: 100vh; }
+
+body {
+  font-family: var(--sans);
+  background:
+    radial-gradient(ellipse at 20% 0%, #1d1d38 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 100%, #2a1b35 0%, transparent 55%),
+    var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--presentation); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+code, .mono { font-family: var(--mono); }
+
+button {
+  font-family: var(--sans);
+  cursor: pointer;
+  border: 1px solid var(--border-bright);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  border-radius: 9px;
+  padding: 9px 15px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  transition: all 0.16s ease;
+}
+button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); border-color: var(--border-bright); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+input {
+  font-family: var(--sans);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 0.88rem;
+  width: 100%;
+}
+input:focus { outline: none; border-color: var(--presentation); }
+
+::selection { background: rgba(110, 168, 216, 0.35); }
