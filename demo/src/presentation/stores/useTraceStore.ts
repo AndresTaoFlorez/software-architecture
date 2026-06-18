@@ -1,30 +1,27 @@
-// PRESENTATION — a small store that records the path a request takes through the
-// layers, purely so the UI can visualise it. This is a teaching aid, not part of
-// the architecture itself.
+// PRESENTATION — a Pinia store that holds the running flow trace. The onion
+// highlights its active layer from the most recent step, and the FlowTracer
+// renders the full list.
 
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-
-export type LayerName = 'View' | 'Store' | 'UseCase' | 'Repository' | 'Domain'
+import type { LayerId } from '../data/layers'
 
 export interface TraceStep {
-  id: number
-  layer: LayerName
-  label: string
+  layer: LayerId
+  message: string
+  ts: number
 }
 
 export const useTraceStore = defineStore('trace', () => {
   const steps = ref<TraceStep[]>([])
-  let counter = 0
 
-  function reset(): void {
+  function push(step: Omit<TraceStep, 'ts'>) {
+    steps.value.push({ ...step, ts: Date.now() })
+  }
+
+  function clear() {
     steps.value = []
-    counter = 0
   }
 
-  function push(layer: LayerName, label: string): void {
-    steps.value.push({ id: ++counter, layer, label })
-  }
-
-  return { steps, reset, push }
+  return { steps, push, clear }
 })

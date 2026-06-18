@@ -1,82 +1,129 @@
 <script setup lang="ts">
+// Panel to the right of the onion. Reads which layer is currently selected
+// (pinned by click) and shows its kicker, name, description, and a small
+// code snippet. When nothing is selected, falls back to a hint.
+
 import { computed } from 'vue'
 import { LAYERS, type LayerId } from '../data/layers'
 
-const props = defineProps<{ selected: LayerId | null }>()
-const info = computed(() => (props.selected ? LAYERS[props.selected] : null))
+const props = defineProps<{
+  selected: LayerId | null
+}>()
+
+const layer = computed(() =>
+  props.selected ? LAYERS.find((l) => l.id === props.selected) ?? null : null,
+)
 </script>
 
 <template>
   <div class="details">
-    <div v-if="!info" class="empty">
-      <h3>Explore the onion</h3>
-      <p>Pick a ring on the left to see what lives there, what it must never do, and the code that
-        proves it in this very app.</p>
+    <div v-if="layer" class="entry" :style="{ '--accent': layer.color }">
+      <span class="num mono">{{ layer.num }}</span>
+      <span class="kicker mono">{{ layer.kicker }}</span>
+      <h2 class="name">{{ layer.name }}</h2>
+      <p class="desc">{{ layer.desc }}</p>
+      <pre class="code"><code>{{ layer.code }}</code></pre>
     </div>
-
-    <div v-else class="content" :key="info.id" :style="{ '--accent': `var(--${info.id})` }">
-      <header>
-        <span class="dot"></span>
-        <h3>{{ info.name }}</h3>
-      </header>
-      <p class="one-liner">{{ info.oneLiner }}</p>
-
-      <div class="row">
-        <span class="key">Depends on</span>
-        <span class="val">{{ info.dependsOn }}</span>
-      </div>
-
-      <div class="row">
-        <span class="key">What lives here</span>
-        <span class="chips">
-          <span v-for="item in info.lives" :key="item" class="chip">{{ item }}</span>
-        </span>
-      </div>
-
-      <div class="row">
-        <span class="key">Must not</span>
-        <span class="val">{{ info.mustNot }}</span>
-      </div>
-
-      <pre class="code"><code>{{ info.example }}</code></pre>
-
-      <p class="in-demo"><strong>In this demo:</strong> {{ info.inThisDemo }}</p>
+    <div v-else class="placeholder">
+      <span class="kicker mono">Pick a layer</span>
+      <p>Hover or click any ring of the onion to see what that layer does.</p>
     </div>
   </div>
 </template>
 
 <style scoped>
-.details { min-height: 320px; }
-.empty h3 { font-size: 1rem; margin-bottom: 8px; }
-.empty p { color: var(--text-faint); font-size: 0.88rem; }
+.details {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 220px;
+}
 
-.content { animation: fade 0.3s ease; }
-@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.entry {
+  --accent: var(--domain);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 12px;
+  row-gap: 8px;
+  align-items: baseline;
+}
 
-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
-header h3 { font-size: 1.15rem; font-weight: 800; color: #fff; }
+.num {
+  grid-row: 1;
+  grid-column: 1;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  font-weight: 700;
+  text-transform: uppercase;
+  align-self: start;
+  padding-top: 2px;
+}
 
-.one-liner { color: var(--text-dim); font-size: 0.92rem; margin-bottom: 16px; }
+.kicker {
+  grid-row: 1;
+  grid-column: 2;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  text-transform: uppercase;
+  opacity: 0.85;
+}
 
-.row { display: flex; gap: 12px; padding: 9px 0; border-top: 1px solid var(--border); font-size: 0.85rem; }
-.key { font-family: var(--mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); flex: 0 0 110px; padding-top: 2px; }
-.val { color: var(--text-dim); }
+.name {
+  grid-row: 2;
+  grid-column: 1 / -1;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.1;
+}
 
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { font-family: var(--mono); font-size: 0.72rem; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.desc {
+  grid-row: 3;
+  grid-column: 1 / -1;
+  color: var(--text-dim);
+  font-size: 0.96rem;
+  margin: 0;
+}
 
 .code {
-  margin-top: 14px;
+  grid-row: 4;
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 14px 16px;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--border);
-  border-left: 2px solid var(--accent);
+  border-left: 3px solid var(--accent);
   border-radius: 8px;
-  padding: 12px 14px;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: var(--text);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
   overflow-x: auto;
 }
-.code code { font-family: var(--mono); font-size: 0.76rem; color: #cdd4e0; line-height: 1.55; white-space: pre; }
 
-.in-demo { margin-top: 14px; font-size: 0.82rem; color: var(--text-dim); }
-.in-demo strong { color: var(--accent); }
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.placeholder .kicker {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+
+.placeholder p {
+  color: var(--text-dim);
+  font-size: 0.94rem;
+  margin: 0;
+}
 </style>
