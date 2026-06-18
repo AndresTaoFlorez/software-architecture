@@ -22,7 +22,6 @@ const layer = computed(() =>
       <span class="kicker mono">{{ layer.kicker }}</span>
       <h2 class="name">{{ layer.name }}</h2>
       <p class="desc">{{ layer.desc }}</p>
-      <pre class="code"><code>{{ layer.code }}</code></pre>
     </div>
     <div v-else class="placeholder">
       <span class="kicker mono">Pick a layer</span>
@@ -88,24 +87,6 @@ const layer = computed(() =>
   color: var(--text-dim);
   font-size: 0.96rem;
   margin: 0;
-}
-
-.code {
-  grid-row: 4;
-  grid-column: 1 / -1;
-  margin: 0;
-  padding: 14px 16px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
-  border-radius: 8px;
-  font-family: var(--mono);
-  font-size: 0.82rem;
-  color: var(--text);
-  line-height: 1.55;
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow-x: auto;
 }
 
 .placeholder {
