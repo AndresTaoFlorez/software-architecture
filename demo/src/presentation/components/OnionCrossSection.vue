@@ -27,9 +27,12 @@ function onEnter(id: LayerId) { hovered.value = id }
 function onLeave(id: LayerId) { if (hovered.value === id) hovered.value = null }
 function onClick(id: LayerId) { emit('select', id) }
 
-// Concentric radii for the cross-section (skin is the outermost disc, not
-// a model layer). Each subsequent layer is a smaller disc inside.
-const layerR = [215, 175, 130, 80] // presentation, infrastructure, application, domain
+// Concentric radii for the cross-section. The outermost (presentation)
+// half-disc matches the sphere radius so the cutaway reads as a true cut:
+// the skin *is* the presentation layer. Each subsequent layer is a smaller
+// disc inside.
+const SPHERE_R = 240
+const layerR = [240, 192, 142, 86] // presentation, infrastructure, application, domain
 
 // Build the half-disc path for a given radius. Right side of the sphere.
 function halfDisc(r: number): string {
@@ -118,7 +121,7 @@ const colorOf = Object.fromEntries(LAYERS.map((l) => [l.id, l.color])) as Record
       <ellipse cx="300" cy="568" rx="200" ry="14" fill="url(#g-ground)" />
 
       <!-- 3D sphere (the outside of the onion, lit from top-left) -->
-      <circle cx="300" cy="300" r="240" fill="url(#g-skin)" />
+      <circle cx="300" cy="300" :r="SPHERE_R" fill="url(#g-skin)" />
 
       <!-- The four model layers, drawn as half-discs on the right (the cut).
            Each gets hover/click/focus; CSS dims siblings of the spotlit one. -->
@@ -159,7 +162,7 @@ const colorOf = Object.fromEntries(LAYERS.map((l) => [l.id, l.color])) as Record
       />
 
       <!-- Rim shadow on the sphere edges -->
-      <circle cx="300" cy="300" r="240" fill="url(#g-rim)" pointer-events="none" />
+      <circle cx="300" cy="300" :r="SPHERE_R" fill="url(#g-rim)" pointer-events="none" />
 
       <!-- Core glow, clipped to the cutaway so it doesn't bleed through
            the un-cut left half of the sphere. -->
