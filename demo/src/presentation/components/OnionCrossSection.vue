@@ -4,31 +4,28 @@
 // reads as a real rounded object. The right wedge is "cut": on top of the
 // sphere, concentric half-discs paint the cross-section, each with its
 // own gradient to give depth.
+//
+// Interaction: clicking a layer "peels" it — it translates outward and
+// rotates around the sphere's centre, exposing the layer behind. This
+// is the metaphor that actually uses the 3D depth.
 
 import { computed, ref } from 'vue'
 import { LAYERS, type LayerId } from '../data/layers'
 
 const props = defineProps<{
-  active: LayerId | null
+  peeled: LayerId | null
 }>()
 
 const emit = defineEmits<{
   (e: 'select', id: LayerId): void
 }>()
 
-// The selected layer is whatever the parent passed (live-traced or pinned).
 const hovered = ref<LayerId | null>(null)
-const spotlit = computed<LayerId | null>(() => props.active ?? hovered.value)
+const spotlit = computed<LayerId | null>(() => props.peeled ?? hovered.value)
 
-function onEnter(id: LayerId) {
-  hovered.value = id
-}
-function onLeave(id: LayerId) {
-  if (hovered.value === id) hovered.value = null
-}
-function onClick(id: LayerId) {
-  emit('select', id)
-}
+function onEnter(id: LayerId) { hovered.value = id }
+function onLeave(id: LayerId) { if (hovered.value === id) hovered.value = null }
+function onClick(id: LayerId) { emit('select', id) }
 
 // Concentric radii for the cross-section (skin is the outermost disc, not
 // a model layer). Each subsequent layer is a smaller disc inside.
@@ -134,6 +131,7 @@ const colorOf = Object.fromEntries(LAYERS.map((l) => [l.id, l.color])) as Record
         :class="{
           dim: spotlit !== null && spotlit !== l.id,
           spot: spotlit === l.id,
+          peel: peeled === l.id,
         }"
         :style="{ '--layer-color': colorOf[l.id] }"
         :data-layer="l.id"
@@ -209,20 +207,31 @@ const colorOf = Object.fromEntries(LAYERS.map((l) => [l.id, l.color])) as Record
   transition:
     opacity 280ms ease,
     filter 280ms ease,
-    transform 280ms ease;
+    transform 420ms ease-out;
   cursor: pointer;
   outline: none;
 }
 
 .layer.dim {
-  opacity: 0.32;
-  filter: saturate(0.55) brightness(0.85);
+  opacity: 0.5;
+  filter: saturate(0.6) brightness(0.88);
 }
 
 .layer.spot {
   opacity: 1;
   filter: brightness(1.18) drop-shadow(0 0 22px var(--layer-color, #fff));
-  transform: scale(1.04);
+}
+
+/* Peeling: the layer lifts off the surface, hinged at the sphere centre.
+   The longer drop-shadow gives it a sense of being physically above the
+   rest of the onion. */
+.layer.peel {
+  opacity: 1;
+  transform: translateX(64px) rotate(8deg);
+  filter:
+    brightness(1.22)
+    drop-shadow(0 6px 12px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 0 22px var(--layer-color, #fff));
 }
 
 .wisps,

@@ -1,10 +1,22 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import OnionDiagram from './presentation/components/OnionCrossSection.vue'
 import LayerDetails from './presentation/components/LayerDetails.vue'
 import type { LayerId } from './presentation/data/layers'
 
-const selected = ref<LayerId | null>('domain')
+// The peeled layer is the single source of truth. The LayerDetails panel
+// mirrors it (so clicking a layer both peels the onion AND swaps the
+// right-side text). Default to 'domain' so the page loads with the core
+// already peeled, which doubles as a hint that the interaction exists.
+const peeled = ref<LayerId | null>('domain')
+
+const selected = computed(() => peeled.value)
+
+function onLayerClick(id: LayerId) {
+  // Toggle: clicking the already-peeled layer closes it; clicking a
+  // different layer moves the peel.
+  peeled.value = peeled.value === id ? null : id
+}
 
 const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
 </script>
@@ -15,15 +27,15 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
       <div class="badge mono">Onion Architecture · interactive</div>
       <h1>Peel the onion.</h1>
       <p class="lede">
-        Frontend Onion Architecture, made tangible. Click a layer to learn what it does.
-        Built straight from the
+        Frontend Onion Architecture, made tangible. Click a layer to peel it open and learn what
+        it does. Built straight from the
         <a :href="GUIDE" target="_blank" rel="noopener">architecture guide</a>.
       </p>
     </header>
 
     <section class="explore">
       <div class="card onion-card">
-        <OnionDiagram :active="selected" @select="selected = $event" />
+        <OnionDiagram :peeled="peeled" @select="onLayerClick" />
       </div>
       <div class="card details-card">
         <LayerDetails :selected="selected" />
