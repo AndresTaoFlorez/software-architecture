@@ -555,9 +555,9 @@ and [§9](#9-scaling-from-startup-to-enterprise) revisits when a growing codebas
 access out of components and behind a store/use-case boundary is consistent with the official guidance to
 treat stores as the place that coordinates state and side-effect-bearing actions [Vue/Pinia docs]. The
 benefit is concrete: the entire UI can be replaced without touching a single business rule, because the UI
-only ever consumes use cases. Conventions for organizing components by feature and for placing their styles
-and animations are covered in [§8.5](#85-feature-based-component-organization--presentation) and
-[§8.6](#86-styling--animation-architecture--presentation).
+only ever consumes use cases. Conventions for organizing components by feature are covered in
+[§8.5](#85-feature-based-component-organization--presentation); placing their styles and animations is covered
+in the companion document [styling-and-animation.md](styling-and-animation.md).
 
 ---
 
@@ -978,7 +978,7 @@ src/
     ├── components/        # grouped by feature + a shared/ folder (see §8.5)
     ├── stores/            # camelCase: useUserStore.js
     ├── router/            # route definitions + guards
-    └── styles/            # design tokens + component styles (see §8.6)
+    └── styles/            # design tokens + component styles (see styling-and-animation.md)
 ```
 
 **Conventions.**
@@ -995,7 +995,7 @@ src/
   markup, reserving inline styles for genuinely runtime-driven values (positions, computed sizes, per-entity
   colors). This keeps the Presentation layer's components focused on structure and behavior. Two layouts for
   those dedicated style and animation files — a mirrored `styles/` tree or colocation in the feature folder —
-  are described in [§8.6](#86-styling--animation-architecture--presentation).
+  are described in the companion document [styling-and-animation.md](styling-and-animation.md).
 - **Components by feature.** Group components into feature folders (`components/auth/`, `components/orders/`)
   with a `shared/` folder for cross-feature primitives, rather than a flat `components/` directory — see
   [§8.5](#85-feature-based-component-organization--presentation).
@@ -1077,78 +1077,10 @@ the home of the pieces, the view is the assembly point.
 
 ### 8.6 Styling & animation architecture — *Presentation*
 
-Where should a component's styles and its imperative animations (a GSAP timeline, a scroll trigger, an
-anime.js sequence) live? Two arrangements are recommended. Both share one goal — a component's visual
-concerns are **findable and movable as a unit** — and differ only in *where* the files sit.
-
-**What counts as a "styling concern" here.** A component's scoped CSS or CSS Module, plus any animation
-script that exists *only to give the component shape, motion, or visual behavior*. These are Presentation
-details that decorate a component without being part of its logic; the component **imports** them rather
-than inlining them. This extends the §7 convention of keeping structural styles out of component markup to
-also cover animation code.
-
-**Approach A — a mirrored `styles/` tree.** The `styles/` folder mirrors the shape of `components/`,
-holding the CSS and animation files that correspond to each component:
-
-```
-presentation/
-├── components/
-│   └── auth/
-│       ├── LoginForm.vue        # imports its style/animation by absolute path
-│       └── SignupForm.vue
-└── styles/
-    └── auth/
-        ├── LoginForm.css
-        ├── LoginForm.gsap.js
-        ├── SignupForm.css
-        └── SignupForm.gsap.js
-```
-
-```js
-// presentation/components/auth/LoginForm.vue  (script)
-import '@/presentation/styles/auth/LoginForm.css'
-import { playEntrance } from '@/presentation/styles/auth/LoginForm.gsap.js'
-```
-
-*When it fits.* A dedicated design or motion owner who works across the visual layer without touching
-component logic; a wish to see "all the styling" gathered in one place; or a shared design-token system that
-already lives under `styles/`. The cost: a component and its appearance sit in two trees, so moving or
-deleting a feature means editing both.
-
-**Approach B — colocation inside the feature folder.** The CSS and animation files sit *next to* the
-component that owns them:
-
-```
-presentation/
-└── components/
-    └── auth/
-        ├── LoginForm.vue
-        ├── LoginForm.css
-        ├── LoginForm.gsap.js
-        ├── SignupForm.vue
-        └── SignupForm.css
-```
-
-```js
-// presentation/components/auth/LoginForm.vue  (script)
-import './LoginForm.css'
-import { playEntrance } from './LoginForm.gsap.js'
-```
-
-*When it fits.* Most application work. The component and everything that gives it form travel as one unit:
-move the folder and nothing breaks; delete the feature and no orphaned CSS is left behind. This is the
-colocation principle applied to styling — "place code as close to where it's relevant as possible"
-[Dodds 2019] — and it pairs naturally with the feature folders of [§8.5](#85-feature-based-component-organization--presentation).
-
-**Choosing.** Default to **Approach B (colocation)**; it has the fewest moving parts and the strongest
-"things that change together live together" property. Reach for **Approach A (mirror)** when an
-organizational reason — a separate styling owner, a shared token pipeline, a design system — makes a
-standalone visual tree worth its coordination cost. Either way two rules hold: the component *imports* its
-styles and animations rather than embedding them, and the chosen layout is applied consistently so a reader
-always knows where a component's appearance lives. Vue's single-file components also support `<style scoped>`
-and `<style module>` for styles small and intrinsic enough to stay in the file; the external-file approaches
-above are for when styling and animation grow beyond what comfortably belongs inline [Vue SFC docs; GSAP
-docs].
+Where a component's styles and imperative animations (GSAP timelines, scroll triggers) should live — the
+mirrored `styles/` tree vs. colocation in the feature folder, and when to choose each — is covered in its own
+companion document: **[styling-and-animation.md](styling-and-animation.md)**. It is a Presentation-layer
+detail, kept separate so this guide stays focused on the four core layers.
 
 ---
 
