@@ -30,13 +30,11 @@ export function useCameraFocus(opts: Options) {
   const desiredPos = DEFAULT_POS.clone()
   const desiredTarget = DEFAULT_TARGET.clone()
   let animating = false
-  let autoRotateWanted = !opts.reduceMotion
 
   function computeFor(id: LayerId | null) {
     if (id === null) {
       desiredPos.copy(DEFAULT_POS)
       desiredTarget.copy(DEFAULT_TARGET)
-      autoRotateWanted = !opts.reduceMotion
       return
     }
     const layer = opts.layers.find((l) => l.id === id)
@@ -47,7 +45,6 @@ export function useCameraFocus(opts: Options) {
     // Closer for inner layers (depth 0..3 -> 6.0..3.2).
     const dist = 6.0 - depth * 0.95
     desiredPos.copy(desiredTarget).addScaledVector(DIR, dist)
-    autoRotateWanted = false
   }
 
   function start() {
@@ -58,16 +55,12 @@ export function useCameraFocus(opts: Options) {
       cam?.position.copy(desiredPos)
       if (ctr) {
         ctr.target.copy(desiredTarget)
-        ctr.autoRotate = autoRotateWanted
         ctr.update?.()
       }
       animating = false
       return
     }
-    if (ctr) {
-      ctr.enabled = false
-      ctr.autoRotate = false
-    }
+    if (ctr) ctr.enabled = false
     animating = true
   }
 
@@ -84,7 +77,6 @@ export function useCameraFocus(opts: Options) {
       cam.position.copy(desiredPos)
       ctr.target.copy(desiredTarget)
       ctr.enabled = true
-      ctr.autoRotate = autoRotateWanted
       ctr.update?.()
       animating = false
     }
