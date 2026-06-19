@@ -55,6 +55,11 @@ function resetView() {
   active.value = null
 }
 
+function closePanel() {
+  stopTour()
+  active.value = null
+}
+
 const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
 </script>
 
@@ -82,7 +87,7 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
       <header class="masthead">
         <span class="kicker">Onion Architecture</span>
         <h1 class="title">Inside a clean app.</h1>
-        <p class="sub">A 3D onion you can take apart, layer by layer.</p>
+        <p class="sub">Drag to look around, scroll to zoom, click a layer to dive in.</p>
       </header>
 
       <!-- Layer legend / table of contents -->
@@ -106,11 +111,6 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
         </button>
       </nav>
 
-      <!-- Lesson card -->
-      <div class="panel-slot">
-        <TeachingPanel :layer="activeLayer" />
-      </div>
-
       <!-- The one rule -->
       <footer class="footrule">
         <p class="rule">
@@ -120,6 +120,14 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
         <a :href="GUIDE" target="_blank" rel="noopener">Read the full guide →</a>
       </footer>
     </div>
+
+    <!-- Floating lesson card: compact, only while a layer is selected -->
+    <transition name="card">
+      <div v-if="activeLayer" class="panel-float">
+        <button class="panel-close" type="button" @click="closePanel" aria-label="Close">×</button>
+        <TeachingPanel :layer="activeLayer" />
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -176,12 +184,12 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
   inset: 0;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(220px, 320px) 1fr minmax(320px, 400px);
+  grid-template-columns: minmax(220px, 300px) 1fr;
   grid-template-rows: auto 1fr auto;
   grid-template-areas:
-    'mast  .     panel'
-    'legend .    panel'
-    'foot  foot  panel';
+    'mast  .'
+    'legend .'
+    'foot  .';
   gap: 24px;
   padding: 32px 32px 28px;
   pointer-events: none;
@@ -262,12 +270,46 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
   color: var(--text-faint);
 }
 
-.panel-slot {
-  grid-area: panel;
-  align-self: center;
-  justify-self: end;
-  max-height: 100%;
+.panel-float {
+  position: absolute;
+  right: 24px;
+  bottom: 84px;
+  z-index: 2;
+  width: min(360px, calc(100vw - 32px));
+  max-height: 66vh;
   overflow-y: auto;
+  pointer-events: auto;
+}
+.panel-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 3;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(20, 12, 22, 0.85);
+  color: var(--text-dim);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.panel-close:hover {
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.34);
+}
+.card-enter-active,
+.card-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.card-enter-from,
+.card-leave-to {
+  opacity: 0;
+  transform: translateY(12px);
 }
 
 .footrule {
@@ -297,15 +339,19 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
 @media (max-width: 980px) {
   .overlay {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto 1fr auto;
+    grid-template-rows: auto auto auto;
     grid-template-areas:
       'mast'
       'legend'
-      'panel'
       'foot';
-    overflow-y: auto;
   }
-  .panel-slot { justify-self: stretch; align-self: start; }
-  .legend { width: 100%; }
+  .legend { width: 100%; max-width: 340px; }
+  .panel-float {
+    left: 16px;
+    right: 16px;
+    bottom: 78px;
+    width: auto;
+    max-height: 52vh;
+  }
 }
 </style>

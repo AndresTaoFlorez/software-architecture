@@ -50,16 +50,9 @@ function onHover(id: LayerId | null) {
 <template>
   <TresCanvas clear-color="#0a070c" :alpha="false" :window-size="true">
     <TresPerspectiveCamera :position="[4.4, 3.2, 5.8]" :fov="42" :look-at="[0, 0, 0]" />
-    <OrbitControls
-      make-default
-      :enable-pan="false"
-      :enable-damping="true"
-      :min-distance="3"
-      :max-distance="11"
-      :auto-rotate="!reduceMotion"
-      :auto-rotate-speed="0.4"
-      :target="[0, 0, 0]"
-    />
+    <!-- Google-Maps-style navigation is configured imperatively in CameraRig
+         (pan, zoom-to-cursor, damping); no auto-rotate so it sits still. -->
+    <OrbitControls make-default :enable-damping="true" :target="[0, 0, 0]" />
 
     <!-- Lighting: soft fill + key light + warm glow from the core -->
     <TresAmbientLight :intensity="0.5" />

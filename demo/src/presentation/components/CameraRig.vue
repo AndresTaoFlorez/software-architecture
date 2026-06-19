@@ -3,7 +3,7 @@
 // the camera-focus loop inside the TresJS context. It pulls the live camera
 // and controls from the context and hands them to useCameraFocus.
 
-import { toRef } from 'vue'
+import { toRef, watchEffect } from 'vue'
 import { useTresContext } from '@tresjs/core'
 import { useCameraFocus } from '../composables/useCameraFocus'
 import type { ArchitectureLayer, LayerId } from '../../domain/entities/ArchitectureLayer'
@@ -16,6 +16,24 @@ const props = defineProps<{
 }>()
 
 const ctx = useTresContext()
+
+// Google-Maps-style feel: drag to look around, scroll to zoom toward the
+// cursor, drag with right button / two fingers to pan. No auto-rotation.
+watchEffect(() => {
+  const c = (ctx.controls as any)?.value
+  if (!c) return
+  c.enablePan = true
+  c.screenSpacePanning = true
+  c.zoomToCursor = true
+  c.panSpeed = 0.9
+  c.zoomSpeed = 1.15
+  c.rotateSpeed = 0.7
+  c.autoRotate = false
+  c.minDistance = 1.8
+  c.maxDistance = 20
+  c.dampingFactor = 0.1
+  c.update?.()
+})
 
 useCameraFocus({
   active: toRef(props, 'active'),
