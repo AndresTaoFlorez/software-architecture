@@ -10,7 +10,6 @@ import type { ArchitectureLayer, LayerId } from '../../domain/entities/Architect
 
 interface Options {
   active: Ref<LayerId | null>
-  resetSignal: Ref<number>
   layers: ArchitectureLayer[]
   reduceMotion: boolean
   getCamera: () => any
@@ -89,11 +88,26 @@ export function useCameraFocus(opts: Options) {
       start()
     },
   )
-  watch(
-    () => opts.resetSignal.value,
-    () => {
-      computeFor(null)
-      start()
-    },
-  )
+
+  // Recenter to the default framing.
+  function reset() {
+    computeFor(null)
+    start()
+  }
+
+  // Dolly the camera toward (factor < 1) or away from (factor > 1) the target,
+  // clamped to the controls' distance limits. Powers the +/- zoom buttons.
+  function zoomBy(factor: number) {
+    const cam = opts.getCamera()
+    const ctr = opts.getControls()
+    if (!cam || !ctr) return
+    const offset = cam.position.clone().sub(ctr.target)
+    const min = ctr.minDistance ?? 1.8
+    const max = ctr.maxDistance ?? 20
+    const len = Math.min(Math.max(offset.length() * factor, min), max)
+    cam.position.copy(ctr.target).addScaledVector(offset.normalize(), len)
+    ctr.update?.()
+  }
+
+  return { reset, zoomBy }
 }

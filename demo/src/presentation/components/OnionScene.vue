@@ -31,12 +31,21 @@ const reduceMotion =
   typeof window !== 'undefined' &&
   !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
-// Bumping this signal tells the CameraRig to fly back to the default framing.
-const resetSignal = ref(0)
-function resetView() {
-  resetSignal.value++
+// Camera API supplied by the CameraRig once it is inside the canvas context.
+let rigApi: { reset: () => void; zoomBy: (f: number) => void } = {
+  reset: () => {},
+  zoomBy: () => {},
 }
-defineExpose({ resetView })
+function onRigReady(api: typeof rigApi) {
+  rigApi = api
+}
+function resetView() {
+  rigApi.reset()
+}
+function zoomBy(factor: number) {
+  rigApi.zoomBy(factor)
+}
+defineExpose({ resetView, zoomBy })
 
 const core = layers.find((l) => l.isCore)!
 const coreColor = new Color(core.color)
@@ -73,9 +82,9 @@ function onHover(id: LayerId | null) {
 
     <CameraRig
       :active="active"
-      :reset-signal="resetSignal"
       :layers="layers"
       :reduce-motion="reduceMotion"
+      @ready="onRigReady"
     />
 
     <!-- Grounding shadow under the onion -->
