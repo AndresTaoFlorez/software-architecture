@@ -20,6 +20,7 @@ const props = defineProps<{ active: LayerId | null }>()
 const emit = defineEmits<{
   (e: 'select', id: LayerId): void
   (e: 'hover', id: LayerId | null): void
+  (e: 'ready'): void
 }>()
 
 const layers = container.getLayers()
@@ -38,6 +39,7 @@ let rigApi: { reset: () => void; zoomBy: (f: number) => void } = {
 }
 function onRigReady(api: typeof rigApi) {
   rigApi = api
+  emit('ready')
 }
 function resetView() {
   rigApi.reset()

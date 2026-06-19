@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import OnionScene from './presentation/components/OnionScene.vue'
 import TeachingPanel from './presentation/components/TeachingPanel.vue'
 import { useDraggable } from './presentation/composables/useDraggable'
@@ -14,6 +14,16 @@ const spotlit = computed(() => active.value ?? hovered.value)
 const activeLayer = computed(() => layers.find((l) => l.id === active.value) ?? null)
 
 const scene = ref<InstanceType<typeof OnionScene> | null>(null)
+
+// Splash while the 3D bundle + scene initialise (avoids a blank first paint).
+const loading = ref(true)
+function onSceneReady() {
+  loading.value = false
+}
+onMounted(() => {
+  // Safety net: never let the splash get stuck if 'ready' is missed.
+  window.setTimeout(() => (loading.value = false), 7000)
+})
 
 // Guided tour: step skin -> core on a timer.
 const touring = ref(false)
@@ -78,8 +88,26 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
   <div class="app">
     <!-- 3D stage -->
     <div class="stage">
-      <OnionScene ref="scene" :active="active" @select="select" @hover="(id) => (hovered = id)" />
+      <OnionScene
+        ref="scene"
+        :active="active"
+        @select="select"
+        @hover="(id) => (hovered = id)"
+        @ready="onSceneReady"
+      />
     </div>
+
+    <!-- Loading splash -->
+    <transition name="splash">
+      <div v-if="loading" class="splash">
+        <div class="splash-onion">
+          <span class="splash-ring r1" />
+          <span class="splash-ring r2" />
+          <span class="splash-core" />
+        </div>
+        <p class="splash-text">Peeling the onion…</p>
+      </div>
+    </transition>
 
     <!-- Minimal chrome over the scene -->
     <div class="ui">
@@ -160,6 +188,71 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
   inset: 0;
   z-index: 0;
 }
+
+/* Loading splash */
+.splash {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  background: radial-gradient(circle at 50% 42%, #1a0c18, var(--bg) 70%);
+}
+.splash-onion {
+  position: relative;
+  width: 84px;
+  height: 84px;
+}
+.splash-ring {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+.splash-ring.r1 {
+  width: 84px;
+  height: 84px;
+  border-top-color: #e2618f;
+  border-right-color: #b56aa6;
+  animation: spin 1.1s linear infinite;
+}
+.splash-ring.r2 {
+  width: 54px;
+  height: 54px;
+  border-bottom-color: #e7b2d0;
+  border-left-color: #f4c95f;
+  animation: spin 0.8s linear infinite reverse;
+}
+.splash-core {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f4c95f;
+  box-shadow: 0 0 22px 4px rgba(244, 201, 95, 0.7);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+.splash-text {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse {
+  0%, 100% { opacity: 0.75; transform: scale(0.92); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+.splash-leave-active { transition: opacity 0.5s ease; }
+.splash-leave-to { opacity: 0; }
 
 /* Chrome layer: transparent to pointer except its widgets */
 .ui {
