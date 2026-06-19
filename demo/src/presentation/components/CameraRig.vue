@@ -1,18 +1,10 @@
 <script setup lang="ts">
-// PRESENTATION — a render-less child of the canvas whose only job is to host
-// the camera-focus loop inside the TresJS context. It pulls the live camera
-// and controls from the context and hands them to useCameraFocus.
+// PRESENTATION — a render-less child of the canvas. It configures the controls
+// for a Google-Earth feel and hands a small camera API up to the scene.
 
-import { onMounted, toRef, watchEffect } from 'vue'
+import { onMounted, watchEffect } from 'vue'
 import { useTresContext } from '@tresjs/core'
 import { useCameraFocus } from '../composables/useCameraFocus'
-import type { ArchitectureLayer, LayerId } from '../../domain/entities/ArchitectureLayer'
-
-const props = defineProps<{
-  active: LayerId | null
-  layers: ArchitectureLayer[]
-  reduceMotion: boolean
-}>()
 
 const emit = defineEmits<{
   (e: 'ready', api: { reset: () => void; zoomBy: (f: number) => void }): void
@@ -20,8 +12,8 @@ const emit = defineEmits<{
 
 const ctx = useTresContext()
 
-// Google-Maps-style feel: drag to look around, scroll to zoom toward the
-// cursor, drag with right button / two fingers to pan. No auto-rotation.
+// Drag to look around, scroll to zoom toward the cursor, drag with the right
+// button / two fingers to pan. No auto-rotation.
 watchEffect(() => {
   const c = (ctx.controls as any)?.value
   if (!c) return
@@ -33,21 +25,18 @@ watchEffect(() => {
   c.rotateSpeed = 0.7
   c.autoRotate = false
   c.minDistance = 1.8
-  c.maxDistance = 20
-  c.dampingFactor = 0.1
+  c.maxDistance = 22
+  c.dampingFactor = 0.12
   c.update?.()
 })
 
+const narrow = typeof window !== 'undefined' && window.innerWidth < 640
 const api = useCameraFocus({
-  active: toRef(props, 'active'),
-  layers: props.layers,
-  reduceMotion: props.reduceMotion,
   getCamera: () => (ctx.camera as any)?.value,
   getControls: () => (ctx.controls as any)?.value,
+  home: narrow ? [6.2, 4.5, 8.2] : [4.4, 3.2, 5.8],
 })
 
-// Hand the camera API up to the scene (closures fetch controls lazily, so this
-// is safe to emit before the controls instance exists).
 onMounted(() => emit('ready', api))
 </script>
 
