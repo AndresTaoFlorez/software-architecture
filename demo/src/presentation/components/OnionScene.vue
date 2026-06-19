@@ -4,7 +4,7 @@
 // inward dependency motes and the camera rig. Selection state comes from the
 // parent; hover is local. Exposes resetView() to recentre the camera.
 
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { Color } from 'three'
 import { TresCanvas } from '@tresjs/core'
 import { OrbitControls, ContactShadows } from '@tresjs/cientos'
@@ -31,6 +31,20 @@ const spotlit = computed<LayerId | null>(() => props.active ?? hovered.value)
 const reduceMotion =
   typeof window !== 'undefined' &&
   !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+// Narrow viewports: pull the camera back so the whole onion fits, and drop the
+// floating 3D labels (they clip off-screen — the bottom dock already names the
+// layers). Tracked reactively so a rotate to landscape brings the labels back.
+const innerW = () => (typeof window !== 'undefined' ? window.innerWidth : 1280)
+const isNarrow = ref(innerW() < 760)
+function onResize() {
+  isNarrow.value = innerW() < 760
+}
+onMounted(() => window.addEventListener('resize', onResize))
+onBeforeUnmount(() => window.removeEventListener('resize', onResize))
+
+// Initial framing, picked once at mount (the user can zoom afterwards).
+const camPos: [number, number, number] = innerW() < 640 ? [6.2, 4.5, 8.2] : [4.4, 3.2, 5.8]
 
 // Camera API supplied by the CameraRig once it is inside the canvas context.
 let rigApi: { reset: () => void; zoomBy: (f: number) => void } = {
@@ -60,7 +74,7 @@ function onHover(id: LayerId | null) {
 
 <template>
   <TresCanvas clear-color="#0a070c" :alpha="false" :window-size="true">
-    <TresPerspectiveCamera :position="[4.4, 3.2, 5.8]" :fov="42" :look-at="[0, 0, 0]" />
+    <TresPerspectiveCamera :position="camPos" :fov="42" :look-at="[0, 0, 0]" />
     <!-- Google-Maps-style navigation is configured imperatively in CameraRig
          (pan, zoom-to-cursor, damping); no auto-rotate so it sits still. -->
     <OrbitControls make-default :enable-damping="true" :target="[0, 0, 0]" />
@@ -78,16 +92,16 @@ function onHover(id: LayerId | null) {
       @hover="onHover"
     />
 
-    <LayerLabels :layers="layers" :spotlit="spotlit" @select="emit('select', $event)" />
+    <LayerLabels
+      v-if="!isNarrow"
+      :layers="layers"
+      :spotlit="spotlit"
+      @select="emit('select', $event)"
+    />
 
     <DependencyFlow :reduce-motion="reduceMotion" />
 
-    <CameraRig
-      :active="active"
-      :layers="layers"
-      :reduce-motion="reduceMotion"
-      @ready="onRigReady"
-    />
+    <CameraRig @ready="onRigReady" />
 
     <!-- Grounding shadow under the onion -->
     <ContactShadows

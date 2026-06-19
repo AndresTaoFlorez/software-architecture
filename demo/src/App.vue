@@ -75,8 +75,9 @@ function zoomOut() {
 }
 
 // Drag for the floating lesson window; re-anchor each time it opens.
+const windowEl = ref<HTMLElement | null>(null)
 const { offset: dragOffset, dragging: isDragging, onPointerDown: onDragStart, reset: resetDrag } =
-  useDraggable()
+  useDraggable(windowEl)
 watch(active, (v) => {
   if (v) resetDrag()
 })
@@ -159,14 +160,14 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
     <!-- Draggable lesson window (bottom sheet on mobile) -->
     <transition name="card">
       <div
+        ref="windowEl"
         v-if="activeLayer"
         class="window"
         :class="{ dragging: isDragging }"
         :style="{ transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)` }"
       >
         <div class="winbar" @pointerdown="onDragStart">
-          <span class="grip" aria-hidden="true">⠿</span>
-          <span class="winname" :style="{ color: activeLayer.color }">{{ activeLayer.name }}</span>
+          <span class="grab" aria-hidden="true" />
           <button class="winclose" type="button" @click="closePanel" aria-label="Close">×</button>
         </div>
         <div class="winbody">
@@ -263,6 +264,11 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
 }
 .ui > * {
   pointer-events: auto;
+}
+/* Non-interactive text must not block orbiting the scene underneath. */
+.masthead,
+.one-rule {
+  pointer-events: none;
 }
 
 /* Masthead, top-left */
@@ -425,40 +431,42 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
 /* Draggable lesson window */
 .window {
   position: absolute;
-  top: 74px;
+  top: 72px;
   right: 24px;
   z-index: 3;
-  width: min(360px, calc(100vw - 32px));
-  max-height: calc(100vh - 150px);
+  width: min(358px, calc(100vw - 32px));
+  max-height: min(560px, calc(100dvh - 120px));
   display: flex;
   flex-direction: column;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(18, 11, 20, 0.82);
+  background: rgba(18, 11, 20, 0.86);
   backdrop-filter: blur(16px);
   box-shadow: 0 26px 64px rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
 .window.dragging { box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6); }
 .winbar {
+  position: relative;
+  flex: 0 0 auto;
+  height: 26px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  justify-content: center;
   cursor: grab;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   touch-action: none;
 }
 .winbar:active { cursor: grabbing; }
-.grip { color: var(--text-faint); font-size: 0.9rem; letter-spacing: -2px; }
-.winname {
-  flex: 1;
-  font-family: var(--display);
-  font-weight: 600;
-  font-size: 0.95rem;
-  letter-spacing: -0.01em;
+.grab {
+  width: 38px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
 }
 .winclose {
+  position: absolute;
+  top: 4px;
+  right: 8px;
   width: 26px;
   height: 26px;
   border-radius: 8px;
@@ -471,7 +479,10 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
 }
 .winclose:hover { color: var(--text); background: rgba(255, 255, 255, 0.08); }
 .winbody {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 /* Merge the teaching panel into the window chrome */
 .winbody :deep(.panel) {
@@ -494,27 +505,40 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
   transform: translateY(12px);
 }
 
-/* Mobile: window becomes a bottom sheet, dock + controls compact */
+/* Mobile: dock to the top, controls to the right edge, lesson as a scrollable
+   bottom sheet that never buries the dock or controls. */
 @media (max-width: 760px) {
-  .masthead { top: 18px; left: 18px; }
-  .guide { top: 18px; right: 18px; }
+  .masthead { top: 14px; left: 14px; max-width: 64vw; }
+  .masthead .hint { display: none; }
+  .title { font-size: 1.4rem; margin: 4px 0; }
+  .guide { top: 14px; right: 14px; padding: 6px 11px; }
   .one-rule { display: none; }
+
   .dock {
-    left: 16px;
-    right: 96px;
+    top: 68px;
+    bottom: auto;
+    left: 12px;
+    right: 12px;
     transform: none;
     max-width: none;
-    bottom: 18px;
+    justify-content: flex-start;
   }
-  .controls { right: 16px; bottom: 18px; flex-direction: row; }
-  .ctl-div { width: 1px; height: auto; margin: 6px 2px; }
+
+  .controls {
+    right: 12px;
+    top: auto;
+    bottom: calc(48dvh + 14px);
+    transform: none;
+    flex-direction: column;
+  }
+
   .window {
     top: auto;
     left: 0;
     right: 0;
     bottom: 0;
     width: auto;
-    max-height: 56vh;
+    max-height: 48dvh;
     border-radius: 18px 18px 0 0;
     transform: none !important;
   }
