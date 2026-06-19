@@ -15,11 +15,42 @@ const activeLayer = computed(() => layers.find((l) => l.id === active.value) ?? 
 
 const scene = ref<InstanceType<typeof OnionScene> | null>(null)
 
+// Guided tour: step through the layers from skin to core on a timer.
+const touring = ref(false)
+let tourTimer = 0
+function stopTour() {
+  touring.value = false
+  if (tourTimer) {
+    clearInterval(tourTimer)
+    tourTimer = 0
+  }
+}
+function startTour() {
+  stopTour()
+  touring.value = true
+  const ids = layers.map((l) => l.id)
+  let i = 0
+  active.value = ids[0]
+  tourTimer = window.setInterval(() => {
+    i++
+    if (i >= ids.length) {
+      stopTour()
+      return
+    }
+    active.value = ids[i]
+  }, 3400)
+}
+function toggleTour() {
+  touring.value ? stopTour() : startTour()
+}
+
 function select(id: LayerId) {
+  stopTour()
   active.value = active.value === id ? null : id
 }
 
 function resetView() {
+  stopTour()
   scene.value?.resetView()
   active.value = null
 }
@@ -34,10 +65,17 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
       <OnionScene ref="scene" :active="active" @select="select" @hover="(id) => (hovered = id)" />
     </div>
 
-    <!-- Recenter the camera to its default framing -->
-    <button class="reset-btn" type="button" @click="resetView" title="Recenter the onion">
-      <span class="reset-ico" aria-hidden="true">⟲</span> Reset view
-    </button>
+    <!-- Scene controls -->
+    <div class="scene-controls">
+      <button class="ctl-btn tour" type="button" @click="toggleTour"
+              :title="touring ? 'Stop the tour' : 'Take a guided tour'">
+        <span class="ctl-ico" aria-hidden="true">{{ touring ? '■' : '▶' }}</span>
+        {{ touring ? 'Stop tour' : 'Take the tour' }}
+      </button>
+      <button class="ctl-btn" type="button" @click="resetView" title="Recenter the onion">
+        <span class="ctl-ico" aria-hidden="true">⟲</span> Reset view
+      </button>
+    </div>
 
     <!-- Floating UI -->
     <div class="overlay">
@@ -98,11 +136,15 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
   z-index: 0;
 }
 
-.reset-btn {
+.scene-controls {
   position: absolute;
   right: 24px;
   bottom: 22px;
   z-index: 2;
+  display: flex;
+  gap: 10px;
+}
+.ctl-btn {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -118,12 +160,16 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
   cursor: pointer;
   transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
 }
-.reset-btn:hover {
+.ctl-btn:hover {
   border-color: rgba(255, 255, 255, 0.3);
   background: rgba(32, 20, 34, 0.82);
   transform: translateY(-1px);
 }
-.reset-ico { font-size: 1rem; }
+.ctl-btn.tour {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  color: #fff;
+}
+.ctl-ico { font-size: 0.92rem; }
 
 .overlay {
   position: absolute;

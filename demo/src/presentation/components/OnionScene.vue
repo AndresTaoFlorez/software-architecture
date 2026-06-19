@@ -1,13 +1,18 @@
 <script setup lang="ts">
-// PRESENTATION — the 3D onion. Nested spheres are carved open with two
-// clipping planes (a quarter wedge removed, facing the camera). DoubleSide
-// materials let you look into the concave shells, and an emissive core lights
-// the interior. Orbit to rotate, scroll to zoom, click a shell to study it.
+// PRESENTATION — the scene orchestrator. Sets up the canvas, camera, lights,
+// orbit controls and bloom, then composes the onion body, the ring labels, the
+// inward dependency motes and the camera rig. Selection state comes from the
+// parent; hover is local. Exposes resetView() to recentre the camera.
 
 import { computed, ref } from 'vue'
-import { DoubleSide, Color, MathUtils } from 'three'
+import { Color } from 'three'
 import { TresCanvas } from '@tresjs/core'
-import { OrbitControls } from '@tresjs/cientos'
+import { OrbitControls, ContactShadows } from '@tresjs/cientos'
+import { EffectComposerPmndrs, BloomPmndrs, VignettePmndrs } from '@tresjs/post-processing'
+import OnionBody from './OnionBody.vue'
+import LayerLabels from './LayerLabels.vue'
+import DependencyFlow from './DependencyFlow.vue'
+import CameraRig from './CameraRig.vue'
 import { container } from '../composition/container'
 import type { LayerId } from '../../domain/entities/ArchitectureLayer'
 
@@ -19,101 +24,86 @@ const emit = defineEmits<{
 
 const layers = container.getLayers()
 
-const controlsRef = ref<any>(null)
-function resetView() {
-  const c = controlsRef.value?.instance ?? controlsRef.value?.value ?? controlsRef.value
-  c?.reset?.()
-}
-defineExpose({ resetView })
-
 const hovered = ref<LayerId | null>(null)
 const spotlit = computed<LayerId | null>(() => props.active ?? hovered.value)
 
-// Each shell is a partial sphere with a quarter wedge missing, baked straight
-// into the geometry (no renderer clipping needed). phiStart = PI, phiLength =
-// 1.5*PI leaves a 90-degree gap facing the +X/+Z corner, i.e. the camera, so
-// you look straight into the nested, concave shells.
-const PHI_START = Math.PI
-const PHI_LENGTH = MathUtils.degToRad(270)
-
 const reduceMotion =
   typeof window !== 'undefined' &&
-  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
-function opacityFor(id: LayerId): number {
-  if (spotlit.value === null) return 0.96
-  return spotlit.value === id ? 1 : 0.16
+// Bumping this signal tells the CameraRig to fly back to the default framing.
+const resetSignal = ref(0)
+function resetView() {
+  resetSignal.value++
 }
-
-function emissiveFor(id: LayerId): number {
-  if (spotlit.value === id) return 0.55
-  return 0.12
-}
-
-function enter(id: LayerId) {
-  hovered.value = id
-  emit('hover', id)
-}
-function leave(id: LayerId) {
-  if (hovered.value === id) {
-    hovered.value = null
-    emit('hover', null)
-  }
-}
+defineExpose({ resetView })
 
 const core = layers.find((l) => l.isCore)!
 const coreColor = new Color(core.color)
+
+function onHover(id: LayerId | null) {
+  hovered.value = id
+  emit('hover', id)
+}
 </script>
 
 <template>
   <TresCanvas clear-color="#0a070c" :alpha="false" :window-size="true">
     <TresPerspectiveCamera :position="[4.4, 3.2, 5.8]" :fov="42" :look-at="[0, 0, 0]" />
     <OrbitControls
-      ref="controlsRef"
+      make-default
       :enable-pan="false"
       :enable-damping="true"
       :min-distance="3"
       :max-distance="11"
       :auto-rotate="!reduceMotion"
-      :auto-rotate-speed="0.45"
+      :auto-rotate-speed="0.4"
       :target="[0, 0, 0]"
     />
 
-    <!-- Lighting: soft fill + a warm glow radiating from the core -->
-    <TresAmbientLight :intensity="0.55" />
-    <TresDirectionalLight :position="[5, 6, 4]" :intensity="1.1" />
-    <TresPointLight :position="[0, 0, 0]" :color="coreColor" :intensity="14" :distance="6" :decay="2" />
+    <!-- Lighting: soft fill + key light + warm glow from the core -->
+    <TresAmbientLight :intensity="0.5" />
+    <TresDirectionalLight :position="[5, 6, 4]" :intensity="1.05" />
+    <TresPointLight :position="[0, 0, 0]" :color="coreColor" :intensity="16" :distance="6.5" :decay="2" />
 
-    <!-- The four nested shells, outer skin to inner -->
-    <TresMesh
-      v-for="l in layers"
-      :key="l.id"
-      @click="emit('select', l.id)"
-      @pointer-enter="enter(l.id)"
-      @pointer-leave="leave(l.id)"
-    >
-      <TresSphereGeometry :args="[l.radius, 96, 64, PHI_START, PHI_LENGTH]" />
-      <TresMeshStandardMaterial
-        :color="l.color"
-        :emissive="l.color"
-        :emissive-intensity="emissiveFor(l.id)"
-        :roughness="0.5"
-        :metalness="0.05"
-        :side="DoubleSide"
-        :transparent="true"
-        :opacity="opacityFor(l.id)"
-      />
-    </TresMesh>
+    <OnionBody
+      :layers="layers"
+      :spotlit="spotlit"
+      :reduce-motion="reduceMotion"
+      @select="emit('select', $event)"
+      @hover="onHover"
+    />
 
-    <!-- Glowing domain core (never clipped) -->
-    <TresMesh :position="[0, 0, 0]">
-      <TresSphereGeometry :args="[0.42, 48, 48]" />
-      <TresMeshStandardMaterial
-        :color="coreColor"
-        :emissive="coreColor"
-        :emissive-intensity="1.4"
-        :roughness="0.3"
+    <LayerLabels :layers="layers" :spotlit="spotlit" @select="emit('select', $event)" />
+
+    <DependencyFlow :reduce-motion="reduceMotion" />
+
+    <CameraRig
+      :active="active"
+      :reset-signal="resetSignal"
+      :layers="layers"
+      :reduce-motion="reduceMotion"
+    />
+
+    <!-- Grounding shadow under the onion -->
+    <ContactShadows
+      :position="[0, -2.1, 0]"
+      :opacity="0.55"
+      :scale="9"
+      :blur="2.6"
+      :far="4"
+      color="#000000"
+    />
+
+    <!-- Glow + vignette -->
+    <EffectComposerPmndrs>
+      <BloomPmndrs
+        :intensity="0.85"
+        :luminance-threshold="0.55"
+        :luminance-smoothing="0.32"
+        mipmap-blur
       />
-    </TresMesh>
+      <VignettePmndrs :darkness="0.72" :offset="0.32" />
+    </EffectComposerPmndrs>
   </TresCanvas>
 </template>
