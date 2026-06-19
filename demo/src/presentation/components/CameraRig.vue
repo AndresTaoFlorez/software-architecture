@@ -3,16 +3,19 @@
 // the camera-focus loop inside the TresJS context. It pulls the live camera
 // and controls from the context and hands them to useCameraFocus.
 
-import { toRef, watchEffect } from 'vue'
+import { onMounted, toRef, watchEffect } from 'vue'
 import { useTresContext } from '@tresjs/core'
 import { useCameraFocus } from '../composables/useCameraFocus'
 import type { ArchitectureLayer, LayerId } from '../../domain/entities/ArchitectureLayer'
 
 const props = defineProps<{
   active: LayerId | null
-  resetSignal: number
   layers: ArchitectureLayer[]
   reduceMotion: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'ready', api: { reset: () => void; zoomBy: (f: number) => void }): void
 }>()
 
 const ctx = useTresContext()
@@ -35,14 +38,17 @@ watchEffect(() => {
   c.update?.()
 })
 
-useCameraFocus({
+const api = useCameraFocus({
   active: toRef(props, 'active'),
-  resetSignal: toRef(props, 'resetSignal'),
   layers: props.layers,
   reduceMotion: props.reduceMotion,
   getCamera: () => (ctx.camera as any)?.value,
   getControls: () => (ctx.controls as any)?.value,
 })
+
+// Hand the camera API up to the scene (closures fetch controls lazily, so this
+// is safe to emit before the controls instance exists).
+onMounted(() => emit('ready', api))
 </script>
 
 <template>
