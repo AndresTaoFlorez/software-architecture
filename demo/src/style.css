@@ -10,7 +10,7 @@
   --text-dim: #c3b3bf;
   --text-faint: #8a7886;
   --rule: rgba(255, 255, 255, 0.12);
-  --accent: #e2618f;
+  --accent: #ec3a78;
 
   color-scheme: dark;
 }
@@ -21,7 +21,7 @@ html,
 body,
 #app {
   margin: 0;
-  height: 100%;
+  min-height: 100%;
   width: 100%;
 }
 
@@ -31,7 +31,6 @@ body {
   font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow: hidden;
 }
 
 a {
