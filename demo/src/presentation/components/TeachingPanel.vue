@@ -67,9 +67,8 @@ const ringR = [27, 20, 13, 6]
         </div>
       </div>
       <p class="role">
-        This is your app, sliced open. Each glowing shell is one layer of its
-        architecture. <strong>Drag</strong> to spin it, <strong>scroll</strong> to zoom,
-        and <strong>click any shell</strong> (or a name on the left) to learn what it does.
+        This is your app, drawn as four layers. <strong>Tap any band</strong> — from the
+        outer skin down to the core — to see what that layer does and why it matters.
       </p>
       <p class="analogy">
         <span class="analogy-icon">🎯</span>
