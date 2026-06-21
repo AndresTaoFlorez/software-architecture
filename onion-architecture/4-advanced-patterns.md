@@ -1,4 +1,4 @@
-> **[Onion Architecture for the Frontend](README.md)** › Appendix, Advanced Patterns. Full reference list: [§10 References](README.md#10-references).
+> **[Onion Architecture](README.md)** › Appendix, Advanced Patterns. Full reference list: [References](references.md).
 
 ## 8. Appendix: Advanced Patterns (Bonus)
 

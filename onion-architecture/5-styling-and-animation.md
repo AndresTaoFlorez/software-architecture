@@ -1,10 +1,10 @@
 # Styling & Animation Architecture (Presentation)
 
-> A companion to the [Onion Architecture for the Frontend](README.md) guide. This is a **Presentation-layer**
+> A companion to the [Onion Architecture](README.md) guide. This is a **Presentation-layer**
 > concern, extracted into its own document so the core guide stays focused on the four layers. It expands on
 > the §7 convention of keeping structural styles out of component markup
-> ([Naming & Conventions](README.md#7-naming--conventions-portable-defaults)) and pairs with feature-based
-> component organization ([§8.5](3-advanced-patterns.md#85-feature-based-component-organization-presentation)).
+> ([Naming & Conventions](README.md#naming--conventions)) and pairs with feature-based
+> component organization ([§8.5](4-advanced-patterns.md#85-feature-based-component-organization-presentation)).
 
 Where should a component's styles and its imperative animations (a GSAP timeline, a scroll trigger, an
 anime.js sequence) live? Two arrangements are recommended. Both share one goal, a component's visual
@@ -71,7 +71,7 @@ import { playEntrance } from './LoginForm.gsap.js'
 move the folder and nothing breaks; delete the feature and no orphaned CSS is left behind. This is the
 colocation principle applied to styling, "place code as close to where it's relevant as possible"
 [Dodds 2019], and it pairs naturally with the feature folders of
-[§8.5](3-advanced-patterns.md#85-feature-based-component-organization-presentation).
+[§8.5](4-advanced-patterns.md#85-feature-based-component-organization-presentation).
 
 ## Choosing
 

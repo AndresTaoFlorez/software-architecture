@@ -1,4 +1,4 @@
-> **[Onion Architecture for the Frontend](README.md)** › Testing the Layers. Full reference list: [§10 References](README.md#10-references).
+> **[Onion Architecture](README.md)** › Testing the Layers. Full reference list: [References](references.md).
 
 ## 5. Testing the Layers
 
@@ -67,7 +67,7 @@ it buys the most coverage per second, at the base.
 
 ### 5.4 Per-layer testing
 
-Each layer below follows a compact template parallel to [§3](1-the-four-layers.md#3-the-four-layers):
+Each layer below follows a compact template parallel to [§3](1-the-rings.md#3-the-four-layers):
 **What to test · What to substitute · Example · Justification.**
 
 #### Domain: substitute nothing
@@ -127,7 +127,7 @@ it('maps the form to the API payload and delegates to the port', async () => {
 ```
 
 **The inversion gap, made visible.** The real `createUserUseCase` does *not* accept an injected
-repository today, it `import`s the concrete `UserRepository` directly ([§4.3](README.md#43-the-inversion-gap)).
+repository today, it `import`s the concrete `UserRepository` directly ([§4.3](2-inward-dependencies.md#43-the-inversion-gap)).
 There is therefore no seam to inject a fake, so the test must reach up into an outer ring and replace the
 whole module:
 
@@ -226,7 +226,7 @@ test completely from transport and from business logic.
 
 ### 5.5 What each layer's tests substitute
 
-Just as [§4.1](README.md#41-allowed-and-forbidden-imports) reduces the Dependency Rule to a check on `import`
+Just as [§4.1](2-inward-dependencies.md#41-allowed-and-forbidden-imports) reduces the Dependency Rule to a check on `import`
 statements, the test strategy reduces to a check on *what each layer's tests are allowed to replace*:
 
 ```
@@ -245,7 +245,7 @@ in the test suite [Khorikov 2020].
 ### 5.6 Where tests live
 
 Co-locate each test with the code it covers, in a sibling `__tests__/` folder, mirroring the naming
-conventions of [§7](README.md#7-naming--conventions-portable-defaults):
+conventions of [§7](README.md#naming--conventions):
 
 ```
 src/
