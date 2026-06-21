@@ -1,4 +1,4 @@
-> **[Onion Architecture for the Frontend](README.md)** › Scaling: From Startup to Enterprise. Full reference list: [§10 References](README.md#10-references).
+> **[Onion Architecture](README.md)** › Scaling: From Startup to Enterprise. Full reference list: [References](references.md).
 
 ## 9. Scaling: From Startup to Enterprise
 
@@ -9,7 +9,7 @@ org. The reassuring thesis first:
 > **The four layers never change. What changes is how dependencies are *wired* and how the code is
 > *partitioned*, and both change in response to headcount and codebase size, not to taste.**
 
-Domain, Application, Infrastructure, and Presentation remain exactly as defined in [§3](1-the-four-layers.md#3-the-four-layers) at
+Domain, Application, Infrastructure, and Presentation remain exactly as defined in [§3](1-the-rings.md#3-the-four-layers) at
 every phase below. A 500-engineer company and a solo founder draw the same four rings. The difference is
 purely mechanical: how the adapter gets injected into the use case, and where the folder boundaries fall.
 
@@ -163,7 +163,7 @@ Concrete signals that you are operating in one phase but need the next phase's t
   as headcount rises. The fix here is organizational design, not another architectural layer, the clearest
   sign that you have reached the limit of what architecture alone can solve.
 
-The honest boundary leak named in [§3.4](1-the-four-layers.md#34-presentation-outermost), a store importing `TOKEN_KEY` and
+The honest boundary leak named in [§3.4](1-the-rings.md#34-presentation-outermost), a store importing `TOKEN_KEY` and
 `wsClient` straight from Infrastructure, is a Phase-1 trade-off. It is invisible at ten engineers and
 intolerable at two hundred; closing it behind a port is precisely the kind of debt each phase transition pays
 down deliberately rather than all at once.

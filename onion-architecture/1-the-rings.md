@@ -1,6 +1,7 @@
-> **[Onion Architecture for the Frontend](README.md)** › The Four Layers. Full reference list: [§10 References](README.md#10-references).
+> **[Onion Architecture](README.md)** › The Rings. Full reference list: [References](references.md).
 
-## 3. The Four Layers
+## 3. The Rings: The Four Layers
+<a id="3-the-four-layers"></a>
 
 Each layer below is described with the same template:
 **Responsibility · What lives here · What it must not do · Dependency direction · Generic example ·
@@ -134,7 +135,7 @@ react precisely, exactly what the Presentation store does in [§3.4](#34-present
 contain "enterprise-wide critical business rules" [Martin 2017]. A rich domain model placed at the center
 of the system is the core recommendation of Domain-Driven Design [Evans 2003]. Keeping this layer free of
 I/O is what allows it to be unit-tested with no mocks and reused unchanged across transports, the
-mechanism is detailed in [§5.4](2-testing.md#54-per-layer-testing).
+mechanism is detailed in [§5.4](3-testing-in-onion.md#54-per-layer-testing).
 
 ---
 
@@ -207,8 +208,8 @@ export async function createUserUseCase({ firstName, firstSurname, email, passwo
 ```
 
 Note the first line: the use case currently imports a *concrete* repository. That is the one deviation
-from the canonical model, addressed deliberately in [§4.3](README.md#43-the-inversion-gap), and, as
-[§5.4](2-testing.md#54-per-layer-testing) shows, it has a measurable cost the moment you try to test this file.
+from the canonical model, addressed deliberately in [§4.3](2-inward-dependencies.md#43-the-inversion-gap), and, as
+[§5.4](3-testing-in-onion.md#54-per-layer-testing) shows, it has a measurable cost the moment you try to test this file.
 
 **Orchestration is more than delegation.** `CreateUserUseCase` is deliberately thin, but a use case is also
 where *application-level* validation lives and where infrastructure failures are translated back into the
@@ -426,14 +427,14 @@ reading derived state (such as `isAuthenticated`) rather than implementing auth 
 logout). That is a small, deliberate leak of the Dependency Rule: a store reaching into Infrastructure rather
 than going through a port. It is tolerated because both are *cross-cutting session concerns* with no business
 logic, and isolating them behind ports would add ceremony for little gain at this project's size. Naming the
-leak is the point, it is the same kind of pragmatic deviation catalogued in [§4.3](README.md#43-the-inversion-gap),
-and [§9](4-scaling.md#9-scaling-from-startup-to-enterprise) revisits when a growing codebase should pay to close it.
+leak is the point, it is the same kind of pragmatic deviation catalogued in [§4.3](2-inward-dependencies.md#43-the-inversion-gap),
+and [§9](6-scaling.md#9-scaling-from-startup-to-enterprise) revisits when a growing codebase should pay to close it.
 
 **Justification.** Frameworks belong in the outermost ring as a "detail" [Martin 2017]. Keeping data
 access out of components and behind a store/use-case boundary is consistent with the official guidance to
 treat stores as the place that coordinates state and side-effect-bearing actions [Vue/Pinia docs]. The
 benefit is concrete: the entire UI can be replaced without touching a single business rule, because the UI
 only ever consumes use cases. Conventions for organizing components by feature are covered in
-[§8.5](3-advanced-patterns.md#85-feature-based-component-organization-presentation); placing their styles and animations is covered
+[§8.5](4-advanced-patterns.md#85-feature-based-component-organization-presentation); placing their styles and animations is covered
 in the companion document [styling-and-animation.md](5-styling-and-animation.md).
 
