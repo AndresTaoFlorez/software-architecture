@@ -24,5 +24,7 @@ The sources most central to MVC and its variants are marked ★.
 - **Vue.js & Pinia documentation.** https://vuejs.org/ · https://pinia.vuejs.org/ (Reactive binding and
   stores — the framework machinery that automates MVC's observer step into MVVM.)
 
-For the whole-application architectures this pattern fits inside, see the companion
-**[Clean](../clean-architecture)** and **[Onion](../onion-architecture)** guides.
+For MVC's direct descendant — the pattern component frameworks actually implement — see the
+companion **[MVVM guide](../model-view-viewmodel)**. For the whole-application architectures this
+pattern fits inside, see the **[Clean](../clean-architecture)** and **[Onion](../onion-architecture)**
+guides.
