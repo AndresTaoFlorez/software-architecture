@@ -62,7 +62,8 @@ canonical map [Fowler]; the summary:
 - **MVVM** [Gossman 2005; Fowler's "Presentation Model"]. A **ViewModel** holds the View's state in
   display-ready form. A framework binding layer keeps View and ViewModel synchronized automatically, so no
   one writes the observer wiring by hand. This is the lineage modern frontend frameworks descend from —
-  see [MVC on the Frontend](3-mvc-on-the-frontend.md).
+  see [MVC on the Frontend](3-mvc-on-the-frontend.md), and the dedicated
+  [MVVM guide](../model-view-viewmodel) for the pattern on its own terms.
 
 All three keep the same Model and the same separated-presentation principle. They differ only in how step
 3–4 of the cycle — getting a Model change onto the screen — is accomplished.

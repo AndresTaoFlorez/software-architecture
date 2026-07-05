@@ -4,7 +4,7 @@
 > four concentric rings. Written to be applied to any new project, and to be defensible: every
 > prescriptive claim is tied to a verifiable source in [References](references.md).
 
-← Back to [Clean & Onion overview](../README.md) · Compare with the [Clean Architecture guide](../clean-architecture)
+← Back to [architecture overview](../README.md) · Compare with the [Clean Architecture guide](../clean-architecture)
 
 ---
 

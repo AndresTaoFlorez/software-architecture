@@ -4,7 +4,8 @@
 
 Modern component frameworks are routinely called "MVC," but that label is imprecise. This page names what
 they actually are, then shows how to apply MVC's real value — separated presentation — inside a component
-app, and inside an Onion or Clean architecture.
+app, and inside an Onion or Clean architecture. The pattern this page concludes frameworks really use has
+a dedicated guide of its own: **[Model-View-ViewModel](../model-view-viewmodel)**.
 
 ---
 

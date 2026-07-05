@@ -4,7 +4,7 @@
 > *sees* (View), and what turns input into change (Controller). Every prescriptive claim is tied to a
 > source in [References](references.md).
 
-← Back to [Clean & Onion overview](../README.md) · See also the [Clean](../clean-architecture) and [Onion](../onion-architecture) guides
+← Back to [architecture overview](../README.md) · See also the [MVVM](../model-view-viewmodel), [Clean](../clean-architecture) and [Onion](../onion-architecture) guides
 
 ---
 
