@@ -111,4 +111,6 @@ exactly what it was invented to do [Gossman 2005].
 
 ---
 
-Back to the **[MVVM index](README.md)** · See the full **[References](references.md)**.
+Next: **[MVVM in React + Redux Toolkit](5-mvvm-in-react-redux.md)** — the mapping pinned to one
+stack: slices, selectors, RTK Query at the infrastructure seam, and the use-case layer as a
+deliberate addition.
