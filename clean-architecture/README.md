@@ -5,7 +5,7 @@
 > Interface Adapters, and Frameworks & Drivers. Every prescriptive claim is tied to a source in
 > [References](references.md).
 
-← Back to [Clean & Onion overview](../README.md) · Compare with the [Onion Architecture guide](../onion-architecture)
+← Back to [architecture overview](../README.md) · Compare with the [Onion Architecture guide](../onion-architecture)
 
 ---
 
