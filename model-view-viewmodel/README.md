@@ -30,6 +30,7 @@ this guide describes the pattern on its own terms.
 - **[2 · The Binding](2-the-binding.md)** — how automatic synchronization replaces the observer, and what it costs
 - **[3 · MVVM on the Frontend](3-mvvm-on-the-frontend.md)** — stores, hooks, and composables as ViewModels; the fat-ViewModel failure mode; MVVM inside Clean and Onion; the pattern at Microsoft, Google, Airbnb, and Vue
 - **[4 · Testing in MVVM](4-testing-in-mvvm.md)** — the headless ViewModel test, the pattern's original justification
+- **[5 · MVVM in React + Redux Toolkit](5-mvvm-in-react-redux.md)** — the mapping pinned to one stack: slices and selectors as the shared ViewModel, RTK Query at the infrastructure seam, the use-case layer as a deliberate addition
 - **[References](references.md)** — every cited source
 
 ---
