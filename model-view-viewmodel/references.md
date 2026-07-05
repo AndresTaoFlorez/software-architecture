@@ -54,6 +54,19 @@ The sources most central to MVVM are marked ★. All URLs verified reachable as 
 - **React documentation.** https://react.dev/ (One-way data flow and hooks — the narrowed-write-path
   end of the binding dial discussed in [The Binding §2.3](2-the-binding.md).)
 
+### The pattern in Redux Toolkit (cited in [§5](5-mvvm-in-react-redux.md))
+
+- **Redux.** *Redux Style Guide*. redux.js.org. ("Put as Much Logic as Possible in Reducers";
+  "Use Selector Functions to Read from Store State" — the extraction MVVM gives a name to.)
+  https://redux.js.org/style-guide/
+- **Redux Toolkit.** *RTK Query Overview*. redux-toolkit.js.org. ("RTK Query is a powerful data
+  fetching and caching tool" — the store-resident HTTP client split at the infrastructure seam in
+  [§5.2](5-mvvm-in-react-redux.md#52-rtk-query-sits-at-the-infrastructure-seam).)
+  https://redux-toolkit.js.org/rtk-query/overview
+- **Testing Library.** *renderHook*. testing-library.com. (The minimal harness React hooks
+  require to test headless.)
+  https://testing-library.com/docs/react-testing-library/api/#renderhook
+
 For the ancestor pattern, see the companion **[MVC guide](../model-view-controller)**. For the
 whole-application architectures this pattern fits inside, see the
 **[Clean](../clean-architecture)** and **[Onion](../onion-architecture)** guides.
