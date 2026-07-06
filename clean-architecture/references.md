@@ -34,6 +34,12 @@ The sources most central to Clean Architecture are marked ★.
   https://www.melconway.com/Home/Committees_Paper.html
 - **Nx & Turborepo documentation.** *Monorepo build systems with enforced project boundaries.* (Module-
   boundary lint rules that make the Dependency Rule checkable in CI.) https://nx.dev/ · https://turborepo.com/
+- **Dodds, K. C.** (2019). *Colocation.* (Place code as close as possible to where it is relevant; the basis
+  for feature folders and colocated styles.) https://kentcdodds.com/blog/colocation
+- **Feature-Sliced Design.** *Architectural methodology for frontend projects.* (Feature-first slicing of the
+  Presentation layer.) https://feature-sliced.design/
+- **Vue.js.** *SFC CSS Features.* (`<style scoped>` and `<style module>` for intrinsic component styles.)
+  https://vuejs.org/api/sfc-css-features.html
 
 For the same model expressed as concentric rings — plus advanced patterns, styling, and scaling — see the
 companion **[Onion Architecture guide](../onion-architecture)**.
