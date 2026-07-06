@@ -22,7 +22,7 @@ Clean and Onion are alternatives to each other. MVC and MVVM are **not** alterna
 
 ### [Clean Architecture](./clean-architecture)
 
-Start here to understand the **Dependency Rule** and how it shapes code: how entities stay independent, how use cases orchestrate them, and why frameworks and databases are "details." Covers dependency injection, composition roots, and scaling.
+Start here to understand the **Dependency Rule** and how it shapes code: how entities stay independent, how use cases orchestrate them, and why frameworks and databases are "details." An eight-part path covering **frontend and backend**: the four layers defined, project structure and import boundaries, a feature built end-to-end, testing, dependency injection and composition roots, scaling, and the same four circles on the server.
 
 ### [Onion Architecture](./onion-architecture)
 

@@ -46,7 +46,7 @@ test('onAdd looks up the product and adds it to the cart', () => {
 
 Note the seam: the Controller depends on the Model through its public methods, so a fake slots in exactly
 where the real Model would. This is the same port-and-fake substitution that
-[Clean Architecture's Test Boundary](../clean-architecture/3-testing-in-clean.md) describes — a test is just
+[Clean Architecture's Test Boundary](../clean-architecture/5-testing-in-clean.md) describes — a test is just
 another collaborator plugged into a known seam.
 
 ---

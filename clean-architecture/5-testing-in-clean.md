@@ -1,13 +1,13 @@
 > **[Clean Architecture](README.md)** › Testing. Full reference list: [References](references.md).
 
-## 3. Testing in Clean Architecture
+## 5. Testing in Clean Architecture
 
 Testability is not a separate discipline bolted onto Clean Architecture — it is the design's most
 immediate dividend. The same rule that forbids an inner circle from naming an outer one is what guarantees
 that, in a test, every outer collaborator can be replaced by a substitute under the test's control
 [Cockburn 2005; Martin 2017].
 
-### 3.1 A test is just another adapter
+### 5.1 A test is just another adapter
 
 Martin places automated tests in the outermost circle, as another kind of *detail* that consumes the
 application through the same boundaries the UI does — the **Test Boundary** [Martin 2017, ch. 28]. The
@@ -27,7 +27,7 @@ circles, not on the volatile outer details.** A test that drives the UI to asser
 coupled to two things that change for unrelated reasons — the rule and the markup. A test that calls the
 use case directly is coupled only to the rule.
 
-### 3.2 The test pyramid mapped onto the circles
+### 5.2 The test pyramid mapped onto the circles
 
 The classic test pyramid [Cohn 2009; Vocke 2018] maps cleanly onto the four circles. Cost rises and
 desired quantity falls as you move outward:
@@ -42,7 +42,7 @@ desired quantity falls as you move outward:
 Most of your tests should sit in the bottom two rows, because that is where most of the *meaning* lives and
 where tests are cheapest to write and slowest to rot.
 
-### 3.3 Why the inner circles are cheap to test
+### 5.3 Why the inner circles are cheap to test
 
 An Entity test needs no setup at all — construct the object, assert a getter:
 
@@ -73,7 +73,7 @@ at the bundler level, which is exactly the kind of brittle, implementation-coupl
 exists to avoid. **The test you have to write is feedback on the design you chose** — if a unit is hard to
 test, it is usually depending outward.
 
-### 3.4 Test doubles, named
+### 5.4 Test doubles, named
 
 Use the precise vocabulary [Meszaros 2007; Fowler 2007] rather than calling everything a "mock":
 
@@ -87,12 +87,12 @@ Prefer **fakes and stubs over mocks** for port boundaries: assert the observable
 sequence of internal calls. Over-mocking couples a test to *how* a unit works rather than *what* it does,
 and that is the most common cause of tests that break on every refactor [Khorikov 2020].
 
-### 3.5 Where tests live
+### 5.5 Where tests live
 
 Co-locate tests in `__tests__/` siblings, named `<Unit>.test.js`, mirroring the circle they cover. A test
 substitutes exactly one circle outward — the boundary the unit under test depends on — and no further.
 
 ---
 
-Next: **[Composition & Dependency Injection](4-composition-and-di.md)** — the one place allowed to name
+Next: **[Composition & Dependency Injection](6-composition-and-di.md)** — the one place allowed to name
 both a port and its concrete adapter.
