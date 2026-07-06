@@ -66,7 +66,8 @@ Read the guide in order — each page is a consequence of the one before it.
 2. **[The Four Layers](2-the-four-layers.md)** — each circle in depth: responsibility, what lives there,
    what it must not do, and a worked example.
 3. **[Project Structure & Conventions](3-project-structure.md)** — the folder layout, naming, and import
-   boundaries that make the rule visible on disk and enforceable in CI.
+   boundaries that make the rule visible on disk and enforceable in CI — plus how to structure the
+   Presentation UI itself: components grouped by feature, and where styles and animations live.
 4. **[Building a Feature End-to-End](4-building-a-feature.md)** — a getting-started walkthrough: create
    "create user" from the core outward, wiring all four layers into a working flow.
 5. **[Testing in Clean Architecture](5-testing-in-clean.md)** — the Test Boundary; a test is just another
