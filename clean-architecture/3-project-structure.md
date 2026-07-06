@@ -110,5 +110,83 @@ that someone reverses by accident fails the build instead of shipping [Nx & Turb
 
 ---
 
+### 3.4 Structuring the outermost circle: the Presentation UI
+
+The tree in [§3.1](#31-the-folder-layout) stops at `frameworks/ui/` — but that folder is where a real
+frontend spends most of its files, and left unstructured it degrades fastest. Clean Architecture says the UI
+is a *detail* in the outermost circle; it says nothing about how to organize that detail internally. These
+are the conventions that keep it from rotting.
+
+**Group components by feature, not by kind.** A flat `frameworks/ui/components/` directory becomes a bag of
+unrelated files where `LoginForm` sits beside `OrderCard` and a generic `Button`. Group by the **feature**
+(or domain area) each component serves, with a `shared/` folder for genuinely cross-feature primitives:
+
+```
+frameworks/ui/
+├── components/
+│   ├── shared/              # cross-feature primitives: BaseButton, BaseModal, Badge
+│   │   ├── BaseButton.vue
+│   │   └── BaseModal.vue
+│   ├── auth/                # everything the auth feature renders
+│   │   ├── LoginForm.vue
+│   │   └── UserMenu.vue
+│   └── orders/
+│       ├── OrderList.vue
+│       ├── OrderCard.vue
+│       └── OrderFilters.vue
+├── views/                   # route-level components that *compose* feature components
+│   ├── LoginView.vue
+│   └── OrdersView.vue
+├── stores/                  # reactive UI state that calls use cases (camelCase)
+│   └── useUsersStore.js
+└── router/                  # route definitions + guards
+```
+
+The rule of thumb: a component lives in a feature folder when it is meaningful *only* to that feature; it
+graduates to `shared/` only once a **second** feature genuinely needs it. Resist promoting early — a
+premature `shared/` becomes its own junk drawer, the very problem feature folders exist to solve. A
+route-level component in `views/` then *composes* feature components: the feature folder is the home of the
+pieces, the view is the assembly point.
+
+This is the same "screaming architecture" instinct the top-level layer folders express [Martin 2017], applied
+one level down: the folder names announce *what the UI is about* (auth, orders) before *what the pieces are*
+(forms, cards). It also follows the colocation principle — code that changes together lives together
+[Dodds 2019] — and is formalized by Feature-Sliced Design [Feature-Sliced Design].
+
+### 3.5 Styles & animation: keep them out of the markup
+
+A component's structural styles and its imperative animations (a GSAP timeline, a scroll trigger) are
+Presentation details that *decorate* a component without being part of its logic. Keep them in dedicated
+files the component **imports**, rather than inlining large blocks in the markup. Two layouts work; both keep
+a component's visual concerns findable and movable as a unit, and differ only in *where* the files sit.
+
+**Approach A — colocation (default).** The CSS and animation files sit next to the component that owns them:
+
+```
+frameworks/ui/components/auth/
+├── LoginForm.vue        // imports './LoginForm.css' and './LoginForm.gsap.js'
+├── LoginForm.css
+├── LoginForm.gsap.js
+└── UserMenu.vue
+```
+
+The component and everything that gives it form travel as one unit: move the folder and nothing breaks;
+delete the feature and no orphaned CSS is left behind [Dodds 2019]. This fits most application work.
+
+**Approach B — a mirrored `styles/` tree.** A `styles/` folder mirrors the shape of `components/`, holding
+the CSS and animation files per component (`styles/auth/LoginForm.css`, referenced by absolute path). Reach
+for it when an organizational reason justifies a standalone visual tree: a separate design/motion owner who
+works across the UI without touching component logic, or a shared design-token pipeline that already lives
+under `styles/`. The cost is that a component and its appearance sit in two trees, so moving or deleting a
+feature means editing both.
+
+Either way, two rules hold: the component *imports* its styles and animations rather than embedding them, and
+the chosen layout is applied consistently so a reader always knows where a component's appearance lives.
+Framework-native mechanisms — Vue's `<style scoped>`/`<style module>`, CSS Modules in React — are fine for
+styles small and intrinsic enough to stay inline; the external-file approaches are for when styling and
+animation outgrow what comfortably belongs in the markup [Vue SFC docs].
+
+---
+
 Next: **[Building a Feature End-to-End](4-building-a-feature.md)** — with the structure in place, build one
 feature from the core outward and watch the four layers snap together.

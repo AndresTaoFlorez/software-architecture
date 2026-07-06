@@ -273,6 +273,12 @@ circles depend inward and the outermost is reached only through adapters, either
 framework, a migration from REST to GraphQL, Axios to Fetch, one database to another — by rewriting the edge,
 while Entities and Use Cases survive untouched. That substitutability is the entire payoff of the style.
 
+On a frontend this circle also holds the Presentation UI — views, components, stores, styles — which is
+where most of the file count lives. Clean Architecture treats all of it as detail; how to organize that
+detail (components grouped by feature, where styles and animations belong) is covered in
+[§3.4](3-project-structure.md#34-structuring-the-outermost-circle-the-presentation-ui) and
+[§3.5](3-project-structure.md#35-styles--animation-keep-them-out-of-the-markup).
+
 ---
 
 Next: **[Project Structure & Conventions](3-project-structure.md)** — how these four layers map onto folders,
