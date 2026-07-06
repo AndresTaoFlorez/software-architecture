@@ -1,12 +1,18 @@
-> **[Clean Architecture](README.md)** › Entities & Use Cases. Full reference list: [References](references.md).
+> **[Clean Architecture](README.md)** › The Four Layers. Full reference list: [References](references.md).
 
-## 2. Entities & Use Cases
+## 2. The Four Layers
 
-The two inner circles hold everything worth protecting. The outer two — Interface Adapters and
-Frameworks & Drivers — exist only to serve them. This page covers the inner two in depth and the outer
-two briefly, because in Clean Architecture the inner circles are where the design effort belongs.
+Each of the four circles is described below with the same template:
+**Responsibility · What lives here · What it must not do · Dependency direction · Generic example ·
+Justification.**
 
-The examples are drawn from a production Vue 3 application, but the layering itself is framework-agnostic.
+The two inner circles — **Entities** and **Use Cases** — hold everything worth protecting, so they get the
+most space. The two outer circles — **Interface Adapters** and **Frameworks & Drivers** — are deliberately
+thin: they carry no business rules, only translation and transport. But all four are defined to the same
+standard here so the boundaries between them are unambiguous.
+
+The examples are framework-agnostic; where a concrete stack helps, they lean on a Vue 3 frontend. The same
+four definitions on the server are in [Clean Architecture on the Backend](8-clean-on-the-backend.md).
 
 ---
 
@@ -24,6 +30,8 @@ would remain meaningful if every technical choice around it were replaced.
 
 **What it must not do.** Import a framework, perform I/O, reference HTTP, touch storage, or know that a UI
 exists. It must not import from any outer circle.
+
+**Dependency direction.** Depends on nothing.
 
 **Generic example.** A plain entity that owns its derived state and its rules:
 
@@ -104,6 +112,8 @@ contains no UI logic and no knowledge of how data physically travels.
 **What it must not do.** Render anything, read framework-reactive state, call an HTTP client directly, or
 depend on a concrete adapter. It depends on Entities and on the *ports* it declares.
 
+**Dependency direction.** Depends inward on Entities (and on the ports it declares).
+
 **Port-based form.** The use case receives its dependency through a port, so it never names a concrete
 adapter. A port is a *contract*, not an implementation — an `interface` in TypeScript, a JSDoc `@typedef`
 in plain JavaScript:
@@ -130,7 +140,7 @@ export function makeCreateUser({ userRepository }) {
 The use case is testable with a fake `userRepository` and is unaware of HTTP entirely. This injection of
 the port — rather than importing a concrete repository — is the Dependency Inversion Principle in action,
 and it is what separates a true Clean boundary from a plain layered stack. The wiring that supplies the
-real adapter lives in the [Composition Root](4-composition-and-di.md).
+real adapter lives in the [Composition Root](6-composition-and-di.md).
 
 **Orchestration is more than delegation.** A use case is also where application-level validation lives and
 where infrastructure failures are translated back into the domain's language before they can leak outward:
@@ -159,24 +169,111 @@ of the Dependency Inversion Principle [Martin 2003].
 
 ---
 
-### 2.3 The outer two circles, briefly
+### 2.3 Interface Adapters
 
-The outer circles are deliberately thin — they carry no business rules, only translation and transport.
+**Responsibility.** Convert data between the form the use cases like and the form the outside world speaks.
+This is the layer that provides the concrete **adapters** for the **ports** the inner circles declare, and
+that translates external shapes into entities on the way in and into display or wire formats on the way out.
 
-- **Interface Adapters** convert data between the form use cases like and the form the outside world
-  speaks. On a frontend these are **gateways** (repository adapters that fetch raw data and map it into
-  entities, never returning raw JSON), **controllers** (that take UI events and call a use case), and
-  **presenters** (that shape use-case output for display). An adapter translates and transports; it does
-  not decide.
-- **Frameworks & Drivers** are the web framework, the UI library, the HTTP client, browser storage, and
-  third-party SDKs. This is the circle most expected to change, so it is kept at the very edge behind the
-  adapters. "The web is a detail. The database is a detail. Keep these things at arm's length" [Martin 2017].
+**What lives here.**
+- **Gateways / repositories**: adapters that fetch raw data and **map it into entities**, never returning
+  raw JSON.
+- **Controllers**: take an input event (a UI gesture, an HTTP request) and call the right use case.
+- **Presenters**: shape a use case's output into the form a view or a response body wants.
+- **Mappers**: pure functions that translate between an external shape and an entity.
 
-Because both outer circles depend inward and implement ports the inner circles declare, either can be
-replaced — a new UI framework, a migration from REST to GraphQL — by rewriting adapters, while Entities
-and Use Cases survive untouched.
+**What it must not do.** Contain business rules, or make a decision that belongs to a use case. An adapter
+*translates and transports; it does not decide.* It may depend on Entities (to construct them) but must not
+depend on Frameworks & Drivers' concrete APIs beyond the client it wraps.
+
+**Dependency direction.** Depends inward on Use Cases and Entities, and implements the ports they declare.
+
+**Generic example.** A repository adapter that hides the transport and returns entities, never raw JSON:
+
+```js
+// adapters/gateways/HttpUserRepository.js
+import client from '@/frameworks/http/client'
+import { User } from '@/entities/User'
+
+/** @implements {import('@/usecases/ports/UserRepository').UserRepository} */
+export const HttpUserRepository = {
+  async fetchAll() {
+    const { data } = await client.get('/users')
+    return data.map((raw) => new User(raw))   // map at the boundary — callers see entities, not JSON
+  },
+  async create(payload) {
+    const { data } = await client.post('/users', payload)
+    return new User(data)
+  },
+}
+```
+
+The adapter satisfies the `UserRepository` **port** declared by the use case in [§2.2](#22-use-cases). A
+**presenter** is the mirror image on the way out — it turns a use-case result into a view-ready shape:
+
+```js
+// adapters/presenters/userListPresenter.js
+export function userListPresenter(users) {
+  return users.map((u) => ({ id: u.id, label: u.fullName, status: u.statusLabel }))
+}
+```
+
+Neither the mapping nor the presentation makes a business decision; both only translate. That is what keeps
+this circle thin.
+
+**Justification.** The **Repository** mediates between the domain and the data source, "acting like an
+in-memory collection of domain objects" [Fowler 2002]. Isolating transport behind a port implemented by an
+adapter is the essence of Ports & Adapters [Cockburn 2005]. Mapping external shapes into entities *at the
+boundary* keeps everything inward of this line speaking the domain's language, not the API's.
 
 ---
 
-Next: **[Testing in Clean Architecture](3-testing-in-clean.md)** — why the Dependency Rule makes the inner
-circles trivially testable.
+### 2.4 Frameworks & Drivers (outermost)
+
+**Responsibility.** Be the volatile technical details — and nothing more. This circle holds the tools the
+application happens to run on today, kept at arm's length so any of them can be swapped without touching the
+core.
+
+**What lives here.**
+- **The UI framework / web framework**: Vue, React, Svelte on the client; Express, NestJS, Fastify on the
+  server.
+- **The transport**: the configured HTTP client, a WebSocket/SSE connection, a message-queue client.
+- **Persistence drivers**: browser storage on the client; a database driver or ORM on the server.
+- **Third-party SDKs**: analytics, payments, auth providers.
+
+**What it must not do.** Be depended on by any inner circle. Nothing in Entities, Use Cases, or the ports
+may name anything in here. "The web is a detail. The database is a detail. Keep these things at arm's
+length" [Martin 2017].
+
+**Dependency direction.** Depends inward (it is used *by* adapters and configured *at* the Composition
+Root); nothing inner depends on it.
+
+**Generic example.** A configured HTTP client — a driver the adapters wrap, unaware of any entity or use
+case:
+
+```js
+// frameworks/http/client.js
+import axios from 'axios'
+
+const client = axios.create({ baseURL: import.meta.env.VITE_API_URL })
+client.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
+
+export default client
+```
+
+Cross-cutting transport concerns (auth headers, token refresh, retries) live here, in one place, so that no
+use case and no component ever handles them.
+
+**Justification.** Frameworks belong in the outermost circle as a "detail" [Martin 2017]. Because both outer
+circles depend inward and the outermost is reached only through adapters, either can be replaced — a new UI
+framework, a migration from REST to GraphQL, Axios to Fetch, one database to another — by rewriting the edge,
+while Entities and Use Cases survive untouched. That substitutability is the entire payoff of the style.
+
+---
+
+Next: **[Project Structure & Conventions](3-project-structure.md)** — how these four layers map onto folders,
+naming, and import rules you can enforce in CI.

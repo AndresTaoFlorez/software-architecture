@@ -55,7 +55,7 @@ test('cart total sums price times quantity', () => {
 ```
 
 In a layered app these are the Domain and use-case tests of the
-[Clean Test Boundary](../clean-architecture/3-testing-in-clean.md) — the same tests, claimed by the
+[Clean Test Boundary](../clean-architecture/5-testing-in-clean.md) — the same tests, claimed by the
 inner rings.
 
 ---

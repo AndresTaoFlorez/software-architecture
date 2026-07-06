@@ -1,12 +1,12 @@
 > **[Clean Architecture](README.md)** › Composition & Dependency Injection. Full reference list: [References](references.md).
 
-## 4. Composition & Dependency Injection
+## 6. Composition & Dependency Injection
 
 The Dependency Rule forbids a use case from naming a concrete adapter. But *something*, somewhere, must
 connect the two — the real `HttpUserGateway` has to reach the `createUser` use case eventually. Clean
 Architecture answers this with a single, deliberate exception: the **Composition Root**.
 
-### 4.1 The inversion, concretely
+### 6.1 The inversion, concretely
 
 A use case must never import the detail it uses. Compare:
 
@@ -32,7 +32,7 @@ The "after" form names no detail. It can be tested with a fake repository, and i
 swapped — HTTP for GraphQL, or for an in-memory double — without editing the use case. The cost is a single
 factory plus a place to wire dependencies. That place is the Composition Root.
 
-### 4.2 The Composition Root
+### 6.2 The Composition Root
 
 The Composition Root is the **one place in the system allowed to name both a concrete adapter and the use
 case it feeds** [Martin 2017]. It sits at the outermost edge — the application's entry point — and assembles
@@ -51,7 +51,7 @@ Everything inward of `bootstrap.js` depends only on ports; everything is testabl
 simple, explicit, and entirely sufficient for most applications — wire the graph once, at the edge, and
 hand the assembled use cases to the UI.
 
-### 4.3 When the wiring grows: a DI container
+### 6.3 When the wiring grows: a DI container
 
 The circles and the rule never change as a codebase scales — only *how the wiring is expressed* changes.
 When a hand-assembled root passes roughly a hundred dependencies and manual ordering becomes error-prone,
@@ -77,7 +77,7 @@ becomes a one-line container override.
 file that has become a bottleneck. A DI container in a three-person project buys complexity it cannot yet
 repay — the manual root is the right default.
 
-### 4.4 Why this is Clean Architecture's signature
+### 6.4 Why this is Clean Architecture's signature
 
 Dependency injection is not a framework feature here; it is the *mechanism that makes the Dependency Rule
 physically true*. Without a Composition Root, every use case that needs data would have to import an
@@ -89,10 +89,10 @@ durable [Martin 2017].
 > **The four circles never change. What changes is how dependencies are *wired* — and that changes in
 > response to codebase size and headcount, not taste.**
 
-For how partitioning (by layer, then by feature, then by bounded context) evolves alongside the wiring as
-an organization grows, see the Onion guide's companion treatment of
-[scaling](../onion-architecture/6-scaling.md) — the analysis is identical under either name.
+How partitioning (by layer, then by feature, then by bounded context) evolves alongside the wiring as an
+organization grows is the subject of the next page.
 
 ---
 
-Back to the **[Clean Architecture index](README.md)** · See the full **[References](references.md)**.
+Next: **[Scaling: Startup to Enterprise](7-scaling-and-patterns.md)** — how the structure and the wiring
+grow with the codebase and the team, and the red flags that say it's time.
