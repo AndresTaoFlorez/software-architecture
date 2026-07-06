@@ -91,5 +91,5 @@ is fastest.
 
 ---
 
-Next: **[Entities & Use Cases](2-entities-and-use-cases.md)** — what belongs in the two protected inner
-circles, and how to keep them pure.
+Next: **[The Four Layers](2-the-four-layers.md)** — what belongs in each of the four circles, from the
+protected core outward, and how to keep the inner ones pure.

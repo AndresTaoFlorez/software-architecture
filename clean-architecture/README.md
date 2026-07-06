@@ -1,28 +1,39 @@
-# Clean Architecture for the Frontend
+# Clean Architecture — Frontend & Backend
 
 > The same goal as every good architecture — protect business rules from volatile details — expressed
 > through Robert C. Martin's **Dependency Rule** and his four concentric circles: Entities, Use Cases,
-> Interface Adapters, and Frameworks & Drivers. Every prescriptive claim is tied to a source in
+> Interface Adapters, and Frameworks & Drivers. This guide takes you from the one rule that defines the
+> style, through the folder structure and a feature built end-to-end, to testing, wiring, scaling, and the
+> same architecture on the **backend**. Every prescriptive claim is tied to a source in
 > [References](references.md).
 
 ← Back to [architecture overview](../README.md) · Compare with the [Onion Architecture guide](../onion-architecture)
 
 ---
 
-## Contents
+## The four layers, defined
 
-- **[1 · The Dependency Rule](1-the-dependency-rule.md)** — the one law that makes the architecture clean
-- **[2 · Entities & Use Cases](2-entities-and-use-cases.md)** — the two inner circles where the business lives
-- **[3 · Testing in Clean Architecture](3-testing-in-clean.md)** — the Test Boundary; a test is just another adapter
-- **[4 · Composition & Dependency Injection](4-composition-and-di.md)** — the Composition Root and how wiring scales
-- **[References](references.md)** — every cited source
+Clean Architecture divides a system into four circles. Each has one responsibility and one thing it is
+forbidden to do. The whole style is these four definitions plus a single rule about the arrows between them.
+
+| Layer | Responsibility | Must **not** | Frontend form | Backend form |
+|---|---|---|---|---|
+| **1 · Entities** (core) | Enterprise-wide business rules and invariants — true with or without this app | Import a framework, do I/O, know a UI or DB exists | Plain `User` / `Order` classes with getters | *Identical* — the same plain classes |
+| **2 · Use Cases** | Application-specific rules; orchestrate one operation via ports | Render, call HTTP/SQL directly, name a concrete adapter | `createUser` interactor | `CreateUserService` interactor |
+| **3 · Interface Adapters** | Translate between the core's shapes and the outside world | Contain business rules | Gateways/repositories, presenters, stores | Controllers, repositories over an ORM, presenters |
+| **4 · Frameworks & Drivers** | The volatile details, kept at the edge | Be depended on by any inner layer | Vue/React, HTTP client, browser storage | Express/NestJS, Postgres, Prisma/TypeORM |
+
+The two inner layers (**Entities** + **Use Cases**) are where the design effort belongs — they hold the
+business. The two outer layers (**Interface Adapters** + **Frameworks & Drivers**) are deliberately thin:
+they only translate and transport. **Entities are literally the same code on the frontend and the backend;**
+only the outer layers differ, which is the whole point of the style — see
+[Clean Architecture on the Backend](8-clean-on-the-backend.md).
 
 ---
 
 ## The Idea in One Picture
 
-Clean Architecture draws the system as four concentric circles. Source code dependencies may point in
-**one direction only — inward** [Martin 2012].
+Source-code dependencies may point in **one direction only — inward** [Martin 2012].
 
 ```
         ┌─────────────────────────────────────────┐
@@ -40,23 +51,33 @@ Clean Architecture draws the system as four concentric circles. Source code depe
                     dependencies point inward  ►
 ```
 
-- **Entities** — the most general and most stable business rules. They would be true with no application
-  around them at all.
-- **Use Cases** — application-specific rules that orchestrate entities to carry out one operation.
-- **Interface Adapters** — controllers, presenters, and gateways that convert data between the form the
-  use cases like and the form the outside world speaks.
-- **Frameworks & Drivers** — the web framework, the database, the UI library: pure detail, kept at arm's
-  length so they can be swapped without touching the core.
-
-The outer two circles map onto a frontend's **Infrastructure** and **Presentation**; the inner two map
-onto its **Domain** and **Application**. The names differ from the [Onion guide](../onion-architecture);
-the rule and the resulting code are identical.
+The outer two circles map onto a frontend's **Infrastructure** and **Presentation**, and onto a backend's
+**Interface** and **Infrastructure**; the inner two map onto **Domain** and **Application** on both. The
+names differ from the [Onion guide](../onion-architecture); the rule and the resulting code are identical.
 
 ---
 
-## Where to Start
+## Learning path
 
-Read **[The Dependency Rule](1-the-dependency-rule.md)** first — everything else is a consequence of it.
-Then **[Entities & Use Cases](2-entities-and-use-cases.md)** shows what belongs in the protected center,
-**[Testing](3-testing-in-clean.md)** shows the dividend the rule pays back, and
-**[Composition & DI](4-composition-and-di.md)** shows the one place allowed to break the rule on purpose.
+Read the guide in order — each page is a consequence of the one before it.
+
+1. **[The Dependency Rule](1-the-dependency-rule.md)** — the one law that makes the architecture clean.
+   *Start here; everything else follows from it.*
+2. **[The Four Layers](2-the-four-layers.md)** — each circle in depth: responsibility, what lives there,
+   what it must not do, and a worked example.
+3. **[Project Structure & Conventions](3-project-structure.md)** — the folder layout, naming, and import
+   boundaries that make the rule visible on disk and enforceable in CI.
+4. **[Building a Feature End-to-End](4-building-a-feature.md)** — a getting-started walkthrough: create
+   "create user" from the core outward, wiring all four layers into a working flow.
+5. **[Testing in Clean Architecture](5-testing-in-clean.md)** — the Test Boundary; a test is just another
+   adapter, and why the inner layers are trivial to test.
+6. **[Composition & Dependency Injection](6-composition-and-di.md)** — the Composition Root, the one place
+   allowed to name both a port and its concrete adapter.
+7. **[Scaling: Startup to Enterprise](7-scaling-and-patterns.md)** — how partitioning and wiring evolve as
+   the codebase and team grow, plus the red flags that say it's time.
+8. **[Clean Architecture on the Backend](8-clean-on-the-backend.md)** — the same four layers on the server:
+   controllers, application services, repositories over an ORM, and a backend feature end-to-end.
+- **[References](references.md)** — every cited source.
+
+**Just want the shortest path to building?** Read §1 → §2 → §3 → §4. That is enough to structure a robust
+project. §5–§8 deepen it once the core is in place.
