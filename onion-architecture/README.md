@@ -19,6 +19,8 @@ a reference to "§5.4" always means the same thing, wherever it is read.
 - **[4 · Advanced Patterns](4-advanced-patterns.md)** — *§8: CRDT sync, optimistic updates, token refresh, feature folders*
 - **[5 · Styling & Animation](5-styling-and-animation.md)** — *Presentation-ring styling layout*
 - **[6 · Scaling: Startup to Enterprise](6-scaling.md)** — *§9: the four growth phases, decision tree, red flags*
+- **[7 · Type Placement](#type-placement-in-onion-architecture)** — *where TypeScript types live by ownership*
+- **[8 · Naming & Conventions](#naming--conventions)** — *portable defaults for files and folders*
 - **[References](references.md)** — *§10: every cited source*
 
 The interactive demo lives in [Onion Architecture.html](Onion%20Architecture.html).
@@ -83,7 +85,222 @@ the durable asset at the protected center is the architecture's highest-value pr
 
 ---
 
-## 7. Naming & Conventions (portable defaults)
+## 7. Type placement in Onion Architecture
+<a id="type-placement-in-onion-architecture"></a>
+
+In a TypeScript project using Onion Architecture, types should live in the layer
+that owns their meaning.
+
+Avoid using a generic `src/types/` folder as the default place for all types. It
+usually becomes a dumping ground and makes architectural boundaries unclear.
+
+Rule:
+
+> A type belongs to the innermost layer that owns its meaning.
+
+### Domain
+
+Use `domain/` for product concepts that would still exist without React, Redux,
+HTTP, storage, or any external framework.
+
+Examples:
+
+```text
+SupportCase
+CaseStatus
+KnowledgeDocument
+ResponseProposal
+WorkflowNodeStatus
+CurrentUser
+Permission
+```
+
+Suggested location:
+
+```text
+domain/<feature>/entities/
+domain/<feature>/value-objects/
+domain/<feature>/errors/
+domain/shared/
+```
+
+### Application
+
+Use `application/` for use case inputs, outputs, commands, queries, and ports.
+
+Examples:
+
+```text
+GetCaseDetailInput
+GetCaseDetailResult
+SearchKnowledgeCommand
+CaseRepository
+SessionRepository
+WorkflowEventsPort
+```
+
+Suggested location:
+
+```text
+application/use-cases/<feature>/
+application/ports/<feature>/
+application/shared/
+```
+
+### Infrastructure
+
+Use `infrastructure/` for external shapes and adapter-specific types: API DTOs,
+generated OpenAPI types, SSE payloads, persistence records, storage records, and
+mapper inputs.
+
+Examples:
+
+```text
+ApiCaseResponseDto
+OpenApiCaseSchema
+SseWorkflowEventPayload
+LocalStorageThemeRecord
+```
+
+Suggested location:
+
+```text
+infrastructure/api/generated/
+infrastructure/api/dtos/
+infrastructure/api/mappers/
+infrastructure/events/
+infrastructure/storage/
+```
+
+Generated API types should not leak into `domain/` or `presentation/`. Map them
+at the infrastructure boundary.
+
+### Presentation
+
+Use `presentation/` for visual types: component props, view models, view state,
+UI commands, table columns, form state, and visual variants.
+
+Examples:
+
+```text
+CaseHeaderProps
+CaseReviewViewModel
+TableColumnDefinition
+ButtonVariant
+ToastState
+```
+
+Suggested location:
+
+```text
+presentation/components/<feature>/<Component>.types.ts
+presentation/view-models/<feature>/
+presentation/store/
+presentation/shared/
+```
+
+Component-specific props should stay colocated with the component:
+
+```text
+presentation/components/case-review/
+├── CaseHeader.tsx
+├── CaseHeader.types.ts
+├── CaseHeader.module.css
+└── CaseHeader.gsap.ts
+```
+
+### Decision rules
+
+Ask:
+
+```text
+Would this type still exist if there were no React components?
+```
+
+If yes, it probably does not belong in `components/`.
+
+Ask:
+
+```text
+Does this type describe the external API shape?
+```
+
+If yes, it belongs in `infrastructure/`, not in `domain/`.
+
+Ask:
+
+```text
+Does this type describe how a screen renders something?
+```
+
+If yes, it belongs in `presentation/`.
+
+### Import rule
+
+TypeScript `type` imports also count as architectural dependencies. Even if they
+are erased at runtime, they still create source-level coupling.
+
+Allowed direction:
+
+```text
+presentation / infrastructure / composition
+        ↓
+application
+        ↓
+domain
+```
+
+Allowed:
+
+```ts
+import type { SupportCase } from '@/domain/cases/entities/SupportCase'
+```
+
+Not allowed from `domain/`:
+
+```ts
+import type { ApiCaseResponseDto } from '@/infrastructure/api/generated'
+import type { CaseHeaderProps } from '@/presentation/components/case-review/CaseHeader.types'
+```
+
+### Quick reference
+
+| Type kind              | Layer                       | Example                                       |
+| ---------------------- | --------------------------- | --------------------------------------------- |
+| Product concept        | `domain/`                   | `SupportCase`, `CaseStatus`                   |
+| Value object           | `domain/`                   | `Confidence`, `Permission`                    |
+| Use case input/output  | `application/`              | `GetCaseDetailInput`, `SearchKnowledgeResult` |
+| Port/interface         | `application/ports/`        | `CaseRepository`, `SessionRepository`         |
+| API DTO/generated type | `infrastructure/`           | `ApiCaseResponseDto`, `OpenApiWorkflowEvent`  |
+| Mapper type            | `infrastructure/`           | `CaseDtoMapperInput`                          |
+| View model             | `presentation/view-models/` | `CaseReviewViewModel`                         |
+| Component props        | `presentation/components/`  | `CaseHeaderProps`                             |
+| Visual variant         | `presentation/`             | `ButtonVariant`, `BadgeTone`                  |
+
+### Avoid
+
+Avoid this as the default structure:
+
+```text
+src/types/
+├── cases.ts
+├── users.ts
+├── api.ts
+├── ui.ts
+└── common.ts
+```
+
+Small shared folders are acceptable only inside the layer that owns the meaning:
+
+```text
+domain/shared/
+application/shared/
+presentation/shared/
+```
+
+Do not use shared folders as a shortcut for unclear ownership.
+
+## 8. Naming & Conventions (portable defaults)
 <a id="naming--conventions"></a>
 
 These defaults make the rules above visible in the file system. They are recommendations, not laws, but
