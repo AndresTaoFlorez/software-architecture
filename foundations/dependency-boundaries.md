@@ -39,14 +39,24 @@ This table is a **recommended project policy**, not a quotation from Clean Archi
 
 At runtime a use case can call outward:
 
-```text
-Use case -> repository implementation -> HTTP API
+```mermaid
+flowchart LR
+    N0["Use case"]
+    N1["repository implementation"]
+    N2["HTTP API"]
+    N0 --> N1
+    N1 --> N2
 ```
 
 while source dependencies still point inward:
 
-```text
-HttpRepository -> RepositoryPort <- UseCase
+```mermaid
+flowchart LR
+    N0["HttpRepository"]
+    N1["RepositoryPort"]
+    N2["UseCase"]
+    N0 --> N1
+    N2 --> N1
 ```
 
 Dependency inversion exists specifically to make those two directions different.

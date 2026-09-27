@@ -35,24 +35,41 @@ The first scale protects business policy from technology. The second keeps the U
 
 ## Recommended source layout
 
-```text
-src/
-├── domain/
-├── application/
-├── infrastructure/
-├── composition/
-└── presentation/
-    ├── app/
-    │   ├── providers/
-    │   ├── routes/
-    │   └── store/
-    ├── pages/
-    ├── features/
-    │   ├── auth/
-    │   └── closures/
-    └── shared/
-        ├── ui/
-        └── lib/
+```mermaid
+flowchart TD
+    N0["src/"]
+    N1["domain/"]
+    N2["application/"]
+    N3["infrastructure/"]
+    N4["composition/"]
+    N5["presentation/"]
+    N6["app/"]
+    N7["providers/"]
+    N8["routes/"]
+    N9["store/"]
+    N10["pages/"]
+    N11["features/"]
+    N12["auth/"]
+    N13["closures/"]
+    N14["shared/"]
+    N15["ui/"]
+    N16["lib/"]
+    N0 --> N1
+    N0 --> N2
+    N0 --> N3
+    N0 --> N4
+    N0 --> N5
+    N5 --> N6
+    N6 --> N7
+    N6 --> N8
+    N6 --> N9
+    N5 --> N10
+    N5 --> N11
+    N11 --> N12
+    N11 --> N13
+    N5 --> N14
+    N14 --> N15
+    N14 --> N16
 ```
 
 This is a recommended default, not a law. Folder names may change. Ownership and dependency direction matter more than the spelling.
@@ -61,12 +78,17 @@ This is a recommended default, not a law. Folder names may change. Ownership and
 
 A feature owns the Presentation code that changes with that capability:
 
-```text
-presentation/features/closures/
-├── ui/
-├── model/
-├── lib/
-└── index.ts
+```mermaid
+flowchart TD
+    N0["presentation/features/closures/"]
+    N1["ui/"]
+    N2["model/"]
+    N3["lib/"]
+    N4["index.ts"]
+    N0 --> N1
+    N0 --> N2
+    N0 --> N3
+    N0 --> N4
 ```
 
 This keeps `closures` UI, state, selectors, bindings and feature-specific helpers close together instead of scattering them across global `components/`, `hooks/`, `state/`, `types/` and `utils/` trees.

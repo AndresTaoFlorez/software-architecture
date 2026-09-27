@@ -23,13 +23,19 @@ Every file belongs to the same capability, but changing that capability requires
 
 Prefer a feature-owned module:
 
-```text
-features/
-└── closures/
-    ├── ui/
-    ├── model/
-    ├── lib/
-    └── index.ts
+```mermaid
+flowchart TD
+    N0["features/"]
+    N1["closures/"]
+    N2["ui/"]
+    N3["model/"]
+    N4["lib/"]
+    N5["index.ts"]
+    N0 --> N1
+    N1 --> N2
+    N1 --> N3
+    N1 --> N4
+    N1 --> N5
 ```
 
 The exact segment names are conventions. The invariant is ownership.
