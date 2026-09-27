@@ -12,21 +12,35 @@ What **does not** follow is that frontend and backend must contain identical Dom
 
 ## 8.1 A backend mapping
 
-```text
-src/
-├── domain/
-│   └── users/
-├── application/
-│   └── users/
-│       ├── ports/
-│       └── use-cases/
-├── infrastructure/
-│   ├── persistence/
-│   └── integrations/
-├── interface/
-│   ├── http/
-│   └── messaging/
-└── composition/
+```mermaid
+flowchart TD
+    N0["src/"]
+    N1["domain/"]
+    N2["users/"]
+    N3["application/"]
+    N4["users/"]
+    N5["ports/"]
+    N6["use-cases/"]
+    N7["infrastructure/"]
+    N8["persistence/"]
+    N9["integrations/"]
+    N10["interface/"]
+    N11["http/"]
+    N12["messaging/"]
+    N13["composition/"]
+    N0 --> N1
+    N1 --> N2
+    N0 --> N3
+    N3 --> N4
+    N4 --> N5
+    N4 --> N6
+    N0 --> N7
+    N7 --> N8
+    N7 --> N9
+    N0 --> N10
+    N10 --> N11
+    N10 --> N12
+    N0 --> N13
 ```
 
 Some teams call the outer HTTP/controller area `presentation`; others use `interface`, `delivery` or framework-specific modules. The name matters less than the dependency rule.
