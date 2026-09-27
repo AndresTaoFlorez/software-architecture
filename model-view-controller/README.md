@@ -1,78 +1,93 @@
-# Model-View-Controller for the Frontend
+# Model-View-Controller (MVC)
 
-> The oldest UI pattern still in daily use. MVC separates what the app *knows* (Model), what the user
-> *sees* (View), and what turns input into change (Controller). Every prescriptive claim is tied to a
-> source in [References](references.md).
+> A presentation pattern with a long history and many incompatible modern interpretations.
 
-← Back to [architecture overview](../README.md) · See also the [MVVM](../model-view-viewmodel), [Clean](../clean-architecture) and [Onion](../onion-architecture) guides
+← [Repository home](../README.md) · [Glossary](../GLOSSARY.md) · [Naming](../conventions/naming-and-file-placement.md)
 
----
+## 1. History
 
-## Read This First: MVC Is a Different Kind of Thing
+Trygve Reenskaug developed the original MVC ideas while visiting Xerox PARC in **1978–1979**. His December 1979 note *Models–Views–Controllers* defined Model, View and Controller in the context of interactive user interfaces.
 
-Clean and Onion are **whole-application** architectures: they organize every layer of a system by the
-direction of its dependencies. MVC is **not** that. MVC organizes the **presentation tier alone** — it
-says nothing about repositories, transports, or where business rules live.
+Original report: https://doi.org/10.5281/zenodo.3676092
 
-That makes the three patterns **complementary, not competing.** MVC (or its descendants MVP and MVVM)
-describes how a screen is wired; Clean and Onion describe where that screen sits in the larger system. A
-well-built app commonly uses MVC-style separation *inside* the outer ring of an Onion or Clean design
-[Fowler, GUI Architectures]. Treat this guide as "how to organize the View layer," not "an alternative to
-the other two."
+The term later evolved across Smalltalk, desktop frameworks, server-side web frameworks and JavaScript libraries. Therefore "MVC" must always be interpreted in context.
 
----
+## 2. What problem does MVC solve?
 
-## Contents
+MVC separates:
 
-- **[1 · The Three Parts](1-the-three-parts.md)** — Model, View, Controller, and what each must not do
-- **[2 · The Flow](2-the-flow.md)** — the input → update → render cycle, and the observer that closes it
-- **[3 · MVC on the Frontend](3-mvc-on-the-frontend.md)** — how component frameworks reshape classic MVC roles, and where related presentation patterns fit
-- **[4 · Testing in MVC](4-testing-in-mvc.md)** — testing the Model directly and the seam at the Controller
-- **[References](references.md)** — every cited source
+- the information/behavior being represented;
+- how it is presented;
+- how user input is interpreted.
 
----
-
-## The Triad in One Picture
-
-```
-            ┌──────────────┐
-   sees     │     View     │   renders the Model; forwards user gestures
-  ┌────────▶│              │──────────────┐
-  │         └──────────────┘              │ user acts
-  │                ▲                       ▼
-┌─────┐            │ notifies      ┌──────────────┐
-│User │            │ (observer)    │  Controller  │   interprets input
-└─────┘            │               └──────────────┘
-  ▲                │                       │ updates
-  │         ┌──────────────┐               │
-  └─────────│    Model     │◀──────────────┘
-            │              │   holds data + rules; knows nothing of the UI
-            └──────────────┘
+```mermaid
+flowchart LR
+    USER["User"] --> CONTROLLER["Controller"]
+    CONTROLLER --> MODEL["Model"]
+    MODEL --> VIEW["View"]
+    VIEW --> USER
+    MODEL -. "change notification / observation" .-> VIEW
 ```
 
-- **Model** — the data and the rules that govern it. In classic MVC the Model is UI-agnostic: it does not
-  know the View or the Controller exist. It announces changes; it does not push them to a specific screen.
-- **View** — the visual representation of the Model. It observes the Model and redraws when notified.
-- **Controller** — interprets user input (a click, a keystroke, a route change) and turns it into
-  operations on the Model.
+## 3. When it fits
 
-The defining property is **separated presentation** [Fowler]: domain state lives in the Model, isolated
-from how it is displayed, so the same Model can drive different Views and be tested with no UI at all.
+MVC is useful when:
 
----
+- one Model can have multiple Views;
+- input interpretation deserves separation from rendering;
+- a framework explicitly follows an MVC-style interaction model;
+- presentation responsibilities are becoming entangled.
 
-## A Warning About the Acronym
+## 4. When it is a poor label
 
-"MVC" is the most overloaded term in software architecture. Smalltalk-80 MVC, server-side MVC (Rails,
-Spring), and the "MVC" marketed by early JavaScript frameworks are three materially different things
-[Fowler]. This guide describes the **classic, client-side** pattern and its direct descendants (MVP,
-MVVM). Where a distinction matters, it is named explicitly — start with [The Flow](2-the-flow.md) to see
-where the variants diverge.
+Avoid forcing "MVC" onto every component framework.
 
----
+Modern React/Vue/Svelte component architectures combine responsibilities differently from classic Smalltalk MVC. Server-side "MVC" frameworks also use the term differently.
 
-## Where to Start
+If the mapping requires redefining every role, use the actual framework architecture instead of preserving the acronym.
 
-Read **[The Three Parts](1-the-three-parts.md)** for the responsibilities, then **[The Flow](2-the-flow.md)**
-for how they interact. **[MVC on the Frontend](3-mvc-on-the-frontend.md)** translates all of it to today's
-component frameworks, where the honest label is usually MVVM.
+## 5. The three roles
+
+| Role | Owns | Should not own |
+| --- | --- | --- |
+| Model | represented data/behavior | concrete View/Controller mechanics |
+| View | presentation of Model/state | business/application policy |
+| Controller | interpretation of user input | rendering or persistent business state |
+
+In a Clean/Onion system, the MVC Model does **not** automatically equal the Domain layer. Presentation patterns and whole-application architectures operate at different scales.
+
+## 6. A practical layered mapping
+
+```mermaid
+flowchart TD
+    PRES["Presentation"]
+    PRES --> V["View / component"]
+    PRES --> C["Controller / event adapter"]
+    C --> APP["Application use case"]
+    APP --> DOMAIN["Domain"]
+```
+
+A controller can translate user intent into an Application command rather than directly embedding business policy.
+
+## 7. File placement example
+
+| Artifact | Example path | Reason |
+| --- | --- | --- |
+| route/page View | `presentation/pages/orders/OrdersPage.tsx` | route rendering |
+| feature controller/event adapter | `presentation/features/orders/model/useOrderActions.ts` | interprets UI intent |
+| business operation | `application/orders/use-cases/cancelOrder.ts` | application policy |
+| business invariant | `domain/orders/Order.ts` | domain truth |
+
+Use [Code Placement](../foundations/code-placement.md) for cross-layer placement.
+
+## 8. Learning path
+
+1. [The Three Parts](./1-the-three-parts.md)
+2. [The Flow](./2-the-flow.md)
+3. [MVC on the Frontend](./3-mvc-on-the-frontend.md)
+4. [Testing](./4-testing-in-mvc.md)
+
+## Sources
+
+- Trygve Reenskaug, *Models–Views–Controllers* (1979): https://doi.org/10.5281/zenodo.3676092
+- Martin Fowler, *GUI Architectures*: https://martinfowler.com/eaaDev/uiArchs.html
