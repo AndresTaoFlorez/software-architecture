@@ -77,20 +77,20 @@ presentation/
 
 As a capability grows, feature ownership may become the stronger change axis:
 
-```text
-application/
-├── orders/
-├── billing/
-└── identity/
+```mermaid
+flowchart TD
+    A["application/"] --> O["orders/"]
+    A --> B["billing/"]
+    A --> I["identity/"]
 ```
 
 or within a Presentation layer:
 
-```text
-presentation/features/
-├── orders/
-├── billing/
-└── identity/
+```mermaid
+flowchart TD
+    P["presentation/features/"] --> O["orders/"]
+    P --> B["billing/"]
+    P --> I["identity/"]
 ```
 
 The question is not "which phase are we in?". It is:
@@ -115,11 +115,9 @@ Martin Fowler's "Monolith First" describes the common benefit of discovering sta
 
 A strong default for many business systems is therefore:
 
-```text
-modular monolith
--> explicit module APIs
--> measured coupling
--> split deployables only where forces justify it
+```mermaid
+flowchart LR
+    M["Modular monolith"] --> API["Explicit module APIs"] --> C["Measure coupling"] --> S["Split deployables only when forces justify it"]
 ```
 
 This is guidance, not a law. Teams with mature distributed-systems capability and already-known boundaries may make a different decision.
