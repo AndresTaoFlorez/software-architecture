@@ -4,10 +4,17 @@ Architecture should evolve in response to observed forces, not headcount or line
 
 There is no defensible rule such as:
 
-```text
-10 developers -> DI container
-50 developers -> monorepo
-200 developers -> microfrontends
+```mermaid
+flowchart LR
+    N0["10 developers"]
+    N1["DI container"]
+    N2["50 developers"]
+    N3["monorepo"]
+    N4["200 developers"]
+    N5["microfrontends"]
+    N0 --> N1
+    N2 --> N3
+    N4 --> N5
 ```
 
 Those decisions solve different problems and carry different costs.

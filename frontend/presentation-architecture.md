@@ -31,50 +31,86 @@ If yes, inspect whether it belongs in Application or Domain instead.
 
 A small project can start with:
 
-```text
-presentation/
-├── components/
-├── hooks/
-├── pages/
-└── state/
+```mermaid
+flowchart TD
+    N0["presentation/"]
+    N1["components/"]
+    N2["hooks/"]
+    N3["pages/"]
+    N4["state/"]
+    N0 --> N1
+    N0 --> N2
+    N0 --> N3
+    N0 --> N4
 ```
 
 At scale, this becomes a horizontal "folder by type" architecture. A single change to `closures` may require editing six distant directories.
 
 Prefer feature ownership:
 
-```text
-presentation/
-├── app/
-│   ├── providers/
-│   ├── routes/
-│   └── store/
-├── pages/
-│   └── closures/
-│       ├── ClosuresPage.tsx
-│       ├── ClosuresPage.styles.ts
-│       └── index.ts
-├── features/
-│   └── closures/
-│       ├── ui/
-│       │   ├── QueryFilters/
-│       │   │   ├── QueryFilters.tsx
-│       │   │   ├── QueryFilters.styles.ts
-│       │   │   ├── QueryFilters.types.ts
-│       │   │   └── index.ts
-│       │   └── ResultsTable/
-│       ├── model/
-│       │   ├── closures.slice.ts
-│       │   ├── closures.selectors.ts
-│       │   ├── closures.thunks.ts
-│       │   ├── closures.bindings.ts
-│       │   └── useClosures.ts
-│       ├── lib/
-│       │   └── closure-validation.ts
-│       └── index.ts
-└── shared/
-    ├── ui/
-    └── lib/
+```mermaid
+flowchart TD
+    N0["presentation/"]
+    N1["app/"]
+    N2["providers/"]
+    N3["routes/"]
+    N4["store/"]
+    N5["pages/"]
+    N6["closures/"]
+    N7["ClosuresPage.tsx"]
+    N8["ClosuresPage.styles.ts"]
+    N9["index.ts"]
+    N10["features/"]
+    N11["closures/"]
+    N12["ui/"]
+    N13["QueryFilters/"]
+    N14["QueryFilters.tsx"]
+    N15["QueryFilters.styles.ts"]
+    N16["QueryFilters.types.ts"]
+    N17["index.ts"]
+    N18["ResultsTable/"]
+    N19["model/"]
+    N20["closures.slice.ts"]
+    N21["closures.selectors.ts"]
+    N22["closures.thunks.ts"]
+    N23["closures.bindings.ts"]
+    N24["useClosures.ts"]
+    N25["lib/"]
+    N26["closure-validation.ts"]
+    N27["index.ts"]
+    N28["shared/"]
+    N29["ui/"]
+    N30["lib/"]
+    N0 --> N1
+    N1 --> N2
+    N1 --> N3
+    N1 --> N4
+    N0 --> N5
+    N5 --> N6
+    N6 --> N7
+    N6 --> N8
+    N6 --> N9
+    N0 --> N10
+    N10 --> N11
+    N11 --> N12
+    N12 --> N13
+    N13 --> N14
+    N13 --> N15
+    N13 --> N16
+    N13 --> N17
+    N12 --> N18
+    N11 --> N19
+    N19 --> N20
+    N19 --> N21
+    N19 --> N22
+    N19 --> N23
+    N19 --> N24
+    N11 --> N25
+    N25 --> N26
+    N11 --> N27
+    N0 --> N28
+    N28 --> N29
+    N28 --> N30
 ```
 
 Not every feature needs every segment or file. Start small and split only when responsibilities become independently meaningful.
