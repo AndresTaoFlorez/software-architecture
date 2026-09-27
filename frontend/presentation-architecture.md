@@ -155,13 +155,13 @@ It should not become the place where HTTP orchestration, domain validation, pers
 
 For a non-trivial component, colocate what belongs only to that component:
 
-```text
-QueryFilters/
-├── QueryFilters.tsx
-├── QueryFilters.styles.ts
-├── QueryFilters.types.ts
-├── QueryFilters.test.tsx
-└── index.ts
+```mermaid
+flowchart TD
+    Q["QueryFilters/"] --> C["QueryFilters.tsx"]
+    Q --> S["QueryFilters.styles.ts"]
+    Q --> T["QueryFilters.types.ts"]
+    Q --> TEST["QueryFilters.test.tsx"]
+    Q --> I["index.ts"]
 ```
 
 Use only the files the component needs. Do not generate empty `types` or `test` files to satisfy a template.
@@ -179,18 +179,13 @@ Benefits:
 
 For feature-heavy screens, a public custom hook can act as a Presentation Model / ViewModel facade.
 
-```text
-View
- |
- v
-useClosures()
- |
- +--> state bindings
- +--> focused feature hooks
- +--> presentation transformations
- |
- v
-Application commands/use cases
+```mermaid
+flowchart TD
+    V["View"] --> VM["useClosures()"]
+    VM --> B["State bindings"]
+    VM --> H["Focused feature hooks"]
+    VM --> T["Presentation transformations"]
+    VM --> A["Application commands / use cases"]
 ```
 
 The hook exposes UI-semantic state and operations:
@@ -245,14 +240,14 @@ A facade can become too large.
 
 If one hook owns query orchestration, draft persistence, file uploads, history, validation, modal state, polling and execution, split internal concerns:
 
-```text
-model/
-├── useClosureQuery.ts
-├── useClosureDraft.ts
-├── useClosureUploads.ts
-├── useClosureExecution.ts
-├── useClosureHistory.ts
-└── useClosures.ts
+```mermaid
+flowchart TD
+    M["model/"] --> Q["useClosureQuery.ts"]
+    M --> D["useClosureDraft.ts"]
+    M --> U["useClosureUploads.ts"]
+    M --> E["useClosureExecution.ts"]
+    M --> H["useClosureHistory.ts"]
+    M --> F["useClosures.ts"]
 ```
 
 `useClosures.ts` can remain the public composition point if a page needs a unified surface.
@@ -338,21 +333,13 @@ This makes it possible to replace Redux, split a hook or reorganize selectors wi
 
 Types should follow meaning:
 
-```text
-Component-only props
--> colocated Component.types.ts
-
-Feature view state / ViewModel
--> feature/model/*.types.ts
-
-Cross-feature visual primitive type
--> shared/ui or shared/lib owner
-
-Application command/result
--> application capability
-
-External DTO
--> infrastructure adapter
+```mermaid
+flowchart LR
+    CP["Component-only props"] --> CT["colocated Component.types.ts"]
+    FS["Feature view state / ViewModel"] --> FT["feature/model/*.types.ts"]
+    CV["Cross-feature visual primitive type"] --> SH["shared/ui or shared/lib"]
+    AR["Application command / result"] --> AC["application capability"]
+    DTO["External DTO"] --> IA["infrastructure adapter"]
 ```
 
 Do not move a type into Domain merely because several UI files use it.

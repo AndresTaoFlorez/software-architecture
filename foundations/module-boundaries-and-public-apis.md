@@ -135,17 +135,13 @@ Do not centralize every TypeScript interface into `types/`.
 
 Prefer:
 
-```text
-features/closures/
-├── ui/QueryFilters/QueryFilters.types.ts   # component contract
-├── model/closure-state.types.ts            # feature presentation state
-└── index.ts
-
-application/closures/
-└── execute-closure.types.ts                # use-case contract
-
-infrastructure/closures/
-└── closure-api.dto.ts                      # transport shape
+```mermaid
+flowchart TD
+    F["features/closures/"] --> FT["ui/QueryFilters/QueryFilters.types.ts — component contract"]
+    F --> FS["model/closure-state.types.ts — feature presentation state"]
+    F --> FI["index.ts — public API"]
+    A["application/closures/"] --> AT["execute-closure.types.ts — use-case contract"]
+    I["infrastructure/closures/"] --> IT["closure-api.dto.ts — transport shape"]
 ```
 
 Types erased at runtime still create source-level coupling.

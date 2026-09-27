@@ -12,23 +12,19 @@ The examples use React, Redux Toolkit and Panda CSS because they make the bounda
 
 A serious frontend commonly has two architectural scales:
 
-```text
-APPLICATION SCALE
-domain <- application <- infrastructure / presentation
-                  ^
-                  |
-             composition
-
-PRESENTATION SCALE
-app / pages
-    |
-feature public API
-    |
-feature model / ViewModel
-    |
-state mechanism + application use cases
-    |
-feature UI
+```mermaid
+flowchart TD
+    subgraph ApplicationScale["Application scale"]
+        PRES["Presentation"] --> APP["Application"] --> DOMAIN["Domain"]
+        INFRA["Infrastructure"] --> APP
+        COMP["Composition"] -. wires .-> PRES
+        COMP -. wires .-> INFRA
+        COMP -. wires .-> APP
+    end
+    subgraph PresentationScale["Presentation scale"]
+        PAGE["App / pages"] --> API["Feature public API"] --> VM["Feature model / ViewModel"] --> STATE["State mechanism + application operations"]
+        API --> UI["Feature UI"]
+    end
 ```
 
 The first scale protects business policy from technology. The second keeps the UI itself cohesive as it grows.
@@ -99,20 +95,9 @@ This repository borrows the **high-cohesion feature slice** and **public API** i
 
 A useful strict boundary for complex applications is:
 
-```text
-Page / Layout / Feature UI
-          |
-          v
-    public hook / ViewModel
-          |
-          v
-       bindings
-          |
-          v
- state library / selectors / effects
-          |
-          v
-   Application use cases
+```mermaid
+flowchart TD
+    UI["Page / Layout / Feature UI"] --> VM["Public hook / ViewModel"] --> B["Bindings"] --> S["State library / selectors / effects"] --> A["Application use cases"]
 ```
 
 This makes the rendering surface depend on semantic operations such as `saveClosure()` instead of Redux actions, HTTP clients or framework internals.

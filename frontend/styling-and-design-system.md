@@ -10,23 +10,9 @@ This guide uses Panda CSS for concrete examples. The model also applies to other
 
 Prefer an explicit progression:
 
-```text
-primitive tokens
-      |
-      v
-semantic tokens
-      |
-      v
-text/layer styles
-      |
-      v
-recipes / slot recipes
-      |
-      v
-component-local styles
-      |
-      v
-rendered component
+```mermaid
+flowchart TD
+    P["Primitive tokens"] --> S["Semantic tokens"] --> T["Text / layer styles"] --> R["Recipes / slot recipes"] --> C["Component-local styles"] --> V["Rendered component"]
 ```
 
 Each level answers a different question.
@@ -140,12 +126,12 @@ export const queryFilters = sva({
 
 This fits colocated component ownership:
 
-```text
-QueryFilters/
-├── QueryFilters.tsx
-├── QueryFilters.styles.ts
-├── QueryFilters.types.ts
-└── index.ts
+```mermaid
+flowchart TD
+    Q["QueryFilters/"] --> C["QueryFilters.tsx"]
+    Q --> S["QueryFilters.styles.ts"]
+    Q --> T["QueryFilters.types.ts"]
+    Q --> I["index.ts"]
 ```
 
 Use variants and compound variants to model visual states rather than creating a web of descendant selectors.
@@ -203,22 +189,20 @@ Panda documents config recipes as useful for design systems, shared presets and 
 
 Do **not** define the same visual recipe twice:
 
-```text
-QueryFilters.styles.ts     -> sva(...)
-presentation/recipes/...   -> defineSlotRecipe(...same rules...)
+```mermaid
+flowchart LR
+    L["QueryFilters.styles.ts"] --> S["sva(...) — local owner"]
+    G["presentation/recipes/..."] --> D["defineSlotRecipe(...) — duplicated owner"]
 ```
 
 That creates two sources of truth.
 
 Choose based on ownership:
 
-```text
-feature/component-local visual contract
--> colocated sva()
-
-cross-feature design-system contract
--> defineRecipe / defineSlotRecipe
-   registered in Panda config
+```mermaid
+flowchart LR
+    L["Feature/component-local visual contract"] --> S["Colocated sva()"]
+    G["Cross-feature design-system contract"] --> R["defineRecipe / defineSlotRecipe"] --> P["Register in Panda config"]
 ```
 
 Promotion from local to shared should be deliberate. Move the recipe; do not copy it.
@@ -229,27 +213,27 @@ Promotion from local to shared should be deliberate. Move the recipe; do not cop
 
 Slot recipes are a strong fit for components whose parts must vary together:
 
-```text
-Dialog
-├── backdrop
-├── positioner
-├── content
-├── header
-├── body
-└── footer
+```mermaid
+flowchart TD
+    D["Dialog"] --> B["backdrop"]
+    D --> P["positioner"]
+    D --> C["content"]
+    D --> H["header"]
+    D --> BD["body"]
+    D --> F["footer"]
 ```
 
 or:
 
-```text
-DataTable
-├── root
-├── toolbar
-├── table
-├── header
-├── row
-├── cell
-└── pagination
+```mermaid
+flowchart TD
+    D["DataTable"] --> R["root"]
+    D --> T["toolbar"]
+    D --> TB["table"]
+    D --> H["header"]
+    D --> ROW["row"]
+    D --> C["cell"]
+    D --> P["pagination"]
 ```
 
 Slots give each part a stable style contract while variants coordinate the complete component.
@@ -401,15 +385,15 @@ The distinction is ownership: runtime data may stay runtime; design decisions be
 
 For a sufficiently large application:
 
-```text
-presentation/
-├── design-system/
-│   ├── recipes/
-│   ├── tokens/
-│   └── README.md
-├── features/
-└── shared/
-    └── ui/
+```mermaid
+flowchart TD
+    P["presentation/"] --> D["design-system/"]
+    P --> F["features/"]
+    P --> S["shared/"]
+    D --> R["recipes/"]
+    D --> T["tokens/"]
+    D --> RD["README.md"]
+    S --> UI["ui/"]
 ```
 
 or keep Panda's global configuration at the project root if that is what the build tool expects.

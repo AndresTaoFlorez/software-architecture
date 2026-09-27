@@ -22,21 +22,13 @@ A practical default:
 
 Examples:
 
-```text
-Is a modal open?
--> local UI state
-
-Which closure rows are selected across sibling components?
--> feature state
-
-Filtered rows derived from filters + source rows?
--> selector; do not duplicate in state
-
-Cached GET /cases response with invalidation/revalidation?
--> server-state mechanism when no application policy is bypassed
-
-May this judicial closure execute?
--> Application/Domain policy, not a Redux reducer
+```mermaid
+flowchart LR
+    M["Is a modal open?"] --> L["Local UI state"]
+    S["Selection shared by sibling components?"] --> F["Feature state"]
+    D["Derived filtered rows?"] --> SEL["Selector; do not duplicate"]
+    C["Cached remote GET data?"] --> SS["Server-state mechanism"]
+    P["May the business operation execute?"] --> AP["Application / Domain policy"]
 ```
 
 Redux's official style guide recommends keeping global state minimal, deriving additional values, and keeping most form state local unless sharing it globally has a concrete benefit.
@@ -259,10 +251,9 @@ That does not mean every server call should bypass Application.
 
 If a screen only needs cached remote data, with invalidation/refetch but little application policy:
 
-```text
-View
--> query adapter
--> API
+```mermaid
+flowchart LR
+    V["View / feature"] --> Q["Query adapter"] --> API["API"]
 ```
 
 RTK Query, TanStack Query or another server-state library may be enough.
@@ -271,12 +262,10 @@ RTK Query, TanStack Query or another server-state library may be enough.
 
 If an operation validates business/application rules, coordinates multiple capabilities, has authorization policy or must stay independent of transport:
 
-```text
-View
--> Presentation adapter
--> Application use case
--> port
--> Infrastructure adapter
+```mermaid
+flowchart LR
+    V["View"] --> P["Presentation adapter"] --> A["Application use case"] --> PORT["Port"]
+    I["Infrastructure adapter"] --> PORT
 ```
 
 Use the architecture because it protects something meaningful, not to wrap every GET request in ceremony.
