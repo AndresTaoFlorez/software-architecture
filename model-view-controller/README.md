@@ -26,7 +26,7 @@ the other two."
 
 - **[1 · The Three Parts](1-the-three-parts.md)** — Model, View, Controller, and what each must not do
 - **[2 · The Flow](2-the-flow.md)** — the input → update → render cycle, and the observer that closes it
-- **[3 · MVC on the Frontend](3-mvc-on-the-frontend.md)** — why modern frameworks are really MVVM, and how to keep MVC honest
+- **[3 · MVC on the Frontend](3-mvc-on-the-frontend.md)** — how component frameworks reshape classic MVC roles, and where related presentation patterns fit
 - **[4 · Testing in MVC](4-testing-in-mvc.md)** — testing the Model directly and the seam at the Controller
 - **[References](references.md)** — every cited source
 
