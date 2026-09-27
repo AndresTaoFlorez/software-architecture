@@ -16,11 +16,14 @@ reactive state, bind it into the template, and the framework re-renders when the
 automatic synchronization is the defining trait of **MVVM**, not classic MVC [Fowler's Presentation Model;
 Gossman 2005].
 
-```
-        Classic MVC                         Modern component framework
-   ─────────────────────────          ──────────────────────────────────
-   View  ── observes ──►  Model        template ── binds ──►  reactive state (ViewModel)
-   (you wire the observer)             (the framework wires the binding)
+```mermaid
+flowchart LR
+    subgraph Classic["Classic MVC"]
+        CV["View"] -->|observes| CM["Model"]
+    end
+    subgraph Modern["Modern component framework"]
+        T["Template / component"] -->|binds/reacts| S["Reactive state / possible ViewModel"]
+    end
 ```
 
 So when a tutorial labels a component "the View" and a store "the Model," the missing piece — the manual

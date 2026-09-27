@@ -120,13 +120,7 @@ flowchart LR
 
 Do not use ASCII/Unicode box drawings or arrow diagrams inside `text`/untyped code fences.
 
-Do not use:
-
-```
-A -> B -> C
-```
-
-as a diagram.
+Do not use an inline text-arrow chain such as `A -> B -> C` as a diagram. Render the relationship with Mermaid instead.
 
 Folder hierarchies that are meant to teach structure should also use Mermaid plus a responsibility table, not a fragile ASCII tree.
 
