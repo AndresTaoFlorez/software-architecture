@@ -12,13 +12,19 @@ A folder structure is useful when it makes architectural ownership visible and g
 
 A practical TypeScript mapping is:
 
-```text
-src/
-├── domain/
-├── application/
-├── infrastructure/
-├── presentation/
-└── composition/
+```mermaid
+flowchart TD
+    N0["src/"]
+    N1["domain/"]
+    N2["application/"]
+    N3["infrastructure/"]
+    N4["presentation/"]
+    N5["composition/"]
+    N0 --> N1
+    N0 --> N2
+    N0 --> N3
+    N0 --> N4
+    N0 --> N5
 ```
 
 Equivalent projects may use Martin's vocabulary:
@@ -65,20 +71,27 @@ Layer-first top-level folders are compatible with feature/capability ownership b
 
 Example:
 
-```text
-domain/
-├── orders/
-└── users/
-
-application/
-├── orders/
-│   ├── ports/
-│   └── use-cases/
-└── users/
-
-infrastructure/
-├── orders/
-└── users/
+```mermaid
+flowchart TD
+    N0["domain/"]
+    N1["orders/"]
+    N2["users/"]
+    N3["application/"]
+    N4["orders/"]
+    N5["ports/"]
+    N6["use-cases/"]
+    N7["users/"]
+    N8["infrastructure/"]
+    N9["orders/"]
+    N10["users/"]
+    N0 --> N1
+    N0 --> N2
+    N3 --> N4
+    N4 --> N5
+    N4 --> N6
+    N3 --> N7
+    N8 --> N9
+    N8 --> N10
 ```
 
 Do not create global dumping grounds such as:
