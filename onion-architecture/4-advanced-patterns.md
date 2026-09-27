@@ -1,82 +1,152 @@
-> **[Onion Architecture](README.md)** › Appendix, Advanced Patterns. Full reference list: [References](references.md).
+> **[Onion Architecture](README.md)** › Advanced Patterns.
 
-## 8. Appendix: Advanced Patterns (Bonus)
+# 8. Advanced Patterns
 
-The patterns below are **not part of the core four-layer model**. They are concrete techniques and
-recommended conventions used by production applications built on this architecture, included to show how
-non-trivial concerns find a natural home in a specific layer without disturbing the others. They are
-optional.
+These patterns are **not part of the definition of Onion Architecture**. They are examples of production concerns that should be assigned to an owner without reversing dependency direction.
 
-### 8.1 Offline-first synchronization with CRDT / Last-Write-Wins (Infrastructure)
+---
 
-A `SyncEngine` loads cached data from `localStorage` instantly, then reconciles it with the server in the
-background. Each entity may carry a `_localUpdatedAt` timestamp; on merge, a recent local edit wins over
-stale server data within a short window, otherwise the server is authoritative. This is a deliberate
-**Last-Write-Wins register**, the simplest member of the family of Conflict-free Replicated Data Types
-[Shapiro et al. 2011]. It lives entirely in Infrastructure, behind the repository boundary, so use cases
-and components remain unaware that caching or conflict resolution occur.
+## 8.1 Offline data and synchronization
 
-### 8.2 Optimistic updates (Presentation + Infrastructure)
+Offline caching, conflict resolution and synchronization are not automatically Domain concerns.
 
-A store applies a mutation to local state immediately (so the UI responds without waiting for the network),
-then confirms it against the server in the background and reconciles via the sync engine. The optimistic
-write is a Presentation concern; the reconciliation rules live in Infrastructure. The use case in between
-stays a plain orchestration step.
+Separate:
 
-### 8.3 Transparent token refresh & request deduplication (Infrastructure)
+```text
+business conflict rule
+-> Domain/Application if it is product policy
 
-The HTTP client refreshes an expired access token on a `401` and retries the original request. Concurrent
-`401`s share a single in-flight refresh promise (`_refreshPromise`) so the refresh endpoint is called once,
-not once per failed request. Because this is confined to `client.js`, authentication lifetime is invisible
-to every layer above it.
+storage mechanism
+-> Infrastructure
 
-### 8.4 Shell "boards" pattern (Presentation)
-
-A fixed application shell (top bar + sidebar) exposes named outlets into which individual views publish
-contextual controls (filters, toolbars) via Vue's `Teleport`. This keeps the chrome stable while letting
-each page contribute its own controls, and it is purely a Presentation-layer composition technique.
-
-### 8.5 Feature-based component organization (Presentation)
-
-As a Presentation layer grows, a flat `presentation/components/` directory degrades into a bag of unrelated
-files where `LoginForm.vue` sits beside `OrderCard.vue` and a generic `Button.vue`. The remedy is to group
-components by the **feature** (or domain area) they serve, with a `shared/` folder reserved for genuinely
-cross-feature primitives:
-
+UI optimistic feedback
+-> Presentation
 ```
+
+For example, "last write wins" is only a correct domain rule if the product actually accepts that conflict policy. Do not call a timestamp overwrite strategy a CRDT merely because it resolves conflicts.
+
+A true CRDT has mathematical convergence properties; a simple LWW policy may be appropriate, but name it accurately.
+
+---
+
+## 8.2 Optimistic updates
+
+Optimistic feedback usually spans concerns:
+
+```text
+Presentation
+  -> display provisional state / pending state
+
+Application
+  -> owns operation policy when meaningful
+
+Infrastructure
+  -> performs remote mutation / retry / transport
+```
+
+Rollback/reconciliation semantics belong where their meaning lives.
+
+A generic server-state library can own purely technical cache reconciliation when no application policy is being bypassed.
+
+---
+
+## 8.3 Token refresh and request deduplication
+
+Transparent HTTP token refresh, request coalescing and transport retries are normally Infrastructure concerns.
+
+```text
+use case
+-> application port
+-> HTTP adapter
+   -> token refresh
+   -> retry
+   -> deduplication
+```
+
+Inner policy should not receive raw `401`, Axios errors or retry counters unless those details have actual application meaning.
+
+---
+
+## 8.4 Feature ownership in Presentation
+
+A growing Presentation layer benefits from feature ownership, but that is **frontend architecture inside the outer ring**, not an Onion ring.
+
+The canonical guide is:
+
+**[Frontend Presentation Architecture](../frontend/presentation-architecture.md)**
+
+Recommended direction:
+
+```text
 presentation/
-└── components/
-    ├── shared/              # cross-feature primitives: BaseButton, BaseModal, Badge
-    │   ├── BaseButton.vue
-    │   └── BaseModal.vue
-    ├── auth/                # everything the auth feature renders
-    │   ├── LoginForm.vue
-    │   ├── SignupForm.vue
-    │   └── UserMenu.vue
-    └── orders/
-        ├── OrderList.vue
-        ├── OrderCard.vue
-        └── OrderFilters.vue
+├── app/
+├── pages/
+├── features/
+│   ├── auth/
+│   └── orders/
+└── shared/
 ```
 
-The rule of thumb: a component lives in a feature folder when it is meaningful only to that feature; it
-graduates to `shared/` only once a *second* feature genuinely needs it. Resist promoting early, a premature
-`shared/` becomes its own junk drawer, the very problem feature folders exist to solve.
+Do not duplicate the full frontend folder specification inside the Onion guide.
 
-This is the same "screaming architecture" instinct the top-level layer folders already express
-[Martin 2017], applied one level down: the folder names announce *what the UI is about* (auth, orders)
-before *what the pieces are* (forms, cards). It also follows the colocation principle, code that changes
-together should live together, so a change to the auth screens touches one folder instead of ranging across
-a flat tree [Dodds 2019]. Modern frontend methodologies such as Feature-Sliced Design formalize exactly this
-feature-first slicing [Feature-Sliced Design].
+---
 
-A route-level component in `presentation/views/` then *composes* feature components: the feature folder is
-the home of the pieces, the view is the assembly point.
+## 8.5 State libraries
 
-### 8.6 Styling & animation architecture (Presentation)
+Redux, Pinia, Zustand and equivalent state libraries are Presentation mechanisms.
 
-Where a component's styles and imperative animations (GSAP timelines, scroll triggers) should live, the
-mirrored `styles/` tree vs. colocation in the feature folder, and when to choose each, is covered in its own
-companion document: **[styling-and-animation.md](5-styling-and-animation.md)**. It is a Presentation-layer
-detail, kept separate so this guide stays focused on the four core layers.
+They can call Application use cases through injected dependencies/adapters without becoming a new Onion layer.
 
+See **[State Management and Side Effects](../frontend/state-management.md)**.
+
+---
+
+## 8.6 Design systems
+
+CSS, Panda CSS, Tailwind, CSS Modules and component recipes are Presentation mechanisms.
+
+Token/recipe architecture is documented centrally in:
+
+**[Styling and Design-System Architecture](../frontend/styling-and-design-system.md)**.
+
+---
+
+## 8.7 Background and realtime work
+
+WebSocket/SSE clients, message subscriptions and browser workers are outer mechanisms.
+
+A useful split:
+
+```text
+Infrastructure
+-> connection/protocol/reconnect
+
+Application
+-> what events mean for the use case
+
+Presentation
+-> how current UI reacts/displays
+```
+
+If reconnect policy itself is a product requirement, elevate that policy appropriately instead of assuming every retry rule is merely Infrastructure.
+
+---
+
+## 8.8 Do not add patterns by fashion
+
+Before introducing CQRS, event sourcing, CRDTs, a global state machine or a complex sync engine, identify the actual force:
+
+- contention?
+- offline editing?
+- auditability?
+- independent reads/writes?
+- long-running workflows?
+- distributed convergence?
+
+A pattern without its motivating problem is architectural debt.
+
+## Sources
+
+- Jeffrey Palermo, Onion Architecture: https://jeffreypalermo.com/2008/07/
+- Redux, Side Effects Approaches: https://redux.js.org/usage/side-effects-approaches
+- Shapiro et al., "Conflict-Free Replicated Data Types" (2011): https://inria.hal.science/inria-00609399/document
