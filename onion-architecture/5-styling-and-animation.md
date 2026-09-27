@@ -26,13 +26,12 @@ Presentation styling may depend on UI state and design-system contracts.
 
 Inner layers must not depend on styling mechanisms:
 
-```text
-domain          -X-> CSS/Panda/DOM
-application     -X-> CSS/Panda/DOM
-
-presentation
-  -> style system
-  -> domain/application meaning through allowed inner contracts
+```mermaid
+flowchart LR
+    D["Domain"] -. forbidden .-> CSS["CSS / Panda / DOM"]
+    A["Application"] -. forbidden .-> CSS
+    P["Presentation"] --> STYLE["Style system"]
+    P --> INNER["Domain / application meaning through allowed inner contracts"]
 ```
 
 A domain status may be mapped to a visual tone in Presentation:
@@ -56,12 +55,12 @@ Do not put `color: 'green'` or `badgeVariant` into the Domain object.
 
 Component-local visual concerns should normally travel with the component:
 
-```text
-ClosureStatusBadge/
-├── ClosureStatusBadge.tsx
-├── ClosureStatusBadge.styles.ts
-├── ClosureStatusBadge.types.ts
-└── index.ts
+```mermaid
+flowchart TD
+    C["ClosureStatusBadge/"] --> X["ClosureStatusBadge.tsx"]
+    C --> S["ClosureStatusBadge.styles.ts"]
+    C --> T["ClosureStatusBadge.types.ts"]
+    C --> I["index.ts"]
 ```
 
 Shared design-system primitives belong to a shared design-system owner.

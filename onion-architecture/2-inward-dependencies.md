@@ -6,10 +6,10 @@
 
 Onion Architecture protects the center from outer technology.
 
-```text
-Presentation ───────┐
-                    ├──> Application ───> Domain
-Infrastructure ─────┘
+```mermaid
+flowchart LR
+    P["Presentation"] --> A["Application"] --> D["Domain"]
+    I["Infrastructure"] --> A
 ```
 
 The important arrow is the **source-code dependency**.
@@ -59,14 +59,17 @@ const placeOrder = makePlaceOrder({ orders })
 
 Source dependency:
 
-```text
-SqlOrderRepository -> OrderRepository <- placeOrder
+```mermaid
+flowchart LR
+    SQL["SqlOrderRepository"] --> PORT["OrderRepository"]
+    UC["placeOrder"] --> PORT
 ```
 
 Runtime call:
 
-```text
-placeOrder -> SqlOrderRepository -> database
+```mermaid
+flowchart LR
+    UC["placeOrder"] --> SQL["SqlOrderRepository"] --> DB["Database"]
 ```
 
 No contradiction exists because dependency direction and control flow are different concepts.
@@ -137,15 +140,11 @@ Do not force every infrastructure error into a Domain error.
 
 Classify by meaning:
 
-```text
-"Order cannot be cancelled after shipment"
--> Domain error
-
-"Requested use case cannot complete because dependency is unavailable"
--> Application error/result
-
-"HTTP 502 / ECONNRESET / SQLSTATE ..."
--> Infrastructure detail; map before it leaks inward/outward
+```mermaid
+flowchart LR
+    D1["Order cannot be cancelled after shipment"] --> DE["Domain error"]
+    A1["Use case cannot complete because dependency is unavailable"] --> AE["Application error / result"]
+    I1["HTTP 502 / ECONNRESET / SQLSTATE"] --> IE["Infrastructure detail; map before crossing boundaries"]
 ```
 
 Presentation should receive an application/presentation-appropriate failure, not raw Axios/Prisma/driver exceptions.
@@ -156,19 +155,19 @@ Presentation should receive an application/presentation-appropriate failure, not
 
 Avoid the misleading linear stack:
 
-```text
-Presentation -> Application -> Infrastructure -> Domain
+```mermaid
+flowchart LR
+    P["Presentation"] --> A["Application"] --> I["Infrastructure"] --> D["Domain"]
 ```
 
 That makes Application depend on Infrastructure or suggests Infrastructure is an inner service layer.
 
 The intended model is:
 
-```text
-Presentation -----> Application -----> Domain
-                       ^
-                       |
-Infrastructure --------+
+```mermaid
+flowchart LR
+    P["Presentation"] --> A["Application"] --> D["Domain"]
+    I["Infrastructure"] --> A
 ```
 
 Infrastructure implements Application-owned ports.

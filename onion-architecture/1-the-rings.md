@@ -4,14 +4,9 @@
 
 This guide uses four practical areas to explain Onion Architecture:
 
-```text
-Presentation / Infrastructure
-            |
-            v
-       Application
-            |
-            v
-          Domain
+```mermaid
+flowchart BT
+    O["Presentation / Infrastructure"] --> A["Application"] --> D["Domain"]
 ```
 
 The drawing is a dependency model, not a call-stack diagram. Runtime control can move outward through injected ports while source dependencies still point inward.
@@ -67,8 +62,9 @@ Domain should not import:
 
 ### Dependency direction
 
-```text
-Domain -> Domain
+```mermaid
+flowchart LR
+    D["Domain"] --> D
 ```
 
 "Depends on nothing" is useful shorthand for "depends on no outer application layer". Domain code can of course depend on the language/runtime standard library and carefully chosen domain-safe libraries.
@@ -129,8 +125,10 @@ Application should not import:
 
 ### Dependency direction
 
-```text
-Application -> Application + Domain
+```mermaid
+flowchart LR
+    A["Application"] --> A
+    A --> D["Domain"]
 ```
 
 Ports live here when they express capabilities required by application policy.
@@ -177,18 +175,20 @@ The adapter knows the inner contract. The Application layer does not know this c
 
 External types should normally stop here:
 
-```text
-ApiClosureDto
--> mapper
--> Application/Domain representation
+```mermaid
+flowchart LR
+    DTO["ApiClosureDto"] --> M["Mapper"] --> AD["Application / Domain representation"]
 ```
 
 Do not leak OpenAPI generated models, ORM records or SDK objects inward simply because their TypeScript shapes happen to match.
 
 ### Dependency direction
 
-```text
-Infrastructure -> Infrastructure + Application + Domain
+```mermaid
+flowchart LR
+    I["Infrastructure"] --> I
+    I --> A["Application"]
+    I --> D["Domain"]
 ```
 
 Infrastructure must not depend on Presentation.
@@ -246,11 +246,10 @@ That is not business policy merely because it contains conditionals.
 
 Recommended strict flow:
 
-```text
-Presentation
--> Application
--> port
-<- Infrastructure adapter
+```mermaid
+flowchart LR
+    P["Presentation"] --> A["Application"] --> PORT["Port"]
+    I["Infrastructure adapter"] --> PORT
 ```
 
 If a project deliberately allows Presentation to use a technical adapter directly for a simple UI-only concern, document that as a scoped architectural decision. Do not present the leak as the canonical Onion boundary.
@@ -259,8 +258,10 @@ If a project deliberately allows Presentation to use a technical adapter directl
 
 A strict default:
 
-```text
-Presentation -> Presentation + Application
+```mermaid
+flowchart LR
+    P["Presentation"] --> P
+    P --> A["Application"]
 ```
 
 Some systems allow Presentation to import Domain types directly because Domain is inward. Others require all Presentation contracts to arrive through Application. Pick and enforce one policy.
@@ -299,13 +300,14 @@ See **[Composition Root](../foundations/composition-root.md)**.
 
 Examples:
 
-```text
-business authorization rule -> Domain/Application
-HTTP auth header            -> Infrastructure
-route guard                 -> Presentation
-logging transport           -> Infrastructure
-use-case audit decision     -> Application
-design tokens               -> Presentation
+```mermaid
+flowchart LR
+    BA["Business authorization rule"] --> DA["Domain / Application"]
+    HH["HTTP auth header"] --> I1["Infrastructure"]
+    RG["Route guard"] --> P1["Presentation"]
+    LT["Logging transport"] --> I2["Infrastructure"]
+    UA["Use-case audit decision"] --> A["Application"]
+    DT["Design tokens"] --> P2["Presentation"]
 ```
 
 Separate the policy from the mechanism.
