@@ -138,6 +138,8 @@ See **[Frontend Architecture](../frontend/README.md)** for the repository's curr
 
 ---
 
+<a id="34-the-pattern-in-the-wild"></a>
+
 ## 3.4 Related implementations in the wild
 
 The following ecosystems use concepts compatible with MVVM or Presentation Model, but they should not be used to claim all modern UI frameworks "are MVVM":
