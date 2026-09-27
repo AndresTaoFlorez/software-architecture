@@ -1,348 +1,192 @@
-# Onion Architecture for the Frontend
+# Onion Architecture
 
-> A reusable blueprint for structuring frontend applications around stable business rules, drawn as
-> four concentric rings. Written to be applied to any new project, and to be defensible: every
-> prescriptive claim is tied to a verifiable source in [References](references.md).
+> A domain-centered architecture in which dependencies point inward and technical infrastructure remains at the edge.
 
-← Back to [architecture overview](../README.md) · Compare with the [Clean Architecture guide](../clean-architecture)
+← [Architecture overview](../README.md) · [Foundations](../foundations/README.md) · [Frontend architecture](../frontend/README.md) · [Clean Architecture](../clean-architecture)
 
 ---
 
-## Contents
+## 1. Scope
 
-This guide is split across several files. Each keeps its original **§ number as a stable identifier**, so
-a reference to "§5.4" always means the same thing, wherever it is read.
+Jeffrey Palermo introduced Onion Architecture for applications with substantial domain behavior and long expected lifetimes. His original guidance explicitly contrasts that target with small websites where the additional abstraction may not pay for itself.
 
-- **[1 · The Rings](1-the-rings.md)** — *§3: Domain · Application · Infrastructure · Presentation*
-- **[2 · Inward Dependencies](2-inward-dependencies.md)** — *§2 + §4: the Dependency Rule and how it plays out in imports*
-- **[3 · Testing the Rings](3-testing-in-onion.md)** — *§5: per-layer test doubles, the test pyramid on the onion*
-- **[4 · Advanced Patterns](4-advanced-patterns.md)** — *§8: CRDT sync, optimistic updates, token refresh, feature folders*
-- **[5 · Styling & Animation](5-styling-and-animation.md)** — *Presentation-ring styling layout*
-- **[6 · Scaling: Startup to Enterprise](6-scaling.md)** — *§9: the four growth phases, decision tree, red flags*
-- **[7 · Type Placement](#type-placement-in-onion-architecture)** — *where TypeScript types live by ownership*
-- **[8 · Naming & Conventions](#naming--conventions)** — *portable defaults for files and folders*
-- **[References](references.md)** — *§10: every cited source*
+The model is therefore a tool for managing complexity, not a default folder template for every program.
 
-The interactive demo lives in [Onion Architecture.html](Onion%20Architecture.html).
+Its central goals are:
 
----
+- keep the domain model independent from infrastructure;
+- place application behavior around the domain;
+- depend on interfaces/contracts toward the center;
+- push databases, UI frameworks, web services and other mechanisms outward.
 
-## 1. Introduction & Purpose
+## 2. Relationship to Clean and Hexagonal
 
-This document describes a frontend architecture organized into **four concentric rings**,
-**Domain**, **Application**, **Infrastructure**, and **Presentation**. Its purpose is to be a single
-authoritative reference: a blueprint that can be reproduced across projects regardless of the specific
-framework in use, and a rationale that explains *why* each ring exists.
+Onion, Clean Architecture and Ports & Adapters share a family resemblance:
 
-The central goal is one idea: **protect business rules from volatile details.** User interfaces, HTTP
-clients, state-management libraries, and storage mechanisms change frequently; the meaning of the
-business does not. An architecture earns its keep when the parts that change often cannot force changes
-on the parts that should stay stable.
+```text
+volatile mechanisms
+        |
+        v
+adapters / infrastructure / UI
+        |
+        v
+application policy
+        |
+        v
+domain
+```
 
-The model presented here is not new. It synthesizes four well-established bodies of work and adapts them
-to the frontend:
+They should not be described as producing "identical code".
 
-- **Onion Architecture**: concentric layers with dependencies pointing inward [Palermo 2008].
-- **Clean Architecture**: the Dependency Rule and the separation of entities, use cases, and details
-  [Martin 2012; Martin 2017]. *(See the [Clean Architecture guide](../clean-architecture) for that framing.)*
-- **Hexagonal Architecture (Ports & Adapters)**: isolating the core behind explicit interfaces
-  [Cockburn 2005].
-- **Domain-Driven Design**: entities and a domain model as the heart of the system [Evans 2003].
+- **Onion** emphasizes a domain model at the center and inward dependencies.
+- **Clean** emphasizes policies vs. mechanisms with Entities, Use Cases, Interface Adapters and Frameworks/Drivers.
+- **Hexagonal** emphasizes ports as purposeful conversations and adapters connecting external actors to the application.
 
-What follows treats the frontend as a first-class application with its own domain, not merely a "view" of
-a backend. The same layering that protects server-side business rules protects client-side ones.
+A real system can use ideas from all three while documenting which boundaries it actually enforces.
 
-The single rule that holds the whole model together — *dependencies point inward* — is detailed in
-[Inward Dependencies](2-inward-dependencies.md). The four rings themselves are in [The Rings](1-the-rings.md).
+## 3. The rings
 
----
+This guide uses four practical areas:
 
-## 6. Why This Architecture
-<a id="why-this-architecture"></a>
+```text
+Domain
+Application
+Infrastructure
+Presentation
+```
 
-Each benefit below is a direct consequence of the Dependency Rule and dependency inversion.
+Infrastructure and Presentation are both outer concerns. Neither is a privileged middle layer that inner policy depends upon.
 
-- **Testability without infrastructure.** Because inner rings depend only on abstractions, use cases and
-  entities can be tested with fakes and with no network, framework, or DOM, the mechanism is laid out in
-  full in [§5](3-testing-in-onion.md#5-testing-the-layers). Independence from frameworks and from the UI is an explicit, stated
-  goal of Clean Architecture [Martin 2017].
-- **Replaceable details.** Transport, storage, and UI sit in outer rings behind ports, so they can be
-  swapped, REST to GraphQL, Axios to Fetch, one UI framework to another, by rewriting adapters, not the
-  core. This substitutability is the defining promise of Ports & Adapters [Cockburn 2005].
-- **Independent evolution.** The domain can grow without waiting on UI decisions, and the UI can be
-  redesigned without risking business rules, because neither names the other [Palermo 2008].
-- **Intent-revealing structure.** Top-level folders name *what the application does* (its domain and use
-  cases) before *how it is delivered*, so the structure communicates purpose, the "screaming
-  architecture" idea [Martin 2017].
-- **A model worth talking about.** A rich, isolated domain model gives the whole team a shared, precise
-  vocabulary, which is the central payoff of Domain-Driven Design [Evans 2003].
+Detailed definitions remain in **[The Rings](1-the-rings.md)**.
 
-**Frontend-specific payoff.** On the client these benefits compound, because the frontend is where
-technology churns fastest. A new rendering framework, a migration from polling to WebSocket, or an
-offline/optimistic strategy can all be introduced as outer-ring changes. The business meaning, encoded in
-entities and use cases, survives untouched. In a field where the average tool's lifespan is short, placing
-the durable asset at the protected center is the architecture's highest-value property.
+## 4. Dependency rule
 
----
+Recommended source dependency policy:
+
+```text
+domain
+  -> domain
+
+application
+  -> application, domain
+
+infrastructure
+  -> infrastructure, application, domain
+
+presentation
+  -> presentation, application
+```
+
+Composition sits at the outer edge and assembles concrete implementations.
+
+See:
+
+- **[Inward Dependencies](2-inward-dependencies.md)**
+- **[Dependency Boundaries](../foundations/dependency-boundaries.md)**
+- **[Composition Root](../foundations/composition-root.md)**
+
+## 5. Frontend application
+
+Onion tells us where business/application policy should sit relative to technical UI mechanisms. It does not prescribe the internal layout of a large Presentation ring.
+
+Canonical frontend guidance is centralized in:
+
+- **[Presentation Architecture](../frontend/presentation-architecture.md)**
+- **[State Management](../frontend/state-management.md)**
+- **[Styling and Design Systems](../frontend/styling-and-design-system.md)**
+
+This keeps React/Redux/Panda guidance out of the definition of Onion itself.
+
+## 6. Why use Onion?
+
+It is valuable when:
+
+- the application has meaningful domain behavior;
+- infrastructure is expected to change;
+- business rules deserve isolated tests;
+- multiple delivery mechanisms consume the same application policy;
+- the project is expected to live long enough for boundary protection to repay its cost.
+
+It may be unnecessary when:
+
+- the application is tiny;
+- most behavior is simple data transport;
+- there is little policy worth protecting;
+- the abstraction cost is greater than the expected change cost.
+
+Architectural rigor includes knowing when **not** to add architecture.
 
 ## 7. Type placement in Onion Architecture
 <a id="type-placement-in-onion-architecture"></a>
 
-In a TypeScript project using Onion Architecture, types should live in the layer
-that owns their meaning.
+Type ownership follows meaning, not convenience:
 
-Avoid using a generic `src/types/` folder as the default place for all types. It
-usually becomes a dumping ground and makes architectural boundaries unclear.
-
-Rule:
-
-> A type belongs to the innermost layer that owns its meaning.
-
-### Domain
-
-Use `domain/` for product concepts that would still exist without React, Redux,
-HTTP, storage, or any external framework.
+| Type | Owner |
+| --- | --- |
+| domain concept / value object | Domain |
+| use-case input/output / required port | Application |
+| external DTO / storage record / SDK type | Infrastructure |
+| component props / ViewModel / form state | Presentation |
 
 Examples:
 
 ```text
-SupportCase
-CaseStatus
-KnowledgeDocument
-ResponseProposal
-WorkflowNodeStatus
-CurrentUser
-Permission
+ClosurePeriod            -> domain
+ExecuteClosureCommand    -> application
+ApiClosureResponseDto    -> infrastructure
+ClosureFormState         -> presentation
+UploadQueueItem          -> presentation
 ```
 
-Suggested location:
+A `type` import still creates source coupling even though TypeScript erases it at runtime.
 
-```text
-domain/<feature>/entities/
-domain/<feature>/value-objects/
-domain/<feature>/errors/
-domain/shared/
-```
+For the fuller rules, see **[Dependency Boundaries](../foundations/dependency-boundaries.md)**.
 
-### Application
-
-Use `application/` for use case inputs, outputs, commands, queries, and ports.
-
-Examples:
-
-```text
-GetCaseDetailInput
-GetCaseDetailResult
-SearchKnowledgeCommand
-CaseRepository
-SessionRepository
-WorkflowEventsPort
-```
-
-Suggested location:
-
-```text
-application/use-cases/<feature>/
-application/ports/<feature>/
-application/shared/
-```
-
-### Infrastructure
-
-Use `infrastructure/` for external shapes and adapter-specific types: API DTOs,
-generated OpenAPI types, SSE payloads, persistence records, storage records, and
-mapper inputs.
-
-Examples:
-
-```text
-ApiCaseResponseDto
-OpenApiCaseSchema
-SseWorkflowEventPayload
-LocalStorageThemeRecord
-```
-
-Suggested location:
-
-```text
-infrastructure/api/generated/
-infrastructure/api/dtos/
-infrastructure/api/mappers/
-infrastructure/events/
-infrastructure/storage/
-```
-
-Generated API types should not leak into `domain/` or `presentation/`. Map them
-at the infrastructure boundary.
-
-### Presentation
-
-Use `presentation/` for visual types: component props, view models, view state,
-UI commands, table columns, form state, and visual variants.
-
-Examples:
-
-```text
-CaseHeaderProps
-CaseReviewViewModel
-TableColumnDefinition
-ButtonVariant
-ToastState
-```
-
-Suggested location:
-
-```text
-presentation/components/<feature>/<Component>.types.ts
-presentation/view-models/<feature>/
-presentation/store/
-presentation/shared/
-```
-
-Component-specific props should stay colocated with the component:
-
-```text
-presentation/components/case-review/
-├── CaseHeader.tsx
-├── CaseHeader.types.ts
-├── CaseHeader.module.css
-└── CaseHeader.gsap.ts
-```
-
-### Decision rules
-
-Ask:
-
-```text
-Would this type still exist if there were no React components?
-```
-
-If yes, it probably does not belong in `components/`.
-
-Ask:
-
-```text
-Does this type describe the external API shape?
-```
-
-If yes, it belongs in `infrastructure/`, not in `domain/`.
-
-Ask:
-
-```text
-Does this type describe how a screen renders something?
-```
-
-If yes, it belongs in `presentation/`.
-
-### Import rule
-
-TypeScript `type` imports also count as architectural dependencies. Even if they
-are erased at runtime, they still create source-level coupling.
-
-Allowed direction:
-
-```text
-presentation / infrastructure / composition
-        ↓
-application
-        ↓
-domain
-```
-
-Allowed:
-
-```ts
-import type { SupportCase } from '@/domain/cases/entities/SupportCase'
-```
-
-Not allowed from `domain/`:
-
-```ts
-import type { ApiCaseResponseDto } from '@/infrastructure/api/generated'
-import type { CaseHeaderProps } from '@/presentation/components/case-review/CaseHeader.types'
-```
-
-### Quick reference
-
-| Type kind              | Layer                       | Example                                       |
-| ---------------------- | --------------------------- | --------------------------------------------- |
-| Product concept        | `domain/`                   | `SupportCase`, `CaseStatus`                   |
-| Value object           | `domain/`                   | `Confidence`, `Permission`                    |
-| Use case input/output  | `application/`              | `GetCaseDetailInput`, `SearchKnowledgeResult` |
-| Port/interface         | `application/ports/`        | `CaseRepository`, `SessionRepository`         |
-| API DTO/generated type | `infrastructure/`           | `ApiCaseResponseDto`, `OpenApiWorkflowEvent`  |
-| Mapper type            | `infrastructure/`           | `CaseDtoMapperInput`                          |
-| View model             | `presentation/view-models/` | `CaseReviewViewModel`                         |
-| Component props        | `presentation/components/`  | `CaseHeaderProps`                             |
-| Visual variant         | `presentation/`             | `ButtonVariant`, `BadgeTone`                  |
-
-### Avoid
-
-Avoid this as the default structure:
-
-```text
-src/types/
-├── cases.ts
-├── users.ts
-├── api.ts
-├── ui.ts
-└── common.ts
-```
-
-Small shared folders are acceptable only inside the layer that owns the meaning:
-
-```text
-domain/shared/
-application/shared/
-presentation/shared/
-```
-
-Do not use shared folders as a shortcut for unclear ownership.
-
-## 8. Naming & Conventions (portable defaults)
+## 8. Naming & Conventions
 <a id="naming--conventions"></a>
 
-These defaults make the rules above visible in the file system. They are recommendations, not laws, but
-adopting them across projects keeps the structure recognizable.
+Naming is a project convention, not Onion Architecture.
 
-**Folder layout.**
+A useful default:
 
-```
+```text
 src/
 ├── domain/
-│   ├── entities/          # PascalCase: User.js, Order.js
-│   └── errors/            # DomainErrors.js
 ├── application/
-│   ├── ports/             # interfaces the use cases depend on
-│   └── use-cases/         # camelCase: createUserUseCase.js, grouped by concept
 ├── infrastructure/
-│   ├── http/              # client.js, ApiError.js
-│   ├── repositories/      # PascalCase adapters: UserRepository.js
-│   └── realtime/          # wsClient.js
-└── presentation/
-    ├── views/             # PascalCase: LoginView.vue
-    ├── components/        # grouped by feature + a shared/ folder (see §8.5)
-    ├── stores/            # camelCase: useUserStore.js
-    ├── router/            # route definitions + guards
-    └── styles/            # design tokens + component styles (see 5-styling-and-animation.md)
+├── presentation/
+└── composition/
 ```
 
-**Conventions.**
-- **Path alias.** Map `@` to `src/` so imports are absolute and the layer is always visible in the path
-  (`@/domain/...`, `@/application/...`). Relative `../../..` chains hide layer crossings.
-- **File naming.** PascalCase for entities, repositories, and components; camelCase for use cases, stores,
-  and composables.
-- **Test placement.** Co-locate tests in `__tests__/` siblings, named `<Unit>.test.js`, mirroring the
-  layer they cover, see [§5.6](3-testing-in-onion.md#56-where-tests-live).
-- **Import boundaries.** Treat the allowed/forbidden table in [§4.1](2-inward-dependencies.md#41-allowed-and-forbidden-imports) as
-  a lint target; an automated import-boundary check turns the Dependency Rule into a guarantee rather than
-  a guideline.
-- **Styles out of components.** Keep structural styles in dedicated files rather than inside component
-  markup, reserving inline styles for genuinely runtime-driven values (positions, computed sizes, per-entity
-  colors). This keeps the Presentation layer's components focused on structure and behavior. Two layouts for
-  those dedicated style and animation files, a mirrored `styles/` tree or colocation in the feature folder,
-  are described in the companion document [5-styling-and-animation.md](5-styling-and-animation.md).
-- **Components by feature.** Group components into feature folders (`components/auth/`, `components/orders/`)
-  with a `shared/` folder for cross-feature primitives, rather than a flat `components/` directory, see
-  [§8.5](4-advanced-patterns.md#85-feature-based-component-organization-presentation).
+Within each area, prefer capability ownership:
+
+```text
+application/
+├── auth/
+├── closures/
+└── orders/
+```
+
+rather than global buckets such as `services/` or `helpers/`.
+
+Use path aliases only when they make ownership visible rather than obscure it.
+
+Use explicit public APIs for non-trivial modules.
+
+See **[Module Boundaries and Public APIs](../foundations/module-boundaries-and-public-apis.md)**.
+
+## 9. Guide
+
+- **[1 · The Rings](1-the-rings.md)**
+- **[2 · Inward Dependencies](2-inward-dependencies.md)**
+- **[3 · Testing the Rings](3-testing-in-onion.md)**
+- **[4 · Advanced Patterns](4-advanced-patterns.md)**
+- **[5 · Styling & Animation](5-styling-and-animation.md)** — now redirects to the central frontend design-system guidance while retaining Onion placement notes.
+- **[6 · Scaling](6-scaling.md)**
+- **[References](references.md)**
+
+## Sources
+
+- Jeffrey Palermo, "The Onion Architecture" series (2008): https://jeffreypalermo.com/2008/07/
+- Robert C. Martin, "The Clean Architecture" (2012): https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
+- Alistair Cockburn, "Hexagonal Architecture" (2005): https://alistair.cockburn.us/hexagonal-architecture/
