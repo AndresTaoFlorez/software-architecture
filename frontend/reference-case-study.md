@@ -2,9 +2,11 @@
 
 This case study records architectural lessons extracted from:
 
-```text
-AndresTaoFlorez/tyba-support-platform
-└── experiments/xxi/web-ui
+```mermaid
+flowchart TD
+    N0["AndresTaoFlorez/tyba-support-platform"]
+    N1["experiments/xxi/web-ui"]
+    N0 --> N1
 ```
 
 The reviewed snapshot is a **reference implementation, not the specification**.
@@ -41,13 +43,19 @@ The pattern should be retained; the concrete classes are project-specific.
 
 Examples such as:
 
-```text
-components/
-├── auth/
-├── closures/
-├── profile/
-├── token/
-└── shared/
+```mermaid
+flowchart TD
+    N0["components/"]
+    N1["auth/"]
+    N2["closures/"]
+    N3["profile/"]
+    N4["token/"]
+    N5["shared/"]
+    N0 --> N1
+    N0 --> N2
+    N0 --> N3
+    N0 --> N4
+    N0 --> N5
 ```
 
 are materially better than one flat component directory.
@@ -58,12 +66,17 @@ The generalized version in this repository goes further: when a feature becomes 
 
 The pattern:
 
-```text
-Component/
-├── Component.tsx
-├── Component.styles.ts
-├── Component.types.ts
-└── index.ts
+```mermaid
+flowchart TD
+    N0["Component/"]
+    N1["Component.tsx"]
+    N2["Component.styles.ts"]
+    N3["Component.types.ts"]
+    N4["index.ts"]
+    N0 --> N1
+    N0 --> N2
+    N0 --> N3
+    N0 --> N4
 ```
 
 is a good default for non-trivial components.
@@ -112,17 +125,27 @@ That is no longer a session capability.
 
 Refactor conceptually toward coherent ports:
 
-```text
-application/
-├── auth/
-│   └── ports/AuthGateway.ts
-├── catalogs/
-│   └── ports/JudicialCatalogGateway.ts
-├── closures/
-│   ├── ports/ClosureGateway.ts
-│   └── ports/ClosureFileGateway.ts
-└── preferences/
-    └── ports/PreferencesStore.ts
+```mermaid
+flowchart TD
+    N0["application/"]
+    N1["auth/"]
+    N2["ports/AuthGateway.ts"]
+    N3["catalogs/"]
+    N4["ports/JudicialCatalogGateway.ts"]
+    N5["closures/"]
+    N6["ports/ClosureGateway.ts"]
+    N7["ports/ClosureFileGateway.ts"]
+    N8["preferences/"]
+    N9["ports/PreferencesStore.ts"]
+    N0 --> N1
+    N1 --> N2
+    N0 --> N3
+    N3 --> N4
+    N0 --> N5
+    N5 --> N6
+    N5 --> N7
+    N0 --> N8
+    N8 --> N9
 ```
 
 Do not mechanically create one interface per endpoint. Port granularity follows cohesive external conversations.
@@ -133,11 +156,15 @@ The same capability sprawl appears in the use-case class.
 
 Prefer use-case/capability ownership:
 
-```text
-application/closures/
-├── execute-closure.ts
-├── get-closure-history.ts
-└── ...
+```mermaid
+flowchart TD
+    N0["application/closures/"]
+    N1["execute-closure.ts"]
+    N2["get-closure-history.ts"]
+    N3["..."]
+    N0 --> N1
+    N0 --> N2
+    N0 --> N3
 ```
 
 A class containing several strongly cohesive use cases may still be reasonable. The rule is cohesion, not "one class per method".
@@ -155,27 +182,38 @@ Names such as `FormState`, `UploadQueueItem` and `WebTable` indicate UI or bound
 
 A normalized model would separate:
 
-```text
-domain/
-├── auth/
-├── closures/
-│   ├── Closure.ts
-│   ├── ClosurePeriod.ts
-│   └── ClosureStatus.ts
-└── judicial-office/
-
-application/
-├── closures/
-│   ├── ExecuteClosureCommand.ts
-│   └── ports/
-└── ...
-
-presentation/features/closures/model/
-├── closure-form.types.ts
-└── upload-queue.types.ts
-
-infrastructure/
-└── ...
+```mermaid
+flowchart TD
+    N0["domain/"]
+    N1["auth/"]
+    N2["closures/"]
+    N3["Closure.ts"]
+    N4["ClosurePeriod.ts"]
+    N5["ClosureStatus.ts"]
+    N6["judicial-office/"]
+    N7["application/"]
+    N8["closures/"]
+    N9["ExecuteClosureCommand.ts"]
+    N10["ports/"]
+    N11["..."]
+    N12["presentation/features/closures/model/"]
+    N13["closure-form.types.ts"]
+    N14["upload-queue.types.ts"]
+    N15["infrastructure/"]
+    N16["..."]
+    N0 --> N1
+    N0 --> N2
+    N2 --> N3
+    N2 --> N4
+    N2 --> N5
+    N0 --> N6
+    N7 --> N8
+    N8 --> N9
+    N8 --> N10
+    N7 --> N11
+    N12 --> N13
+    N12 --> N14
+    N15 --> N16
 ```
 
 ### 2.4 Browser `File` leaks into Application
@@ -206,14 +244,21 @@ The public facade is a good idea, but it accumulates query logic, draft behavior
 
 Keep the facade while splitting internal concerns:
 
-```text
-presentation/features/closures/model/
-├── useClosureQuery.ts
-├── useClosureDraft.ts
-├── useClosureUploads.ts
-├── useClosureExecution.ts
-├── useClosureHistory.ts
-└── useClosures.ts
+```mermaid
+flowchart TD
+    N0["presentation/features/closures/model/"]
+    N1["useClosureQuery.ts"]
+    N2["useClosureDraft.ts"]
+    N3["useClosureUploads.ts"]
+    N4["useClosureExecution.ts"]
+    N5["useClosureHistory.ts"]
+    N6["useClosures.ts"]
+    N0 --> N1
+    N0 --> N2
+    N0 --> N3
+    N0 --> N4
+    N0 --> N5
+    N0 --> N6
 ```
 
 ### 2.7 Redux Toolkit mechanics leak through the facade
