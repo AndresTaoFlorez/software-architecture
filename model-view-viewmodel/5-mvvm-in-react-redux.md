@@ -38,10 +38,9 @@ Its architectural placement depends on what the operation means.
 
 If a View mainly needs cached remote data, invalidation and re-fetching:
 
-```text
-View / feature
--> RTK Query
--> server
+```mermaid
+flowchart LR
+    V["View / feature"] --> Q["RTK Query"] --> S["Server"]
 ```
 
 may be entirely appropriate.
@@ -50,12 +49,10 @@ may be entirely appropriate.
 
 If the operation contains application policy or must remain transport-independent:
 
-```text
-View
--> ViewModel/Presentation adapter
--> Application use case
--> port
--> Infrastructure adapter
+```mermaid
+flowchart LR
+    V["View"] --> VM["ViewModel / Presentation adapter"] --> A["Application use case"] --> P["Port"]
+    I["Infrastructure adapter"] --> P
 ```
 
 Do not label RTK Query universally "Infrastructure" merely because it performs HTTP. Its generated hooks and cache participate directly in Redux/Presentation, while endpoint definitions contain transport knowledge. In a strict layered system you may wrap or isolate that transport knowledge; in a simpler application you may intentionally keep the query mechanism in Presentation.
@@ -70,11 +67,10 @@ Redux Toolkit does not require an Application layer. MVVM does not require one e
 
 A Clean/Onion project may deliberately add:
 
-```text
-Redux thunk/binding
--> application use case
--> application port
--> infrastructure adapter
+```mermaid
+flowchart LR
+    R["Redux thunk / binding"] --> U["Application use case"] --> P["Application port"]
+    I["Infrastructure adapter"] --> P
 ```
 
 because application policy deserves an independent boundary.

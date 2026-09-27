@@ -85,18 +85,12 @@ Ask:
 
 Examples:
 
-```text
-"show spinner while request is pending"
--> Presentation/ViewModel
-
-"format total as localized currency"
--> Presentation/ViewModel
-
-"order cannot be cancelled after shipment"
--> Domain/Application
-
-"retry 502 with exponential backoff"
--> Infrastructure/transport policy unless product semantics say otherwise
+```mermaid
+flowchart LR
+    A["Show spinner while request is pending"] --> P1["Presentation / ViewModel"]
+    B["Format total as localized currency"] --> P2["Presentation / ViewModel"]
+    C["Order cannot be cancelled after shipment"] --> D["Domain / Application"]
+    E["Retry 502 with exponential backoff"] --> I["Infrastructure / transport policy unless product semantics say otherwise"]
 ```
 
 A large public facade can remain useful while internal responsibilities are split into focused hooks/modules.
@@ -121,16 +115,11 @@ How do application/domain policies depend on external mechanisms?
 
 A strict layered mapping can be:
 
-```text
-Presentation
-├── View
-└── ViewModel / Presentation facade
-        |
-        v
-Application use case
-        |
-        v
-Domain
+```mermaid
+flowchart TD
+    P["Presentation"] --> V["View"]
+    P --> VM["ViewModel / Presentation facade"]
+    VM --> A["Application use case"] --> D["Domain"]
 ```
 
 Infrastructure implements ports required inward and is wired at composition.
