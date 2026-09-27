@@ -14,21 +14,21 @@ single home for everything behind the GitHub Pages site.
 
 ## Layout (the four rings)
 
-```
-src/
-├── domain/                 # entities + domain errors (no framework, no I/O)
-│   ├── entities/User.ts
-│   └── errors/DomainErrors.ts
-├── application/            # use cases + the port they depend on
-│   ├── ports/UserRepository.ts
-│   └── use-cases/*.ts
-├── infrastructure/         # two adapters implementing the same port
-│   ├── InMemoryUserRepository.ts
-│   └── LocalStorageUserRepository.ts
-└── presentation/           # Vue: stores, components, composition root
-    ├── composition/container.ts   # the one place a concrete adapter is chosen
-    ├── stores/*.ts
-    └── components/*.vue
+```mermaid
+flowchart TD
+    SRC["src/"] --> D["domain/ — entities + domain errors"]
+    D --> DU["entities/User.ts"]
+    D --> DE["errors/DomainErrors.ts"]
+    SRC --> A["application/ — use cases + required port"]
+    A --> AP["ports/UserRepository.ts"]
+    A --> AU["use-cases/*.ts"]
+    SRC --> I["infrastructure/ — adapters"]
+    I --> IM["InMemoryUserRepository.ts"]
+    I --> IL["LocalStorageUserRepository.ts"]
+    SRC --> P["presentation/ — Vue UI"]
+    P --> PC["composition/container.ts"]
+    P --> PS["stores/*.ts"]
+    P --> PV["components/*.vue"]
 ```
 
 ## Run it locally

@@ -73,14 +73,17 @@ const getUser = makeGetUser({ users })
 
 Source dependencies:
 
-```text
-SqlUserRepository -> UserRepository <- getUser
+```mermaid
+flowchart LR
+    SQL["SqlUserRepository"] --> PORT["UserRepository"]
+    UC["getUser"] --> PORT
 ```
 
 Runtime control:
 
-```text
-getUser -> SqlUserRepository -> database
+```mermaid
+flowchart LR
+    UC["getUser"] --> SQL["SqlUserRepository"] --> DB["Database"]
 ```
 
 Dependency inversion makes those directions intentionally different.
@@ -101,14 +104,9 @@ Examples of outer representations:
 
 Translate at the boundary:
 
-```text
-external DTO
-    |
-    v
-adapter / mapper
-    |
-    v
-application/domain representation
+```mermaid
+flowchart TD
+    DTO["External DTO"] --> MAP["Adapter / mapper"] --> MODEL["Application / domain representation"]
 ```
 
 This does not mean every crossing needs a class. A pure mapping function is often sufficient.
@@ -139,21 +137,16 @@ Document those stricter rules as project architecture, not as quotations from Cl
 
 For the application structures documented here, we usually enforce:
 
-```text
-domain
-  -> domain
-
-application
-  -> application, domain
-
-infrastructure
-  -> infrastructure, application, domain
-
-presentation
-  -> presentation, application
-
-composition
-  -> concrete modules needed for assembly
+```mermaid
+flowchart LR
+    D["Domain"] --> D
+    A["Application"] --> D
+    I["Infrastructure"] --> A
+    I --> D
+    P["Presentation"] --> A
+    C["Composition"] -. wires .-> I
+    C -. wires .-> P
+    C -. wires .-> A
 ```
 
 This is a practical mapping of the Clean goal, not the canonical four-circle taxonomy.
