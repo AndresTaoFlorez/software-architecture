@@ -11,12 +11,13 @@ provides. This page traces the resulting cycle, then names what the convenience 
 
 ### 2.1 The MVVM cycle
 
-```
-1. User acts            ─►  a binding fires        (click, input, key)
-2. Binding invokes      ─►  a ViewModel command    (the gesture, given meaning)
-3. Command updates      ─►  ViewModel / Model      (display state and domain state change)
-4. Reactivity notifies  ─►  the binding layer      (observables / signals / store)
-5. Binding re-renders   ─►  the View               (no subscription code written by hand)
+```mermaid
+flowchart LR
+    U["User"] -->|"gesture"| V["View"]
+    V -->|"command"| VM["ViewModel"]
+    VM --> M["Model"]
+    VM -. "reactive state" .-> B["Binding"]
+    B -->|"re-render"| V
 ```
 
 Compare with [classic MVC's cycle](../model-view-controller/2-the-flow.md#21-the-classic-cycle):
@@ -24,12 +25,13 @@ steps 1–3 are the old Controller path under a new name, and steps 4–5 are th
 automated. No View subscribes to anything; no Model broadcasts to anyone. The developer declares
 *what maps to what*, and the framework maintains the mapping [Gossman 2005].
 
-```
-        gesture               command
-  User ────────►  View ────────────────►  ViewModel ────► Model
-   ▲               ▲                          │
-   │ sees          │ re-render (automatic)    │ reactive change
-   │               └──────── binding ◀────────┘
+```mermaid
+flowchart TD
+    N0["gesture command"]
+    N1["User ────────► View ────────────────► ViewModel ────► Model"]
+    N2["▲ ▲ │"]
+    N3["│ sees │ re-render (automatic) │ reactive change"]
+    N4["────── binding ◀────────┘"]
 ```
 
 ---
