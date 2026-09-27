@@ -15,11 +15,18 @@ consequence is liberating: **a test is just another adapter.** Where production 
 a port, a test plugs a fake into the same port. Nothing in the Entities or Use Cases changes between the
 two configurations — which is the entire point of having a port there.
 
-```
-   Production wiring                     Test wiring
-   ────────────────                      ───────────
-   createUser ── port ── HttpUserGateway   createUser ── port ── FakeUserRepository
-                          (real network)                         (in-memory, instant)
+```mermaid
+flowchart LR
+    subgraph Production
+        PUC["createUser"] --> PPORT["port"]
+        PPORT --> HTTP["HttpUserGateway"]
+        HTTP --> NET["real network"]
+    end
+    subgraph Test
+        TUC["createUser"] --> TPORT["port"]
+        TPORT --> FAKE["FakeUserRepository"]
+        FAKE --> MEM["in-memory / instant"]
+    end
 ```
 
 From this follows the rule of thumb that prevents fragile tests: **tests should depend on the stable inner

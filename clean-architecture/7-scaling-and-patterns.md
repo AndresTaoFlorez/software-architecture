@@ -29,12 +29,17 @@ Moving it across a process boundary is a deployment decision, not proof of bette
 
 Avoid mechanically creating:
 
-```text
-feature/
-├── entities/
-├── usecases/
-├── adapters/
-└── frameworks/
+```mermaid
+flowchart TD
+    N0["feature/"]
+    N1["entities/"]
+    N2["usecases/"]
+    N3["adapters/"]
+    N4["frameworks/"]
+    N0 --> N1
+    N0 --> N2
+    N0 --> N3
+    N0 --> N4
 ```
 
 for every small feature.
