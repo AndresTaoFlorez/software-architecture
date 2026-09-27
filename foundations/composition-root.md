@@ -25,10 +25,11 @@ createRoot(document.getElementById('root')!).render(
 
 The Composition Root is allowed to know both sides:
 
-```text
-application contract <── composition ──> infrastructure implementation
-                              │
-                              └────────> presentation/store/bootstrap
+```mermaid
+flowchart TD
+    C["Composition Root"] --> A["Application contract"]
+    C --> I["Infrastructure implementation"]
+    C --> P["Presentation / store / bootstrap"]
 ```
 
 That is not an exception to the Dependency Rule. Composition is at the outer edge of the application and exists specifically to assemble details around policy.
