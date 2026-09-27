@@ -103,12 +103,9 @@ This should become a first-class architectural practice.
 
 The project has a mature direction:
 
-```text
-tokens
--> semanticTokens
--> text/layer styles
--> sva slot recipes
--> components
+```mermaid
+flowchart LR
+    T["Tokens"] --> S["Semantic tokens"] --> TS["Text / layer styles"] --> R["sva slot recipes"] --> C["Components"]
 ```
 
 The local `sva` pattern for multipart components is worth preserving after duplicate recipes are removed.
@@ -297,24 +294,20 @@ Prefer a storage adapter and, when Redux owns the state transition, a listener/m
 
 The project contains both:
 
-```text
-Component.styles.ts
--> sva(...)
-
-presentation/recipes/*.recipes.ts
--> defineSlotRecipe(...)
+```mermaid
+flowchart LR
+    LOCAL["Component.styles.ts"] --> SVA["sva(...)"]
+    GLOBAL["presentation/recipes/*.recipes.ts"] --> SLOT["defineSlotRecipe(...)"]
 ```
 
 for overlapping visual definitions.
 
 The corrected rule is:
 
-```text
-local feature/component
--> sva
-
-shared config/design-system recipe
--> defineRecipe / defineSlotRecipe
+```mermaid
+flowchart LR
+    L["Local feature / component"] --> S["sva"]
+    G["Shared config / design-system recipe"] --> R["defineRecipe / defineSlotRecipe"]
 ```
 
 Never both for the same recipe.
@@ -345,47 +338,43 @@ and remove a generic `common` bucket unless the project can define a non-overlap
 
 The generalized structure is:
 
-```text
-src/
-├── domain/
-│   ├── auth/
-│   ├── closures/
-│   └── judicial-office/
-│
-├── application/
-│   ├── auth/
-│   │   ├── ports/
-│   │   └── use-cases/
-│   ├── catalogs/
-│   └── closures/
-│       ├── ports/
-│       └── use-cases/
-│
-├── infrastructure/
-│   ├── auth/
-│   ├── catalogs/
-│   ├── closures/
-│   └── storage/
-│
-├── composition/
-│   └── container.ts
-│
-└── presentation/
-    ├── app/
-    ├── pages/
-    ├── features/
-    │   ├── auth/
-    │   │   ├── ui/
-    │   │   ├── model/
-    │   │   └── index.ts
-    │   └── closures/
-    │       ├── ui/
-    │       ├── model/
-    │       ├── lib/
-    │       └── index.ts
-    └── shared/
-        ├── ui/
-        └── lib/
+```mermaid
+flowchart TD
+    SRC["src/"] --> D["domain/"]
+    SRC --> A["application/"]
+    SRC --> I["infrastructure/"]
+    SRC --> C["composition/"]
+    SRC --> P["presentation/"]
+    D --> DA["auth/"]
+    D --> DC["closures/"]
+    D --> DJ["judicial-office/"]
+    A --> AA["auth/"]
+    AA --> AAP["ports/"]
+    AA --> AAU["use-cases/"]
+    A --> ACAT["catalogs/"]
+    A --> ACL["closures/"]
+    ACL --> ACLP["ports/"]
+    ACL --> ACLU["use-cases/"]
+    I --> IA["auth/"]
+    I --> ICAT["catalogs/"]
+    I --> ICL["closures/"]
+    I --> IS["storage/"]
+    C --> CT["container.ts"]
+    P --> APP["app/"]
+    P --> PAGE["pages/"]
+    P --> FTR["features/"]
+    P --> SH["shared/"]
+    FTR --> FA["auth/"]
+    FA --> FAUI["ui/"]
+    FA --> FAM["model/"]
+    FA --> FAI["index.ts"]
+    FTR --> FC["closures/"]
+    FC --> FCUI["ui/"]
+    FC --> FCM["model/"]
+    FC --> FCL["lib/"]
+    FC --> FCI["index.ts"]
+    SH --> SHUI["ui/"]
+    SH --> SHLIB["lib/"]
 ```
 
 This structure is not a migration command for the XXI project. It is the **conceptual reference** extracted from it for future projects.
@@ -396,33 +385,20 @@ This structure is not a migration command for the XXI project. It is the **conce
 
 For a policy-bearing closure operation:
 
-```text
-ClosuresPage
-    |
-    v
-useClosures()                  Presentation facade
-    |
-    v
-closure bindings / state      Presentation adapter
-    |
-    v
-ExecuteClosure                 Application use case
-    |
-    v
-ClosureGateway                 Application port
-    ^
-    |
-HttpClosureGateway             Infrastructure adapter
-    ^
-    |
-Composition Root               concrete wiring
+```mermaid
+flowchart TD
+    PAGE["ClosuresPage"] --> VM["useClosures() — Presentation facade"] --> STATE["Closure bindings / state — Presentation adapter"] --> UC["ExecuteClosure — Application use case"] --> PORT["ClosureGateway — Application port"]
+    HTTP["HttpClosureGateway — Infrastructure adapter"] --> PORT
+    ROOT["Composition Root"] -. wires .-> HTTP
+    ROOT -. wires .-> UC
+    ROOT -. wires .-> STATE
 ```
 
 For a purely local visual concern:
 
-```text
-Component
--> local state
+```mermaid
+flowchart LR
+    C["Component"] --> L["Local state"]
 ```
 
 Do not route every checkbox through the entire onion.
