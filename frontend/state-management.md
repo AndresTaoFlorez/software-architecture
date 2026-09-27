@@ -47,23 +47,32 @@ Redux's official style guide recommends keeping global state minimal, deriving a
 
 For a simple Redux Toolkit feature, one slice file may be enough:
 
-```text
-model/
-└── auth.slice.ts
+```mermaid
+flowchart TD
+    N0["model/"]
+    N1["auth.slice.ts"]
+    N0 --> N1
 ```
 
 Redux Toolkit intentionally encourages colocating reducer logic and generated actions in `createSlice`.
 
 As complexity grows, split by responsibility **inside the feature**, not back into application-wide technical folders:
 
-```text
-features/closures/model/
-├── closures.slice.ts
-├── closures.selectors.ts
-├── closures.thunks.ts
-├── closures.listeners.ts
-├── closures.bindings.ts
-└── useClosures.ts
+```mermaid
+flowchart TD
+    N0["features/closures/model/"]
+    N1["closures.slice.ts"]
+    N2["closures.selectors.ts"]
+    N3["closures.thunks.ts"]
+    N4["closures.listeners.ts"]
+    N5["closures.bindings.ts"]
+    N6["useClosures.ts"]
+    N0 --> N1
+    N0 --> N2
+    N0 --> N3
+    N0 --> N4
+    N0 --> N5
+    N0 --> N6
 ```
 
 This is a scaling technique, not a mandatory template. A five-line feature does not need six files.

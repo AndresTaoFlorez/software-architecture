@@ -22,12 +22,17 @@ The mapping is role-based, not class-based.
 
 A ViewModel can be distributed across a small set of Presentation modules when ownership remains clear:
 
-```text
-features/closures/model/
-├── closures.selectors.ts
-├── closures.bindings.ts
-├── useClosureQuery.ts
-└── useClosures.ts
+```mermaid
+flowchart TD
+    N0["features/closures/model/"]
+    N1["closures.selectors.ts"]
+    N2["closures.bindings.ts"]
+    N3["useClosureQuery.ts"]
+    N4["useClosures.ts"]
+    N0 --> N1
+    N0 --> N2
+    N0 --> N3
+    N0 --> N4
 ```
 
 The public facade is what the View depends on.

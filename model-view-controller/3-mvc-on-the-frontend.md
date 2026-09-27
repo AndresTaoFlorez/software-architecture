@@ -59,13 +59,16 @@ that only reads state and emits events is a **Passive View**, the most testable 
 
 MVC organizes the presentation tier; Onion and Clean organize the whole app. They compose cleanly:
 
-```
-   Onion / Clean outer ring (Presentation)
-   ├── View         →  component template
-   ├── ViewModel    →  store / composable (display state)
-   └── Controller   →  event handlers that call a USE CASE, not the Model directly
-
-   …inner rings (Application, Domain) — unchanged, framework-free
+```mermaid
+flowchart TD
+    N0["Onion / Clean outer ring (Presentation)"]
+    N1["View → component template"]
+    N2["ViewModel → store / composable (display state)"]
+    N3["Controller → event handlers that call a USE CASE, not the Model directly"]
+    N4["…inner rings (Application, Domain) — unchanged, framework-free"]
+    N0 --> N1
+    N0 --> N2
+    N0 --> N3
 ```
 
 The one adjustment when MVC lives inside a layered architecture: the Controller should call an
