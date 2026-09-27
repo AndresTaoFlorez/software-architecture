@@ -1,93 +1,74 @@
-# Styling & Animation Architecture (Presentation)
+# Styling & Animation in an Onion Application
 
-> A companion to the [Onion Architecture](README.md) guide. This is a **Presentation-layer**
-> concern, extracted into its own document so the core guide stays focused on the four layers. It expands on
-> the §7 convention of keeping structural styles out of component markup
-> ([Naming & Conventions](README.md#naming--conventions)) and pairs with feature-based
-> component organization ([§8.5](4-advanced-patterns.md#85-feature-based-component-organization-presentation)).
+Styling and animation live in the **Presentation ring** because they exist to render and communicate UI state.
 
-Where should a component's styles and its imperative animations (a GSAP timeline, a scroll trigger, an
-anime.js sequence) live? Two arrangements are recommended. Both share one goal, a component's visual
-concerns are **findable and movable as a unit**, and differ only in *where* the files sit.
+Onion Architecture does not prescribe CSS files, CSS-in-JS, Panda CSS, Tailwind, CSS Modules, GSAP or a particular folder tree.
 
-**What counts as a "styling concern" here.** A component's scoped CSS or CSS Module, plus any animation
-script that exists *only to give the component shape, motion, or visual behavior*. These are Presentation
-details that decorate a component without being part of its logic; the component **imports** them rather
-than inlining them. This extends the convention of keeping structural styles out of component markup to
-also cover animation code.
+The canonical repository guidance now lives in:
 
-## Approach A: a mirrored `styles/` tree
+**[Frontend Styling and Design-System Architecture](../frontend/styling-and-design-system.md)**
 
-The `styles/` folder mirrors the shape of `components/`, holding the CSS and animation files that correspond
-to each component:
+That guide covers:
 
-```
-presentation/
-├── components/
-│   └── auth/
-│       ├── LoginForm.vue        # imports its style/animation by absolute path
-│       └── SignupForm.vue
-└── styles/
-    └── auth/
-        ├── LoginForm.css
-        ├── LoginForm.gsap.js
-        ├── SignupForm.css
-        └── SignupForm.gsap.js
-```
+- primitive vs. semantic design tokens;
+- Panda `sva` local slot recipes;
+- `defineRecipe` / `defineSlotRecipe` for shared design-system recipes;
+- component colocation;
+- avoiding duplicate recipe ownership;
+- global styles and keyframes;
+- responsive policy;
+- runtime inline values;
+- variants vs. specificity escalation.
 
-```js
-// presentation/components/auth/LoginForm.vue  (script)
-import '@/presentation/styles/auth/LoginForm.css'
-import { playEntrance } from '@/presentation/styles/auth/LoginForm.gsap.js'
+## Onion-specific rule
+
+Presentation styling may depend on UI state and design-system contracts.
+
+Inner layers must not depend on styling mechanisms:
+
+```text
+domain          -X-> CSS/Panda/DOM
+application     -X-> CSS/Panda/DOM
+
+presentation
+  -> style system
+  -> domain/application meaning through allowed inner contracts
 ```
 
-*When it fits.* A dedicated design or motion owner who works across the visual layer without touching
-component logic; a wish to see "all the styling" gathered in one place; or a shared design-token system that
-already lives under `styles/`. The cost: a component and its appearance sit in two trees, so moving or
-deleting a feature means editing both.
+A domain status may be mapped to a visual tone in Presentation:
 
-## Approach B: colocation inside the feature folder
-
-The CSS and animation files sit *next to* the component that owns them:
-
-```
-presentation/
-└── components/
-    └── auth/
-        ├── LoginForm.vue
-        ├── LoginForm.css
-        ├── LoginForm.gsap.js
-        ├── SignupForm.vue
-        └── SignupForm.css
+```ts
+function closureTone(status: ClosureStatus): BadgeTone {
+  switch (status) {
+    case 'completed':
+      return 'success'
+    case 'failed':
+      return 'danger'
+    default:
+      return 'neutral'
+  }
+}
 ```
 
-```js
-// presentation/components/auth/LoginForm.vue  (script)
-import './LoginForm.css'
-import { playEntrance } from './LoginForm.gsap.js'
+Do not put `color: 'green'` or `badgeVariant` into the Domain object.
+
+## Colocation
+
+Component-local visual concerns should normally travel with the component:
+
+```text
+ClosureStatusBadge/
+├── ClosureStatusBadge.tsx
+├── ClosureStatusBadge.styles.ts
+├── ClosureStatusBadge.types.ts
+└── index.ts
 ```
 
-*When it fits.* Most application work. The component and everything that gives it form travel as one unit:
-move the folder and nothing breaks; delete the feature and no orphaned CSS is left behind. This is the
-colocation principle applied to styling, "place code as close to where it's relevant as possible"
-[Dodds 2019], and it pairs naturally with the feature folders of
-[§8.5](4-advanced-patterns.md#85-feature-based-component-organization-presentation).
+Shared design-system primitives belong to a shared design-system owner.
 
-## Choosing
+That is a Presentation organization choice, not a new ring.
 
-Default to **Approach B (colocation)**; it has the fewest moving parts and the strongest "things that change
-together live together" property. Reach for **Approach A (mirror)** when an organizational reason, a separate
-styling owner, a shared token pipeline, a design system, makes a standalone visual tree worth its
-coordination cost. Either way two rules hold: the component *imports* its styles and animations rather than
-embedding them, and the chosen layout is applied consistently so a reader always knows where a component's
-appearance lives. Vue's single-file components also support `<style scoped>` and `<style module>` for styles
-small and intrinsic enough to stay in the file; the external-file approaches above are for when styling and
-animation grow beyond what comfortably belongs inline [Vue SFC docs; GSAP docs].
+## Sources
 
-## References
-
-- **Dodds, K. C.** (2019). *Colocation*. (Place code as close as possible to where it is relevant.)
-  https://kentcdodds.com/blog/colocation
-- **GreenSock (GSAP).** *GSAP Documentation.* (Imperative, timeline-based animation.) https://gsap.com/docs/
-- **Vue.js.** *SFC CSS Features.* (`<style scoped>` and `<style module>`.)
-  https://vuejs.org/api/sfc-css-features.html
+- Panda CSS documentation: https://panda-css.com/
+- Kent C. Dodds, "Colocation": https://kentcdodds.com/blog/colocation

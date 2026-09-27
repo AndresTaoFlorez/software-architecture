@@ -1,0 +1,426 @@
+# Styling and Design-System Architecture
+
+Styling is a Presentation concern, but a mature styling system still needs architecture: ownership, layers of abstraction, public APIs and one source of truth.
+
+This guide uses Panda CSS for concrete examples. The model also applies to other token/recipe/component systems.
+
+---
+
+## 1. Use a layered design-system pipeline
+
+Prefer an explicit progression:
+
+```text
+primitive tokens
+      |
+      v
+semantic tokens
+      |
+      v
+text/layer styles
+      |
+      v
+recipes / slot recipes
+      |
+      v
+component-local styles
+      |
+      v
+rendered component
+```
+
+Each level answers a different question.
+
+### Primitive tokens
+
+Raw scales and values:
+
+```ts
+tokens: {
+  colors: {
+    neutral: {
+      50: { value: '#f8f7f4' },
+      900: { value: '#161719' },
+    },
+  },
+  spacing: {
+    2: { value: '8px' },
+    3: { value: '12px' },
+  },
+}
+```
+
+### Semantic tokens
+
+Contextual roles:
+
+```ts
+semanticTokens: {
+  colors: {
+    canvas: {
+      value: {
+        base: '{colors.neutral.50}',
+        _dark: '{colors.neutral.900}',
+      },
+    },
+  },
+}
+```
+
+Panda's documentation explicitly positions semantic tokens as context-dependent aliases and supports references back to raw tokens.
+
+A semantic token should usually answer **what the value means**, not merely duplicate a hex value under another name.
+
+---
+
+## 2. Keep typography reusable
+
+Panda text styles are intended to capture typographic properties.
+
+Prefer:
+
+```ts
+textStyles: {
+  pageTitle: {
+    value: {
+      fontFamily: 'body',
+      fontSize: '2xl',
+      fontWeight: 'semibold',
+      lineHeight: 'tight',
+    },
+  },
+}
+```
+
+and apply context separately:
+
+```tsx
+<h1 className={css({
+  textStyle: 'pageTitle',
+  color: 'ink',
+})}>
+  Cierres
+</h1>
+```
+
+Avoid baking layout or contextual color into every text style. Panda's text-style guidance recommends avoiding layout and color properties so styles remain reusable.
+
+---
+
+## 3. Local atomic slot recipes: `sva`
+
+Panda's `sva` creates an atomic slot recipe.
+
+Use it for a multipart component whose styling belongs to that component/feature:
+
+```ts
+// QueryFilters.styles.ts
+import { sva } from '../styled-system/css'
+
+export const queryFilters = sva({
+  className: 'query-filters',
+  slots: ['root', 'header', 'actions', 'grid'],
+  base: {
+    root: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '3',
+    },
+  },
+  variants: {
+    density: {
+      normal: {},
+      compact: {
+        actions: { gap: '1' },
+      },
+    },
+  },
+})
+```
+
+This fits colocated component ownership:
+
+```text
+QueryFilters/
+├── QueryFilters.tsx
+├── QueryFilters.styles.ts
+├── QueryFilters.types.ts
+└── index.ts
+```
+
+Use variants and compound variants to model visual states rather than creating a web of descendant selectors.
+
+---
+
+## 4. Config recipes: shared design-system API
+
+Panda also provides `defineRecipe` and `defineSlotRecipe` for config recipes registered in `theme.recipes` / `theme.slotRecipes`.
+
+Use them when the recipe is part of the reusable design-system contract:
+
+```ts
+// design-system/button.recipe.ts
+export const buttonRecipe = defineRecipe({
+  className: 'button',
+  base: {
+    display: 'inline-flex',
+    alignItems: 'center',
+  },
+  variants: {
+    tone: {
+      primary: {
+        background: 'action.primary',
+        color: 'action.onPrimary',
+      },
+      secondary: {
+        background: 'surface',
+        color: 'ink',
+      },
+    },
+  },
+})
+```
+
+Register once:
+
+```ts
+export default defineConfig({
+  theme: {
+    extend: {
+      recipes: {
+        button: buttonRecipe,
+      },
+    },
+  },
+})
+```
+
+Panda documents config recipes as useful for design systems, shared presets and JIT-friendly reuse.
+
+---
+
+## 5. One recipe, one owner
+
+Do **not** define the same visual recipe twice:
+
+```text
+QueryFilters.styles.ts     -> sva(...)
+presentation/recipes/...   -> defineSlotRecipe(...same rules...)
+```
+
+That creates two sources of truth.
+
+Choose based on ownership:
+
+```text
+feature/component-local visual contract
+-> colocated sva()
+
+cross-feature design-system contract
+-> defineRecipe / defineSlotRecipe
+   registered in Panda config
+```
+
+Promotion from local to shared should be deliberate. Move the recipe; do not copy it.
+
+---
+
+## 6. Slot recipes for multipart components
+
+Slot recipes are a strong fit for components whose parts must vary together:
+
+```text
+Dialog
+├── backdrop
+├── positioner
+├── content
+├── header
+├── body
+└── footer
+```
+
+or:
+
+```text
+DataTable
+├── root
+├── toolbar
+├── table
+├── header
+├── row
+├── cell
+└── pagination
+```
+
+Slots give each part a stable style contract while variants coordinate the complete component.
+
+Do not use a slot recipe simply because a component has many DOM nodes. Use it when the parts form one reusable visual unit.
+
+---
+
+## 7. Prefer variants over selector escalation
+
+A warning sign:
+
+```ts
+'&[data-density="minimal"]': {
+  '& .feature__actions button span': {
+    display: 'none !important',
+  },
+}
+```
+
+If `density` is a real visual state, model it:
+
+```ts
+variants: {
+  density: {
+    normal: {},
+    compact: {
+      actionLabel: { display: 'none' },
+    },
+    minimal: {
+      actionLabel: { display: 'none' },
+      secondaryLabel: { display: 'none' },
+    },
+  },
+}
+```
+
+Use `data-*` attributes when they represent genuine runtime/semantic state that CSS needs to observe. Avoid using them to compensate for missing recipe variants.
+
+Treat `!important` as an escape hatch, not a normal specificity strategy.
+
+---
+
+## 8. Global styles have one owner
+
+If Panda owns tokens and theme conditions, do not create a second handwritten theme in a global CSS file:
+
+```css
+:root {
+  --colors-canvas: #fff;
+}
+
+html[data-theme='dark'] {
+  --colors-canvas: #111;
+}
+```
+
+while also defining `canvas` in `semanticTokens`.
+
+That creates competing sources of truth.
+
+Prefer Panda's:
+
+- `globalCss`;
+- semantic tokens;
+- conditions;
+- keyframes;
+- global variables where appropriate.
+
+Raw CSS remains valid for explicit integration boundaries such as:
+
+- vendor/third-party styles;
+- browser rules the chosen styling abstraction cannot express cleanly;
+- font-face integration;
+- legacy migration boundaries;
+- deliberately external stylesheets.
+
+Therefore the repository does **not** establish "zero CSS files" as a universal architectural rule.
+
+---
+
+## 9. Keyframes and reduced motion
+
+If Panda owns the styling system, define reusable animations in the theme:
+
+```ts
+theme: {
+  extend: {
+    keyframes: {
+      spin: {
+        to: { transform: 'rotate(360deg)' },
+      },
+    },
+  },
+}
+```
+
+Reduced-motion behavior is a cross-cutting accessibility concern. Prefer a central condition/global rule rather than reimplementing it component by component.
+
+Animations that encode component-specific choreography may remain colocated with the component, but they should still consume design tokens and accessibility policy where practical.
+
+---
+
+## 10. Responsive design
+
+Use named breakpoints and mobile-first responsive values when viewport breakpoints are truly the right abstraction:
+
+```ts
+gridTemplateColumns: {
+  base: '1fr',
+  md: '1fr 1fr',
+  xl: '2fr 3fr',
+}
+```
+
+Do not proliferate one-off raw media queries when the design system already defines the same breakpoint concept.
+
+For a reusable component whose behavior depends on **its own available width**, prefer container-query/container-condition techniques rather than coupling it unnecessarily to the viewport.
+
+Breakpoints are design-system decisions, not architectural laws. Do not add intermediate breakpoints simply to make a scale look complete; add them when the layout has a real transition.
+
+---
+
+## 11. Inline styles
+
+Do not prohibit inline styles categorically.
+
+They are appropriate for values that are genuinely calculated at runtime and are not meaningful design tokens, for example:
+
+```tsx
+<th style={{ width: column.width }} />
+```
+
+They are poor substitutes for reusable visual policy:
+
+```tsx
+<button style={{
+  background: '#22252a',
+  padding: '6px 12px',
+  borderRadius: 4,
+}} />
+```
+
+The distinction is ownership: runtime data may stay runtime; design decisions belong in the design system/component style owner.
+
+---
+
+## 12. Design-system folder
+
+For a sufficiently large application:
+
+```text
+presentation/
+├── design-system/
+│   ├── recipes/
+│   ├── tokens/
+│   └── README.md
+├── features/
+└── shared/
+    └── ui/
+```
+
+or keep Panda's global configuration at the project root if that is what the build tool expects.
+
+Do not create a second abstraction layer merely to move `panda.config.ts` into a prettier folder.
+
+## Sources
+
+- Panda CSS, Recipes: https://panda-css.com/docs/concepts/recipes
+- Panda CSS, Slot Recipes: https://panda-css.com/docs/concepts/slot-recipes
+- Panda CSS, Tokens: https://panda-css.com/docs/theming/tokens
+- Panda CSS, Text Styles: https://panda-css.com/docs/theming/text-styles
+- Panda CSS, Global Styles: https://panda-css.com/docs/concepts/writing-styles
+- Panda CSS, Animations/Keyframes: https://panda-css.com/docs/customization/theme#keyframes
