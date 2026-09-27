@@ -66,19 +66,16 @@ Test that the adapter correctly translates between external and inner representa
 
 For HTTP:
 
-```text
-stub/fake HTTP transport
--> real HttpOrderRepository
--> verify request mapping
--> verify response/error mapping
+```mermaid
+flowchart LR
+    S["Stub / fake HTTP transport"] --> R["Real HttpOrderRepository"] --> M["Verify request mapping"] --> E["Verify response / error mapping"]
 ```
 
 For persistence:
 
-```text
-test database/container where valuable
--> real persistence adapter
--> verify mapping/constraints
+```mermaid
+flowchart LR
+    DB["Test database / container"] --> A["Real persistence adapter"] --> V["Verify mapping / constraints"]
 ```
 
 Do not mock the mapper you are trying to test.
@@ -89,15 +86,11 @@ Do not mock the mapper you are trying to test.
 
 Test at the Presentation contract appropriate to the feature:
 
-```text
-ViewModel/public hook test
--> fake application operation
-
-component test
--> feature facade/provider/store test setup
-
-end-to-end
--> complete executable graph
+```mermaid
+flowchart LR
+    VM["ViewModel / public hook test"] --> FA["Fake application operation"]
+    CT["Component test"] --> FS["Feature facade / provider / store setup"]
+    E2E["End-to-end test"] --> G["Complete executable graph"]
 ```
 
 Avoid mocking Infrastructure directly from a component test when Presentation is designed to depend only on Application. That test would couple the component to a detail its production code should not know.
@@ -153,10 +146,10 @@ Either colocation or a mirrored test tree can work.
 
 Recommended default for unit/component tests:
 
-```text
-feature/
-├── cancelOrder.ts
-└── cancelOrder.test.ts
+```mermaid
+flowchart TD
+    F["feature/"] --> C["cancelOrder.ts"]
+    F --> T["cancelOrder.test.ts"]
 ```
 
 Use dedicated integration/e2e directories where setup is shared or tests span several modules.

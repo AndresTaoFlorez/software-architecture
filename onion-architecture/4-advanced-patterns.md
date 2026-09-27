@@ -12,15 +12,11 @@ Offline caching, conflict resolution and synchronization are not automatically D
 
 Separate:
 
-```text
-business conflict rule
--> Domain/Application if it is product policy
-
-storage mechanism
--> Infrastructure
-
-UI optimistic feedback
--> Presentation
+```mermaid
+flowchart LR
+    B["Business conflict rule"] --> D["Domain / Application if it is product policy"]
+    S["Storage mechanism"] --> I["Infrastructure"]
+    U["UI optimistic feedback"] --> P["Presentation"]
 ```
 
 For example, "last write wins" is only a correct domain rule if the product actually accepts that conflict policy. Do not call a timestamp overwrite strategy a CRDT merely because it resolves conflicts.
@@ -33,15 +29,11 @@ A true CRDT has mathematical convergence properties; a simple LWW policy may be 
 
 Optimistic feedback usually spans concerns:
 
-```text
-Presentation
-  -> display provisional state / pending state
-
-Application
-  -> owns operation policy when meaningful
-
-Infrastructure
-  -> performs remote mutation / retry / transport
+```mermaid
+flowchart LR
+    P["Presentation"] --> PS["Display provisional / pending state"]
+    A["Application"] --> AP["Own operation policy when meaningful"]
+    I["Infrastructure"] --> IT["Remote mutation / retry / transport"]
 ```
 
 Rollback/reconciliation semantics belong where their meaning lives.
@@ -54,13 +46,13 @@ A generic server-state library can own purely technical cache reconciliation whe
 
 Transparent HTTP token refresh, request coalescing and transport retries are normally Infrastructure concerns.
 
-```text
-use case
--> application port
--> HTTP adapter
-   -> token refresh
-   -> retry
-   -> deduplication
+```mermaid
+flowchart LR
+    U["Use case"] --> P["Application port"]
+    H["HTTP adapter"] --> P
+    H --> T["Token refresh"]
+    H --> R["Retry"]
+    H --> D["Deduplication"]
 ```
 
 Inner policy should not receive raw `401`, Axios errors or retry counters unless those details have actual application meaning.
@@ -77,14 +69,14 @@ The canonical guide is:
 
 Recommended direction:
 
-```text
-presentation/
-├── app/
-├── pages/
-├── features/
-│   ├── auth/
-│   └── orders/
-└── shared/
+```mermaid
+flowchart TD
+    P["presentation/"] --> A["app/"]
+    P --> PG["pages/"]
+    P --> F["features/"]
+    P --> S["shared/"]
+    F --> AU["auth/"]
+    F --> O["orders/"]
 ```
 
 Do not duplicate the full frontend folder specification inside the Onion guide.
@@ -117,15 +109,11 @@ WebSocket/SSE clients, message subscriptions and browser workers are outer mecha
 
 A useful split:
 
-```text
-Infrastructure
--> connection/protocol/reconnect
-
-Application
--> what events mean for the use case
-
-Presentation
--> how current UI reacts/displays
+```mermaid
+flowchart LR
+    I["Infrastructure"] --> IC["Connection / protocol / reconnect"]
+    A["Application"] --> AM["Meaning of events for the use case"]
+    P["Presentation"] --> PU["How current UI reacts / displays"]
 ```
 
 If reconnect policy itself is a product requirement, elevate that policy appropriately instead of assuming every retry rule is merely Infrastructure.
