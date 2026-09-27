@@ -16,11 +16,9 @@ The canonical guidance is now centralized in:
 
 The same use-case boundary can live in:
 
-```text
-one package
--> module inside a monolith
--> separate package
--> independently deployed service
+```mermaid
+flowchart LR
+    A["One package"] --> B["Module inside a monolith"] --> C["Separate package"] --> D["Independently deployed service"]
 ```
 
 Moving it across a process boundary is a deployment decision, not proof of better Clean Architecture.

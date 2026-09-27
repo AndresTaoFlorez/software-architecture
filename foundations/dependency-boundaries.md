@@ -10,14 +10,12 @@ Robert C. Martin's Clean Architecture describes the outer circles as mechanisms 
 
 A useful generic model is:
 
-```text
-                 volatile / concrete
-
-  UI ───────────────┐
-  HTTP / storage ───┼──> adapters ───> application ───> domain
-  DB / SDKs ────────┘
-
-                 stable / policy
+```mermaid
+flowchart LR
+    UI["UI"] --> AD["Adapters"]
+    HTTP["HTTP / storage"] --> AD
+    DB["DB / SDKs"] --> AD
+    AD --> APP["Application"] --> D["Domain"]
 ```
 
 The exact number of circles is not architectural law. Martin explicitly describes the four-circle diagram as schematic and allows additional boundaries as long as the Dependency Rule holds.
@@ -150,10 +148,11 @@ Do not pass a database row, API response DTO or UI form state inward unchanged j
 
 Prefer explicit mapping:
 
-```text
-API DTO -> infrastructure mapper -> application/domain model
-UI form -> presentation mapper -> application command
-domain/application result -> presentation mapper -> ViewModel
+```mermaid
+flowchart LR
+    DTO["API DTO"] --> IM["Infrastructure mapper"] --> M["Application / domain model"]
+    FORM["UI form"] --> PM["Presentation mapper"] --> CMD["Application command"]
+    RES["Domain / application result"] --> PM2["Presentation mapper"] --> VM["ViewModel"]
 ```
 
 Not every boundary needs a bespoke mapping class. Plain functions are often enough.
