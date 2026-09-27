@@ -26,6 +26,8 @@ Redux's official guidance commonly allows components to use typed Redux hooks di
 
 ---
 
+<a id="52-rtk-query-sits-at-the-infrastructure-seam"></a>
+
 ## 5.2 RTK Query and the infrastructure seam
 
 RTK Query is Redux Toolkit's server-state fetching/caching solution.
