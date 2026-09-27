@@ -44,21 +44,16 @@ The canonical rules for those dependencies live in **[Architecture Foundations](
 
 ### Recommended import matrix
 
-```text
-domain
-  -> domain
-
-application
-  -> application, domain
-
-infrastructure
-  -> infrastructure, application, domain
-
-presentation
-  -> presentation, application
-
-composition
-  -> application, infrastructure, presentation, domain as needed for wiring
+```mermaid
+flowchart LR
+    D["Domain"] --> D
+    A["Application"] --> D
+    I["Infrastructure"] --> A
+    I --> D
+    P["Presentation"] --> A
+    C["Composition"] -. wires .-> I
+    C -. wires .-> P
+    C -. wires .-> A
 ```
 
 Whether Presentation may import Domain types directly is a project decision. A stricter application-contract boundary may forbid it to reduce coupling between UI and domain representation.
@@ -135,19 +130,19 @@ The canonical repository guidance is therefore centralized in:
 
 Recommended default:
 
-```text
-presentation/
-├── app/
-├── pages/
-├── features/
-│   └── orders/
-│       ├── ui/
-│       ├── model/
-│       ├── lib/
-│       └── index.ts
-└── shared/
-    ├── ui/
-    └── lib/
+```mermaid
+flowchart TD
+    P["presentation/"] --> APP["app/"]
+    P --> PAGES["pages/"]
+    P --> FEATURES["features/"]
+    P --> SHARED["shared/"]
+    FEATURES --> ORDERS["orders/"]
+    ORDERS --> UI["ui/"]
+    ORDERS --> MODEL["model/"]
+    ORDERS --> LIB["lib/"]
+    ORDERS --> INDEX["index.ts"]
+    SHARED --> SUI["ui/"]
+    SHARED --> SLIB["lib/"]
 ```
 
 This is a Presentation organization strategy, not a fifth Clean Architecture circle.
@@ -162,12 +157,12 @@ Use the central **[Styling and Design-System Architecture](../frontend/styling-a
 
 The default principle is **ownership and colocation**:
 
-```text
-FeatureComponent/
-├── FeatureComponent.tsx
-├── FeatureComponent.styles.ts
-├── FeatureComponent.types.ts
-└── index.ts
+```mermaid
+flowchart TD
+    C["FeatureComponent/"] --> TSX["FeatureComponent.tsx"]
+    C --> ST["FeatureComponent.styles.ts"]
+    C --> TY["FeatureComponent.types.ts"]
+    C --> IX["index.ts"]
 ```
 
 Shared design-system recipes have a different owner from feature-local styles. Do not duplicate a recipe in both places.
@@ -178,11 +173,12 @@ Shared design-system recipes have a different owner from feature-local styles. D
 
 Types belong to the layer/capability that owns their meaning.
 
-```text
-Money                         -> domain
-PlaceOrderCommand             -> application
-ApiOrderDto                   -> infrastructure
-CheckoutFormState             -> presentation
+```mermaid
+flowchart LR
+    MONEY["Money"] --> D["domain/"]
+    CMD["PlaceOrderCommand"] --> A["application/"]
+    DTO["ApiOrderDto"] --> I["infrastructure/"]
+    FORM["CheckoutFormState"] --> P["presentation/"]
 ```
 
 Type-only imports still represent source-level coupling.
@@ -195,9 +191,9 @@ A top-level `src/types` directory is rarely a good default because it erases own
 
 Keep concrete wiring at an outer bootstrap boundary:
 
-```text
-composition/
-└── container.ts
+```mermaid
+flowchart TD
+    C["composition/"] --> CT["container.ts"]
 ```
 
 The Composition Root may import concrete Infrastructure plus Application contracts and Presentation bootstrap/store code as needed to assemble the executable.

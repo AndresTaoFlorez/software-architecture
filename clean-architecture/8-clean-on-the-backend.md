@@ -167,11 +167,11 @@ import { deactivateUser } from '@/composition/container'
 
 Better:
 
-```text
-Composition Root
-  -> constructs repository
-  -> constructs use case
-  -> constructs controller/router
+```mermaid
+flowchart TD
+    C["Composition Root"] --> R["Construct repository"]
+    C --> U["Construct use case"]
+    C --> H["Construct controller / router"]
 ```
 
 This keeps composition one-directional.
@@ -196,18 +196,12 @@ Do not let the ORM's transaction object spread through Domain merely because it 
 
 Separate validation by meaning:
 
-```text
-Malformed HTTP input
--> delivery/interface validation
-
-Application precondition
--> Application
-
-Business invariant
--> Domain
-
-Database constraint
--> Infrastructure safety net, mapped to meaningful errors
+```mermaid
+flowchart LR
+    H["Malformed HTTP input"] --> HV["Delivery / interface validation"]
+    AP["Application precondition"] --> A["Application"]
+    BI["Business invariant"] --> D["Domain"]
+    DB["Database constraint"] --> I["Infrastructure safety net + mapped error"]
 ```
 
 The same rule may be defended at more than one level for security/user experience, but each layer should express it in its own vocabulary.
@@ -218,19 +212,9 @@ The same rule may be defended at more than one level for security/user experienc
 
 A generated API client or shared DTO package can be useful, but it should represent the **wire contract**, not force frontend and backend internal models to become identical.
 
-```text
-backend domain model
-        |
-        v
-response DTO / schema
-        |
-       wire
-        |
-        v
-frontend infrastructure DTO
-        |
-        v
-frontend application/presentation model
+```mermaid
+flowchart TD
+    B["Backend domain model"] --> DTO["Response DTO / schema"] --> W["Wire contract"] --> FDTO["Frontend infrastructure DTO"] --> FM["Frontend application / presentation model"]
 ```
 
 This explicit mapping protects both sides from accidental coupling.
@@ -258,8 +242,9 @@ See **[Composition Root](../foundations/composition-root.md)**.
 
 The dependency **principle** is shared:
 
-```text
-outer mechanism -> adapter -> application -> domain
+```mermaid
+flowchart LR
+    O["Outer mechanism"] --> AD["Adapter"] --> A["Application"] --> D["Domain"]
 ```
 
 The concrete policies and models are not required to be the same.

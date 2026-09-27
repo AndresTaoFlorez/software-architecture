@@ -88,10 +88,11 @@ Do not map every external failure into a Domain error.
 
 Use meaning:
 
-```text
-business invariant violation -> Domain error
-use case cannot complete     -> Application error/result
-HTTP/SQL/SDK detail          -> translated outer detail
+```mermaid
+flowchart LR
+    BI["Business invariant violation"] --> DE["Domain error"]
+    UC["Use case cannot complete"] --> AE["Application error / result"]
+    EXT["HTTP / SQL / SDK detail"] --> MAP["Translated outer detail"]
 ```
 
 ---
@@ -163,8 +164,9 @@ Hold replaceable mechanisms:
 
 Do not read:
 
-```text
-Frameworks -> Adapters -> UseCases -> Entities
+```mermaid
+flowchart LR
+    F["Frameworks & Drivers"] --> A["Interface Adapters"] --> U["Use Cases"] --> E["Entities"]
 ```
 
 as "every request must call exactly one thing in each circle".

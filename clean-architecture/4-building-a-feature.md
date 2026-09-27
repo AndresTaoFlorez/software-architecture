@@ -140,12 +140,11 @@ startUi({ store })
 
 The dependency direction is:
 
-```text
-composition
-   |
-   +--> infrastructure adapter
-   +--> application use case
-   +--> presentation bootstrap
+```mermaid
+flowchart TD
+    C["Composition Root"] --> I["Infrastructure adapter"]
+    C --> A["Application use case"]
+    C --> P["Presentation bootstrap"]
 ```
 
 Presentation does **not** import the Composition Root:
@@ -161,20 +160,19 @@ If consumers reach into the container, composition stops being a root and become
 
 ## 4.6 The runtime flow
 
-```text
-User intent
--> View
--> Presentation facade/state adapter
--> cancelOrder use case
--> OrderRepository port
--> HttpOrderRepository adapter
--> HTTP API
+```mermaid
+flowchart LR
+    U["User intent"] --> V["View"] --> P["Presentation facade / state adapter"] --> UC["cancelOrder use case"] --> PORT["OrderRepository port"]
+    HTTP["HttpOrderRepository adapter"] --> PORT
+    HTTP --> API["HTTP API"]
 ```
 
 Source dependencies still point inward around policy:
 
-```text
-HttpOrderRepository -> OrderRepository <- cancelOrder
+```mermaid
+flowchart LR
+    H["HttpOrderRepository"] --> R["OrderRepository"]
+    U["cancelOrder"] --> R
 ```
 
 and composition connects the runtime graph.
