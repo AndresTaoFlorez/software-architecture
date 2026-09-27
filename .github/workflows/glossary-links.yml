@@ -1,0 +1,25 @@
+name: Glossary links
+
+on:
+  pull_request:
+    paths:
+      - '**/*.md'
+      - 'glossary/terms.json'
+      - 'scripts/glossary-links.mjs'
+  push:
+    branches:
+      - main
+    paths:
+      - '**/*.md'
+      - 'glossary/terms.json'
+      - 'scripts/glossary-links.mjs'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/glossary-links.mjs --check
