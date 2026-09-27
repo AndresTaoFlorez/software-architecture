@@ -10,17 +10,15 @@ Clean Architecture is best understood by separating its **canonical rule** from 
 
 Robert C. Martin's diagram uses:
 
-```text
-Entities
-    ^
-    |
-Use Cases
-    ^
-    |
-Interface Adapters
-    ^
-    |
-Frameworks & Drivers
+```mermaid
+flowchart LR
+    N0["Entities"]
+    N1["Use Cases"]
+    N0 --> N1
+    N2["Interface Adapters"]
+    N1 --> N2
+    N3["Frameworks & Drivers"]
+    N2 --> N3
 ```
 
 Inner circles contain higher-level policy. Outer circles contain mechanisms and details.
