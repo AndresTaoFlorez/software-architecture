@@ -11,11 +11,12 @@ the well-known variants — MVP and MVVM — are the *same cycle* with one conne
 
 In Smalltalk-80 MVC the loop runs like this [Krasner & Pope 1988]:
 
-```
-1. User acts          ─►  Controller   (a click, a keystroke)
-2. Controller updates ─►  Model        (translates the gesture into a domain operation)
-3. Model announces    ─►  "I changed"  (broadcasts to its observers)
-4. View observes      ─►  re-reads Model and redraws
+```mermaid
+flowchart LR
+    U["User"] -->|"acts"| C["Controller"]
+    C -->|"updates"| M["Model"]
+    M -->|"notifies"| V["View"]
+    V -->|"renders"| U
 ```
 
 The crucial detail is step 3–4: the Model does **not** call the View. It emits a change notification, and
@@ -23,12 +24,12 @@ the View — which subscribed to the Model — pulls the new state and redraws. 
 pattern doing the synchronization, and it is what lets one Model drive several Views at once without
 knowing any of them exist [Gamma et al. 1994].
 
-```
-        act              update
-  User ────►  Controller ────►  Model
-   ▲                              │ notify (observer)
-   │ sees                         ▼
-  View ◀───────────────────── observes & redraws
+```mermaid
+flowchart LR
+    U["User"] -->|"acts"| C["Controller"]
+    C -->|"updates"| M["Model"]
+    M -->|"notifies"| V["View"]
+    V -->|"renders"| U
 ```
 
 Because the arrows only ever point one way around the loop, no part needs a back-reference to the part
