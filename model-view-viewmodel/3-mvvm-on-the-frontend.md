@@ -1,138 +1,160 @@
 > **[Model-View-ViewModel](README.md)** › MVVM on the Frontend. Full reference list: [References](references.md).
 
-## 3. MVVM on the Frontend
+# 3. MVVM on the Frontend
 
-The [MVC guide](../model-view-controller/3-mvc-on-the-frontend.md) argues that a modern component is
-closer to MVVM than to classic MVC. This page takes that conclusion as the starting point and answers
-the practical question: **where, concretely, does each MVVM role live in a component codebase** — and
-how does the triad sit inside a Clean or Onion application.
+Modern component frameworks provide reactive rendering mechanisms that make separated-presentation patterns convenient. They do not select MVVM for you.
+
+This chapter shows how MVVM/Presentation Model responsibilities **can** be mapped onto a frontend without claiming every store or hook is automatically a ViewModel.
 
 ---
 
-### 3.1 The honest mapping
+## 3.1 The honest mapping
 
-| MVVM role | Typical frontend home |
-|---|---|
-| **Model** | domain entities / plain modules, framework-free — in a layered app, the inner rings |
-| **ViewModel** | a store (Pinia/Redux/signals), a composable (`useCart()`), or a hook — display state + commands |
-| **View** | the component template and its render output |
+A useful mapping in a layered frontend is:
 
-Two placements deserve emphasis:
+| MVVM role | Possible frontend owner |
+| --- | --- |
+| View | component render/template + strictly local rendering behavior |
+| ViewModel | feature facade/custom hook/composable/state holder exposing view-oriented state + operations |
+| Model | application/domain capabilities consumed behind the ViewModel; not necessarily one object |
 
-- **The ViewModel is rarely one class.** In WPF it was; on the frontend it is usually *distributed*:
-  a shared store holds cross-screen display state, while a composable or hook holds one screen's
-  local state and commands. Both halves satisfy the definition — display-ready state plus commands,
-  no reference to the rendering — and both test headless. What matters is the role, not the shape.
-- **The component is only the View when it stays thin.** The moment a component body accumulates
-  state derivations and request logic, it has silently become View *and* ViewModel *and* a slice of
-  Model in one file — the fat component the MVC guide names
-  [[MVC §3.2](../model-view-controller/3-mvc-on-the-frontend.md#32-the-failure-mode-the-fat-component)].
-  Extracting that body into a composable/hook is, literally, extracting the ViewModel.
+The mapping is role-based, not class-based.
 
-```js
-// The ViewModel, extracted: display state + commands, no JSX, no DOM.
-export function useCartViewModel({ cart, catalog }) {
-  const isAdding = ref(false)
-  const formattedTotal = computed(() => currency.format(cart.total))
+A ViewModel can be distributed across a small set of Presentation modules when ownership remains clear:
 
-  async function addItem(productId) {          // command
-    isAdding.value = true
-    try { cart.add(catalog.find(productId)) }
-    finally { isAdding.value = false }
+```text
+features/closures/model/
+├── closures.selectors.ts
+├── closures.bindings.ts
+├── useClosureQuery.ts
+└── useClosures.ts
+```
+
+The public facade is what the View depends on.
+
+Example:
+
+```ts
+export interface ClosuresViewModel {
+  readonly rows: readonly ClosureRow[]
+  readonly busy: boolean
+  readonly error: string | null
+
+  query(input: QueryInput): Promise<void>
+  reset(): void
+}
+
+export function useClosures(): ClosuresViewModel {
+  const state = useClosuresState()
+  const actions = useClosuresActions()
+
+  return {
+    rows: state.rows,
+    busy: state.busy,
+    error: state.error,
+    query: actions.query,
+    reset: actions.reset,
   }
-
-  return { isAdding, formattedTotal, addItem }
 }
 ```
 
-```html
-<!-- The View: consumes the ViewModel, contributes nothing but markup. -->
-<script setup>
-const vm = useCartViewModel(inject('cartDeps'))
-</script>
-<template>
-  <p class="total">{{ vm.formattedTotal }}</p>
-  <button :disabled="vm.isAdding" @click="vm.addItem(product.id)">Add</button>
-</template>
+A React hook has not become a ViewModel merely because its name starts with `use`. It fills that role when it intentionally presents state/operations for a View while hiding lower-level mechanisms.
+
+---
+
+## 3.2 The failure mode: the fat ViewModel
+
+The ViewModel is a convenient place to put logic, which makes it a common coupling hotspot.
+
+Warning signs:
+
+- authoritative pricing/eligibility rules live in selectors;
+- HTTP response codes are interpreted throughout the hook;
+- storage and transport clients are imported directly;
+- unrelated workflows accumulate in one huge `useFeature()`;
+- state-library action mechanics leak through the public API.
+
+Ask:
+
+> Does this behavior exist because of the screen, or because of the business/application?
+
+Examples:
+
+```text
+"show spinner while request is pending"
+-> Presentation/ViewModel
+
+"format total as localized currency"
+-> Presentation/ViewModel
+
+"order cannot be cancelled after shipment"
+-> Domain/Application
+
+"retry 502 with exponential backoff"
+-> Infrastructure/transport policy unless product semantics say otherwise
 ```
 
----
-
-### 3.2 The failure mode: the fat ViewModel
-
-MVC decays into fat components; MVVM has its own decay, one step inward. Because the ViewModel is
-the most convenient place in the codebase — reactive, injectable, already holding the data — domain
-rules migrate into it: pricing logic in a `computed`, validation invariants in a command, a workflow
-decision in a store action. The screen still works; the architecture is gone.
-
-The damage is the same as every collapsed separation:
-
-- the rules are now welded to one screen's ViewModel, and get re-implemented for the next screen;
-- they can no longer be tested without constructing presentation state;
-- a UI redesign risks changing business behavior, because they share a file.
-
-The test is simple: **would this line still be true if the app had no screens?** If yes, it is Model
-(domain) or use-case logic and belongs inward. The ViewModel keeps only what exists *because* this
-screen exists: formatting, filtering-for-display, in-progress flags, pending input, and the commands
-that forward intent [Fowler 2004; Smith 2009].
+A large public facade can remain useful while internal responsibilities are split into focused hooks/modules.
 
 ---
 
-### 3.3 How MVVM sits inside Onion and Clean
+## 3.3 How MVVM sits inside Onion and Clean
 
-MVVM organizes the presentation tier; Onion and Clean organize the whole app. They compose exactly
-as MVC does [[MVC §3.3](../model-view-controller/3-mvc-on-the-frontend.md#33-how-mvc-sits-inside-onion-and-clean)],
-with the roles now named honestly:
+MVVM and Clean/Onion answer different questions.
 
-```
-   Onion / Clean outer ring (Presentation)
-   ├── View        →  component template (markup + bindings only)
-   └── ViewModel   →  store / composable / hook
-                       ├── display state          (pure Presentation)
-                       └── commands ──────────────► call an APPLICATION USE CASE
+MVVM:
 
-   …inner rings (Application, Domain) — unchanged, framework-free
+```text
+How is presentation state/behavior separated from rendering?
 ```
 
-The one adjustment when MVVM lives inside a layered architecture: **a command calls an application
-use case, not the Model directly.** In a standalone MVVM screen the command manipulates the Model
-itself; in a Clean/Onion app that conversation is routed through the Application layer, so the
-Dependency Rule still holds and business orchestration stays in one place. The ViewModel keeps its
-two prohibitions — no View reference, no domain rules — and gains a third: no reaching past the use
-cases into repositories or HTTP clients.
+Clean/Onion:
 
-Put plainly: **the ViewModel is the last stop of Presentation, and the use case is the first stop of
-everything else.** A codebase where every command body is one use-case call is a codebase where the
-onion's outer ring is exactly as thin as it should be.
+```text
+How do application/domain policies depend on external mechanisms?
+```
 
----
+A strict layered mapping can be:
 
-### 3.4 The pattern in the wild
+```text
+Presentation
+├── View
+└── ViewModel / Presentation facade
+        |
+        v
+Application use case
+        |
+        v
+Domain
+```
 
-MVVM is not a historical curiosity or a WPF-only convention; it is the documented house pattern of
-the largest UI platforms and product companies. Four verifiable anchors:
+Infrastructure implements ports required inward and is wired at composition.
 
-- **Microsoft** keeps MVVM as the prescribed architecture for .NET MAUI enterprise apps, with the
-  same discipline this guide describes: "the view model is unaware of the view," and — as an
-  explicit tip — "don't reference view types, such as Button and ListView, from view models. …
-  view models can be tested in isolation" [Microsoft, *Enterprise Application Patterns Using
-  .NET MAUI*].
-- **Google**'s official Android architecture guide is MVVM-shaped in all but name: the UI layer is
-  split into "UI elements that render the data on the screen" and "state holders (such as
-  `ViewModel`) that hold data, expose it to the UI, and handle logic," connected by unidirectional
-  data flow — the narrowed write path of [§2.3](2-the-binding.md#23-two-way-binding-one-way-flow--both-are-mvvm)
-  [Google, Guide to App Architecture].
-- **Airbnb** built and open-sourced **Mavericks** (formerly MvRx), "the Android framework from
-  Airbnb that we use for nearly all product development at Airbnb" — a `MavericksViewModel` owning
-  an immutable state class that views render [Airbnb, Mavericks].
-- **Vue** acknowledges the lineage in its own documentation: "Although not strictly associated with
-  the MVVM pattern, Vue's design was partly inspired by it. As a convention, we often use the
-  variable `vm` (short for ViewModel) to refer to our Vue instance" [Vue.js Guide].
+That does **not** mean an MVVM command must always be exactly one use-case call. A ViewModel can coordinate UI-only concerns around an application operation. The boundary is semantic: business/application policy stays inward; view behavior stays in Presentation.
 
-The convergence is the point: platforms that never shared code arrived at the same shape — a
-declarative View, a testable state-holder it binds to, and domain logic kept further in.
+Likewise, not every application needs an explicit use-case layer. This repository adds one when following Clean/Onion because those architectural styles require a place for application policy; MVVM alone does not.
+
+See **[Frontend Architecture](../frontend/README.md)** for the repository's current feature/state organization guidance.
 
 ---
 
-Next: **[Testing in MVVM](4-testing-in-mvvm.md)** — the headless ViewModel test, and why it was the
-pattern's original selling point.
+## 3.4 Related implementations in the wild
+
+The following ecosystems use concepts compatible with MVVM or Presentation Model, but they should not be used to claim all modern UI frameworks "are MVVM":
+
+- **Microsoft/.NET UI** has explicit MVVM guidance and a long MVVM lineage.
+- **Android** recommends UI state holders such as `ViewModel` and unidirectional data flow. This is compatible with MVVM-like separation but Android's architecture guidance is broader than one historical pattern name.
+- **Airbnb Mavericks** uses immutable state + ViewModel concepts on Android.
+- **Vue** historically documents MVVM inspiration while explicitly saying Vue is not strictly associated with MVVM.
+
+The engineering takeaway is the recurring separation of rendering from testable state/behavior—not a need to relabel every framework architecture MVVM.
+
+---
+
+Next: **[Testing in MVVM](4-testing-in-mvvm.md)**.
+
+## Sources
+
+- Martin Fowler, "Presentation Model": https://martinfowler.com/eaaDev/PresentationModel.html
+- Martin Fowler, "GUI Architectures": https://martinfowler.com/eaaDev/uiArchs.html
+- Vue 2 documentation, instance/MVVM note: https://v2.vuejs.org/v2/guide/instance.html
