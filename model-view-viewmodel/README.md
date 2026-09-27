@@ -1,128 +1,123 @@
-# Model-View-ViewModel for the Frontend
+# Model-View-ViewModel (MVVM)
 
-> MVVM is a presentation pattern that separates a View from a ViewModel containing view-oriented state and behavior. Modern reactive frameworks can implement this separation naturally, but using React, Vue or Svelte does **not** make an application MVVM automatically.
+> A presentation pattern that separates rendering from view-oriented state and behavior.
 
-← Back to [architecture overview](../README.md) · See also the [MVC](../model-view-controller), [Frontend Architecture](../frontend), [Clean](../clean-architecture) and [Onion](../onion-architecture) guides
+← [Repository home](../README.md) · [Glossary](../GLOSSARY.md) · [Frontend architecture](../frontend/README.md)
 
----
+## 1. History
 
-## Read This First: MVVM Is a Presentation Pattern, Not a Framework Default
+Martin Fowler described **Presentation Model** in 2004: an abstraction containing the state and behavior of a View while remaining independent of concrete UI controls.
 
-MVVM originated in Microsoft's UI ecosystem and is closely related to earlier separated-presentation patterns such as Presentation Model.
+In **2005**, John Gossman introduced the MVVM name in the WPF ecosystem. Microsoft literature later described MVVM as closely related to/specialized from Presentation Model for WPF-style binding.
 
-Its useful idea is architectural:
+References:
 
-```text
-View
-  |
-  v
-ViewModel / Presentation Model
-  |
-  v
-application/domain capabilities
+- https://martinfowler.com/eaaDev/PresentationModel.html
+- https://learn.microsoft.com/en-us/archive/msdn-magazine/2009/february/patterns-wpf-apps-with-the-model-view-viewmodel-design-pattern
+
+## 2. What problem does it solve?
+
+UI components often accumulate:
+
+- loading/error state;
+- formatting;
+- commands;
+- validation for presentation;
+- subscriptions;
+- business rules;
+- transport calls.
+
+MVVM separates the rendering surface from the state/behavior needed by that rendering surface.
+
+```mermaid
+flowchart LR
+    VIEW["View"] -->|"user intent"| VM["ViewModel"]
+    VM -->|"view state"| VIEW
+    VM --> MODEL["Application / Model"]
 ```
 
-The ViewModel exposes state and operations shaped for a view without needing references to concrete UI controls.
+## 3. When MVVM is useful
 
-Reactive rendering, subscriptions, signals and data binding make this style convenient, but they are **mechanisms**, not proof that the application follows MVVM.
+Strong fit:
 
-A component with HTTP calls, domain rules, persistence and rendering all in one file is not made MVVM by automatic re-rendering.
+- rich stateful screens;
+- UI logic that benefits from headless tests;
+- multiple visual representations over the same presentation state;
+- declarative binding/reactive UI frameworks;
+- complex forms/workflows where rendering should stay simple.
 
----
+## 4. When it is unnecessary
 
-## Contents
+A dedicated ViewModel can be overhead when:
 
-- **[1 · The Three Parts](1-the-three-parts.md)** — Model, View and ViewModel responsibilities
-- **[2 · The Binding](2-the-binding.md)** — reactive synchronization and one-way/two-way binding
-- **[3 · MVVM on the Frontend](3-mvvm-on-the-frontend.md)** — hooks/stores as possible ViewModels, failure modes and layered applications
-- **[4 · Testing in MVVM](4-testing-in-mvvm.md)** — testing ViewModels/Presentation Models independently of rendering
-- **[5 · MVVM in React + Redux Toolkit](5-mvvm-in-react-redux.md)** — one possible mapping, with explicit caveats about Redux and server state
-- **[References](references.md)**
+- the screen is tiny;
+- UI state is trivial;
+- direct local component state is clearer;
+- creating a ViewModel only forwards values without adding a useful boundary.
 
----
+Microsoft's own MVVM literature explicitly discusses the overhead for simple models/screens.
 
-## The roles
+## 5. Roles
 
-```text
-┌──────────────┐       observes / renders       ┌─────────────────┐
-│     View     │ <---------------------------- │    ViewModel    │
-│ UI controls  │ ----------------------------> │ view state +    │
-│ / template   │       user intent             │ operations      │
-└──────────────┘                                └────────┬────────┘
-                                                       │
-                                                       v
-                                               application/model
+| Role | Owns | Does not automatically own |
+| --- | --- | --- |
+| View | rendering + user gestures | domain/application rules |
+| ViewModel | view-oriented state, derived display values, commands | HTTP/DB details or authoritative business invariants |
+| Model | non-view application/domain capabilities | concrete View controls |
+
+The word "Model" is overloaded. In a Clean/Onion application it is not automatically identical to `domain/`.
+
+## 6. React mapping used in this repository
+
+React is **not MVVM by default**.
+
+A feature may intentionally use this mapping:
+
+```mermaid
+flowchart TD
+    VIEW["React component (View)"]
+    VM["useClosures() (ViewModel / Presentation facade)"]
+    BIND["Presentation state bindings"]
+    APP["Application use case"]
+    DOMAIN["Domain"]
+
+    VIEW --> VM
+    VM --> BIND
+    VM --> APP
+    APP --> DOMAIN
 ```
 
-### View
+The hook is a ViewModel only when it genuinely exposes a view-oriented contract and hides lower-level mechanisms.
 
-Renders and captures interaction. It may own strictly local rendering concerns; "thin View" does not mean "zero conditionals".
+## 7. Where files go
 
-### ViewModel
+| Artifact | Example path |
+| --- | --- |
+| View | `features/closures/ui/QueryFilters/QueryFilters.tsx` |
+| public ViewModel facade | `features/closures/model/useClosures.ts` |
+| selectors | `features/closures/model/closures.selectors.ts` |
+| Redux binding | `features/closures/model/closures.bindings.ts` |
+| use case | `application/closures/use-cases/executeClosure.ts` |
 
-Owns state and behavior that exist because this View/use flow exists:
+## 8. Naming
 
-- loading/pending state;
-- display-ready derived values;
-- commands/intent handlers;
-- coordination of Presentation state;
-- mapping application results to view-oriented state.
+React requires:
 
-It should not accumulate business invariants simply because it is convenient.
+- component names to begin with a capital letter;
+- custom hooks to begin with `use`.
 
-### Model
+See [Naming and File Placement Conventions](../conventions/naming-and-file-placement.md).
 
-"Model" is overloaded. In classic MVVM it means the non-ViewModel state/business side of the application.
+## 9. Learning path
 
-In a Clean/Onion application there is **no required one-to-one mapping** such as:
-
-```text
-MVVM Model == Clean Entity == Onion Domain
-```
-
-The ViewModel may call Application use cases, which in turn coordinate Domain objects and ports.
-
----
-
-## Binding is not necessarily two-way
-
-WPF popularized rich declarative data binding. Modern web frameworks often use different mechanisms:
-
-- React commonly uses one-way rendering plus event callbacks;
-- Vue supports reactive rendering and optional two-way form conveniences;
-- state libraries provide subscription mechanisms.
-
-All can support a View/ViewModel separation. The exact binding mechanism is secondary to responsibility and dependency direction.
-
----
-
-## MVVM inside a layered architecture
-
-A strict layered frontend may use:
-
-```text
-React component (View)
-        |
-        v
-useClosures() (ViewModel/Presentation facade)
-        |
-        v
-Presentation state adapter
-        |
-        v
-Application use case
-        |
-        v
-Domain / ports
-```
-
-That is **one valid interpretation**, not a universal rule of MVVM.
-
-See **[Frontend Presentation Architecture](../frontend/presentation-architecture.md)** for the repository's current recommended frontend structure.
+1. [The Three Parts](./1-the-three-parts.md)
+2. [Binding](./2-the-binding.md)
+3. [MVVM on the Frontend](./3-mvvm-on-the-frontend.md)
+4. [Testing](./4-testing-in-mvvm.md)
+5. [React + Redux Toolkit](./5-mvvm-in-react-redux.md)
 
 ## Sources
 
-- John Gossman, "Introduction to Model/View/ViewModel pattern for building WPF apps" (2005), archived/source references listed in [References](references.md)
-- Martin Fowler, "Presentation Model": https://martinfowler.com/eaaDev/PresentationModel.html
-- Martin Fowler, "GUI Architectures": https://martinfowler.com/eaaDev/uiArchs.html
-- Vue documentation explicitly notes that Vue was inspired by MVVM but is not strictly associated with it: https://v2.vuejs.org/v2/guide/instance.html
+- Martin Fowler, *Presentation Model*: https://martinfowler.com/eaaDev/PresentationModel.html
+- Martin Fowler, *GUI Architectures*: https://martinfowler.com/eaaDev/uiArchs.html
+- Microsoft, *WPF Apps With The Model-View-ViewModel Design Pattern*: https://learn.microsoft.com/en-us/archive/msdn-magazine/2009/february/patterns-wpf-apps-with-the-model-view-viewmodel-design-pattern

@@ -1,94 +1,134 @@
 # Software Architecture
 
-A practical, source-backed reference for designing serious software systems.
+A practical, source-backed reference for learning and applying software architecture from first principles.
 
-This repository separates four things that are often mixed together:
+The repository is intentionally progressive: a programmer who has never studied architecture should be able to start here, understand **why boundaries exist**, learn **where code belongs**, and only then move into advanced patterns.
 
-1. **Foundations** — dependency direction, boundaries, dependency inversion, composition, module APIs and architecture enforcement.
-2. **Architectural styles** — Clean Architecture, Onion Architecture, MVC and MVVM.
-3. **Delivery-specific architecture** — how the same principles are applied on frontend and backend systems.
-4. **Framework and implementation patterns** — React hooks, Redux Toolkit, Panda CSS, repositories, adapters, selectors and similar mechanisms.
+Terminology is centralized in the **[Architecture Glossary](./GLOSSARY.md)**.
 
-The goal is not to force every project into the same folder tree. The goal is to make the architectural decisions explicit, defensible and mechanically enforceable.
+## Start here if you are new
 
----
+Read in this order:
 
-## Start here
+1. **[Code Placement: Where Does This Code Belong?](./foundations/code-placement.md)**  
+   Learn where a function, type, class, hook, adapter, component, DTO, or use case should live.
 
-### Foundations
+2. **[Naming and File Placement Conventions](./conventions/naming-and-file-placement.md)**  
+   Learn how files and symbols are named in the examples.
 
-Read **[Architecture Foundations](./foundations/README.md)** before choosing an architectural style.
+3. **[Architecture Foundations](./foundations/README.md)**  
+   Learn dependency direction, composition, module boundaries, public APIs, tests, and scaling.
 
-- [Dependency boundaries](./foundations/dependency-boundaries.md)
-- [Composition Root and dependency injection](./foundations/composition-root.md)
-- [Module boundaries and public APIs](./foundations/module-boundaries-and-public-apis.md)
-- [Executable architecture](./foundations/architecture-testing.md)
+4. Choose an architecture/presentation pattern:
+   - [Clean Architecture](./clean-architecture)
+   - [Onion Architecture](./onion-architecture)
+   - [MVC](./model-view-controller)
+   - [MVVM](./model-view-viewmodel)
 
-These rules are reusable across Clean, Onion, Hexagonal, frontend and backend systems.
+5. For modern frontend organization:
+   - [Frontend Architecture](./frontend/README.md)
 
-### Frontend architecture
+## What this repository separates
 
-The canonical frontend guidance now lives under **[frontend/](./frontend/README.md)** rather than being duplicated inside Clean and Onion:
+```mermaid
+flowchart TD
+    F["Foundations"]
+    A["Architectural styles"]
+    P["Presentation patterns"]
+    M["Framework mechanisms"]
+    C["Project conventions"]
 
-- [Presentation architecture](./frontend/presentation-architecture.md)
-- [State management and side effects](./frontend/state-management.md)
-- [Styling and design systems](./frontend/styling-and-design-system.md)
-- [Reference case study](./frontend/reference-case-study.md)
-- [Frontend references](./frontend/references.md)
+    F --> A
+    F --> P
+    A --> C
+    P --> C
+    M --> C
 
-The frontend guide uses React, Redux Toolkit and Panda CSS for concrete examples, but the architectural rules are framework-independent.
+    A --> CLEAN["Clean Architecture"]
+    A --> ONION["Onion Architecture"]
+    P --> MVC["MVC"]
+    P --> MVVM["MVVM"]
+    M --> REACT["React"]
+    M --> REDUX["Redux Toolkit"]
+    M --> PANDA["Panda CSS"]
+```
 
----
+These categories are deliberately different.
+
+- A **Dependency Rule** is an architectural constraint.
+- A **Repository** is a design pattern.
+- Redux is a state-management mechanism.
+- `closures.slice.ts` is a naming convention.
+- `features/closures/` is an organization strategy.
+
+Treating all of those as the same kind of rule produces cargo-cult architecture.
 
 ## Architectural styles
 
-### [Clean Architecture](./clean-architecture)
+### Clean Architecture
 
-Robert C. Martin's framing around Entities, Use Cases, Interface Adapters and Frameworks & Drivers. Its durable rule is that source dependencies point toward higher-level policy. The four circles are schematic, not a mandatory folder count.
+Robert C. Martin published the well-known Clean Architecture article in 2012 and later expanded the ideas in the 2017 book. It organizes software around policy vs. mechanism and the rule that source dependencies point inward.
 
-### [Onion Architecture](./onion-architecture)
+Start: **[Clean Architecture](./clean-architecture/README.md)**.
 
-Jeffrey Palermo's framing around a domain model at the center and infrastructure pushed outward. It is especially useful for long-lived business applications with meaningful domain behavior; it is not automatically justified for every small application.
+### Onion Architecture
 
-### [Model-View-Controller](./model-view-controller)
+Jeffrey Palermo published the Onion Architecture series in 2008. It emphasizes a domain model at the center, application behavior around it, and infrastructure pushed outward.
 
-A family of presentation patterns for separating domain/model concerns, rendering and user input. MVC is not a substitute for Clean or Onion: it operates at a different scope.
+Start: **[Onion Architecture](./onion-architecture/README.md)**.
 
-### [Model-View-ViewModel](./model-view-viewmodel)
+### MVC
 
-A presentation pattern in which a ViewModel/Presentation Model exposes view-oriented state and behavior while the rendering layer stays comparatively humble.
+Trygve Reenskaug developed the original Model-View-Controller ideas at Xerox PARC in 1978–1979 to help users manipulate complex information through multiple views.
 
----
+Start: **[Model-View-Controller](./model-view-controller/README.md)**.
 
-## How the styles relate
+### MVVM
 
-Clean, Onion and Ports & Adapters overlap heavily in goals: isolate application policy from volatile technology and direct dependencies toward stable abstractions. They are **related, not identical**. Their vocabulary, boundary placement and emphasis differ, and real systems may combine ideas from more than one.
+John Gossman introduced MVVM terminology in 2005 in the WPF ecosystem, closely related to Martin Fowler's earlier Presentation Model pattern.
 
-MVC and MVVM are presentation patterns. They can be used inside a Clean/Onion application, but neither pattern determines persistence, transport or application-layer boundaries.
+Start: **[Model-View-ViewModel](./model-view-viewmodel/README.md)**.
 
-A framework is not an architecture. React, Vue, Redux, Pinia, Panda CSS, NestJS, Spring or an ORM are implementation mechanisms that must be placed behind the boundaries chosen for the system.
+## Frontend architecture
 
----
+The frontend section explains the second architectural scale that Clean/Onion do not prescribe:
 
-## Repository rules
+- feature ownership;
+- pages/layouts;
+- public hooks / ViewModels;
+- local vs. shared vs. server state;
+- Redux Toolkit;
+- design systems;
+- Panda CSS recipes;
+- architecture tests.
 
-Documentation in this repository should distinguish:
+Start: **[Frontend Architecture](./frontend/README.md)**.
 
-- **architectural invariant** — a rule whose violation changes the architecture;
-- **recommended default** — a strong practice that works for many projects but may be replaced deliberately;
-- **framework convention** — guidance specific to a tool;
-- **project convention** — a local choice, not a universal rule.
+## How to contribute
 
-Whenever a rule can be checked mechanically, prefer enforcing it in CI instead of relying only on code review.
+Every contribution must follow **[CONTRIBUTING.md](./CONTRIBUTING.md)**.
 
----
+The rules include:
 
-## Primary sources
+- beginner-first progressive teaching;
+- history and source context;
+- explicit best/worst-fit scenarios;
+- Mermaid-only diagrams;
+- folder/file ownership explanations;
+- naming references;
+- glossary links;
+- three review passes before a substantial documentation change is considered complete.
 
-The architectural guides cite their own detailed references. The common starting points are:
+AI agents must additionally follow **[AGENTS.md](./AGENTS.md)**.
 
-- Robert C. Martin, *The Clean Architecture* (2012)
-- Jeffrey Palermo, *The Onion Architecture* series (2008)
-- Alistair Cockburn, *Hexagonal Architecture / Ports and Adapters* (2005)
-- Martin Fowler, *Presentation Model* and GUI architecture writings
-- Official React, Redux Toolkit and Panda CSS documentation for framework-specific guidance
+## Primary source families
+
+The guides cite sources locally. The repository primarily relies on:
+
+- Robert C. Martin — *The Clean Architecture* / *Clean Architecture*;
+- Jeffrey Palermo — *The Onion Architecture*;
+- Alistair Cockburn — *Hexagonal Architecture / Ports and Adapters*;
+- Trygve Reenskaug — original MVC reports;
+- Martin Fowler — Presentation Model, GUI architecture, enterprise patterns;
+- Mark Seemann — Composition Root / Dependency Injection;
+- official React, Redux Toolkit, Panda CSS, TypeScript ecosystem documentation.

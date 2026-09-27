@@ -1,192 +1,182 @@
 # Onion Architecture
 
-> A domain-centered architecture in which dependencies point inward and technical infrastructure remains at the edge.
+> A progressive guide to Jeffrey Palermo's domain-centered architecture.
 
-← [Architecture overview](../README.md) · [Foundations](../foundations/README.md) · [Frontend architecture](../frontend/README.md) · [Clean Architecture](../clean-architecture)
+← [Repository home](../README.md) · [Glossary](../GLOSSARY.md) · [Code placement](../foundations/code-placement.md) · [Naming](../conventions/naming-and-file-placement.md)
 
----
+## 1. History and origin
 
-## 1. Scope
+Jeffrey Palermo published the Onion Architecture series in **2008**. The central observation was that long-lived business applications often become coupled to database/UI/framework choices when infrastructure is allowed to define the application's shape.
 
-Jeffrey Palermo introduced Onion Architecture for applications with substantial domain behavior and long expected lifetimes. His original guidance explicitly contrasts that target with small websites where the additional abstraction may not pay for itself.
+Palermo's framing puts the **domain model at the center** and requires dependencies to point inward.
 
-The model is therefore a tool for managing complexity, not a default folder template for every program.
+Primary source: https://jeffreypalermo.com/2008/07/
 
-Its central goals are:
+## 2. What problem does it solve?
 
-- keep the domain model independent from infrastructure;
-- place application behavior around the domain;
-- depend on interfaces/contracts toward the center;
-- push databases, UI frameworks, web services and other mechanisms outward.
+The target problem is infrastructure-driven design:
 
-## 2. Relationship to Clean and Hexagonal
-
-Onion, Clean Architecture and Ports & Adapters share a family resemblance:
-
-```text
-volatile mechanisms
-        |
-        v
-adapters / infrastructure / UI
-        |
-        v
-application policy
-        |
-        v
-domain
+```mermaid
+flowchart LR
+    UI["UI"] --> SERVICE["Service"]
+    SERVICE --> ORM["ORM model"]
+    ORM --> DB["Database"]
+    SERVICE --> SDK["External SDK"]
 ```
 
-They should not be described as producing "identical code".
+When ORM/API/framework models become the application's language:
 
-- **Onion** emphasizes a domain model at the center and inward dependencies.
-- **Clean** emphasizes policies vs. mechanisms with Entities, Use Cases, Interface Adapters and Frameworks/Drivers.
-- **Hexagonal** emphasizes ports as purposeful conversations and adapters connecting external actors to the application.
+- domain rules inherit infrastructure constraints;
+- tests require technical systems;
+- technology migrations become business rewrites;
+- application policy becomes difficult to identify.
 
-A real system can use ideas from all three while documenting which boundaries it actually enforces.
+Onion Architecture reverses that ownership: infrastructure adapts to the application/domain.
 
-## 3. The rings
+## 3. Strong-fit scenarios
 
-This guide uses four practical areas:
+Use Onion when:
 
-```text
-Domain
-Application
-Infrastructure
-Presentation
+- the domain has meaningful rules/behavior;
+- the application is expected to live for years;
+- infrastructure choices may change;
+- multiple external mechanisms surround the same business policy;
+- independent testing of Domain/Application matters.
+
+## 4. Weak-fit scenarios
+
+It can be too expensive for:
+
+- tiny CRUD utilities;
+- throwaway prototypes;
+- applications with almost no domain behavior;
+- simple content sites where infrastructure abstraction provides little value.
+
+Palermo explicitly framed Onion for complex, long-lived business applications rather than every small site.
+
+## 5. Mental model
+
+```mermaid
+flowchart BT
+    OUTER["Presentation + Infrastructure"]
+    APP["Application"]
+    DOMAIN["Domain"]
+
+    OUTER --> APP
+    APP --> DOMAIN
 ```
 
-Infrastructure and Presentation are both outer concerns. Neither is a privileged middle layer that inner policy depends upon.
+Presentation and Infrastructure are outer concerns. Application surrounds Domain.
 
-Detailed definitions remain in **[The Rings](1-the-rings.md)**.
+The important rule:
 
-## 4. Dependency rule
+> Outer code may depend inward; inner code must not know outer mechanisms.
 
-Recommended source dependency policy:
+## 6. Rings and responsibilities
 
-```text
-domain
-  -> domain
+| Area | Owns | Typical files | Must not know |
+| --- | --- | --- | --- |
+| Domain | concepts, invariants, value objects, entities | `Order.ts`, `Money.ts` | React, Redux, HTTP, ORM |
+| Application | use cases, required ports, application results | `cancelOrder.ts`, `OrderRepository.ts` | concrete HTTP/DB/UI |
+| Infrastructure | adapters and external representations | `HttpOrderRepository.ts`, DTO/mappers | Presentation |
+| Presentation | views, view state, feature hooks, UI store | `useOrders.ts`, components | concrete Infrastructure in strict mode |
+| Composition | concrete assembly | `bootstrap.ts` | business policy |
 
-application
-  -> application, domain
+## 7. Recommended physical structure
 
-infrastructure
-  -> infrastructure, application, domain
+```mermaid
+flowchart TD
+    SRC["src/"]
+    SRC --> DOMAIN["domain/"]
+    SRC --> APP["application/"]
+    SRC --> INFRA["infrastructure/"]
+    SRC --> PRES["presentation/"]
+    SRC --> COMP["composition/"]
 
-presentation
-  -> presentation, application
+    DOMAIN --> DORD["orders/"]
+    APP --> AORD["orders/"]
+    AORD --> USE["use-cases/"]
+    AORD --> PORTS["ports/"]
+    INFRA --> IORD["orders/"]
+    PRES --> FORD["features/orders/"]
+    COMP --> BOOT["bootstrap.ts"]
 ```
 
-Composition sits at the outer edge and assembles concrete implementations.
+The names are repository conventions; inward dependency direction is the architecture.
 
-See:
+## 8. Where does code go?
 
-- **[Inward Dependencies](2-inward-dependencies.md)**
-- **[Dependency Boundaries](../foundations/dependency-boundaries.md)**
-- **[Composition Root](../foundations/composition-root.md)**
-
-## 5. Frontend application
-
-Onion tells us where business/application policy should sit relative to technical UI mechanisms. It does not prescribe the internal layout of a large Presentation ring.
-
-Canonical frontend guidance is centralized in:
-
-- **[Presentation Architecture](../frontend/presentation-architecture.md)**
-- **[State Management](../frontend/state-management.md)**
-- **[Styling and Design Systems](../frontend/styling-and-design-system.md)**
-
-This keeps React/Redux/Panda guidance out of the definition of Onion itself.
-
-## 6. Why use Onion?
-
-It is valuable when:
-
-- the application has meaningful domain behavior;
-- infrastructure is expected to change;
-- business rules deserve isolated tests;
-- multiple delivery mechanisms consume the same application policy;
-- the project is expected to live long enough for boundary protection to repay its cost.
-
-It may be unnecessary when:
-
-- the application is tiny;
-- most behavior is simple data transport;
-- there is little policy worth protecting;
-- the abstraction cost is greater than the expected change cost.
-
-Architectural rigor includes knowing when **not** to add architecture.
-
-## 7. Type placement in Onion Architecture
-<a id="type-placement-in-onion-architecture"></a>
-
-Type ownership follows meaning, not convenience:
-
-| Type | Owner |
-| --- | --- |
-| domain concept / value object | Domain |
-| use-case input/output / required port | Application |
-| external DTO / storage record / SDK type | Infrastructure |
-| component props / ViewModel / form state | Presentation |
-
-Examples:
-
-```text
-ClosurePeriod            -> domain
-ExecuteClosureCommand    -> application
-ApiClosureResponseDto    -> infrastructure
-ClosureFormState         -> presentation
-UploadQueueItem          -> presentation
+```mermaid
+flowchart TD
+    Q{"What meaning does the code own?"}
+    Q -->|"Business truth"| D["Domain"]
+    Q -->|"Application operation"| A["Application"]
+    Q -->|"Technology / I/O"| I["Infrastructure"]
+    Q -->|"View / interaction"| P["Presentation"]
+    Q -->|"Construction / wiring"| C["Composition"]
 ```
 
-A `type` import still creates source coupling even though TypeScript erases it at runtime.
+Use the full **[Code Placement Guide](../foundations/code-placement.md)** for functions, types, adapters and UI code.
 
-For the fuller rules, see **[Dependency Boundaries](../foundations/dependency-boundaries.md)**.
+## 9. Why ports are inside Application
 
-## 8. Naming & Conventions
-<a id="naming--conventions"></a>
+Suppose cancellation needs persistence.
 
-Naming is a project convention, not Onion Architecture.
+Application needs the capability:
 
-A useful default:
-
-```text
-src/
-├── domain/
-├── application/
-├── infrastructure/
-├── presentation/
-└── composition/
+```ts
+export interface OrderRepository {
+  findById(id: OrderId): Promise<Order | null>
+  save(order: Order): Promise<void>
+}
 ```
 
-Within each area, prefer capability ownership:
+Infrastructure implements it:
 
-```text
-application/
-├── auth/
-├── closures/
-└── orders/
+```ts
+export class HttpOrderRepository implements OrderRepository {
+  // HTTP-specific details
+}
 ```
 
-rather than global buckets such as `services/` or `helpers/`.
+```mermaid
+flowchart LR
+    UC["cancelOrder"] --> PORT["OrderRepository"]
+    HTTP["HttpOrderRepository"] --> PORT
+    HTTP --> API["HTTP API"]
+```
 
-Use path aliases only when they make ownership visible rather than obscure it.
+The port belongs inward because **Application defines what it needs**. Infrastructure adapts to that need.
 
-Use explicit public APIs for non-trivial modules.
+## 10. Naming
 
-See **[Module Boundaries and Public APIs](../foundations/module-boundaries-and-public-apis.md)**.
+Follow **[Naming and File Placement Conventions](../conventions/naming-and-file-placement.md)**.
 
-## 9. Guide
+Do not use names such as `GenericService`, `CommonRepository`, or `Manager` when a capability name exists.
 
-- **[1 · The Rings](1-the-rings.md)**
-- **[2 · Inward Dependencies](2-inward-dependencies.md)**
-- **[3 · Testing the Rings](3-testing-in-onion.md)**
-- **[4 · Advanced Patterns](4-advanced-patterns.md)**
-- **[5 · Styling & Animation](5-styling-and-animation.md)** — now redirects to the central frontend design-system guidance while retaining Onion placement notes.
-- **[6 · Scaling](6-scaling.md)**
-- **[References](references.md)**
+## 11. Progressive learning path
+
+1. **[The Rings](./1-the-rings.md)**
+2. **[Inward Dependencies](./2-inward-dependencies.md)**
+3. **[Testing the Rings](./3-testing-in-onion.md)**
+4. **[Advanced Patterns](./4-advanced-patterns.md)**
+5. **[Styling & Animation](./5-styling-and-animation.md)**
+6. **[Evolution & Scaling](./6-scaling.md)**
+
+## 12. Relationship to Clean and Hexagonal
+
+```mermaid
+flowchart TD
+    GOAL["Protect policy from volatile mechanisms"]
+    GOAL --> ONION["Onion: domain-centered rings"]
+    GOAL --> CLEAN["Clean: entities / use cases / adapters / frameworks"]
+    GOAL --> HEX["Hexagonal: ports + adapters around the application"]
+```
+
+They overlap strongly but are not identical taxonomies.
 
 ## Sources
 
-- Jeffrey Palermo, "The Onion Architecture" series (2008): https://jeffreypalermo.com/2008/07/
-- Robert C. Martin, "The Clean Architecture" (2012): https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
-- Alistair Cockburn, "Hexagonal Architecture" (2005): https://alistair.cockburn.us/hexagonal-architecture/
+- Jeffrey Palermo, Onion Architecture series (2008): https://jeffreypalermo.com/2008/07/
+- Robert C. Martin, "The Clean Architecture": https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
+- Alistair Cockburn, "Hexagonal Architecture": https://alistair.cockburn.us/hexagonal-architecture/
