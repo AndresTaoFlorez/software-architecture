@@ -9,6 +9,8 @@ application/model capabilities those interactions use.
 
 ---
 
+<a id="31-a-component-is-closer-to-mvvm-than-to-classic-mvc"></a>
+
 ### 3.1 Component frameworks do not automatically implement MVC or MVVM
 
 Vue, React and Svelte provide reactive rendering mechanisms, so developers rarely reproduce the exact
@@ -54,9 +56,7 @@ the network. It has collapsed all three parts into one, losing every benefit of 
 
 The fix is separated responsibilities: move authoritative business/application rules inward, keep
 view-specific state in [Presentation](../GLOSSARY.md#presentation-layer), isolate technical I/O behind its proper boundary, and let the
-component focus on rendering and forwarding intent. A component
-that only reads state and emits events is a **Passive [View](../GLOSSARY.md#view)**, the most testable arrangement there is
-[Fowler].
+component focus on rendering and forwarding intent. A read-only reactive component is not automatically [Passive View](../GLOSSARY.md#passive-view): that pattern excludes [Model](../GLOSSARY.md#model) access and uses an externally driven view interface. Choose the arrangement that exposes useful test boundaries for the actual feature.
 
 ---
 
@@ -66,9 +66,9 @@ that only reads state and emits events is a **Passive [View](../GLOSSARY.md#view
 
 ```mermaid
 flowchart TD
-    N0["Onion / Clean outer ring (Presentation)"]
+    N0["Physical Presentation area (adapter behavior and UI glue)"]
     N1["View → component template"]
-    N2["ViewModel → store / composable (display state)"]
+    N2["Represented state → observable model / state container"]
     N3["Controller-like action → interprets user intent"]
     N4["Application use case"]
     N5["Domain"]
