@@ -2,9 +2,9 @@
 
 This guide answers the question a beginner encounters first:
 
-> I have a function, type, class, hook, adapter, or component. Which folder owns it, and why?
+> I have a function, type, class, hook, [adapter](../GLOSSARY.md#adapter), or component. Which folder owns it, and why?
 
-The default layered structure used throughout this repository is:
+The default layered structure used throughout this [repository](../GLOSSARY.md#repository) is:
 
 ```mermaid
 flowchart TD
@@ -45,10 +45,10 @@ Put code in `domain/` when its meaning is business/domain meaning and it should 
 
 Examples:
 
-| Code | Why Domain owns it |
+| Code | Why [Domain](../GLOSSARY.md#domain) owns it |
 | --- | --- |
 | `Order` | business entity with identity |
-| `Money` | value semantics and invariants |
+| `Money` | value semantics and [invariants](../GLOSSARY.md#invariant) |
 | `ClosurePeriod` | valid/invalid date-range business rule |
 | `ShippedOrderCannotBeCancelled` | failure expressed in domain language |
 
@@ -56,12 +56,12 @@ Do **not** put here:
 
 - React hooks/components;
 - Redux slices;
-- API DTOs;
+- API [DTOs](../GLOSSARY.md#data-transfer-object-dto);
 - ORM rows;
 - `FormState`;
 - `UploadQueueItem`;
 - browser `File`;
-- CSS/Panda recipes.
+- CSS/Panda [recipes](../GLOSSARY.md#recipe).
 
 ### Function example
 
@@ -69,7 +69,7 @@ Requirement:
 
 > An order may not be cancelled after shipment.
 
-The rule belongs in Domain because the rule is true regardless of how cancellation was requested.
+The rule belongs in [Domain](../GLOSSARY.md#domain) because the rule is true regardless of how cancellation was requested.
 
 ```ts
 // src/domain/orders/Order.ts
@@ -116,17 +116,17 @@ export function makeCancelOrder(deps: {
 }
 ```
 
-Why Application?
+Why [Application](../GLOSSARY.md#application-layer)?
 
 - loading + saving is use-case orchestration;
-- the business invariant remains in `Order`;
+- the business [invariant](../GLOSSARY.md#invariant) remains in `Order`;
 - the concrete database/HTTP mechanism remains outside.
 
 Do **not** import `PrismaClient`, `axios`, React, or Redux here.
 
 ## 4. Ports
 
-A port belongs with the inner policy that requires the capability.
+A [port](../GLOSSARY.md#port) belongs with the inner policy that requires the capability.
 
 ```ts
 // src/application/orders/ports/OrderRepository.ts
@@ -138,7 +138,7 @@ export interface OrderRepository {
 
 Why here?
 
-Application needs "load/save Orders". It does not need "SQL" or "REST".
+[Application](../GLOSSARY.md#application-layer) needs "load/save Orders". It does not need "SQL" or "REST".
 
 The concrete implementation goes outward.
 
@@ -155,15 +155,15 @@ export class HttpOrderRepository implements OrderRepository {
 }
 ```
 
-Infrastructure may know Application contracts. Application must not know this concrete class.
+[Infrastructure](../GLOSSARY.md#infrastructure) may know [Application](../GLOSSARY.md#application-layer) contracts. [Application](../GLOSSARY.md#application-layer) must not know this concrete class.
 
-Typical Infrastructure files:
+Typical [Infrastructure](../GLOSSARY.md#infrastructure) files:
 
 - `HttpOrderRepository.ts`
 - `PrismaUserRepository.ts`
 - `SessionStorageDraftStorage.ts`
 - `StripePaymentGateway.ts`
-- API DTOs and mappers.
+- API [DTOs](../GLOSSARY.md#data-transfer-object-dto) and [mappers](../GLOSSARY.md#mapper).
 
 ## 6. Presentation
 
@@ -189,7 +189,7 @@ Examples:
 | --- | --- | --- |
 | `ClosuresPage.tsx` | `presentation/pages/closures/` | route-level composition |
 | `QueryFilters.tsx` | `features/closures/ui/` | feature UI |
-| `useClosures.ts` | `features/closures/model/` | public Presentation facade |
+| `useClosures.ts` | `features/closures/model/` | public [Presentation](../GLOSSARY.md#presentation-layer) facade |
 | `closures.slice.ts` | `features/closures/model/` | shared client feature state |
 | `closure-validation.ts` | `features/closures/lib/` | helper still owned by the feature |
 | `Button.tsx` | `shared/ui/` | cross-feature primitive |
@@ -207,7 +207,7 @@ const store = createAppStore({ cancelOrder })
 startUi({ store })
 ```
 
-Do not import this container from a use case, hook, component, or controller to locate dependencies.
+Do not import this container from a [use case](../GLOSSARY.md#use-case), hook, component, or controller to locate dependencies.
 
 ## 8. Where does a type belong?
 
@@ -224,11 +224,11 @@ Examples:
 
 | Type | Owner |
 | --- | --- |
-| `Money` | Domain |
-| `ExecuteClosureCommand` | Application |
-| `ApiClosureDto` | Infrastructure |
-| `ClosureFormState` | Presentation |
-| `UploadQueueItem` | Presentation |
+| `Money` | [Domain](../GLOSSARY.md#domain) |
+| `ExecuteClosureCommand` | [Application](../GLOSSARY.md#application-layer) |
+| `ApiClosureDto` | [Infrastructure](../GLOSSARY.md#infrastructure) |
+| `ClosureFormState` | [Presentation](../GLOSSARY.md#presentation-layer) |
+| `UploadQueueItem` | [Presentation](../GLOSSARY.md#presentation-layer) |
 
 ## 9. Where does a helper function belong?
 
@@ -237,9 +237,9 @@ Do not default to `utils/`.
 Ask what owns the meaning.
 
 - formats a closure-specific message → `features/closures/lib/`;
-- maps an API DTO → Infrastructure mapper;
-- validates a business invariant → Domain;
-- coordinates a use case → Application;
+- maps an API [DTO](../GLOSSARY.md#data-transfer-object-dto) → [Infrastructure](../GLOSSARY.md#infrastructure) [mapper](../GLOSSARY.md#mapper);
+- validates a business [invariant](../GLOSSARY.md#invariant) → [Domain](../GLOSSARY.md#domain);
+- coordinates a [use case](../GLOSSARY.md#use-case) → [Application](../GLOSSARY.md#application-layer);
 - generic `formatBytes` used across unrelated features → `presentation/shared/lib/` or another explicit shared library.
 
 ## 10. A complete placement example
@@ -250,13 +250,13 @@ Requirement:
 
 | Artifact | File | Reason |
 | --- | --- | --- |
-| invariant | `domain/orders/Order.ts` | business truth |
-| repository capability | `application/orders/ports/OrderRepository.ts` | required by application policy |
-| use case | `application/orders/use-cases/cancelOrder.ts` | orchestrates operation |
-| HTTP adapter | `infrastructure/orders/HttpOrderRepository.ts` | technical detail |
+| [invariant](../GLOSSARY.md#invariant) | `domain/orders/Order.ts` | business truth |
+| [repository](../GLOSSARY.md#repository) capability | `application/orders/ports/OrderRepository.ts` | required by application policy |
+| [use case](../GLOSSARY.md#use-case) | `application/orders/use-cases/cancelOrder.ts` | orchestrates operation |
+| HTTP [adapter](../GLOSSARY.md#adapter) | `infrastructure/orders/HttpOrderRepository.ts` | technical detail |
 | feature facade | `presentation/features/orders/model/useOrders.ts` | view-facing API |
 | button | `presentation/features/orders/ui/CancelOrderButton.tsx` | rendering + interaction |
-| wiring | `composition/bootstrap.ts` | selects concrete adapter |
+| wiring | `composition/bootstrap.ts` | selects concrete [adapter](../GLOSSARY.md#adapter) |
 
 ```mermaid
 flowchart LR

@@ -27,14 +27,14 @@ Ask what is actually hurting:
 
 | Signal | Possible response |
 | --- | --- |
-| manual object graph is hard to understand/test | improve composition; possibly use a DI container |
+| manual object graph is hard to understand/test | improve composition; possibly use a [DI container](../GLOSSARY.md#di-container) |
 | one capability is scattered across many technical folders | reorganize by feature/capability |
 | teams repeatedly edit the same modules | strengthen ownership and module APIs |
 | cross-module dependencies form cycles | redefine boundaries / introduce contracts |
 | release coordination dominates delivery | investigate independently deployable boundaries |
 | one deployable has excessive runtime scaling constraints | separate runtime workloads where evidence supports it |
-| a domain area has distinct language/rules/ownership | consider a bounded context |
-| frontend teams block each other on one build/deploy pipeline | evaluate modular frontend ownership; microfrontends only if independent deployment is worth the premium |
+| a domain area has distinct language/rules/ownership | consider a [bounded context](../GLOSSARY.md#bounded-context) |
+| frontend teams block each other on one build/deploy pipeline | evaluate modular frontend ownership; [microfrontends](../GLOSSARY.md#microfrontend) only if independent deployment is worth the premium |
 
 The response is not automatic. Each option has trade-offs.
 
@@ -42,7 +42,7 @@ The response is not automatic. Each option has trade-offs.
 
 ## 2. Manual composition vs. DI container
 
-A DI container solves object-graph/lifetime/composition problems. It does not make an architecture "enterprise".
+A [DI container](../GLOSSARY.md#di-container) solves object-graph/lifetime/composition problems. It does not make an architecture "enterprise".
 
 Keep manual composition while it remains obvious:
 
@@ -85,7 +85,7 @@ flowchart TD
     A --> I["identity/"]
 ```
 
-or within a Presentation layer:
+or within a [Presentation layer](../GLOSSARY.md#presentation-layer):
 
 ```mermaid
 flowchart TD
@@ -112,7 +112,7 @@ A process boundary is expensive:
 - latency;
 - operational ownership.
 
-Martin Fowler's "Monolith First" describes the common benefit of discovering stable boundaries before paying the microservice premium, while also acknowledging counterarguments and exceptions.
+Martin Fowler's "Monolith First" describes the common benefit of discovering stable boundaries before paying the [microservice](../GLOSSARY.md#microservice) premium, while also acknowledging counterarguments and exceptions.
 
 A strong default for many business systems is therefore:
 
@@ -127,13 +127,13 @@ This is guidance, not a law. Teams with mature distributed-systems capability an
 
 ## 5. Bounded contexts are semantic boundaries
 
-Do not create a bounded context because a folder is large.
+Do not create a [bounded context](../GLOSSARY.md#bounded-context) because a folder is large.
 
-DDD bounded contexts are justified by model/language boundaries:
+[DDD](../GLOSSARY.md#domain-driven-design-ddd) [bounded contexts](../GLOSSARY.md#bounded-context) are justified by model/language boundaries:
 
-Signals include the same word having different meanings, different invariants, different lifecycles/ownership, different sources of truth, or materially different change cadence.
+Signals include the same word having different meanings, different [invariants](../GLOSSARY.md#invariant), different lifecycles/ownership, different sources of truth, or materially different change cadence.
 
-A bounded context may initially live in the same process as another context.
+A [bounded context](../GLOSSARY.md#bounded-context) may initially live in the same process as another context.
 
 Logical modularity and physical deployment are separate decisions.
 
@@ -167,13 +167,13 @@ Consider independently deployable services when there is a concrete need such as
 - regulatory/data isolation;
 - technology/runtime constraints that justify separation.
 
-Do not use microservices to repair poor module boundaries. Distribution makes unclear boundaries more expensive.
+Do not use [microservices](../GLOSSARY.md#microservice) to repair poor module boundaries. Distribution makes unclear boundaries more expensive.
 
 ---
 
 ## 8. Microfrontends
 
-Microfrontends primarily address **organizational and delivery independence** in large frontend products.
+[Microfrontends](../GLOSSARY.md#microfrontend) primarily address **organizational and delivery independence** in large frontend products.
 
 They may help when:
 
@@ -189,11 +189,11 @@ Costs include:
 - cross-application communication complexity;
 - routing/composition complexity;
 - performance overhead;
-- design-system governance.
+- [design-system](../GLOSSARY.md#design-system) governance.
 
-A large frontend does not automatically need microfrontends.
+A large frontend does not automatically need [microfrontends](../GLOSSARY.md#microfrontend).
 
-Cam Jackson's Martin Fowler article frames microfrontends around scaling frontend development across teams and discusses both benefits and implementation costs; it does not establish a headcount threshold.
+Cam Jackson's Martin Fowler article frames [microfrontends](../GLOSSARY.md#microfrontend) around scaling frontend development across teams and discusses both benefits and implementation costs; it does not establish a headcount threshold.
 
 ---
 
@@ -231,7 +231,7 @@ The point is not to optimize a vanity metric. The point is to know **which force
 ## Sources
 
 - Martin Fowler, "Monolith First": https://martinfowler.com/bliki/MonolithFirst.html
-- Martin Fowler, Microservices Guide: https://martinfowler.com/microservices/
+- Martin Fowler, [Microservices](../GLOSSARY.md#microservice) Guide: https://martinfowler.com/microservices/
 - Cam Jackson, "Micro Frontends": https://martinfowler.com/articles/micro-frontends.html
 - Team Topologies, Key Concepts: https://teamtopologies.com/key-concepts
-- Mark Seemann, "Composition Root": https://blog.ploeh.dk/2011/07/28/CompositionRoot/
+- Mark Seemann, "[Composition Root](../GLOSSARY.md#composition-root)": https://blog.ploeh.dk/2011/07/28/CompositionRoot/
