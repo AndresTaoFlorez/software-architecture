@@ -198,9 +198,7 @@ export interface ClosureDraftStorage {
 
 with a browser implementation:
 
-```text
-SessionStorageClosureDraftStorage
-```
+`SessionStorageClosureDraftStorage`
 
 Depending on the application's boundary policy, the port can live in Application or the persistence contract can remain entirely inside Presentation if the draft itself is purely UI state. What matters is that browser I/O is not hidden inside a pure state transition.
 

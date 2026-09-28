@@ -68,11 +68,12 @@ Do not switch because the team crossed an arbitrary size.
 
 Layer-first structures can be clear in smaller codebases:
 
-```text
-domain/
-application/
-infrastructure/
-presentation/
+```mermaid
+flowchart TD
+    SRC["src/"] --> D["domain/"]
+    SRC --> A["application/"]
+    SRC --> I["infrastructure/"]
+    SRC --> P["presentation/"]
 ```
 
 As a capability grows, feature ownership may become the stronger change axis:
@@ -130,13 +131,7 @@ Do not create a bounded context because a folder is large.
 
 DDD bounded contexts are justified by model/language boundaries:
 
-```text
-same word, different meaning
-different invariants
-different lifecycle/ownership
-different source of truth
-different change cadence
-```
+Signals include the same word having different meanings, different invariants, different lifecycles/ownership, different sources of truth, or materially different change cadence.
 
 A bounded context may initially live in the same process as another context.
 
@@ -208,12 +203,7 @@ As systems grow, a giant shared library often becomes a coupling hub.
 
 Prefer one of:
 
-```text
-feature-local implementation
-explicit reusable library with stable owner/API
-platform capability consumed as a product/service
-duplicated tiny code when coupling would cost more
-```
+Possible ownership choices include a feature-local implementation, an explicit reusable library with a stable owner/API, a platform capability consumed as a product/service, or deliberate duplication of tiny code when sharing would create more coupling than value.
 
 "DRY" is not a reason to erase ownership boundaries.
 

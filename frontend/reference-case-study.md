@@ -21,12 +21,13 @@ Its useful patterns are generalized here. Its accidental complexity and boundary
 
 The project uses:
 
-```text
-domain
-application
-infrastructure
-presentation
-composition
+```mermaid
+flowchart TD
+    SRC["src/"] --> D["domain/"]
+    SRC --> A["application/"]
+    SRC --> I["infrastructure/"]
+    SRC --> P["presentation/"]
+    SRC --> C["composition/"]
 ```
 
 with architecture tests that verify import direction.
@@ -227,11 +228,9 @@ That can make imports look clean while preserving conceptual coupling.
 
 Prefer explicit capability public APIs:
 
-```text
-application/auth/index.ts
-application/closures/index.ts
-application/catalogs/index.ts
-```
+- `application/auth/index.ts`
+- `application/closures/index.ts`
+- `application/catalogs/index.ts`
 
 with deliberate exports.
 
@@ -324,11 +323,9 @@ Both categories exist.
 
 Prefer:
 
-```text
-shared/ui
-shared/lib
-feature-local lib
-```
+- `shared/ui/`
+- `shared/lib/`
+- feature-local `lib/`
 
 and remove a generic `common` bucket unless the project can define a non-overlapping responsibility for it.
 
