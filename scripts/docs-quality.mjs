@@ -1,278 +1,127 @@
 #!/usr/bin/env node
 import fs from 'node:fs'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
+import { anchors, glossaryErrors, headings, markdownFiles, parseMarkdown, sourceOf, visit } from './markdown.mjs'
 
-const root = process.cwd()
-const errors = []
+export const progression = [
+  /History/i, /problem/i, /strong.?fit|strong fit/i, /weak|too much/i,
+  /mental model|fundamental model/i, /(?:circle|ring|role).*responsibilit|each circle owns|isolation/i,
+  /physical structure/i, /Where does.*(?:code|function)/i, /Naming/i,
+  /feature end to end/i, /Testing/i, /Trade-offs|failure modes/i, /learning path/i, /^Sources$/i,
+]
 
-function fail(file, message) {
-  errors.push(file + ': ' + message)
-}
-
-function walk(dir) {
-  const out = []
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (['.git', 'node_modules', 'dist', 'build'].includes(entry.name)) continue
-    const full = path.join(dir, entry.name)
-    if (entry.isDirectory()) out.push(...walk(full))
-    else if (entry.isFile() && entry.name.endsWith('.md')) out.push(full)
-  }
-  return out
-}
-
-function relative(file) {
-  return path.relative(root, file).replaceAll('\\', '/')
-}
-
-function headings(content) {
-  return content.split('\n')
-    .filter(line => /^#{1,6}\s+/.test(line))
-    .map(line => line.replace(/^#{1,6}\s+/, ''))
-}
-
-function normalizeHeadingText(value) {
-  return value
-    .replace(/<[^>]+>/g, '')
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-    .replace(/`([^`]*)`/g, '$1')
-    .replace(/[\*_~]/g, '')
-    .trim()
-}
-
-function githubSlug(value) {
-  return normalizeHeadingText(value)
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s_-]/gu, '')
-    .trim()
-    .replace(/\s+/g, '-')
-}
-
-const anchorCache = new Map()
-
-function anchorsFor(file) {
-  const key = path.resolve(file)
-  if (anchorCache.has(key)) return anchorCache.get(key)
-
-  const content = fs.readFileSync(key, 'utf8')
-  const anchors = new Set()
-  const explicit = /<a\s+(?:id|name)=["']([^"']+)["'][^>]*>/gi
-  let match
-
-  while ((match = explicit.exec(content))) anchors.add(match[1])
-
-  const counts = new Map()
-  for (const heading of headings(content)) {
-    const base = githubSlug(heading)
-    if (!base) continue
-    const count = counts.get(base) ?? 0
-    counts.set(base, count + 1)
-    anchors.add(count === 0 ? base : base + '-' + count)
-  }
-
-  anchorCache.set(key, anchors)
-  return anchors
-}
-
-function decodeFragment(value) {
-  try {
-    return decodeURIComponent(value)
-  } catch {
-    return value
-  }
-}
-
-const architectureGuides = {
-  'clean-architecture/README.md': [
-    /History/i,
-    /problem/i,
-    /strong fit|fit/i,
-    /too much|weak/i,
-    /fundamental model|mental model/i,
-    /circle|layer/i,
-    /physical structure/i,
-    /Where does a new function|Where does.*code/i,
-    /Naming/i,
-    /feature end to end/i,
-    /Testing/i,
-    /Trade-offs|failure modes/i,
-    /learning path/i,
-    /Sources/i,
-  ],
-  'onion-architecture/README.md': [
-    /History/i,
-    /problem/i,
-    /strong-fit|strong fit|fit/i,
-    /weak-fit|weak fit/i,
-    /mental model/i,
-    /ring|responsibilit/i,
-    /physical structure/i,
-    /Where does code go/i,
-    /Naming/i,
-    /feature end to end/i,
-    /Testing/i,
-    /Trade-offs|failure modes/i,
-    /learning path/i,
-    /Sources/i,
-  ],
-  'model-view-controller/README.md': [
-    /History/i,
-    /problem/i,
-    /strong fit|fit/i,
-    /weak fit|poor label/i,
-    /mental model|role/i,
-    /physical structure/i,
-    /Where does a new function go/i,
-    /Naming/i,
-    /feature end to end/i,
-    /Testing/i,
-    /Trade-offs|failure modes/i,
-    /Learning path/i,
-    /Sources/i,
-  ],
-  'model-view-viewmodel/README.md': [
-    /History/i,
-    /problem/i,
-    /strong fit|useful|fit/i,
-    /weak|unnecessary/i,
-    /mental model|role/i,
-    /physical structure/i,
-    /Where does a new function go/i,
-    /Naming/i,
-    /feature end to end/i,
-    /Testing/i,
-    /Trade-offs|failure modes/i,
-    /Learning path/i,
-    /Sources/i,
-  ],
-}
-
-for (const [guide, required] of Object.entries(architectureGuides)) {
-  const file = path.join(root, guide)
-  if (!fs.existsSync(file)) {
-    fail(guide, 'missing architecture landing page')
-    continue
-  }
-
-  const content = fs.readFileSync(file, 'utf8')
-  const hs = headings(content)
+export function progressionErrors(tree) {
+  const hs = headings(tree).filter(h => h.depth === 2).map(h => h.text)
   let cursor = -1
-
-  for (const pattern of required) {
+  const errors = []
+  for (const pattern of progression) {
     const index = hs.findIndex((heading, i) => i > cursor && pattern.test(heading))
-    if (index === -1) {
-      fail(guide, 'missing or out-of-order required section matching ' + pattern)
-      break
-    }
-    cursor = index
+    if (index < 0) errors.push('missing or out-of-order section: ' + pattern)
+    else cursor = index
   }
-
-  if (!content.includes('```mermaid')) fail(guide, 'must contain at least one Mermaid diagram')
-  if (!/^## Sources\s*$/m.test(content)) fail(guide, 'must contain an explicit Sources section')
+  return errors
 }
 
-const boxDrawing = /[┌┐└┘├┤┬┴┼│─▶▼▲◀]/
-const arrowDiagram = /(^|\s)([A-Za-z0-9_./()[\]"'& -]+)\s*(?:-->|<--|->|<-|↓|↑|=>)\s*([A-Za-z0-9_./()[\]"'& -]+)/m
+const boxDrawing = /[\u2500-\u257f]/u
+const arrows = /\b[\w./]+\s*(?:-->|<--|->|<-|↓|↑)\s*[\w./]+/m
+const mermaidType = /^(?:flowchart|graph|sequenceDiagram|classDiagram|stateDiagram(?:-v2)?|erDiagram|mindmap|timeline|gitGraph|quadrantChart|journey|pie|xychart(?:-beta)?|block(?:-beta)?|architecture-beta|sankey-beta|packet(?:-beta)?|kanban|requirementDiagram|C4Context|C4Container|C4Component|C4Dynamic|C4Deployment|gantt|zenuml)\b/
 
-for (const file of walk(root)) {
-  const fileRel = relative(file)
-  const content = fs.readFileSync(file, 'utf8')
-
-  if (/\[\[[^\]\n]+\]\([^)]+\)\]/.test(content)) {
-    fail(fileRel, 'contains a malformed nested Markdown link such as [[text](target)]')
+export function documentErrors(content, file, root, loadAnchors = target => anchors(parseMarkdown(fs.readFileSync(target, 'utf8'))).all) {
+  const errors = []
+  const tree = parseMarkdown(content)
+  const definitions = new Map()
+  const explicit = anchors(tree).explicit
+  for (const id of new Set(explicit)) if (explicit.filter(value => value === id).length > 1) errors.push('duplicate explicit anchor: ' + id)
+  visit(tree, node => { if (node.type === 'definition') definitions.set(node.identifier, node.url) })
+  function checkLink(url, line) {
+    if (!url?.trim()) { errors.push('empty link target near line ' + line); return }
+    if (/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(url)) return
+    let pathname, fragment
+    try {
+      const [beforeHash, ...hash] = url.split('#')
+      pathname = decodeURIComponent(beforeHash.split('?')[0])
+      fragment = decodeURIComponent(hash.join('#'))
+    } catch { errors.push('invalid URL encoding: ' + url); return }
+    let target = pathname ? path.resolve(pathname.startsWith('/') ? root : path.dirname(file), pathname.replace(/^\//, '')) : file
+    if (!fs.existsSync(target)) { errors.push('broken relative link: ' + url); return }
+    if (fs.statSync(target).isDirectory()) {
+      const readme = path.join(target, 'README.md')
+      if (fs.existsSync(readme)) target = readme
+      else if (fragment) { errors.push('directory fragment has no README.md: ' + url); return }
+    }
+    if (fragment && target.toLowerCase().endsWith('.md') && !loadAnchors(target).has(fragment)) errors.push('broken Markdown anchor: ' + url)
   }
-  if (/\[[^\]\n]*\]\(\s*\)/.test(content)) {
-    fail(fileRel, 'contains an empty Markdown link target')
-  }
-  if (boxDrawing.test(content)) fail(fileRel, 'contains box-drawing diagram glyphs; use Mermaid')
-
-  const lines = content.split('\n')
-  let inFence = false
-  let language = ''
-  let start = 0
-  let body = []
-  const outside = []
-
-  for (let i = 0; i < lines.length; i++) {
-    const marker = lines[i].match(/^\s*```([^\s`]*)\s*$/)
-    if (marker) {
-      if (!inFence) {
-        inFence = true
-        language = marker[1] || ''
-        start = i + 1
-        body = []
-      } else {
-        const value = body.join('\n')
-        if ((language === '' || language === 'text') && (boxDrawing.test(value) || arrowDiagram.test(value))) {
-          fail(fileRel, 'diagram-like fenced block near line ' + start + ' must use Mermaid')
-        }
-        if (language === 'mermaid') {
-          if (boxDrawing.test(value)) {
-            fail(fileRel, 'Mermaid block near line ' + start + ' embeds box-drawing glyphs')
-          }
-          const first = body.find(line => line.trim())?.trim() ?? ''
-          const supported = /^(?:flowchart|graph|sequenceDiagram|classDiagram|stateDiagram(?:-v2)?|erDiagram|mindmap|timeline|gitGraph|quadrantChart|journey|pie|xychart-beta|block-beta|architecture-beta)\b/
-          if (!supported.test(first)) {
-            fail(fileRel, 'Mermaid block near line ' + start + ' has an unknown or missing diagram declaration: ' + first)
-          }
-        }
-        inFence = false
-        language = ''
-        body = []
+  visit(tree, (node, parents) => {
+    const line = node.position.start.line
+    if (['link', 'image', 'definition'].includes(node.type)) checkLink(node.url, line)
+    if (['linkReference', 'imageReference'].includes(node.type)) checkLink(definitions.get(node.identifier), line)
+    if (node.type === 'code') {
+      const raw = sourceOf(content, node)
+      const fence = raw.match(/^(`{3,}|~{3,})/)
+      if (fence) {
+        const last = raw.trimEnd().split(/\r?\n/).at(-1).replace(/^\s*(?:>\s*)*/, '')
+        if (raw.split('\n').length < 2 || !new RegExp('^' + fence[1][0] + '{' + fence[1].length + ',}\\s*$').test(last)) errors.push('unclosed fenced code block near line ' + line)
       }
-      continue
-    }
-    if (inFence) body.push(lines[i])
-    else outside.push(lines[i])
-  }
-
-  if (inFence) fail(fileRel, 'unclosed fenced code block near line ' + start)
-
-  const withoutInlineCode = outside.join('\n').replace(new RegExp('`[^`]*`', 'g'), '')
-  if (arrowDiagram.test(withoutInlineCode)) {
-    fail(fileRel, 'contains prose used as an arrow diagram; use Mermaid or a sentence/table')
-  }
-
-  const base = path.dirname(file)
-  const linkRe = /\[[^\]]*\]\(([^)]+)\)/g
-  let match
-
-  while ((match = linkRe.exec(content))) {
-    const rawTarget = match[1].trim()
-    if (!rawTarget || /^(https?:|mailto:)/.test(rawTarget)) continue
-
-    const hashIndex = rawTarget.indexOf('#')
-    const pathPart = (hashIndex === -1 ? rawTarget : rawTarget.slice(0, hashIndex)).split('?')[0]
-    const fragment = hashIndex === -1 ? '' : decodeFragment(rawTarget.slice(hashIndex + 1))
-    const resolved = pathPart ? path.resolve(base, pathPart) : path.resolve(file)
-
-    if (!fs.existsSync(resolved)) {
-      fail(fileRel, 'broken relative link: ' + rawTarget)
-      continue
-    }
-
-    if (fragment && fs.statSync(resolved).isFile() && resolved.endsWith('.md')) {
-      if (!anchorsFor(resolved).has(fragment)) {
-        fail(fileRel, 'broken Markdown anchor: ' + rawTarget)
+      if (boxDrawing.test(node.value)) errors.push('box-drawing diagram near line ' + line + '; use Mermaid')
+      if ((!node.lang || ['text', 'plaintext'].includes(node.lang)) && (arrows.test(node.value) || /^\s*[|v]\s*$/m.test(node.value))) errors.push('text arrow diagram near line ' + line + '; use Mermaid')
+      if (node.lang === 'mermaid') {
+        const declaration = node.value.replace(/%%\{[\s\S]*?\}%%/g, '').split('\n').find(s => s.trim() && !s.trim().startsWith('%%'))?.trim() ?? ''
+        if (!mermaidType.test(declaration)) errors.push('unknown or missing Mermaid declaration near line ' + line)
       }
     }
+    if (node.type === 'paragraph') {
+      let raw = sourceOf(content, node)
+      visit(node, child => {
+        if (child.type === 'inlineCode' || child.type === 'html') raw = raw.replace(sourceOf(content, child), '')
+      })
+      if (/\[\[[\s\S]*?\]\([^\n]*\)\]|\[[^\]\n]*\[[^\]\n]*\]\([^\n]*\)\]/.test(raw)) errors.push('malformed nested Markdown link near line ' + line)
+    }
+    if (node.type === 'text' && !parents.some(p => ['link', 'image', 'heading'].includes(p.type))) {
+      if (boxDrawing.test(node.value)) errors.push('box-drawing diagram near line ' + line)
+      if (arrows.test(node.value)) errors.push('prose arrow diagram near line ' + line + '; use Mermaid')
+      for (const match of node.value.matchAll(/\[([^\]\n]+)\]\[([^\]\n]*)\]/g)) {
+        const id = (match[2] || match[1]).trim().replace(/\s+/g, ' ').toLowerCase()
+        if (!definitions.has(id)) errors.push('undefined reference link near line ' + line + ': ' + match[0])
+      }
+      if (/\[[^\]\n]+\]\([^\)\n]*$/.test(node.value)) errors.push('malformed Markdown link near line ' + line)
+    }
+  })
+  return errors
+}
+
+export function checkDocs(root) {
+  const errors = []
+  const registry = path.join(root, 'glossary/terms.json')
+  const glossary = path.join(root, 'GLOSSARY.md')
+  if (!fs.existsSync(registry)) errors.push('missing glossary registry')
+  else if (fs.existsSync(glossary)) {
+    try {
+      for (const error of glossaryErrors(JSON.parse(fs.readFileSync(registry, 'utf8')), fs.readFileSync(glossary, 'utf8'))) errors.push('glossary: ' + error)
+    } catch (error) { errors.push('invalid glossary registry: ' + error.message) }
   }
+  const cache = new Map()
+  const loadAnchors = target => {
+    if (!cache.has(target)) cache.set(target, anchors(parseMarkdown(fs.readFileSync(target, 'utf8'))).all)
+    return cache.get(target)
+  }
+  for (const file of markdownFiles(root)) {
+    const rel = path.relative(root, file).replaceAll('\\', '/')
+    const content = fs.readFileSync(file, 'utf8')
+    for (const error of documentErrors(content, file, root, loadAnchors)) errors.push(rel + ': ' + error)
+    if (['clean-architecture', 'onion-architecture', 'model-view-controller', 'model-view-viewmodel'].some(dir => rel === dir + '/README.md')) {
+      for (const error of progressionErrors(parseMarkdown(content))) errors.push(rel + ': ' + error)
+      if (!/```mermaid\b/.test(content)) errors.push(rel + ': requires a Mermaid mental model')
+    }
+  }
+  for (const required of ['CONTRIBUTING.md', 'AGENTS.md', 'GLOSSARY.md', 'foundations/code-placement.md', 'conventions/naming-and-file-placement.md', 'docs/architecture-guide-template.md', ...['clean-architecture', 'onion-architecture', 'model-view-controller', 'model-view-viewmodel'].map(dir => dir + '/README.md')]) {
+    if (!fs.existsSync(path.join(root, required))) errors.push('missing required document: ' + required)
+  }
+  return errors
 }
 
-for (const required of [
-  'CONTRIBUTING.md',
-  'AGENTS.md',
-  'GLOSSARY.md',
-  'foundations/code-placement.md',
-  'conventions/naming-and-file-placement.md',
-  'docs/architecture-guide-template.md',
-]) {
-  if (!fs.existsSync(path.join(root, required))) fail(required, 'required documentation governance file is missing')
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  const errors = checkDocs(process.cwd())
+  if (errors.length) { console.error(errors.join('\n')); process.exitCode = 1 }
+  else console.log('Documentation links, anchors, fences, diagram declarations and guide progression passed. Mermaid syntax and meaning require a separate review.')
 }
-
-if (errors.length) {
-  console.error('Documentation quality checks failed:')
-  errors.forEach(error => console.error(' - ' + error))
-  process.exit(1)
-}
-
-console.log('Documentation quality checks passed.')

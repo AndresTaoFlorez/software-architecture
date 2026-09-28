@@ -1,148 +1,65 @@
 #!/usr/bin/env node
 import fs from 'node:fs'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
+import { glossaryErrors, markdownFiles, parseMarkdown, visit } from './markdown.mjs'
 
-const root = process.cwd()
-const glossaryPath = path.join(root, 'GLOSSARY.md')
-const registryPath = path.join(root, 'glossary', 'terms.json')
-const mode = process.argv.includes('--write') ? 'write' : 'check'
-const terms = JSON.parse(fs.readFileSync(registryPath, 'utf8'))
-
-function walk(dir) {
-  const out = []
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (['.git', 'node_modules', 'dist', 'build'].includes(entry.name)) continue
-    const full = path.join(dir, entry.name)
-    if (entry.isDirectory()) out.push(...walk(full))
-    else if (entry.isFile() && entry.name.endsWith('.md')) out.push(full)
-  }
-  return out
-}
-
-function escapeRe(value) {
-  return value.replace(/[.*+?^$()|[\]\\{}]/g, '\\$&')
-}
-
-const seenTerms = new Set()
-const seenAnchors = new Set()
-const seenAliases = new Map()
-
-for (const term of terms) {
-  if (seenTerms.has(term.term)) throw new Error('Duplicate glossary term: ' + term.term)
-  if (seenAnchors.has(term.anchor)) throw new Error('Duplicate glossary anchor: ' + term.anchor)
-  seenTerms.add(term.term)
-  seenAnchors.add(term.anchor)
-
-  for (const alias of term.aliases) {
-    const key = alias.text.toLowerCase()
-    const existing = seenAliases.get(key)
-    if (existing && existing !== term.anchor) {
-      throw new Error('Glossary alias "' + alias.text + '" maps to both ' + existing + ' and ' + term.anchor)
-    }
-    seenAliases.set(key, term.anchor)
-  }
-}
-
-const aliases = terms
-  .flatMap(term => term.aliases.map(alias => ({ ...alias, anchor: term.anchor })))
-  .sort((a, b) => b.text.length - a.text.length)
-
-const byLower = new Map()
-for (const alias of aliases) {
-  const key = alias.text.toLowerCase()
-  const group = byLower.get(key) ?? []
-  group.push(alias)
-  byLower.set(key, group)
-}
-
-const aliasPattern = aliases.map(alias => escapeRe(alias.text)).join('|')
-const aliasRe = new RegExp('(?<![A-Za-z0-9_])(' + aliasPattern + ')(?![A-Za-z0-9_])', 'gi')
-
-function linkTarget(file, anchor) {
-  let rel = path.relative(path.dirname(file), glossaryPath).replaceAll('\\', '/')
-  if (!rel.startsWith('.')) rel = './' + rel
-  return rel + '#' + anchor
-}
-
-function replaceAliases(segment, file) {
-  if (!segment) return segment
-  return segment.replace(aliasRe, matched => {
-    const candidates = byLower.get(matched.toLowerCase()) ?? []
-    const hit = candidates.find(alias => !alias.caseSensitive || alias.text === matched)
-    if (!hit) return matched
-    return '[' + matched + '](' + linkTarget(file, hit.anchor) + ')'
+export function linkMarkdown(content, file, terms, glossaryPath) {
+  if (path.resolve(file) === path.resolve(glossaryPath)) return content
+  const tree = parseMarkdown(content)
+  const protectedRanges = []
+  const protectedTypes = new Set(['heading', 'link', 'linkReference', 'image', 'imageReference', 'definition', 'inlineCode', 'code', 'html'])
+  visit(tree, node => {
+    if (protectedTypes.has(node.type)) protectedRanges.push([node.position.start.offset, node.position.end.offset])
   })
-}
-
-function linkText(text, file) {
-  const protectedRe = /(!?\[[^\]]*\]\([^)]*\)|!?\[[^\]]*\]\[[^\]]*\]|\[[^\]\n]+\]|\`[^\`]*\`|<[^>]+>|https?:\/\/[^\s)]+)/g
-  const protectedParts = []
-  let cursor = 0
-  let result = ''
-  let match
-
-  while ((match = protectedRe.exec(text))) {
-    result += replaceAliases(text.slice(cursor, match.index), file)
-    const token = '__GLOSSARY_PROTECTED_' + protectedParts.length + '__'
-    protectedParts.push(match[0])
-    result += token
-    cursor = match.index + match[0].length
+  // Bracketed citations and bare URLs are text in CommonMark. Inline HTML lines
+  // are protected conservatively, including formatting inside their contents.
+  for (const match of content.matchAll(/\\?\[[^\]]*\]|\b(?:https?|ftp):\/\/[^\s<>]+|\bmailto:[^\s<>]+|^.*<\/?[A-Za-z!][^>]*>.*$/gm)) {
+    protectedRanges.push([match.index, match.index + match[0].length])
   }
-
-  result += replaceAliases(text.slice(cursor), file)
-
-  protectedParts.forEach((value, index) => {
-    result = result.replace('__GLOSSARY_PROTECTED_' + index + '__', value)
-  })
-
-  return result
-}
-
-function linkMarkdown(content, file) {
-  const lines = content.split('\n')
-  let inFence = false
-
-  return lines.map(line => {
-    if (/^\s*```/.test(line) || /^\s*~~~/.test(line)) {
-      inFence = !inFence
-      return line
+  const aliases = terms.flatMap(term => term.aliases.map(alias => ({ ...alias, anchor: term.anchor })))
+    .sort((a, b) => b.text.length - a.text.length)
+  const escape = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const pattern = new RegExp('(?<![\\p{L}\\p{N}_])(?:' + aliases.map(alias => escape(alias.text)).join('|') + ')(?![\\p{L}\\p{N}_])', 'giu')
+  let target = path.relative(path.dirname(file), glossaryPath).replaceAll('\\', '/')
+  if (!target.startsWith('.')) target = './' + target
+  const edits = []
+  visit(tree, (node, parents) => {
+    if (node.type !== 'text' || parents.some(parent => protectedTypes.has(parent.type))) return
+    const start = node.position.start.offset
+    const raw = content.slice(start, node.position.end.offset)
+    for (const match of raw.matchAll(pattern)) {
+      const offset = start + match.index
+      if (protectedRanges.some(([a, b]) => offset < b && offset + match[0].length > a)) continue
+      const hit = aliases.find(alias => alias.caseSensitive ? alias.text === match[0] : alias.text.toLowerCase() === match[0].toLowerCase())
+      if (hit) edits.push({ start: offset, end: offset + match[0].length, value: '[' + match[0] + '](' + target + '#' + hit.anchor + ')' })
     }
-    if (inFence) return line
-    if (/^#{1,6}\s/.test(line)) return line
-    if (path.resolve(file) === path.resolve(glossaryPath)) return line
-    return linkText(line, file)
-  }).join('\n')
+  })
+  // Edit source offsets instead of serializing the tree: formatting stays intact.
+  for (const edit of edits.reverse()) content = content.slice(0, edit.start) + edit.value + content.slice(edit.end)
+  return content
 }
 
-const changed = []
-for (const file of walk(root)) {
-  if (path.resolve(file) === path.resolve(glossaryPath)) continue
-  const before = fs.readFileSync(file, 'utf8')
-  const after = linkMarkdown(before, file)
-  if (before !== after) {
+export function checkGlossary(root, write = false) {
+  const glossaryPath = path.join(root, 'GLOSSARY.md')
+  const terms = JSON.parse(fs.readFileSync(path.join(root, 'glossary', 'terms.json'), 'utf8'))
+  const errors = glossaryErrors(terms, fs.readFileSync(glossaryPath, 'utf8'))
+  if (errors.length) return { errors, changed: [] }
+  const changed = []
+  for (const file of markdownFiles(root)) {
+    const before = fs.readFileSync(file, 'utf8')
+    const after = linkMarkdown(before, file, terms, glossaryPath)
+    if (before === after) continue
     changed.push(path.relative(root, file).replaceAll('\\', '/'))
-    if (mode === 'write') fs.writeFileSync(file, after)
+    if (write) fs.writeFileSync(file, after)
   }
+  if (!write && changed.length) errors.push('missing glossary links in: ' + changed.join(', '))
+  return { errors, changed }
 }
 
-if (mode === 'write') {
-  console.log('Glossary links updated in ' + changed.length + ' Markdown files.')
-  process.exit(0)
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  const write = process.argv.includes('--write')
+  const { errors, changed } = checkGlossary(process.cwd(), write)
+  if (errors.length) { console.error(errors.join('\n')); process.exitCode = 1 }
+  else console.log(write ? 'Glossary links updated in ' + changed.length + ' Markdown files.' : 'Glossary registry and links are up to date.')
 }
-
-if (changed.length) {
-  console.error('Glossary links are missing or stale in:')
-  changed.forEach(file => console.error(' - ' + file))
-  console.error('\nRun: node scripts/glossary-links.mjs --write')
-  process.exit(1)
-}
-
-const glossary = fs.readFileSync(glossaryPath, 'utf8')
-for (const term of terms) {
-  if (!glossary.includes('id="' + term.anchor + '"')) {
-    console.error('Missing glossary anchor: ' + term.anchor)
-    process.exit(1)
-  }
-}
-
-console.log('Glossary links are up to date.')
