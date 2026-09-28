@@ -4,7 +4,7 @@
 
 [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) was introduced by John Gossman in 2005 for WPF, as a specialization of Martin Fowler's
 **[Presentation Model](../GLOSSARY.md#presentation-model)** pattern tailored to platforms with a declarative binding system
-[Gossman 2005; Fowler 2004]. Its goal is the same separated presentation [MVC](../GLOSSARY.md#model-view-controller-mvc) pursued since 1979 —
+[Gossman 2005; Fowler 2004]. Its goal is the same [separated presentation](../GLOSSARY.md#separated-presentation) [MVC](../GLOSSARY.md#model-view-controller-mvc) pursued since 1979 —
 domain state isolated from how it is displayed — plus one more, stated by Gossman himself: "the
 [ViewModel](../GLOSSARY.md#viewmodel) is easier to unit test than code-behind or event driven code … you can test it without
 awkward UI automation and interaction" [Gossman 2006]. The three parts divide that responsibility.
@@ -93,7 +93,7 @@ exposes exactly what the [View](../GLOSSARY.md#view) needs to render (display-re
 
 1. **Do not depend on concrete [View](../GLOSSARY.md#view) instances/controls.** A classic WPF-style [ViewModel](../GLOSSARY.md#viewmodel) is UI-toolkit
    agnostic and can be tested without a [View](../GLOSSARY.md#view) [Gossman 2006; Smith 2009]. A modern framework-specific
-   [Presentation](../GLOSSARY.md#presentation-layer) facade such as a React custom Hook may legitimately import React; in that case it is
+   [Presentation](../GLOSSARY.md#presentation-layer) [facade](../GLOSSARY.md#facade-pattern) such as a React custom Hook may legitimately import React; in that case it is
    playing a [ViewModel](../GLOSSARY.md#viewmodel)-like role rather than being a framework-free historical [ViewModel](../GLOSSARY.md#viewmodel) implementation.
 2. **Never absorb the [Model](../GLOSSARY.md#model)'s rules.** The [ViewModel](../GLOSSARY.md#viewmodel) *reshapes and coordinates*; it does not decide
    domain outcomes. A [ViewModel](../GLOSSARY.md#viewmodel) that computes prices or validates business [invariants](../GLOSSARY.md#invariant) has become a
@@ -139,7 +139,7 @@ input* to *owning display state* [Fowler, GUI Architectures].
 ### 1.5 The one rule that holds it together
 
 Strip away the binding machinery and [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) reduces to the same principle as its ancestor:
-**separated presentation** [Fowler]. The [Model](../GLOSSARY.md#model) side is independent of the concrete [View](../GLOSSARY.md#view); the [ViewModel](../GLOSSARY.md#viewmodel)
+**[separated presentation](../GLOSSARY.md#separated-presentation)** [Fowler]. The [Model](../GLOSSARY.md#model) side is independent of the concrete [View](../GLOSSARY.md#view); the [ViewModel](../GLOSSARY.md#viewmodel)
 shapes state/behavior for presentation; the [View](../GLOSSARY.md#view) renders and captures interaction. A separate
 Clean/[Onion architecture](../GLOSSARY.md#onion-architecture) may place authoritative application/domain policy further inward. Everything in
 [The Binding](2-the-binding.md) is a consequence of deciding that a framework, not a programmer,
