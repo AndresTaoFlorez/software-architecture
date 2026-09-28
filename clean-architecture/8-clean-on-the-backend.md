@@ -1,201 +1,275 @@
-> **[Clean Architecture](README.md)** › Clean Architecture on the Backend. Full reference list: [References](references.md).
+> **[Clean Architecture](README.md)** › [Clean Architecture](../GLOSSARY.md#clean-architecture) on the Backend.
 
-## 8. Clean Architecture on the Backend
 
-Clean Architecture was born on the server, and it is where the payoff is most tangible: the database, the web
-framework, and the ORM are *all* details, kept at the edge so the business rules outlive them. This page
-takes the four circles you already know and shows their server-side form, then builds the **same
-"create user" feature** end-to-end so you can see, side by side, that the core is literally identical — only
-the outer circles change.
+# 8. Clean Architecture on the Backend
 
-The examples are in Node/TypeScript with Express and an ORM (Prisma-style), matching this repository's stack.
-As always, the framework is illustrative; the layering is not tied to it.
+The [Dependency Rule](../GLOSSARY.md#dependency-rule) applies on a backend exactly as it does elsewhere: source dependencies should point from technical mechanisms toward higher-level application policy.
+
+What changes is the set of outer mechanisms: HTTP servers, queues, schedulers, databases, ORMs, filesystem access and external SDKs.
+
+What **does not** follow is that frontend and backend must contain identical [Domain](../GLOSSARY.md#domain) or [Application](../GLOSSARY.md#application-layer) source files.
 
 ---
 
-### 8.1 The four circles on the server
+<a id="81-the-four-circles-on-the-server"></a>
 
-| Circle | Frontend form | Backend form |
-|---|---|---|
-| **1 · Entities** | Plain `User` class with getters | **The exact same class** — no change |
-| **2 · Use Cases** | `createUser` interactor + a port | `createUser` interactor + **the same port** |
-| **3 · Interface Adapters** | Gateway (HTTP → entity), store, presenter | **Controller** (HTTP request → use case), **repository over an ORM**, presenter (entity → response body) |
-| **4 · Frameworks & Drivers** | Vue, browser HTTP client, `localStorage` | **Express/NestJS**, the **database**, the **ORM/driver** |
+## 8.1 A backend mapping
 
-The headline: **Entities and Use Cases move to the server unchanged.** What was an HTTP *gateway* on the
-client becomes a database *repository* on the server — but both implement the *same port shape*, so the use
-case cannot tell them apart. The database is not a privileged foundation the use cases sit "on top of"; it is
-an outermost driver that *implements* a contract the core declares [Martin 2017].
-
-The folder tree is the one from [§3.1](3-project-structure.md#31-the-folder-layout), with the outer circles
-holding server tools instead of browser ones:
-
+```mermaid
+flowchart TD
+    N0["src/"]
+    N1["domain/"]
+    N2["users/"]
+    N3["application/"]
+    N4["users/"]
+    N5["ports/"]
+    N6["use-cases/"]
+    N7["infrastructure/"]
+    N8["persistence/"]
+    N9["integrations/"]
+    N10["interface/"]
+    N11["http/"]
+    N12["messaging/"]
+    N13["composition/"]
+    N0 --> N1
+    N1 --> N2
+    N0 --> N3
+    N3 --> N4
+    N4 --> N5
+    N4 --> N6
+    N0 --> N7
+    N7 --> N8
+    N7 --> N9
+    N0 --> N10
+    N10 --> N11
+    N10 --> N12
+    N0 --> N13
 ```
-src/
-├── entities/                 # 1 — identical to the frontend's entities
-│   ├── User.ts
-│   └── errors/DomainErrors.ts
-├── usecases/                 # 2 — identical shape; ports declared here
-│   ├── ports/UserRepository.ts
-│   └── CreateUser.ts
-├── adapters/                 # 3 — controllers, ORM repositories, presenters
-│   ├── controllers/UserController.ts
-│   ├── repositories/PrismaUserRepository.ts
-│   └── presenters/userPresenter.ts
-├── frameworks/               # 4 — Express app, ORM client, config
-│   ├── http/server.ts
-│   └── db/prisma.ts
-└── composition/container.ts  # the Composition Root (see §6)
-```
+
+Some teams call the outer HTTP/controller area `presentation`; others use `interface`, `delivery` or framework-specific modules. The name matters less than the [dependency rule](../GLOSSARY.md#dependency-rule).
 
 ---
 
-### 8.2 Step 1 — the Entity (unchanged)
+Code below is a set of boundary excerpts: supporting `UserId`, errors, mapping functions and ORM schema are assumed. Persistence must implement the service's concurrency/transaction policy; the update below does not by itself guarantee race-free business behavior. For complete client types and wiring, see [Building a Feature](4-building-a-feature.md).
 
-The same plain class, now in TypeScript. No import of Express, no import of the ORM.
+<a id="82-step-1--the-entity-unchanged"></a>
+
+## 8.2 Domain
+
+The backend [Domain](../GLOSSARY.md#domain) owns business concepts and [invariants](../GLOSSARY.md#invariant) that are authoritative in that service/[bounded context](../GLOSSARY.md#bounded-context).
 
 ```ts
-// entities/User.ts
 export class User {
   constructor(
-    public readonly id: string,
-    public readonly firstName: string,
-    public readonly lastName: string,
-    public readonly email: string,
-    public readonly isActive: boolean = true,
+    readonly id: UserId,
+    private status: UserStatus,
   ) {}
 
-  get fullName(): string {
-    return [this.firstName, this.lastName].filter(Boolean).join(' ')
+  deactivate() {
+    if (this.status === 'deleted') {
+      throw new UserCannotBeDeactivated()
+    }
+
+    this.status = 'inactive'
   }
 }
 ```
 
+A frontend may model a `User` too. That does not automatically make the two models the same object or justify a shared package.
+
+Share code only when the semantics, ownership and release coupling are genuinely shared.
+
 ---
 
-### 8.3 Step 2 — the Port and the Use Case (unchanged shape)
+<a id="83-step-2--the-port-and-the-use-case-unchanged-shape"></a>
 
-The port is a real `interface` in TypeScript, and the use case is the same factory that depends on it. This
-file could be copied between the frontend and backend codebases verbatim.
+## 8.3 Application
+
+[Application](../GLOSSARY.md#application-layer) code orchestrates use-case policy:
 
 ```ts
-// usecases/ports/UserRepository.ts
-import { User } from '@/entities/User'
-
 export interface UserRepository {
-  create(payload: { firstName: string; lastName: string; email: string }): Promise<User>
+  findById(id: UserId): Promise<User | null>
+  save(user: User): Promise<void>
 }
-```
 
-```ts
-// usecases/CreateUser.ts
-import { UserRepository } from '@/usecases/ports/UserRepository'
-import { User } from '@/entities/User'
+export function makeDeactivateUser(deps: {
+  users: UserRepository
+}) {
+  return async function deactivateUser(id: UserId) {
+    const user = await deps.users.findById(id)
 
-export function makeCreateUser({ userRepository }: { userRepository: UserRepository }) {
-  return async function createUser(input: { firstName: string; lastName: string; email: string }): Promise<User> {
-    if (!input.email) throw new Error('Email is required.')   // application rule, framework-free
-    return userRepository.create(input)                       // delegate to the injected port
+    if (!user) throw new UserNotFound(id)
+
+    user.deactivate()
+    await deps.users.save(user)
   }
 }
 ```
 
-The use case names neither Express nor the ORM. That is the whole discipline: swap Postgres for MongoDB, or
-Express for NestJS, and this file does not move.
+The [use case](../GLOSSARY.md#use-case) does not import the ORM or web framework.
+
+A frontend may have a different application operation such as `submitDeactivateUserConfirmation`, because client interaction and authoritative server transaction are different responsibilities.
 
 ---
 
-### 8.4 Step 3 — the Interface Adapters (controller + ORM repository)
+## 8.4 Infrastructure
 
-On the server the layer splits into two familiar shapes. The **controller** turns an HTTP request into a
-use-case call and a use-case result into an HTTP response — it decides nothing:
-
-```ts
-// adapters/controllers/UserController.ts
-import { Request, Response } from 'express'
-import { createUser } from '@/composition/container'
-import { userPresenter } from '@/adapters/presenters/userPresenter'
-
-export async function postUser(req: Request, res: Response) {
-  const user = await createUser(req.body)      // call the use case
-  res.status(201).json(userPresenter(user))    // present the entity as a response body
-}
-```
-
-The **repository** implements the *same port* the frontend gateway did, but over the ORM instead of HTTP —
-and it maps the raw ORM row into a `User` entity at the boundary, so nothing inward sees a database record:
+Concrete persistence implements [Application](../GLOSSARY.md#application-layer)-owned capabilities:
 
 ```ts
-// adapters/repositories/PrismaUserRepository.ts
-import { PrismaClient } from '@prisma/client'
-import { UserRepository } from '@/usecases/ports/UserRepository'
-import { User } from '@/entities/User'
-
 export class PrismaUserRepository implements UserRepository {
   constructor(private readonly db: PrismaClient) {}
 
-  async create(payload: { firstName: string; lastName: string; email: string }): Promise<User> {
-    const row = await this.db.user.create({
-      data: { first_name: payload.firstName, last_name: payload.lastName, email: payload.email },
+  async findById(id: UserId): Promise<User | null> {
+    const record = await this.db.user.findUnique({
+      where: { id: id.value },
     })
-    return new User(row.id, row.first_name, row.last_name, row.email, row.is_active)  // map at the boundary
+
+    return record ? mapUserRecord(record) : null
+  }
+
+  async save(user: User): Promise<void> {
+    const record = toUserRecord(user)
+    await this.db.user.update({ where: { id: record.id }, data: record })
   }
 }
 ```
 
-This is the **Repository** pattern in its original setting — mediating between the domain and the data-mapping
-layer, "acting like an in-memory collection of domain objects" [Fowler 2002]. Because it satisfies the port,
-the use case is oblivious to the fact that a database exists at all.
+The ORM record does not leak into the [use case](../GLOSSARY.md#use-case).
+
+The same principle applies to:
+
+- message brokers;
+- object storage;
+- payment SDKs;
+- email providers;
+- search engines;
+- remote APIs.
 
 ---
 
-### 8.5 Step 4 — Frameworks & Drivers + the Composition Root
+<a id="84-step-3--the-interface-adapters-controller--orm-repository"></a>
 
-The outermost circle is the Express app and the ORM client — pure detail. The Composition Root is the one
-place that wires the concrete ORM repository into the use case and mounts the controller:
+## 8.5 Interface adapters / delivery
+
+An HTTP controller translates a transport request into an application command and translates the result to a transport response. Here `HttpRequest`/`HttpResponse` are [adapter](../GLOSSARY.md#adapter)-owned shapes supplied/consumed by outer router glue. Importing framework-owned request types into a separate canonical [Interface Adapter](../GLOSSARY.md#interface-adapter) would point outward. A physical delivery module may combine both roles, but document that combination.
 
 ```ts
-// composition/container.ts — names both the adapter and the use case
-import { PrismaClient } from '@prisma/client'
-import { PrismaUserRepository } from '@/adapters/repositories/PrismaUserRepository'
-import { makeCreateUser } from '@/usecases/CreateUser'
+export function makeDeactivateUserController(deps: {
+  deactivateUser: (id: UserId) => Promise<void>
+}) {
+  return async function controller(req: HttpRequest): Promise<HttpResponse> {
+    const id = UserId.parse(req.params.id)
 
+    await deps.deactivateUser(id)
+
+    return { status: 204 }
+  }
+}
+```
+
+The controller should **receive** the [use case](../GLOSSARY.md#use-case) from composition. It should not import the [Composition Root](../GLOSSARY.md#composition-root) and locate it itself.
+
+Bad:
+
+```ts
+import { deactivateUser } from '@/composition/container'
+```
+
+Better:
+
+```mermaid
+flowchart TD
+    C["Composition Root"] --> R["Construct repository"]
+    C --> U["Construct use case"]
+    C --> H["Construct controller / router"]
+```
+
+This keeps composition one-directional.
+
+---
+
+
+## 8.6 Transactions
+
+Transaction ownership is application-specific and deserves an explicit boundary.
+
+Options include:
+
+- a [Unit of Work](../GLOSSARY.md#unit-of-work) [port](../GLOSSARY.md#port) owned by [Application](../GLOSSARY.md#application-layer);
+- a transaction boundary applied around a [use case](../GLOSSARY.md#use-case) at composition/framework level;
+- [repository](../GLOSSARY.md#repository) operations that are already atomic enough for the [use case](../GLOSSARY.md#use-case).
+
+Do not let the ORM's transaction object spread through [Domain](../GLOSSARY.md#domain) merely because it is convenient.
+
+---
+
+## 8.7 Validation
+
+Separate validation by meaning:
+
+```mermaid
+flowchart LR
+    H["Malformed HTTP input"] --> HV["Delivery / interface validation"]
+    AP["Application precondition"] --> A["Application"]
+    BI["Business invariant"] --> D["Domain"]
+    DB["Database constraint"] --> I["Infrastructure safety net + mapped error"]
+```
+
+The same rule may be defended at more than one level for security/user experience, but each layer should express it in its own vocabulary.
+
+---
+
+## 8.8 Shared contracts with frontend
+
+A generated API client or shared [DTO](../GLOSSARY.md#data-transfer-object-dto) package can be useful, but it should represent the **wire contract**, not force frontend and backend internal models to become identical.
+
+```mermaid
+flowchart TD
+    B["Backend domain model"] --> DTO["Response DTO / schema"] --> W["Wire contract"] --> FDTO["Frontend infrastructure DTO"] --> FM["Frontend application / presentation model"]
+```
+
+This explicit mapping protects both sides from accidental coupling.
+
+---
+
+<a id="85-step-4--frameworks--drivers--the-composition-root"></a>
+
+## 8.9 Composition
+
+```ts
 const db = new PrismaClient()
-const userRepository = new PrismaUserRepository(db)
-export const createUser = makeCreateUser({ userRepository })
+const users = new PrismaUserRepository(db)
+const deactivateUser = makeDeactivateUser({ users })
+const controller = makeDeactivateUserController({ deactivateUser })
+
+router.post('/users/:id/deactivate', adapt(controller))
 ```
 
-```ts
-// frameworks/http/server.ts
-import express from 'express'
-import { postUser } from '@/adapters/controllers/UserController'
+Composition names concrete implementations. Inner code does not.
 
-const app = express()
-app.use(express.json())
-app.post('/users', postUser)   // the framework knows only the controller
-app.listen(3000)
-```
+See **[Composition Root](../foundations/composition-root.md)**.
 
 ---
 
-### 8.6 The whole flow, in mirror image
+<a id="86-the-whole-flow-in-mirror-image"></a>
 
-Compare this to the frontend flow in [§4.5](4-building-a-feature.md#45-the-whole-flow). It is the *same line*,
-reflected — the request enters from the outside and travels inward to the core, then the result travels back
-out:
+## 8.10 Frontend comparison
 
+The dependency **principle** is shared:
+
+```mermaid
+flowchart LR
+    O["Outer mechanism"] --> AD["Adapter"] --> A["Application"] --> D["Domain"]
 ```
-HTTP request → UserController → createUser (Use Case) → PrismaUserRepository (Adapter) → ORM → Database
-   framework      translation        application rule          translation              driver   detail
-```
 
-The single, load-bearing observation: **`entities/User.ts`, `usecases/ports/UserRepository.ts`, and
-`usecases/CreateUser.ts` are identical to their frontend counterparts.** The only files that differ between
-the two applications are the adapters and the frameworks — the outer two circles. That is not a coincidence or
-a nicety; it is the *definition* of the architecture working. When the business rules of a system are the same
-whether you reach them through a browser store or an HTTP controller, you have protected what matters from the
-technology that delivers it — on both sides of the wire [Martin 2017; Cockburn 2005].
+The concrete policies and models are not required to be the same.
 
----
+A backend and frontend can share pure domain code where that is genuinely the same domain, but architecture should never assume source-code sharing as proof of correctness.
 
-Back to the **[Clean Architecture index](README.md)** · See the full **[References](references.md)**.
+## Sources
+
+- Robert C. Martin, "The [Clean Architecture](../GLOSSARY.md#clean-architecture)": https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
+- Martin Fowler, [Repository](../GLOSSARY.md#repository): https://martinfowler.com/eaaCatalog/repository.html
+- Martin Fowler, [Unit of Work](../GLOSSARY.md#unit-of-work): https://martinfowler.com/eaaCatalog/unitOfWork.html

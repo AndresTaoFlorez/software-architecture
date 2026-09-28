@@ -1,161 +1,164 @@
-> **[Model-View-ViewModel](README.md)** › MVVM in React + Redux Toolkit. Full reference list: [References](references.md).
+> **[Model-View-ViewModel](README.md)** › [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) in React + Redux Toolkit. Full reference list: [References](references.md).
 
-## 5. MVVM in React + Redux Toolkit
+# 5. MVVM in React + Redux Toolkit
 
-[MVVM on the Frontend](3-mvvm-on-the-frontend.md) places the roles generically: stores and hooks
-are ViewModels, components are Views. This page pins that mapping to one concrete stack — React
-with Redux Toolkit and RTK Query — because it is the stack where the pattern's seams are easiest
-to miss: the store doubles as an HTTP client, and idiomatic Redux ships without the application
-layer that [§3.3](3-mvvm-on-the-frontend.md#33-how-mvvm-sits-inside-onion-and-clean) tells
-commands to call. Both are resolvable — but only deliberately.
+React and Redux Toolkit do not prescribe [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm). This chapter demonstrates **one optional mapping** when a project intentionally uses a [ViewModel](../GLOSSARY.md#viewmodel)/[Presentation](../GLOSSARY.md#presentation-layer) [facade](../GLOSSARY.md#facade-pattern) boundary.
+
+For the repository's current Redux guidance, also read **[State Management and Side Effects](../frontend/state-management.md)**.
 
 ---
 
-### 5.1 The mapping, in RTK vocabulary
+## 5.1 The mapping, in RTK vocabulary
 
-| MVVM role | RTK home |
-|---|---|
-| **Model** | framework-free domain modules — in a layered app, the inner rings, unchanged |
-| **ViewModel — shared half** | slices holding cross-screen display state, plus memoized selectors |
-| **ViewModel — local half** | one custom hook per screen (`useCartViewModel()`): local flags + commands |
-| **Commands** | the functions that hook exposes — dispatches, and calls inward |
-| **Binding** | `useSelector` subscriptions and React's re-render — the narrowed write path of [§2.3](2-the-binding.md#23-two-way-binding-one-way-flow--both-are-mvvm) |
+A possible mapping:
 
-Redux's own style guide pushes in this direction without using the word: logic out of components,
-into reducers and selector functions [Redux Style Guide]. What MVVM adds is a *name* for where the
-extracted logic lives — and the prohibitions of [§1.3](1-the-three-parts.md#13-viewmodel) that
-keep it presentation-sized.
+| [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) role | React/Redux owner |
+| --- | --- |
+| [View](../GLOSSARY.md#view) | React component rendering + local rendering concerns |
+| [ViewModel](../GLOSSARY.md#viewmodel) [facade](../GLOSSARY.md#facade-pattern) | feature hook such as `useClosures()` |
+| shared view state | Redux slice + [selectors](../GLOSSARY.md#selector) |
+| binding | React Redux subscriptions/hooks, hidden or exposed according to project policy |
+| [Model](../GLOSSARY.md#model)/[Application](../GLOSSARY.md#application-layer) | inner application/domain modules where the chosen architecture defines them |
 
----
+This is not the only valid Redux architecture.
 
-### 5.2 RTK Query sits at the infrastructure seam
-
-RTK Query is "a powerful data fetching and caching tool" [Redux Toolkit, RTK Query] that lives
-*inside the store* and is consumed through *generated hooks*. That makes it two things at once: a
-reactive cache participating in binding — ViewModel territory — and an HTTP client, which the
-third prohibition of [§3.3](3-mvvm-on-the-frontend.md#33-how-mvvm-sits-inside-onion-and-clean)
-forbids the ViewModel to reach. The resolution is to split it along exactly that line:
-
-- **Endpoint definitions are Infrastructure.** They encode transport — URLs, methods, payload
-  shapes — ideally generated from the API contract. Wherever the folders live, they are an
-  adapter and belong with the adapters.
-- **The generated hooks are binding machinery.** Like `computed` or `useSelector`, they are the
-  framework's code, not yours ([§4.3](4-testing-in-mvvm.md#43-commands-test-the-seam-fakes-fill-it)).
-  A ViewModel hook may consume a **query** hook to obtain display state.
-- **Mutations that carry business meaning are commands.** Inside Clean/Onion, a command body is a
-  use-case call ([§3.3](3-mvvm-on-the-frontend.md#33-how-mvvm-sits-inside-onion-and-clean)) — not
-  a bare `useSomeMutation()` fired from JSX.
-
-One discipline makes the split hold: **components never import generated hooks.** The screen's
-ViewModel hook wraps them and exposes one object — display state plus commands — so the View
-binds to a ViewModel, never to the transport.
+Redux's official guidance commonly allows components to use typed Redux hooks directly. Hiding Redux behind a feature [facade](../GLOSSARY.md#facade-pattern) is a **stricter project boundary** that can be valuable when framework replaceability/test seams justify it.
 
 ---
 
-### 5.3 The use-case layer is added, not inherited
+<a id="52-rtk-query-sits-at-the-infrastructure-seam"></a>
 
-In standalone MVVM a command may manipulate the Model directly
-([§3.3](3-mvvm-on-the-frontend.md#33-how-mvvm-sits-inside-onion-and-clean)), and standalone Redux
-agrees: the style guide routes logic through reducers and thunks, and no application layer exists
-unless you build one [Redux Style Guide]. Inside Clean or Onion, that layer is a **deliberate
-addition** — plain use-case modules, framework-free, called by commands, defended by an
-import-boundary lint. Nothing in RTK scaffolds it, and nothing in RTK objects when it erodes.
-Skip it, and orchestration silts into thunks: a fat ViewModel
-([§3.2](3-mvvm-on-the-frontend.md#32-the-failure-mode-the-fat-viewmodel)) distributed across the
-store.
+
+## 5.2 RTK Query and the infrastructure seam
+
+[RTK Query](../GLOSSARY.md#rtk-query) is Redux Toolkit's [server-state](../GLOSSARY.md#server-state) fetching/caching solution.
+
+Its architectural placement depends on what the operation means.
+
+### Server-state dominant query
+
+If a [View](../GLOSSARY.md#view) mainly needs cached remote data, invalidation and re-fetching:
+
+```mermaid
+flowchart LR
+    V["View / feature"] --> Q["RTK Query"] --> S["Server"]
+```
+
+may be entirely appropriate.
+
+### Policy-bearing operation
+
+If the operation contains application policy or must remain transport-independent:
+
+```mermaid
+flowchart LR
+    V["View"] --> VM["ViewModel / Presentation adapter"] --> A["Application use case"] --> P["Port"]
+    I["Infrastructure adapter"] --> P
+```
+
+Do not label [RTK Query](../GLOSSARY.md#rtk-query) universally "[Infrastructure](../GLOSSARY.md#infrastructure)" merely because it performs HTTP. Its generated hooks and cache participate directly in Redux/[Presentation](../GLOSSARY.md#presentation-layer), while endpoint definitions contain transport knowledge. In a strict layered system you may wrap or isolate that transport knowledge; in a simpler application you may intentionally keep the query mechanism in [Presentation](../GLOSSARY.md#presentation-layer).
+
+Document the chosen boundary.
 
 ---
 
-### 5.4 Selectors are where reshape lives
+<a id="53-the-use-case-layer-is-added-not-inherited"></a>
 
-`createSelector` is the reshape instrument: formatting, filtering-for-display, deriving flags —
-the style guide's "Use Selector Functions to Read from Store State", applied with MVVM's boundary
-[Redux Style Guide]. It is also where domain rules leak most quietly, because a selector is
-exactly as convenient as a `computed`. The
-[§3.2](3-mvvm-on-the-frontend.md#32-the-failure-mode-the-fat-viewmodel) test applies per line:
-*would this still be true if the app had no screens?* Price math — inward. "Format that price for
-this locale" — selector, correctly placed.
+## 5.3 The use-case layer is added by Clean/Onion, not Redux or MVVM
+
+Redux Toolkit does not require an [Application layer](../GLOSSARY.md#application-layer). [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) does not require one either.
+
+A Clean/Onion project may deliberately add:
+
+```mermaid
+flowchart LR
+    R["Redux thunk / binding"] --> U["Application use case"] --> P["Application port"]
+    I["Infrastructure adapter"] --> P
+```
+
+because application policy deserves an independent boundary.
+
+For a simple UI-only state transition, Redux can handle it directly without inventing a [use case](../GLOSSARY.md#use-case).
+
+The rule is proportionality.
 
 ---
 
-### 5.5 The §3.1 example, restated
+<a id="54-selectors-are-where-reshape-lives"></a>
 
-```js
-// ViewModel, shared half — a slice for cross-screen display state, a selector for reshape.
-const cartUi = createSlice({
-  name: 'cartUi',
-  initialState: { isAdding: false },
-  reducers: {
-    addStarted: s => { s.isAdding = true },
-    addSettled: s => { s.isAdding = false },
-  },
-})
+## 5.4 Selectors reshape Presentation state
 
-const selectFormattedTotal = createSelector(
-  selectCartTotal,                                   // computed by the inner rings
-  total => currency.format(total)                    // reshape only — no price math here
+[Selectors](../GLOSSARY.md#selector) are appropriate for derived state:
+
+```ts
+export const selectVisibleOrders = createSelector(
+  [selectOrders, selectFilters],
+  (orders, filters) => filterOrders(orders, filters),
 )
 ```
 
-```js
-// ViewModel, local half — the hook the screen binds to. No JSX, no DOM.
-export function useCartViewModel() {
-  const { addToCart } = useDeps()                    // use case, injected at composition
-  const dispatch = useDispatch()
-  const isAdding = useSelector(s => s.cartUi.isAdding)
-  const formattedTotal = useSelector(selectFormattedTotal)
+Keep business [invariants](../GLOSSARY.md#invariant) out of [selectors](../GLOSSARY.md#selector).
 
-  async function addItem(productId) {                // command: one use-case call
-    dispatch(cartUi.actions.addStarted())
-    try { await addToCart({ productId, qty: 1 }) }
-    finally { dispatch(cartUi.actions.addSettled()) }
+Good [selector](../GLOSSARY.md#selector) logic:
+
+- filtering for display;
+- sorting for display;
+- aggregate counts for a dashboard;
+- UI flags derived from stored state.
+
+Move authoritative business rules inward when they must be consistent across interfaces.
+
+---
+
+<a id="55-the-31-example-restated"></a>
+
+## 5.5 Public facade example
+
+A strict [ViewModel](../GLOSSARY.md#viewmodel)-style boundary excerpt; `useOrdersState` and `useOrdersActions` are existing feature bindings with semantic result contracts:
+
+```ts
+export function useOrders() {
+  const state = useOrdersState()
+  const actions = useOrdersActions()
+
+  return {
+    rows: state.visibleRows,
+    busy: state.busy,
+    cancel: actions.cancel,
   }
-
-  return { isAdding, formattedTotal, addItem }
 }
 ```
 
-```jsx
-// The View: consumes the ViewModel, contributes nothing but markup.
-function CartTotal({ productId }) {
-  const vm = useCartViewModel()
-  return (
-    <>
-      <p className="total">{vm.formattedTotal}</p>
-      <button disabled={vm.isAdding} onClick={() => vm.addItem(productId)}>Add</button>
-    </>
-  )
-}
+`useOrdersActions()` can convert Redux-specific action outcomes into semantic results:
+
+```ts
+type Result<T, E> =
+  | { ok: true; value: T }
+  | { ok: false; error: E }
 ```
+
+The [View](../GLOSSARY.md#view) should not need `cancelOrderThunk.fulfilled.match(...)` if the [facade](../GLOSSARY.md#facade-pattern)'s purpose is to hide Redux.
 
 ---
 
-### 5.6 Testing: the RTK dividend, and one React tax
+<a id="56-testing-the-rtk-dividend-and-one-react-tax"></a>
 
-Slice reducers and selectors are plain functions — they test at the Model tier of
-[the pyramid](4-testing-in-mvvm.md#45-the-pyramid-restated-for-mvvm), no harness at all. The
-ViewModel hook carries one tax Vue composables did not: React hooks only run inside a component,
-so the headless test needs `renderHook` — a minimal harness, not a rendered screen
-[Testing Library]. The test still reads act-then-look, with a fake use case at the seam
-([§4.3](4-testing-in-mvvm.md#43-commands-test-the-seam-fakes-fill-it)):
+## 5.6 Do not force everything through Redux
 
-```js
-test('addItem exposes a busy flag while the add is in flight', async () => {
-  const addToCart = vi.fn(() => new Promise(r => setTimeout(r)))   // fake use case
-  const { result } = renderHook(() => useCartViewModel(), {
-    wrapper: makeWrapper({ store, deps: { addToCart } }),
-  })
+Local component state remains appropriate for:
 
-  let pending
-  act(() => { pending = result.current.addItem('sku-1') })
-  expect(result.current.isAdding).toBe(true)         // what the View would show now
+- modal open/closed;
+- hover/focus;
+- temporary text input;
+- state used by one component subtree.
 
-  await act(() => pending)
-  expect(result.current.isAdding).toBe(false)
-  expect(addToCart).toHaveBeenCalledWith({ productId: 'sku-1', qty: 1 })
-})
-```
+Redux recommends keeping [global state](../GLOSSARY.md#global-state) minimal and deriving values where possible.
 
----
+A [ViewModel](../GLOSSARY.md#viewmodel) [facade](../GLOSSARY.md#facade-pattern) may compose local React state and Redux-backed feature state without pretending they are the same ownership scope.
 
-Back to the **[MVVM index](README.md)** · See the full **[References](references.md)**.
+## Sources
+
+- Redux Style Guide: https://redux.js.org/style-guide/
+- Redux Toolkit, [RTK Query](../GLOSSARY.md#rtk-query): https://redux-toolkit.js.org/rtk-query/overview
+- React Redux hooks: https://react-redux.js.org/api/hooks
+- Martin Fowler, [Presentation Model](../GLOSSARY.md#presentation-model): https://martinfowler.com/eaaDev/PresentationModel.html

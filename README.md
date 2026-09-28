@@ -1,52 +1,149 @@
-# Software Architecture: Clean, Onion, MVC & MVVM
+<a id="software-architecture-clean-onion-mvc--mvvm"></a>
 
-Four ways to structure a maintainable frontend. Two of them — **Clean** and **Onion** — organize the whole application by the direction of its dependencies. The other two — **MVC** and its descendant **MVVM** — organize the presentation tier and fit *inside* the first two. Pick the layering you think in, then use MVC/MVVM to structure the screens within it.
+# Software Architecture
 
----
+A practical, source-backed reference for learning and applying software architecture from first principles.
 
-## Quick Comparison
+The repository is intentionally progressive: a programmer who has never studied architecture should be able to start here, understand **why boundaries exist**, learn **where code belongs**, and only then move into advanced patterns.
 
-|  | **Clean Architecture** | **Onion Architecture** | **Model-View-Controller** | **Model-View-ViewModel** |
-|---|---|---|---|---|
-| **Scope** | Whole application | Whole application | Presentation tier only | Presentation tier only |
-| **Focus** | The Dependency Rule—entities, use cases, details | Concentric rings—visualizing inward dependencies | Separating data, display, and input handling | Binding a declarative View to a testable ViewModel |
-| **Structure** | Entities → use cases → adapters → frameworks | Domain → Application → Infrastructure → Presentation | Model · View · Controller (and MVP, MVVM) | Model · View · ViewModel (synced by the framework) |
-| **Originator** | Robert C. Martin, 2012 | Jeffrey Palermo, 2008 | Trygve Reenskaug, 1979 | John Gossman, 2005 |
-| **Best for** | Understanding the principle and how layers interlock | Visualizing the architecture and feature organization | Understanding the classic cycle and its variants | Structuring screens in a reactive component framework |
+Terminology is centralized in the **[Architecture Glossary](./GLOSSARY.md)**.
 
-Clean and Onion are alternatives to each other. MVC and MVVM are **not** alternatives to either — they are complementary, and live in their outer ring. Between themselves, MVVM is MVC with the observer wiring automated by a binding layer: in a modern component framework, MVVM is the pattern you are already using.
+<a id="choose-your-path"></a>
 
----
+## Start here if you are new
 
-## Choose Your Path
+Read in this order:
 
-### [Clean Architecture](./clean-architecture)
+1. **[Code Placement: Where Does This Code Belong?](./foundations/code-placement.md)**\
+   Learn where a function, type, class, hook, [adapter](./GLOSSARY.md#adapter), component, [DTO](./GLOSSARY.md#data-transfer-object-dto), or [use case](./GLOSSARY.md#use-case) should live.
 
-Start here to understand the **Dependency Rule** and how it shapes code: how entities stay independent, how use cases orchestrate them, and why frameworks and databases are "details." An eight-part path covering **frontend and backend**: the four layers defined, project structure and import boundaries, a feature built end-to-end, testing, dependency injection and composition roots, scaling, and the same four circles on the server.
+2. **[Naming and File Placement Conventions](./conventions/naming-and-file-placement.md)**\
+   Learn how files and symbols are named in the examples.
 
-### [Onion Architecture](./onion-architecture)
+3. **[Architecture Foundations](./foundations/README.md)**\
+   Learn dependency direction, composition, module boundaries, [public APIs](./GLOSSARY.md#public-api), tests, and scaling.
 
-Start here if you think in **visualizations and rings**: why the four layers form an onion, how dependencies spiral inward, and how to organize code and teams around that structure. Covers advanced patterns (CRDT sync, optimistic updates), feature-based organization, styling, and scaling.
+4. Choose an architecture/presentation pattern:
+   - [Clean Architecture](./clean-architecture)
+   - [Onion Architecture](./onion-architecture)
+   - [MVC](./model-view-controller)
+   - [MVVM](./model-view-viewmodel)
 
-### [Model-View-Controller](./model-view-controller)
+5. For modern frontend organization:
+   - [Frontend Architecture](./frontend/README.md)
 
-Start here to structure the **presentation tier from first principles**: separating what the app knows (Model) from what the user sees (View) and what turns input into change (Controller). Covers the classic cycle, the MVP and MVVM variants, why modern component frameworks are really MVVM, and how MVC sits inside a Clean or Onion app.
+<a id="quick-comparison"></a>
 
-### [Model-View-ViewModel](./model-view-viewmodel)
+<a id="how-they-relate"></a>
 
-Start here if you build with a **reactive component framework** (Vue, React, Svelte): the ViewModel as the screen's state and commands with no reference to the View, the binding layer that replaces MVC's hand-written observer, stores and composables/hooks as ViewModels, the fat-ViewModel failure mode, and the headless ViewModel test the pattern was invented for.
+## What this repository separates
 
----
+```mermaid
+flowchart TD
+    F["Foundations"]
+    A["Architectural styles"]
+    P["Presentation patterns"]
+    M["Framework mechanisms"]
+    C["Project conventions"]
 
-## How They Relate
+    F --> A
+    F --> P
+    A --> C
+    P --> C
+    M --> C
 
-- **Clean vs. Onion** — the same rule, two framings. Clean emphasizes *what each layer is*; Onion emphasizes *where each layer sits*. Inner layers depend on nothing; outer layers depend on inner ones. The resulting code is identical.
-- **MVC/MVVM vs. both** — a different category. MVC and MVVM say nothing about repositories or transports; they organize the screen. In a layered app, the View and display state are pure Presentation, while the Model's *rules* belong to the inner layers — the Controller (or the ViewModel's commands) reaches them through a use case, not directly. See [MVC on the Frontend](./model-view-controller/3-mvc-on-the-frontend.md) and [MVVM on the Frontend](./model-view-viewmodel/3-mvvm-on-the-frontend.md).
-- **MVC vs. MVVM** — ancestor and descendant, one substitution apart. MVVM replaces MVC's hand-wired observer with the framework's declarative binding, and renames the Controller's surviving half (gesture interpretation) into the ViewModel's commands. Read MVC to understand *why* the parts are separated; read MVVM for the form that separation takes in today's frameworks. See [The Binding](./model-view-viewmodel/2-the-binding.md).
+    A --> CLEAN["Clean Architecture"]
+    A --> ONION["Onion Architecture"]
+    P --> MVC["MVC"]
+    P --> MVVM["MVVM"]
+    M --> REACT["React"]
+    M --> REDUX["Redux Toolkit"]
+    M --> PANDA["Panda CSS"]
+```
 
----
+These categories are deliberately different.
 
-## Supplementary Resources
+- A **[Dependency Rule](./GLOSSARY.md#dependency-rule)** is an architectural constraint.
+- A **[Repository](./GLOSSARY.md#repository)** is a design pattern.
+- Redux is a [state-management](./GLOSSARY.md#state-management) mechanism.
+- `closures.slice.ts` is a naming convention.
+- `features/closures/` is an organization strategy.
 
-- **[Visual Testing Harness](./scraper)** — Playwright + TypeScript tool for verifying demo sites and capturing architecture snapshots
-- **[GitHub](https://github.com/AndresTaoFlorez/onion-architecture)** — Live demos and implementations
+Treating all of those as the same kind of rule produces cargo-cult architecture.
+
+## Architectural styles
+
+### Clean Architecture
+
+Robert C. Martin published the well-known [Clean Architecture](./GLOSSARY.md#clean-architecture) article in 2012 and later expanded the ideas in the 2017 book. It organizes software around policy vs. mechanism and the rule that source dependencies point inward.
+
+Start: **[Clean Architecture](./clean-architecture/README.md)**.
+
+### Onion Architecture
+
+Jeffrey Palermo published the [Onion Architecture](./GLOSSARY.md#onion-architecture) series in 2008. It emphasizes a domain model at the center, application behavior around it, and infrastructure pushed outward.
+
+Start: **[Onion Architecture](./onion-architecture/README.md)**.
+
+<a id="model-view-controller"></a>
+
+### MVC
+
+Trygve Reenskaug developed the original [Model-View-Controller](./GLOSSARY.md#model-view-controller-mvc) ideas at Xerox PARC in 1978–1979 to help users manipulate complex information through multiple views.
+
+Start: **[Model-View-Controller](./model-view-controller/README.md)**.
+
+<a id="model-view-viewmodel"></a>
+
+### MVVM
+
+John Gossman introduced [MVVM](./GLOSSARY.md#model-view-viewmodel-mvvm) terminology in 2005 in the WPF ecosystem, closely related to Martin Fowler's earlier [Presentation Model](./GLOSSARY.md#presentation-model) pattern.
+
+Start: **[Model-View-ViewModel](./model-view-viewmodel/README.md)**.
+
+<a id="supplementary-resources"></a>
+
+## Frontend architecture
+
+The frontend section explains the second architectural scale that Clean/Onion do not prescribe:
+
+- feature ownership;
+- pages/layouts;
+- public hooks / [ViewModels](./GLOSSARY.md#viewmodel);
+- local vs. shared vs. [server state](./GLOSSARY.md#server-state);
+- Redux Toolkit;
+- [design systems](./GLOSSARY.md#design-system);
+- Panda CSS [recipes](./GLOSSARY.md#recipe);
+- [architecture tests](./GLOSSARY.md#architecture-test).
+
+Start: **[Frontend Architecture](./frontend/README.md)**.
+
+
+## How to contribute
+
+Every contribution must follow **[CONTRIBUTING.md](./CONTRIBUTING.md)**.
+
+The rules include:
+
+- beginner-first progressive teaching;
+- history and source context;
+- explicit best/worst-fit scenarios;
+- Mermaid-only diagrams;
+- folder/file ownership explanations;
+- naming references;
+- glossary links;
+- three review passes before a substantial documentation change is considered complete.
+
+AI agents must additionally follow **[AGENTS.md](./AGENTS.md)**.
+
+## Primary source families
+
+The guides cite sources locally. The repository primarily relies on:
+
+- Robert C. Martin — *The [Clean Architecture](./GLOSSARY.md#clean-architecture)* / *[Clean Architecture](./GLOSSARY.md#clean-architecture)*;
+- Jeffrey Palermo — *The [Onion Architecture](./GLOSSARY.md#onion-architecture)*;
+- Alistair Cockburn — *[Hexagonal Architecture](./GLOSSARY.md#hexagonal-architecture-ports-and-adapters) / [Ports and Adapters](./GLOSSARY.md#hexagonal-architecture-ports-and-adapters)*;
+- Trygve Reenskaug — original [MVC](./GLOSSARY.md#model-view-controller-mvc) reports;
+- Martin Fowler — [Presentation Model](./GLOSSARY.md#presentation-model), GUI architecture, enterprise patterns;
+- Mark Seemann — [Composition Root](./GLOSSARY.md#composition-root) / [Dependency Injection](./GLOSSARY.md#dependency-injection-di);
+- official React, Redux Toolkit, Panda CSS, TypeScript ecosystem documentation.
