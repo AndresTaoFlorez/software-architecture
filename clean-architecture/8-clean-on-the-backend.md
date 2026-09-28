@@ -1,12 +1,12 @@
-> **[Clean Architecture](README.md)** › Clean Architecture on the Backend.
+> **[Clean Architecture](README.md)** › [Clean Architecture](../GLOSSARY.md#clean-architecture) on the Backend.
 
 # 8. Clean Architecture on the Backend
 
-The Dependency Rule applies on a backend exactly as it does elsewhere: source dependencies should point from technical mechanisms toward higher-level application policy.
+The [Dependency Rule](../GLOSSARY.md#dependency-rule) applies on a backend exactly as it does elsewhere: source dependencies should point from technical mechanisms toward higher-level application policy.
 
 What changes is the set of outer mechanisms: HTTP servers, queues, schedulers, databases, ORMs, filesystem access and external SDKs.
 
-What **does not** follow is that frontend and backend must contain identical Domain or Application source files.
+What **does not** follow is that frontend and backend must contain identical [Domain](../GLOSSARY.md#domain) or [Application](../GLOSSARY.md#application-layer) source files.
 
 ---
 
@@ -43,13 +43,13 @@ flowchart TD
     N0 --> N13
 ```
 
-Some teams call the outer HTTP/controller area `presentation`; others use `interface`, `delivery` or framework-specific modules. The name matters less than the dependency rule.
+Some teams call the outer HTTP/controller area `presentation`; others use `interface`, `delivery` or framework-specific modules. The name matters less than the [dependency rule](../GLOSSARY.md#dependency-rule).
 
 ---
 
 ## 8.2 Domain
 
-The backend Domain owns business concepts and invariants that are authoritative in that service/bounded context.
+The backend [Domain](../GLOSSARY.md#domain) owns business concepts and [invariants](../GLOSSARY.md#invariant) that are authoritative in that service/[bounded context](../GLOSSARY.md#bounded-context).
 
 ```ts
 export class User {
@@ -76,7 +76,7 @@ Share code only when the semantics, ownership and release coupling are genuinely
 
 ## 8.3 Application
 
-Application code orchestrates use-case policy:
+[Application](../GLOSSARY.md#application-layer) code orchestrates use-case policy:
 
 ```ts
 export interface UserRepository {
@@ -98,7 +98,7 @@ export function makeDeactivateUser(deps: {
 }
 ```
 
-The use case does not import the ORM or web framework.
+The [use case](../GLOSSARY.md#use-case) does not import the ORM or web framework.
 
 A frontend may have a different application operation such as `submitDeactivateUserConfirmation`, because client interaction and authoritative server transaction are different responsibilities.
 
@@ -106,7 +106,7 @@ A frontend may have a different application operation such as `submitDeactivateU
 
 ## 8.4 Infrastructure
 
-Concrete persistence implements Application-owned capabilities:
+Concrete persistence implements [Application](../GLOSSARY.md#application-layer)-owned capabilities:
 
 ```ts
 export class PrismaUserRepository implements UserRepository {
@@ -126,7 +126,7 @@ export class PrismaUserRepository implements UserRepository {
 }
 ```
 
-The ORM record does not leak into the use case.
+The ORM record does not leak into the [use case](../GLOSSARY.md#use-case).
 
 The same principle applies to:
 
@@ -157,7 +157,7 @@ export function makeDeactivateUserController(deps: {
 }
 ```
 
-The controller should **receive** the use case from composition. It should not import the Composition Root and locate it itself.
+The controller should **receive** the [use case](../GLOSSARY.md#use-case) from composition. It should not import the [Composition Root](../GLOSSARY.md#composition-root) and locate it itself.
 
 Bad:
 
@@ -184,11 +184,11 @@ Transaction ownership is application-specific and deserves an explicit boundary.
 
 Options include:
 
-- a Unit of Work port owned by Application;
-- a transaction boundary applied around a use case at composition/framework level;
-- repository operations that are already atomic enough for the use case.
+- a [Unit of Work](../GLOSSARY.md#unit-of-work) [port](../GLOSSARY.md#port) owned by [Application](../GLOSSARY.md#application-layer);
+- a transaction boundary applied around a [use case](../GLOSSARY.md#use-case) at composition/framework level;
+- [repository](../GLOSSARY.md#repository) operations that are already atomic enough for the [use case](../GLOSSARY.md#use-case).
 
-Do not let the ORM's transaction object spread through Domain merely because it is convenient.
+Do not let the ORM's transaction object spread through [Domain](../GLOSSARY.md#domain) merely because it is convenient.
 
 ---
 
@@ -210,7 +210,7 @@ The same rule may be defended at more than one level for security/user experienc
 
 ## 8.8 Shared contracts with frontend
 
-A generated API client or shared DTO package can be useful, but it should represent the **wire contract**, not force frontend and backend internal models to become identical.
+A generated API client or shared [DTO](../GLOSSARY.md#data-transfer-object-dto) package can be useful, but it should represent the **wire contract**, not force frontend and backend internal models to become identical.
 
 ```mermaid
 flowchart TD
@@ -253,6 +253,6 @@ A backend and frontend can share pure domain code where that is genuinely the sa
 
 ## Sources
 
-- Robert C. Martin, "The Clean Architecture": https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
-- Martin Fowler, Repository: https://martinfowler.com/eaaCatalog/repository.html
-- Martin Fowler, Unit of Work: https://martinfowler.com/eaaCatalog/unitOfWork.html
+- Robert C. Martin, "The [Clean Architecture](../GLOSSARY.md#clean-architecture)": https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
+- Martin Fowler, [Repository](../GLOSSARY.md#repository): https://martinfowler.com/eaaCatalog/repository.html
+- Martin Fowler, [Unit of Work](../GLOSSARY.md#unit-of-work): https://martinfowler.com/eaaCatalog/unitOfWork.html
