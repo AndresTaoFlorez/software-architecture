@@ -2,6 +2,9 @@
 
 # 2. Inward Dependencies
 
+<a id="2-core-principle-the-dependency-rule"></a>
+<a id="21-the-concentric-model"></a>
+
 ## 2.1 The principle
 
 [Onion Architecture](../GLOSSARY.md#onion-architecture) protects the center from outer technology.
@@ -17,6 +20,11 @@ The important arrow is the **source-code dependency**.
 Runtime flow may call an external system in the opposite direction through an injected [port](../GLOSSARY.md#port).
 
 ---
+
+<a id="22-the-dependency-rule"></a>
+<a id="23-dependency-inversion-the-mechanism"></a>
+
+<a id="43-the-inversion-gap"></a>
 
 ## 2.2 Dependency inversion
 
@@ -76,6 +84,10 @@ No contradiction exists because dependency direction and control flow are differ
 
 ---
 
+<a id="4-dependency-direction-in-practice"></a>
+
+<a id="41-allowed-and-forbidden-imports"></a>
+
 ## 2.3 Recommended import policy
 
 | Area | Allowed dependencies | Forbidden by the default policy |
@@ -90,6 +102,7 @@ Composition is allowed to know the concrete modules required to assemble the exe
 This table is a documentation convention for implementing Onion cleanly; Palermo's articles define the inward principle, not these exact folder names.
 
 ---
+
 
 ## 2.4 Type imports count
 
@@ -139,6 +152,8 @@ flowchart LR
 
 ---
 
+<a id="24-why-this-matters-specifically-on-the-frontend"></a>
+
 ## 2.7 Presentation and Infrastructure are siblings outside Application
 
 Avoid the misleading linear stack:
@@ -161,6 +176,8 @@ flowchart LR
 [Infrastructure](../GLOSSARY.md#infrastructure) implements [Application](../GLOSSARY.md#application-layer)-owned [ports](../GLOSSARY.md#port).
 
 ---
+
+<a id="42-adding-a-feature-across-the-four-layers"></a>
 
 ## 2.8 Adding a capability
 
