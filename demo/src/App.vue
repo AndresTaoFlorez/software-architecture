@@ -2,10 +2,10 @@
 import { computed, ref } from 'vue'
 import OnionRings from './presentation/components/OnionRings.vue'
 import TeachingPanel from './presentation/components/TeachingPanel.vue'
-import { container } from './presentation/composition/container'
-import type { LayerId } from './domain/entities/ArchitectureLayer'
+import type { LayerId } from './application/use-cases/getLayers'
+import type { LayerView } from './presentation/layerViews'
 
-const layers = container.getLayers()
+const { layers } = defineProps<{ layers: LayerView[] }>()
 
 const active = ref<LayerId | null>(null)
 const hovered = ref<LayerId | null>(null)
@@ -16,7 +16,7 @@ function select(id: LayerId) {
   active.value = active.value === id ? null : id
 }
 
-const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
+const GUIDE = 'https://github.com/AndresTaoFlorez/software-architecture/tree/main/onion-architecture'
 </script>
 
 <template>
@@ -34,7 +34,7 @@ const GUIDE = 'https://github.com/AndresTaoFlorez/onion-architecture'
           @select="select"
           @hover="(id) => (hovered = id)"
         />
-        <p class="caption">Dependencies point inward →</p>
+        <p class="caption">Dependencies point inward. Presentation and Infrastructure are peers; shell size is display order.</p>
       </div>
 
       <div class="lesson">

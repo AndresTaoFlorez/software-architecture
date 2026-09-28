@@ -1,7 +1,5 @@
-// INFRASTRUCTURE — an adapter implementing LayerContentPort. Here it is a
-// static source, but it could just as easily fetch from a CMS or an API: the
-// inner layers would never know the difference. That swap-ability is the whole
-// point of keeping data access out at the edge.
+// Static teaching-content adapter. The synchronous port fits local content.
+// A remote CMS would need an asynchronous contract and UI loading/error behavior.
 
 import { ArchitectureLayer } from '../domain/entities/ArchitectureLayer'
 import type { LayerContentPort } from '../application/ports/LayerContentPort'
@@ -16,17 +14,13 @@ export class StaticLayerContent implements LayerContentPort {
         tagline: 'What you see and click',
         role: 'The screens, buttons and pages. It shows things to the person using the app and reacts when they tap or type.',
         analogy: 'The waiter — takes your order and brings your food, but never cooks it.',
-        rule: 'It asks the inside to do the real work. It never talks to a server or a database by itself.',
+        rule: 'In this strict project policy, it receives application operations. It does not import Infrastructure or a container.',
         livesHere: [
-          { icon: '🔘', label: 'Buttons & pages' },
-          { icon: '🧩', label: 'Vue components' },
-          { icon: '🍍', label: 'Stores (Pinia)' },
+          { label: 'Buttons & pages' },
+          { label: 'Vue components' },
+          { label: 'Stores (Pinia)' },
         ],
         code: 'function onPlaceOrder() {\n  // just ask the inside to do it\n  placeOrder({ orderId })\n}',
-        color: '#ec3a78',
-        radius: 2.0,
-        icon: '🖥️',
-        analogyIcon: '🍽️',
       }),
       new ArchitectureLayer({
         id: 'infrastructure',
@@ -35,17 +29,13 @@ export class StaticLayerContent implements LayerContentPort {
         tagline: 'The doors to the outside world',
         role: 'The code that talks to servers, databases and browser storage, turning messy outside data into clean shapes the app understands.',
         analogy: 'The suppliers and delivery trucks — you can swap them without changing the recipe.',
-        rule: 'It is replaceable. Swap a real server for a fake one and the inner layers never notice.',
+        rule: 'It implements inward-owned contracts. Replacement must preserve the contract, including failures and timing assumptions.',
         livesHere: [
-          { icon: '🌐', label: 'API / fetch calls' },
-          { icon: '🗄️', label: 'Repositories' },
-          { icon: '💾', label: 'Local storage' },
+          { label: 'API / fetch calls' },
+          { label: 'Repositories' },
+          { label: 'Local storage' },
         ],
         code: 'class HttpOrderRepo\n  implements OrderPort {\n  findById(id) { /* fetch */ }\n}',
-        color: '#ff9f43',
-        radius: 1.55,
-        icon: '🔌',
-        analogyIcon: '🚚',
       }),
       new ArchitectureLayer({
         id: 'application',
@@ -56,15 +46,11 @@ export class StaticLayerContent implements LayerContentPort {
         analogy: 'The recipe steps — follow them in order to turn ingredients into a dish.',
         rule: 'It orchestrates the task but knows nothing about screens or servers. It only knows the core and its ports.',
         livesHere: [
-          { icon: '🎬', label: 'Use cases' },
-          { icon: '🔗', label: 'Ports (interfaces)' },
-          { icon: '📨', label: 'Commands' },
+          { label: 'Use cases' },
+          { label: 'Ports (interfaces)' },
+          { label: 'Commands' },
         ],
         code: 'function placeOrder(cmd, ports) {\n  const o = ports.find(cmd.id)\n  o.confirm()\n  ports.save(o)\n}',
-        color: '#34c6e8',
-        radius: 1.15,
-        icon: '⚙️',
-        analogyIcon: '📋',
       }),
       new ArchitectureLayer({
         id: 'domain',
@@ -75,15 +61,11 @@ export class StaticLayerContent implements LayerContentPort {
         analogy: 'The soul of the app — still true even with no app around it.',
         rule: 'It knows nothing about anything outside it. Everything depends on the core; the core depends on no one.',
         livesHere: [
-          { icon: '🧱', label: 'Entities' },
-          { icon: '💎', label: 'Value objects' },
-          { icon: '⚖️', label: 'Business rules' },
+          { label: 'Entities' },
+          { label: 'Value objects' },
+          { label: 'Business rules' },
         ],
         code: 'class Order {\n  confirm() {\n    if (this.isEmpty) throw Error()\n  }\n}',
-        color: '#ffd25f',
-        radius: 0.8,
-        icon: '💛',
-        analogyIcon: '✨',
       }),
     ]
   }
