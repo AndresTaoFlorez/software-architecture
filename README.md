@@ -1,3 +1,5 @@
+<a id="software-architecture-clean-onion-mvc--mvvm"></a>
+
 # Software Architecture
 
 A practical, source-backed reference for learning and applying software architecture from first principles.
@@ -5,6 +7,8 @@ A practical, source-backed reference for learning and applying software architec
 The repository is intentionally progressive: a programmer who has never studied architecture should be able to start here, understand **why boundaries exist**, learn **where code belongs**, and only then move into advanced patterns.
 
 Terminology is centralized in the **[Architecture Glossary](./GLOSSARY.md)**.
+
+<a id="choose-your-path"></a>
 
 ## Start here if you are new
 
@@ -27,6 +31,10 @@ Read in this order:
 
 5. For modern frontend organization:
    - [Frontend Architecture](./frontend/README.md)
+
+<a id="quick-comparison"></a>
+
+<a id="how-they-relate"></a>
 
 ## What this repository separates
 
@@ -77,17 +85,23 @@ Jeffrey Palermo published the [Onion Architecture](./GLOSSARY.md#onion-architect
 
 Start: **[Onion Architecture](./onion-architecture/README.md)**.
 
+<a id="model-view-controller"></a>
+
 ### MVC
 
 Trygve Reenskaug developed the original [Model-View-Controller](./GLOSSARY.md#model-view-controller-mvc) ideas at Xerox PARC in 1978–1979 to help users manipulate complex information through multiple views.
 
 Start: **[Model-View-Controller](./model-view-controller/README.md)**.
 
+<a id="model-view-viewmodel"></a>
+
 ### MVVM
 
 John Gossman introduced [MVVM](./GLOSSARY.md#model-view-viewmodel-mvvm) terminology in 2005 in the WPF ecosystem, closely related to Martin Fowler's earlier [Presentation Model](./GLOSSARY.md#presentation-model) pattern.
 
 Start: **[Model-View-ViewModel](./model-view-viewmodel/README.md)**.
+
+<a id="supplementary-resources"></a>
 
 ## Frontend architecture
 
@@ -103,6 +117,7 @@ The frontend section explains the second architectural scale that Clean/Onion do
 - [architecture tests](./GLOSSARY.md#architecture-test).
 
 Start: **[Frontend Architecture](./frontend/README.md)**.
+
 
 ## How to contribute
 

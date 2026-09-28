@@ -8,11 +8,17 @@ This guide uses Panda CSS for concrete examples. The model also applies to other
 
 ## 1. Use a layered design-system pipeline
 
-Prefer an explicit progression:
+Use explicit ownership and reuse. This is a [dependency graph](../GLOSSARY.md#dependency-graph) of style definitions, not a requirement that every component pass through every abstraction:
 
 ```mermaid
 flowchart TD
-    P["Primitive tokens"] --> S["Semantic tokens"] --> T["Text / layer styles"] --> R["Recipes / slot recipes"] --> C["Component-local styles"] --> V["Rendered component"]
+    S["Semantic tokens"] --> P["Primitive tokens"]
+    T["Text / layer styles"] --> S
+    R["Recipes / slot recipes"] --> S
+    C["Component-local styles"] --> S
+    C --> T
+    C --> R
+    V["Rendered component"] --> C
 ```
 
 Each level answers a different question.
@@ -101,7 +107,7 @@ Use it for a multipart component whose styling belongs to that component/feature
 
 ```ts
 // QueryFilters.styles.ts
-import { sva } from '../styled-system/css'
+import { sva } from '@/styled-system/css'
 
 export const queryFilters = sva({
   className: 'query-filters',
@@ -124,6 +130,8 @@ export const queryFilters = sva({
 })
 ```
 
+The generated import assumes Panda's `outdir` is `styled-system` and the `@/*` TypeScript/bundler alias resolves from the project root. Adapt both together. Local `sva` ownership is this repository's default, not a Panda restriction: atomic [recipes](../GLOSSARY.md#recipe) can also be shared.
+
 This fits colocated component ownership:
 
 ```mermaid
@@ -134,7 +142,7 @@ flowchart TD
     Q --> I["index.ts"]
 ```
 
-Use variants and compound variants to model visual states rather than creating a web of descendant [selectors](../GLOSSARY.md#selector).
+Use variants and compound variants to model visual states rather than creating a web of descendant [CSS selectors](../GLOSSARY.md#css-selector).
 
 ---
 
@@ -146,6 +154,8 @@ Use them when the [recipe](../GLOSSARY.md#recipe) is part of the reusable [desig
 
 ```ts
 // design-system/button.recipe.ts
+import { defineRecipe } from '@pandacss/dev'
+
 export const buttonRecipe = defineRecipe({
   className: 'button',
   base: {
@@ -170,6 +180,9 @@ export const buttonRecipe = defineRecipe({
 Register once:
 
 ```ts
+import { defineConfig } from '@pandacss/dev'
+import { buttonRecipe } from './design-system/button.recipe'
+
 export default defineConfig({
   theme: {
     extend: {
@@ -306,6 +319,7 @@ Prefer Panda's:
 Raw CSS remains valid for explicit integration boundaries such as:
 
 - vendor/third-party styles;
+- deliberate reset/preflight integration with one owner for browser defaults;
 - browser rules the chosen styling abstraction cannot express cleanly;
 - font-face integration;
 - legacy migration boundaries;
