@@ -1,95 +1,200 @@
-> **[Clean Architecture](README.md)** › The Dependency Rule. Full reference list: [References](references.md).
+> **[Clean Architecture](README.md)** › The [Dependency Rule](../GLOSSARY.md#dependency-rule).
 
-## 1. The Dependency Rule
 
-Clean Architecture is, at heart, a single rule with a set of consequences. Everything else — the circles,
-the ports, the testability — falls out of it.
+# 1. The Dependency Rule
 
-### 1.1 The four circles
-
-The system is drawn as four concentric circles. The innermost is the most abstract and the most stable;
-the outermost is the most concrete and the most volatile [Martin 2017].
-
-![Clean Architecture Diagram by Robert C. Martin (Uncle Bob)](https://blog.cleancoder.com/uncle-bob/images/2012-08-13-the-clean-architecture/CleanArchitecture.jpg)
-
-*Image source: "The Clean Code Blog" by Robert C. Martin (Uncle Bob), August 13, 2012. Original article:
-[The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html).*
-
-From the center outward: **Entities → Use Cases → Interface Adapters → Frameworks & Drivers.** A crucial
-point of placement: the database and the web framework are **both outer details**. The database is not a
-privileged middle tier the use cases are built "on top of"; it is an outermost driver that *implements*
-what the inner circles declare. The use cases sit closer to the core than any technical detail [Martin 2017].
-
-### 1.2 The rule itself
-
-> Source-code dependencies must point only inward, toward higher-level policies. Nothing in an inner
-> circle can know anything at all about something in an outer circle [Martin 2012].
-
-Concretely:
-
-- **Entities** depend on nothing.
-- **Use Cases** depend only on Entities.
-- **Interface Adapters** and **Frameworks & Drivers** depend on the inner circles, never the reverse.
-
-The name of anything declared in an outer circle — a class, a function, a variable, a database table —
-must never be mentioned by code in an inner circle. This is the single rule from which every benefit
-follows.
-
-### 1.3 Crossing the boundary: Dependency Inversion
-
-The rule raises an obvious tension. A use case must, eventually, read from a database, yet the database
-is an outer detail the use case is forbidden to name. The resolution is the **Dependency Inversion
-Principle**: high-level modules must not depend on low-level modules; both depend on abstractions
-[Martin 2003 (SOLID); Martin 2017].
-
-The use case declares an **interface (a "port")** describing the operation it needs. An outer circle
-provides a concrete **implementation (an "adapter")**. At runtime the adapter is injected into the use
-case. The *source-code* dependency now points inward — the adapter depends on the port — even though the
-*flow of control* moves outward at runtime. This is the ports-and-adapters arrangement of Hexagonal
-Architecture, and it is how every boundary in Clean Architecture is crossed [Cockburn 2005].
-
-```
-   Use Case defines the port           Interface Adapter implements it
-   ─────────────────────────────      ──────────────────────────────
-   interface UserRepository  ◄───────  class HttpUserRepository
-     fetchAll(): User[]                   (uses the HTTP client, maps JSON → User)
-
-           ▲                                       │
-           │ depends on (inward)                   │ implements
-           └───────────────────────────────────────┘
-```
-
-### 1.4 The rule as a check on imports
-
-The Dependency Rule reduces to a small set of mechanical checks on `import` statements:
-
-```
-✅ adapters/controllers/UserController     imports  usecases/CreateUser        (outer → inner)
-✅ usecases/CreateUser                     imports  usecases/ports/UserRepository
-✅ adapters/gateways/HttpUserRepository     imports  entities/User
-✅ adapters/gateways/HttpUserRepository     implements usecases/ports/UserRepository
-
-❌ frameworks/web/LoginView                 imports  frameworks/http/client     (skips the core)
-❌ entities/User                            imports  axios                      (entity → detail)
-❌ usecases/CreateUser                      imports  react / vue / pinia        (use case → framework)
-```
-
-A useful heuristic: **the deeper a file sits, the fewer things it is allowed to import.** An Entity should
-import almost nothing. Treat this table as a lint target — an automated import-boundary check (Nx,
-Turborepo, or an ESLint boundaries rule) turns the Dependency Rule into a guarantee rather than a
-guideline.
-
-### 1.5 Why this matters on the frontend
-
-Frontend stacks are unusually volatile. UI frameworks rise and fall, HTTP clients are replaced, state
-libraries are swapped, transports migrate from REST to GraphQL, from polling to WebSocket. Each of these
-lives in an outer circle. When business rules are confined to Entities and Use Cases and depend only on
-ports, a change of framework or transport becomes a change of *adapters* — not a rewrite of what the
-application means. The most stable asset (what the product *does*) is insulated from the least stable one
-(the technology it currently *runs on*). That is the entire payoff, and it is largest exactly where churn
-is fastest.
+[Clean Architecture](../GLOSSARY.md#clean-architecture) is best understood by separating its **canonical rule** from project-specific conventions built on top of it.
 
 ---
 
-Next: **[The Four Layers](2-the-four-layers.md)** — what belongs in each of the four circles, from the
-protected core outward, and how to keep the inner ones pure.
+<a id="11-the-four-circles"></a>
+
+## 1.1 The canonical circles
+
+Robert C. Martin's diagram uses:
+
+```mermaid
+flowchart LR
+    N0["Entities"]
+    N1["Use Cases"]
+    N1 --> N0
+    N2["Interface Adapters"]
+    N2 --> N1
+    N3["Frameworks & Drivers"]
+    N3 --> N2
+```
+
+Inner circles contain higher-level policy. Outer circles contain mechanisms and details.
+
+Martin explicitly notes that the diagram is schematic: an application may have more than four circles. The same [Dependency Rule](../GLOSSARY.md#dependency-rule) applies across any additional boundary.
+
+---
+
+<a id="12-the-rule-itself"></a>
+
+## 1.2 The rule
+
+> Source-code dependencies may only point inward, toward higher-level policies.
+
+Consequences:
+
+- [Entities](../GLOSSARY.md#clean-entities-circle) do not name [Use Cases](../GLOSSARY.md#use-case), UI frameworks, databases or transports.
+- [Use Cases](../GLOSSARY.md#use-case) do not name concrete outer [adapters](../GLOSSARY.md#adapter)/frameworks.
+- [Interface Adapters](../GLOSSARY.md#interface-adapter) may depend on [Use Cases](../GLOSSARY.md#use-case)/[Entities](../GLOSSARY.md#clean-entities-circle).
+- [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers) may depend inward.
+
+An inner circle should not mention a class, function, schema or data representation owned by an outer circle.
+
+This includes type-level dependencies.
+
+---
+
+<a id="13-crossing-the-boundary-dependency-inversion"></a>
+
+## 1.3 Dependency direction is not runtime flow
+
+A [use case](../GLOSSARY.md#use-case) can invoke a database at runtime without importing the database implementation.
+
+The following fragments illustrate signatures and wiring; omitted types and method bodies are not a runnable feature. See [the complete cancellation example](4-building-a-feature.md).
+
+Inner contract:
+
+```ts
+export interface UserRepository {
+  findById(id: UserId): Promise<User | null>
+}
+```
+
+Outer [adapter](../GLOSSARY.md#adapter):
+
+```ts
+export class SqlUserRepository implements UserRepository {
+  // database-specific implementation
+}
+```
+
+Composition:
+
+```ts
+const users = new SqlUserRepository(db)
+const getUser = makeGetUser({ users })
+```
+
+Source dependencies:
+
+```mermaid
+flowchart LR
+    SQL["SqlUserRepository"] --> PORT["UserRepository"]
+    UC["getUser"] --> PORT
+```
+
+Runtime control:
+
+```mermaid
+flowchart LR
+    UC["getUser"] --> SQL["SqlUserRepository"] --> DB["Database"]
+```
+
+Dependency inversion makes those directions intentionally different.
+
+---
+
+## 1.4 Boundary data
+
+Martin's original article also warns that data formats owned by an outer mechanism should not cross inward unchanged.
+
+Examples of outer representations:
+
+- database rows;
+- framework request/response objects;
+- ORM models;
+- raw API response [DTOs](../GLOSSARY.md#data-transfer-object-dto);
+- generated SDK types.
+
+Translate at the boundary:
+
+```mermaid
+flowchart TD
+    DTO["External DTO"] --> MAP["Adapter / mapper"] --> MODEL["Application / domain representation"]
+```
+
+This does not mean every crossing needs a class. A pure mapping function is often sufficient.
+
+---
+
+<a id="15-why-this-matters-on-the-frontend"></a>
+
+## 1.5 What the Dependency Rule does **not** say
+
+It does not say:
+
+- every project needs exactly four folders;
+- every external call needs a [Repository](../GLOSSARY.md#repository) interface;
+- frontend and backend must share [Entities](../GLOSSARY.md#clean-entities-circle);
+- every [View](../GLOSSARY.md#view) must be framework-free;
+- a [DI container](../GLOSSARY.md#di-container) is required;
+- Redux is an [Application layer](../GLOSSARY.md#application-layer);
+- a component may never import another outer-circle technical module.
+
+That last point matters.
+
+Martin places views alongside controllers and [presenters](../GLOSSARY.md#presenter) in [Interface Adapters](../GLOSSARY.md#interface-adapter). Such an [adapter](../GLOSSARY.md#adapter) must not import an outward-owned HTTP driver. A physical React component or HTTP repository can combine [adapter](../GLOSSARY.md#adapter) behavior with framework glue; placing both in an outer physical folder does not make an outward canonical dependency valid. Either separate the glue behind an [adapter](../GLOSSARY.md#adapter)-owned contract or explicitly describe the merged physical module. The stricter policy here also forbids [Presentation](../GLOSSARY.md#presentation-layer) from importing [Infrastructure](../GLOSSARY.md#infrastructure), even when both contain outer mechanisms.
+
+Document those stricter rules as project architecture, not as quotations from [Clean Architecture](../GLOSSARY.md#clean-architecture).
+
+---
+
+## 1.6 Practical repository policy
+
+For the application structures documented here, we usually enforce:
+
+```mermaid
+flowchart LR
+    D["Domain"] --> D
+    A["Application"] --> D
+    I["Infrastructure"] --> A
+    I --> D
+    P["Presentation"] --> A
+    C["Composition"] -. wires .-> I
+    C -. wires .-> P
+    C -. wires .-> A
+```
+
+This is a practical mapping of the Clean goal, not the canonical four-circle taxonomy.
+
+See **[Dependency Boundaries](../foundations/dependency-boundaries.md)**.
+
+---
+
+## 1.7 Dependency Inversion Principle
+
+The [Dependency Inversion Principle](../GLOSSARY.md#dependency-inversion-principle-dip) and [Clean Architecture](../GLOSSARY.md#clean-architecture)'s [Dependency Rule](../GLOSSARY.md#dependency-rule) reinforce each other but are not identical statements.
+
+[DIP](../GLOSSARY.md#dependency-inversion-principle-dip) says high-level policy should not depend on low-level detail; both depend on abstractions. Clean uses that mechanism to cross [architectural boundaries](../GLOSSARY.md#architectural-boundary) without reversing source dependencies.
+
+A [port](../GLOSSARY.md#port) is useful when it protects policy from a detail. Do not add interfaces indiscriminately.
+
+---
+
+<a id="14-the-rule-as-a-check-on-imports"></a>
+
+## 1.8 Make the rule executable
+
+If a project says [Application](../GLOSSARY.md#application-layer) cannot import [Infrastructure](../GLOSSARY.md#infrastructure), CI should detect the import.
+
+[Architecture tests](../GLOSSARY.md#architecture-test) should consider:
+
+- static imports;
+- re-exports;
+- dynamic imports;
+- relative paths;
+- path aliases;
+- [type-only imports](../GLOSSARY.md#type-only-import).
+
+See **[Executable Architecture](../foundations/architecture-testing.md)**.
+
+## Sources
+
+- Robert C. Martin, "The [Clean Architecture](../GLOSSARY.md#clean-architecture)" (2012): https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
+- Robert C. Martin, *[Clean Architecture](../GLOSSARY.md#clean-architecture)* (2017)
+- Alistair Cockburn, "[Hexagonal Architecture](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters)" (2005): https://alistair.cockburn.us/hexagonal-architecture/

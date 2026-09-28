@@ -1,154 +1,210 @@
-> **[Onion Architecture](README.md)** › Inward Dependencies. Full reference list: [References](references.md).
+> **[Onion Architecture](README.md)** › Inward Dependencies.
 
-## 2. Core Principle: The Dependency Rule
+# 2. Inward Dependencies
+
 <a id="2-core-principle-the-dependency-rule"></a>
+<a id="21-the-concentric-model"></a>
 
-### 2.1 The concentric model
+## 2.1 The principle
 
-The four layers are best visualized as concentric rings. The innermost ring is the most abstract and the
-most stable; the outermost rings are the most concrete and the most volatile.
+[Onion Architecture](../GLOSSARY.md#onion-architecture) protects the center from outer technology.
 
-![Clean Architecture Diagram by Robert C. Martin (Uncle Bob)](https://blog.cleancoder.com/uncle-bob/images/2012-08-13-the-clean-architecture/CleanArchitecture.jpg)
+```mermaid
+flowchart LR
+    P["Presentation"] --> A["Application"] --> D["Domain"]
+    I["Infrastructure"] --> A
+```
 
-*Image source: "The Clean Code Blog" by Robert C. Martin (Uncle Bob), August 13, 2012.*  
-*This is the canonical Clean Architecture model diagram that inspired the frontend adaptation in this document.*  
-*Original article: [The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)*
+The important arrow is the **source-code dependency**.
 
-**Dependencies flow inward:** Domain → Application → Infrastructure & Presentation. Nothing in an inner ring may know about an outer ring.
+Runtime flow may call an external system in the opposite direction through an injected [port](../GLOSSARY.md#port).
 
 ---
 
-A clarification on placement: in the canonical model, **Infrastructure and Presentation are both *outer
-details***. Infrastructure does not sit "above" the Application layer as a privileged middle tier, it is
-an outer ring that *implements* what the inner rings declare. The Application layer is closer to the core
-than any technical detail. This positioning is what makes the architecture an *onion* rather than a plain
-top-down stack [Palermo 2008; Martin 2017].
+<a id="22-the-dependency-rule"></a>
+<a id="23-dependency-inversion-the-mechanism"></a>
 
-### 2.2 The Dependency Rule
+<a id="43-the-inversion-gap"></a>
 
-> Source-code dependencies must point only inward. Nothing in an inner layer may know anything about an
-> outer layer [Martin 2012].
+## 2.2 Dependency inversion
 
-Concretely:
+[Application](../GLOSSARY.md#application-layer) needs an external capability:
 
-- The **Domain** layer depends on nothing.
-- The **Application** layer depends only on the Domain.
-- **Infrastructure** and **Presentation** depend on the inner layers, never the reverse.
-
-The name of a class, function, or variable declared in an outer layer must never be mentioned by code in
-an inner layer. This is the single rule from which most of the benefits in [Why This Architecture](README.md#why-this-architecture)
-follow.
-
-### 2.3 Dependency Inversion: the mechanism
-
-The Dependency Rule raises an obvious tension. A use case must, eventually, fetch data over HTTP, yet
-HTTP is an outer detail the use case is forbidden to depend on. The resolution is the **Dependency
-Inversion Principle**: high-level modules should not depend on low-level modules; both should depend on
-abstractions [Martin 2003 (SOLID); Martin 2017].
-
-The Application layer declares an **interface (a "port")** describing the data operations it needs. The
-Infrastructure layer provides a concrete implementation (an "adapter") of that port. At runtime the
-adapter is injected into the use case. The arrow of *source-code dependency* now points inward, the
-adapter depends on the port, not the other way around, even though the *flow of control* at runtime
-moves outward into Infrastructure. This is precisely the ports-and-adapters arrangement of Hexagonal
-Architecture [Cockburn 2005].
-
-```
-   Application defines the port        Infrastructure implements it
-   ─────────────────────────────      ──────────────────────────────
-   interface UserRepository  ◄───────  class HttpUserRepository
-     fetchAll(): User[]                   (uses axios, maps JSON → User)
-
-           ▲                                       │
-           │ depends on (inward)                   │ implements
-           └───────────────────────────────────────┘
-```
-
-### 2.4 Why this matters specifically on the frontend
-
-Frontend stacks are unusually volatile. UI frameworks rise and fall, HTTP clients are replaced, state
-libraries are swapped, and transport mechanisms migrate (REST to GraphQL, polling to WebSocket). Each of
-these lives in an outer ring. When business rules are confined to the Domain and Application layers and
-depend only on ports, a change of framework or transport becomes a change of *adapters*, not a rewrite
-of the application's meaning. The most stable asset (what the product *does*) is insulated from the least
-stable asset (the technology it currently *runs on*).
-
----
-
-## 4. Dependency Direction in Practice
-<a id="4-dependency-direction-in-practice"></a>
-
-### 4.1 Allowed and forbidden imports
-
-The Dependency Rule becomes a small set of mechanical checks on `import` statements:
-
-```
-✅ presentation/stores/useUserStore.js   imports  application/use-cases/...   (outer → inner)
-✅ application/use-cases/CreateUser.js    imports  application/ports/UserRepository
-✅ infrastructure/repositories/User.js    imports  domain/entities/User
-✅ infrastructure/repositories/User.js    implements application/ports/UserRepository
-
-❌ presentation/views/LoginView.vue       imports  infrastructure/http/client   (skips the core)
-❌ domain/entities/User.js                imports  axios                        (core → detail)
-❌ application/use-cases/CreateUser.js     imports  vue / pinia                  (core → framework)
-```
-
-A useful heuristic: **the deeper a file sits, the fewer things it is allowed to import.** A Domain file
-should import almost nothing.
-
-### 4.2 Adding a feature across the four layers
-
-A repeatable checklist for any new capability, working from the inside out:
-
-1. **Domain**, model the concept as an entity or value object; encode its rules and invariants.
-2. **Application (port)**, declare the interface describing the data operation the feature needs.
-3. **Application (use case)**, write the orchestration that uses entities and the port.
-4. **Infrastructure (adapter)**, implement the port against the real transport; map responses to
-   entities.
-5. **Presentation (store)**, call the use case and expose reactive state.
-6. **Presentation (view/component)**, bind the store's state and actions to the interface.
-
-Following this order guarantees that, at every step, code only ever reaches inward. The same inside-out
-order is the cheapest way to test a feature, see [§5.3](3-testing-in-onion.md#53-the-test-pyramid-mapped-onto-the-onion).
-
-### 4.3 The inversion gap
-
-In the present codebase, the Application layer imports concrete Infrastructure classes directly, for
-example, `CreateUserUseCase.js` begins with
-`import { UserRepository } from '@/infrastructure/repositories/UserRepository'`. This produces a working
-*linear* layering (`Presentation → Application → Infrastructure → Domain`), but it lets a use case depend
-on a detail, which the canonical model forbids [Martin 2017].
-
-The prescribed evolution is to invert that single dependency. The Application layer should declare a port,
-and the use case should receive an implementation rather than importing one:
-
-```js
-// BEFORE: use case depends on a concrete adapter (a detail)
-import { UserRepository } from '@/infrastructure/repositories/UserRepository'
-
-export async function createUserUseCase(form) {
-  const payload = toPayload(form)
-  return UserRepository.create(payload)        // hard-wired to Infrastructure
+```ts
+export interface OrderRepository {
+  save(order: Order): Promise<void>
 }
 ```
 
-```js
-// AFTER: use case depends on an injected port (an abstraction)
-export function makeCreateUserUseCase({ userRepository }) {
-  return async function createUserUseCase(form) {
-    const payload = toPayload(form)
-    return userRepository.create(payload)      // any adapter satisfying the port
+[Infrastructure](../GLOSSARY.md#infrastructure) supplies it:
+
+```ts
+export class SqlOrderRepository implements OrderRepository {
+  // ...
+}
+```
+
+[Application](../GLOSSARY.md#application-layer) consumes only the abstraction:
+
+```ts
+export function makePlaceOrder(deps: {
+  orders: OrderRepository
+}) {
+  return async function placeOrder(command: PlaceOrderCommand) {
+    const order = Order.place(command)
+    await deps.orders.save(order)
+    return order.id
   }
 }
-
-// composition root (e.g. a small factory wired once at startup)
-import { HttpUserRepository } from '@/infrastructure/repositories/UserRepository'
-export const createUserUseCase = makeCreateUserUseCase({ userRepository: HttpUserRepository })
 ```
 
-The cost is one factory and a place to wire dependencies (a *composition root*). The gain is that the
-Application layer no longer names any detail: it can be tested with a fake repository, and the HTTP adapter
-can be swapped for a GraphQL or in-memory one without editing a use case. This is the difference between a
-layered stack and a true onion [Palermo 2008; Cockburn 2005]. The gain is not abstract, it is the
-difference between injecting a fake in one line and intercepting a module path, shown side by side in
-[§5.4](3-testing-in-onion.md#54-per-layer-testing).
+Composition connects both:
+
+```ts
+const orders = new SqlOrderRepository(db)
+const placeOrder = makePlaceOrder({ orders })
+```
+
+Source dependency:
+
+```mermaid
+flowchart LR
+    SQL["SqlOrderRepository"] --> PORT["OrderRepository"]
+    UC["placeOrder"] --> PORT
+```
+
+Runtime call:
+
+```mermaid
+flowchart LR
+    UC["placeOrder"] --> SQL["SqlOrderRepository"] --> DB["Database"]
+```
+
+No contradiction exists because dependency direction and control flow are different concepts.
+
+---
+
+<a id="4-dependency-direction-in-practice"></a>
+
+<a id="41-allowed-and-forbidden-imports"></a>
+
+## 2.3 Recommended import policy
+
+| Area | Allowed dependencies | Forbidden by the default policy |
+| --- | --- | --- |
+| [Domain](../GLOSSARY.md#domain) | [Domain](../GLOSSARY.md#domain) | [Application](../GLOSSARY.md#application-layer), [Infrastructure](../GLOSSARY.md#infrastructure), [Presentation](../GLOSSARY.md#presentation-layer) |
+| [Application](../GLOSSARY.md#application-layer) | [Application](../GLOSSARY.md#application-layer), [Domain](../GLOSSARY.md#domain) | [Infrastructure](../GLOSSARY.md#infrastructure), [Presentation](../GLOSSARY.md#presentation-layer) |
+| [Infrastructure](../GLOSSARY.md#infrastructure) | [Infrastructure](../GLOSSARY.md#infrastructure), [Application](../GLOSSARY.md#application-layer), [Domain](../GLOSSARY.md#domain) | [Presentation](../GLOSSARY.md#presentation-layer) |
+| [Presentation](../GLOSSARY.md#presentation-layer) | [Presentation](../GLOSSARY.md#presentation-layer), [Application](../GLOSSARY.md#application-layer); [Domain](../GLOSSARY.md#domain) only if the project explicitly allows it | [Infrastructure](../GLOSSARY.md#infrastructure) |
+
+Composition is allowed to know the concrete modules required to assemble the executable.
+
+This table is a documentation convention for implementing Onion cleanly; Palermo's articles define the inward principle, not these exact folder names.
+
+---
+
+
+## 2.4 Type imports count
+
+This still creates coupling:
+
+```ts
+import type { ApiUserDto } from '@/infrastructure/api'
+```
+
+inside [Application](../GLOSSARY.md#application-layer).
+
+TypeScript erases it at runtime, but [Application](../GLOSSARY.md#application-layer) source now names an [Infrastructure](../GLOSSARY.md#infrastructure) concept.
+
+Architectural rules operate on source dependencies, not only runtime bundle dependencies.
+
+---
+
+## 2.5 Re-exports do not change ownership
+
+This does not magically make a [Domain](../GLOSSARY.md#domain) or [Infrastructure](../GLOSSARY.md#infrastructure) type an [Application](../GLOSSARY.md#application-layer) type:
+
+```ts
+// application/contract.ts
+export type { ApiClosureDto } from '@/infrastructure'
+```
+
+[Presentation](../GLOSSARY.md#presentation-layer) importing it through `application/contract` still depends conceptually on an [Infrastructure](../GLOSSARY.md#infrastructure)-owned shape.
+
+[Public APIs](../GLOSSARY.md#public-api) should expose concepts owned by the module, not launder unrelated types through a [barrel](../GLOSSARY.md#barrel-file).
+
+---
+
+## 2.6 External failures
+
+Do not force every infrastructure error into a [Domain error](../GLOSSARY.md#domain-error).
+
+Classify by meaning:
+
+```mermaid
+flowchart LR
+    D1["Order cannot be cancelled after shipment"] --> DE["Domain error"]
+    A1["Use case cannot complete because dependency is unavailable"] --> AE["Application error / result"]
+    I1["HTTP 502 / ECONNRESET / SQLSTATE"] --> IE["Infrastructure detail; map before crossing boundaries"]
+```
+
+[Presentation](../GLOSSARY.md#presentation-layer) should receive an application/presentation-appropriate failure, not raw Axios/Prisma/driver exceptions.
+
+---
+
+<a id="24-why-this-matters-specifically-on-the-frontend"></a>
+
+## 2.7 Presentation and Infrastructure are siblings outside Application
+
+Avoid the misleading linear stack:
+
+```mermaid
+flowchart LR
+    P["Presentation"] --> A["Application"] --> I["Infrastructure"] --> D["Domain"]
+```
+
+That makes [Application](../GLOSSARY.md#application-layer) depend on [Infrastructure](../GLOSSARY.md#infrastructure) or suggests [Infrastructure](../GLOSSARY.md#infrastructure) is an inner service layer.
+
+The intended model is:
+
+```mermaid
+flowchart LR
+    P["Presentation"] --> A["Application"] --> D["Domain"]
+    I["Infrastructure"] --> A
+```
+
+[Infrastructure](../GLOSSARY.md#infrastructure) implements [Application](../GLOSSARY.md#application-layer)-owned [ports](../GLOSSARY.md#port).
+
+---
+
+<a id="42-adding-a-feature-across-the-four-layers"></a>
+
+## 2.8 Adding a capability
+
+Do not blindly create four files/folders.
+
+A policy-bearing capability may evolve inside-out:
+
+1. identify [Domain](../GLOSSARY.md#domain) concept/[invariant](../GLOSSARY.md#invariant) if one exists;
+2. define [Application](../GLOSSARY.md#application-layer) operation;
+3. define only the external [ports](../GLOSSARY.md#port) the operation genuinely needs;
+4. implement [Infrastructure](../GLOSSARY.md#infrastructure) [adapters](../GLOSSARY.md#adapter);
+5. expose the operation to [Presentation](../GLOSSARY.md#presentation-layer);
+6. wire concrete dependencies at composition;
+7. add [architecture tests](../GLOSSARY.md#architecture-test) for important boundaries.
+
+A CRUD screen with no meaningful domain policy may need much less structure.
+
+---
+
+## 2.9 Enforce imports
+
+Treat the import matrix as executable policy.
+
+See **[Executable Architecture](../foundations/architecture-testing.md)** for [AST](../GLOSSARY.md#abstract-syntax-tree-ast) tests and dependency-graph tools.
+
+## Sources
+
+- Jeffrey Palermo, [Onion Architecture](../GLOSSARY.md#onion-architecture) series: https://jeffreypalermo.com/2008/07/
+- Alistair Cockburn, [Hexagonal Architecture](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters): https://alistair.cockburn.us/hexagonal-architecture/
+- Robert C. Martin, The [Clean Architecture](../GLOSSARY.md#clean-architecture): https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html

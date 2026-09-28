@@ -1,348 +1,499 @@
-# Onion Architecture for the Frontend
+<a id="onion-architecture-for-the-frontend"></a>
 
-> A reusable blueprint for structuring frontend applications around stable business rules, drawn as
-> four concentric rings. Written to be applied to any new project, and to be defensible: every
-> prescriptive claim is tied to a verifiable source in [References](references.md).
+# Onion Architecture
 
-← Back to [architecture overview](../README.md) · Compare with the [Clean Architecture guide](../clean-architecture)
+> A progressive guide to Jeffrey Palermo's domain-centered architecture.
 
----
+← [Repository home](../README.md) · [Glossary](../GLOSSARY.md) · [Code placement](../foundations/code-placement.md) · [Naming](../conventions/naming-and-file-placement.md)
 
-## Contents
+<a id="1-introduction--purpose"></a>
 
-This guide is split across several files. Each keeps its original **§ number as a stable identifier**, so
-a reference to "§5.4" always means the same thing, wherever it is read.
+## 1. History and origin
 
-- **[1 · The Rings](1-the-rings.md)** — *§3: Domain · Application · Infrastructure · Presentation*
-- **[2 · Inward Dependencies](2-inward-dependencies.md)** — *§2 + §4: the Dependency Rule and how it plays out in imports*
-- **[3 · Testing the Rings](3-testing-in-onion.md)** — *§5: per-layer test doubles, the test pyramid on the onion*
-- **[4 · Advanced Patterns](4-advanced-patterns.md)** — *§8: CRDT sync, optimistic updates, token refresh, feature folders*
-- **[5 · Styling & Animation](5-styling-and-animation.md)** — *Presentation-ring styling layout*
-- **[6 · Scaling: Startup to Enterprise](6-scaling.md)** — *§9: the four growth phases, decision tree, red flags*
-- **[7 · Type Placement](#type-placement-in-onion-architecture)** — *where TypeScript types live by ownership*
-- **[8 · Naming & Conventions](#naming--conventions)** — *portable defaults for files and folders*
-- **[References](references.md)** — *§10: every cited source*
+Jeffrey Palermo published the [Onion Architecture](../GLOSSARY.md#onion-architecture) series in **2008**. His goal was to keep long-lived business applications from becoming organized around databases, UI frameworks and other infrastructure.
 
-The interactive demo lives in [Onion Architecture.html](Onion%20Architecture.html).
+Palermo's framing places the **domain model at the center** and requires dependencies to point inward.
 
----
+Primary source: https://jeffreypalermo.com/2008/07/
 
-## 1. Introduction & Purpose
+## 2. What problem does it solve?
 
-This document describes a frontend architecture organized into **four concentric rings**,
-**Domain**, **Application**, **Infrastructure**, and **Presentation**. Its purpose is to be a single
-authoritative reference: a blueprint that can be reproduced across projects regardless of the specific
-framework in use, and a rationale that explains *why* each ring exists.
+A common failure is infrastructure-driven design:
 
-The central goal is one idea: **protect business rules from volatile details.** User interfaces, HTTP
-clients, state-management libraries, and storage mechanisms change frequently; the meaning of the
-business does not. An architecture earns its keep when the parts that change often cannot force changes
-on the parts that should stay stable.
+```mermaid
+flowchart LR
+    UI["UI"] --> SERVICE["Service"]
+    SERVICE --> ORM["ORM model"]
+    ORM --> DB["Database"]
+    SERVICE --> SDK["External SDK"]
+```
 
-The model presented here is not new. It synthesizes four well-established bodies of work and adapts them
-to the frontend:
+When ORM/API/framework models become the application's language:
 
-- **Onion Architecture**: concentric layers with dependencies pointing inward [Palermo 2008].
-- **Clean Architecture**: the Dependency Rule and the separation of entities, use cases, and details
-  [Martin 2012; Martin 2017]. *(See the [Clean Architecture guide](../clean-architecture) for that framing.)*
-- **Hexagonal Architecture (Ports & Adapters)**: isolating the core behind explicit interfaces
-  [Cockburn 2005].
-- **Domain-Driven Design**: entities and a domain model as the heart of the system [Evans 2003].
+- domain rules inherit infrastructure constraints;
+- tests require technical systems;
+- technology migrations become business rewrites;
+- application policy becomes difficult to identify.
 
-What follows treats the frontend as a first-class application with its own domain, not merely a "view" of
-a backend. The same layering that protects server-side business rules protects client-side ones.
+Onion reverses that ownership: external mechanisms adapt to application/domain contracts.
 
-The single rule that holds the whole model together — *dependencies point inward* — is detailed in
-[Inward Dependencies](2-inward-dependencies.md). The four rings themselves are in [The Rings](1-the-rings.md).
+It does **not** automatically solve UI architecture, distributed-system reliability, team topology, deployment or domain discovery.
 
----
+<a id="6-why-this-architecture"></a>
 
-## 6. Why This Architecture
 <a id="why-this-architecture"></a>
 
-Each benefit below is a direct consequence of the Dependency Rule and dependency inversion.
+## 3. Strong-fit scenarios
 
-- **Testability without infrastructure.** Because inner rings depend only on abstractions, use cases and
-  entities can be tested with fakes and with no network, framework, or DOM, the mechanism is laid out in
-  full in [§5](3-testing-in-onion.md#5-testing-the-layers). Independence from frameworks and from the UI is an explicit, stated
-  goal of Clean Architecture [Martin 2017].
-- **Replaceable details.** Transport, storage, and UI sit in outer rings behind ports, so they can be
-  swapped, REST to GraphQL, Axios to Fetch, one UI framework to another, by rewriting adapters, not the
-  core. This substitutability is the defining promise of Ports & Adapters [Cockburn 2005].
-- **Independent evolution.** The domain can grow without waiting on UI decisions, and the UI can be
-  redesigned without risking business rules, because neither names the other [Palermo 2008].
-- **Intent-revealing structure.** Top-level folders name *what the application does* (its domain and use
-  cases) before *how it is delivered*, so the structure communicates purpose, the "screaming
-  architecture" idea [Martin 2017].
-- **A model worth talking about.** A rich, isolated domain model gives the whole team a shared, precise
-  vocabulary, which is the central payoff of Domain-Driven Design [Evans 2003].
+Onion is a strong fit when:
 
-**Frontend-specific payoff.** On the client these benefits compound, because the frontend is where
-technology churns fastest. A new rendering framework, a migration from polling to WebSocket, or an
-offline/optimistic strategy can all be introduced as outer-ring changes. The business meaning, encoded in
-entities and use cases, survives untouched. In a field where the average tool's lifespan is short, placing
-the durable asset at the protected center is the architecture's highest-value property.
+- the domain has meaningful rules/behavior;
+- the application is expected to live for years;
+- infrastructure choices may change;
+- multiple mechanisms surround the same business policy;
+- independent testing of [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer) matters.
 
----
+## 4. Weak-fit scenarios
 
-## 7. Type placement in Onion Architecture
+It can be unnecessarily expensive for:
+
+- tiny CRUD utilities;
+- throwaway prototypes;
+- applications with almost no domain behavior;
+- simple content sites where abstractions protect little real volatility.
+
+Palermo explicitly framed Onion for complex, long-lived business applications rather than every small site.
+
+## 5. Mental model
+
+```mermaid
+flowchart BT
+    OUTER["Presentation + Infrastructure"]
+    APP["Application"]
+    DOMAIN["Domain"]
+
+    OUTER --> APP
+    APP --> DOMAIN
+```
+
+[Presentation](../GLOSSARY.md#presentation-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) are outer concerns. [Application](../GLOSSARY.md#application-layer) surrounds [Domain](../GLOSSARY.md#domain).
+
+The central rule is simple:
+
+> Outer code may depend inward; inner code must not know outer mechanisms.
+
+<a id="domain"></a>
+
+<a id="application"></a>
+
+<a id="infrastructure"></a>
+
+<a id="presentation"></a>
+
+## 6. Rings and responsibilities
+
+This repository uses four practical areas plus an executable composition boundary to implement the Onion idea. These are physical ownership conventions; Palermo also describes [Domain Services](../GLOSSARY.md#domain-service) and [Application Services](../GLOSSARY.md#application-service), rather than prescribing this exact four-folder taxonomy:
+
+| Area | Owns | Put here | Do not put here | May depend on |
+| --- | --- | --- | --- | --- |
+| [Domain](../GLOSSARY.md#domain) | business concepts and [invariants](../GLOSSARY.md#invariant) | entities, [value objects](../GLOSSARY.md#value-object), domain policies/events | React, Redux, HTTP, ORM, [DTOs](../GLOSSARY.md#data-transfer-object-dto) | [Domain](../GLOSSARY.md#domain) only |
+| [Application](../GLOSSARY.md#application-layer) | application operations and required capabilities | [use cases](../GLOSSARY.md#use-case), commands/results, [ports](../GLOSSARY.md#port) | concrete UI/DB/HTTP implementations | [Application](../GLOSSARY.md#application-layer) + [Domain](../GLOSSARY.md#domain) |
+| [Infrastructure](../GLOSSARY.md#infrastructure) | technical [adapters](../GLOSSARY.md#adapter) and external representations | HTTP/DB/storage/SDK implementations, [DTOs](../GLOSSARY.md#data-transfer-object-dto), [mappers](../GLOSSARY.md#mapper) | [Presentation](../GLOSSARY.md#presentation-layer) and authoritative business policy | [Infrastructure](../GLOSSARY.md#infrastructure) + [Application](../GLOSSARY.md#application-layer) + [Domain](../GLOSSARY.md#domain) |
+| [Presentation](../GLOSSARY.md#presentation-layer) | views, interactions and view-oriented state | pages, components, hooks/[ViewModels](../GLOSSARY.md#viewmodel), UI [store](../GLOSSARY.md#store) | concrete [Infrastructure](../GLOSSARY.md#infrastructure) in the strict boundary used here | [Presentation](../GLOSSARY.md#presentation-layer) + [Application](../GLOSSARY.md#application-layer) |
+| Composition | executable assembly | concrete construction/bootstrap | business rules | all concrete modules required for wiring |
+
+### Why isolate the rings?
+
+Different concerns change for different reasons.
+
+- [Domain](../GLOSSARY.md#domain) changes when business rules change.
+- [Application](../GLOSSARY.md#application-layer) changes when workflows change.
+- [Infrastructure](../GLOSSARY.md#infrastructure) changes when technology/integrations change.
+- [Presentation](../GLOSSARY.md#presentation-layer) changes when user interaction changes.
+
+The purpose of the onion is to prevent outer change from forcing inner policy to change unnecessarily.
+
+## 7. Recommended physical structure
+
+```mermaid
+flowchart TD
+    SRC["src/"]
+    SRC --> DOMAIN["domain/"]
+    SRC --> APP["application/"]
+    SRC --> INFRA["infrastructure/"]
+    SRC --> PRES["presentation/"]
+    SRC --> COMP["composition/"]
+
+    DOMAIN --> DORD["orders/"]
+    APP --> AORD["orders/"]
+    AORD --> USE["use-cases/"]
+    AORD --> PORTS["ports/"]
+    INFRA --> IORD["orders/"]
+    PRES --> FORD["features/orders/"]
+    COMP --> BOOT["bootstrap.ts"]
+```
+
+| Path | Owns | Why | Must not contain |
+| --- | --- | --- | --- |
+| `domain/` | domain meaning/[invariants](../GLOSSARY.md#invariant) | center should survive technical replacement | HTTP/DB/UI/framework details |
+| `application/` | use-case orchestration + [ports](../GLOSSARY.md#port) | policy declares what capabilities it needs | concrete [adapters](../GLOSSARY.md#adapter) |
+| `infrastructure/` | concrete technologies | translates external mechanisms to inner contracts | presentation behavior |
+| `presentation/` | user interaction/view state | isolates UI-specific change | persistence/transport implementations in strict mode |
+| `composition/` | object graph/bootstrap | selects implementations without [service location](../GLOSSARY.md#service-locator) | domain/application branching |
+
+The folder names are documentation conventions. The inward dependency direction is the architecture.
+
+
+<a id="7-type-placement-in-onion-architecture"></a>
+
 <a id="type-placement-in-onion-architecture"></a>
 
-In a TypeScript project using Onion Architecture, types should live in the layer
-that owns their meaning.
+<a id="decision-rules"></a>
 
-Avoid using a generic `src/types/` folder as the default place for all types. It
-usually becomes a dumping ground and makes architectural boundaries unclear.
+<a id="quick-reference"></a>
 
-Rule:
+## 8. Where does code go?
 
-> A type belongs to the innermost layer that owns its meaning.
-
-### Domain
-
-Use `domain/` for product concepts that would still exist without React, Redux,
-HTTP, storage, or any external framework.
-
-Examples:
-
-```text
-SupportCase
-CaseStatus
-KnowledgeDocument
-ResponseProposal
-WorkflowNodeStatus
-CurrentUser
-Permission
+```mermaid
+flowchart TD
+    Q{"Why does this code exist?"}
+    Q -->|"Business truth"| D["Domain"]
+    Q -->|"Application operation"| A["Application"]
+    Q -->|"Technology / I/O"| I["Infrastructure"]
+    Q -->|"View / interaction"| P["Presentation"]
+    Q -->|"Construction / wiring"| C["Composition"]
 ```
 
-Suggested location:
+| Code | Owner | Reason |
+| --- | --- | --- |
+| `Order.cancel()` | [Domain](../GLOSSARY.md#domain) | business [invariant](../GLOSSARY.md#invariant) |
+| `cancelOrder(id)` | [Application](../GLOSSARY.md#application-layer) | use-case coordination |
+| `OrderRepository` [port](../GLOSSARY.md#port) | [Application](../GLOSSARY.md#application-layer) | required capability expressed inward |
+| `HttpOrderRepository` | [Infrastructure](../GLOSSARY.md#infrastructure) | concrete transport |
+| `ApiOrderDto` | [Infrastructure](../GLOSSARY.md#infrastructure) | wire shape |
+| `useOrders()` | [Presentation](../GLOSSARY.md#presentation-layer) | view-oriented [facade](../GLOSSARY.md#facade-pattern) |
+| `CancelOrderButton.tsx` | [Presentation](../GLOSSARY.md#presentation-layer) | rendering/gesture |
+| dependency construction | Composition | outer assembly |
 
-```text
-domain/<feature>/entities/
-domain/<feature>/value-objects/
-domain/<feature>/errors/
-domain/shared/
-```
+For functions, types and helpers, use **[Code Placement](../foundations/code-placement.md)**.
 
-### Application
+<a id="import-rule"></a>
 
-Use `application/` for use case inputs, outputs, commands, queries, and ports.
+## 9. Why ports belong inward
 
-Examples:
+Suppose cancellation requires persistence.
 
-```text
-GetCaseDetailInput
-GetCaseDetailResult
-SearchKnowledgeCommand
-CaseRepository
-SessionRepository
-WorkflowEventsPort
-```
-
-Suggested location:
-
-```text
-application/use-cases/<feature>/
-application/ports/<feature>/
-application/shared/
-```
-
-### Infrastructure
-
-Use `infrastructure/` for external shapes and adapter-specific types: API DTOs,
-generated OpenAPI types, SSE payloads, persistence records, storage records, and
-mapper inputs.
-
-Examples:
-
-```text
-ApiCaseResponseDto
-OpenApiCaseSchema
-SseWorkflowEventPayload
-LocalStorageThemeRecord
-```
-
-Suggested location:
-
-```text
-infrastructure/api/generated/
-infrastructure/api/dtos/
-infrastructure/api/mappers/
-infrastructure/events/
-infrastructure/storage/
-```
-
-Generated API types should not leak into `domain/` or `presentation/`. Map them
-at the infrastructure boundary.
-
-### Presentation
-
-Use `presentation/` for visual types: component props, view models, view state,
-UI commands, table columns, form state, and visual variants.
-
-Examples:
-
-```text
-CaseHeaderProps
-CaseReviewViewModel
-TableColumnDefinition
-ButtonVariant
-ToastState
-```
-
-Suggested location:
-
-```text
-presentation/components/<feature>/<Component>.types.ts
-presentation/view-models/<feature>/
-presentation/store/
-presentation/shared/
-```
-
-Component-specific props should stay colocated with the component:
-
-```text
-presentation/components/case-review/
-├── CaseHeader.tsx
-├── CaseHeader.types.ts
-├── CaseHeader.module.css
-└── CaseHeader.gsap.ts
-```
-
-### Decision rules
-
-Ask:
-
-```text
-Would this type still exist if there were no React components?
-```
-
-If yes, it probably does not belong in `components/`.
-
-Ask:
-
-```text
-Does this type describe the external API shape?
-```
-
-If yes, it belongs in `infrastructure/`, not in `domain/`.
-
-Ask:
-
-```text
-Does this type describe how a screen renders something?
-```
-
-If yes, it belongs in `presentation/`.
-
-### Import rule
-
-TypeScript `type` imports also count as architectural dependencies. Even if they
-are erased at runtime, they still create source-level coupling.
-
-Allowed direction:
-
-```text
-presentation / infrastructure / composition
-        ↓
-application
-        ↓
-domain
-```
-
-Allowed:
+[Application](../GLOSSARY.md#application-layer) expresses the capability it needs:
 
 ```ts
-import type { SupportCase } from '@/domain/cases/entities/SupportCase'
+// Signature excerpt; complete contracts follow in section 11.
+export interface OrderRepository {
+  findById(id: OrderId): Promise<Order | null>
+  save(order: Order): Promise<void>
+}
 ```
 
-Not allowed from `domain/`:
+[Infrastructure](../GLOSSARY.md#infrastructure) implements that capability:
 
 ```ts
-import type { ApiCaseResponseDto } from '@/infrastructure/api/generated'
-import type { CaseHeaderProps } from '@/presentation/components/case-review/CaseHeader.types'
+// infrastructure/orders/HttpOrderRepository.ts
+export class HttpOrderRepository implements OrderRepository {
+  // HTTP-specific details
+}
 ```
 
-### Quick reference
-
-| Type kind              | Layer                       | Example                                       |
-| ---------------------- | --------------------------- | --------------------------------------------- |
-| Product concept        | `domain/`                   | `SupportCase`, `CaseStatus`                   |
-| Value object           | `domain/`                   | `Confidence`, `Permission`                    |
-| Use case input/output  | `application/`              | `GetCaseDetailInput`, `SearchKnowledgeResult` |
-| Port/interface         | `application/ports/`        | `CaseRepository`, `SessionRepository`         |
-| API DTO/generated type | `infrastructure/`           | `ApiCaseResponseDto`, `OpenApiWorkflowEvent`  |
-| Mapper type            | `infrastructure/`           | `CaseDtoMapperInput`                          |
-| View model             | `presentation/view-models/` | `CaseReviewViewModel`                         |
-| Component props        | `presentation/components/`  | `CaseHeaderProps`                             |
-| Visual variant         | `presentation/`             | `ButtonVariant`, `BadgeTone`                  |
-
-### Avoid
-
-Avoid this as the default structure:
-
-```text
-src/types/
-├── cases.ts
-├── users.ts
-├── api.ts
-├── ui.ts
-└── common.ts
+```mermaid
+flowchart LR
+    UC["cancelOrder"] --> PORT["OrderRepository"]
+    HTTP["HttpOrderRepository"] --> PORT
+    HTTP --> API["HTTP API"]
 ```
 
-Small shared folders are acceptable only inside the layer that owns the meaning:
+[Application](../GLOSSARY.md#application-layer) owns the language "load/save orders". [Infrastructure](../GLOSSARY.md#infrastructure) owns "HTTP".
 
-```text
-domain/shared/
-application/shared/
-presentation/shared/
-```
+This is [Dependency Inversion](../GLOSSARY.md#dependency-inversion-principle-dip): runtime control can reach outward while source dependencies remain inward.
 
-Do not use shared folders as a shortcut for unclear ownership.
+<a id="8-naming--conventions-portable-defaults"></a>
 
-## 8. Naming & Conventions (portable defaults)
 <a id="naming--conventions"></a>
 
-These defaults make the rules above visible in the file system. They are recommendations, not laws, but
-adopting them across projects keeps the structure recognizable.
+## 10. Naming
 
-**Folder layout.**
+Follow **[Naming and File Placement Conventions](../conventions/naming-and-file-placement.md)**.
 
+| Role | Recommended example |
+| --- | --- |
+| entity/[value object](../GLOSSARY.md#value-object) | `Order.ts`, `Money.ts` |
+| [use case](../GLOSSARY.md#use-case) | `cancelOrder.ts` |
+| [port](../GLOSSARY.md#port) | `OrderRepository.ts`, `PaymentGateway.ts` |
+| concrete [adapter](../GLOSSARY.md#adapter) | `HttpOrderRepository.ts` |
+| [DTO](../GLOSSARY.md#data-transfer-object-dto) | `orderApi.dto.ts` |
+| [mapper](../GLOSSARY.md#mapper) | `orderApi.mapper.ts` |
+| React component | `CancelOrderButton.tsx` |
+| feature [facade](../GLOSSARY.md#facade-pattern) | `useOrders.ts` |
+
+Avoid generic names such as `GenericService`, `CommonRepository`, `Manager` and `helpers.ts` when a capability owner can be named.
+
+## 11. First feature end to end
+
+Requirement:
+
+> A user cancels an order. Shipped orders cannot be cancelled. A successful cancellation is persisted through HTTP.
+
+| Artifact | File | Owner | Why here | Why not elsewhere |
+| --- | --- | --- | --- | --- |
+| [invariant](../GLOSSARY.md#invariant) | `domain/orders/Order.ts` | [Domain](../GLOSSARY.md#domain) | business truth | must not depend on UI/HTTP |
+| required persistence capability | `application/orders/cancelOrder.ts` | [Application](../GLOSSARY.md#application-layer) | [use case](../GLOSSARY.md#use-case) defines what it needs | [Infrastructure](../GLOSSARY.md#infrastructure) should not define inward policy |
+| operation | `application/orders/cancelOrder.ts` | [Application](../GLOSSARY.md#application-layer) | orchestrates load → domain behavior → save | [Domain](../GLOSSARY.md#domain) should not do I/O |
+| HTTP [adapter](../GLOSSARY.md#adapter) | `infrastructure/orders/HttpOrderRepository.ts` | [Infrastructure](../GLOSSARY.md#infrastructure) | speaks transport | [Application](../GLOSSARY.md#application-layer) should not know HTTP |
+| button | `presentation/orders/CancelOrderButton.ts` | [Presentation](../GLOSSARY.md#presentation-layer) | renders + captures gesture | [invariant](../GLOSSARY.md#invariant) must not live in JSX |
+| assembly | `composition/bootstrap.ts` | Composition | wires concrete objects | inner modules should not resolve dependencies |
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant View as CancelOrderButton
+    participant UC as cancelOrder
+    participant Order
+    participant Adapter as HttpOrderRepository
+    User->>View: click Cancel
+    View->>UC: cancelOrder(id)
+    UC->>Adapter: findById(id)
+    Adapter-->>UC: Order and version
+    UC->>Order: cancel()
+    UC->>Adapter: save(order, version)
+    Adapter-->>UC: completion
+    UC-->>View: result and feedback
 ```
-src/
-├── domain/
-│   ├── entities/          # PascalCase: User.js, Order.js
-│   └── errors/            # DomainErrors.js
-├── application/
-│   ├── ports/             # interfaces the use cases depend on
-│   └── use-cases/         # camelCase: createUserUseCase.js, grouped by concept
-├── infrastructure/
-│   ├── http/              # client.js, ApiError.js
-│   ├── repositories/      # PascalCase adapters: UserRepository.js
-│   └── realtime/          # wsClient.js
-└── presentation/
-    ├── views/             # PascalCase: LoginView.vue
-    ├── components/        # grouped by feature + a shared/ folder (see §8.5)
-    ├── stores/            # camelCase: useUserStore.js
-    ├── router/            # route definitions + guards
-    └── styles/            # design tokens + component styles (see 5-styling-and-animation.md)
+
+The same capability can later receive another [adapter](../GLOSSARY.md#adapter) without changing the core policy.
+
+### Complete client implementation
+
+The business rule belongs in `domain/orders/Order.ts`; the operation, result, persistence failure and [port](../GLOSSARY.md#port) belong in `application/orders/cancelOrder.ts`. [DTO](../GLOSSARY.md#data-transfer-object-dto) validation/mapping and the concrete repository belong in `infrastructure/orders/HttpOrderRepository.ts`. [Presentation](../GLOSSARY.md#presentation-layer) owns gestures and feedback; `composition/bootstrap.ts` selects implementations. These are documentation conventions. A small file may contain cohesive contracts and functions; split them when ownership or change pressure requires it.
+
+```ts
+// domain/orders/Order.ts
+export type OrderStatus = 'pending' | 'shipped' | 'cancelled'
+export class ShippedOrderCannotBeCancelled extends Error {}
+export class Order {
+  readonly id: string
+  #status: OrderStatus
+  constructor(id: string, status: OrderStatus) { this.id = id; this.#status = status }
+  get status(): OrderStatus { return this.#status }
+  cancel(): void {
+    if (this.#status === 'shipped') throw new ShippedOrderCannotBeCancelled()
+    this.#status = 'cancelled'
+  }
+}
 ```
 
-**Conventions.**
-- **Path alias.** Map `@` to `src/` so imports are absolute and the layer is always visible in the path
-  (`@/domain/...`, `@/application/...`). Relative `../../..` chains hide layer crossings.
-- **File naming.** PascalCase for entities, repositories, and components; camelCase for use cases, stores,
-  and composables.
-- **Test placement.** Co-locate tests in `__tests__/` siblings, named `<Unit>.test.js`, mirroring the
-  layer they cover, see [§5.6](3-testing-in-onion.md#56-where-tests-live).
-- **Import boundaries.** Treat the allowed/forbidden table in [§4.1](2-inward-dependencies.md#41-allowed-and-forbidden-imports) as
-  a lint target; an automated import-boundary check turns the Dependency Rule into a guarantee rather than
-  a guideline.
-- **Styles out of components.** Keep structural styles in dedicated files rather than inside component
-  markup, reserving inline styles for genuinely runtime-driven values (positions, computed sizes, per-entity
-  colors). This keeps the Presentation layer's components focused on structure and behavior. Two layouts for
-  those dedicated style and animation files, a mirrored `styles/` tree or colocation in the feature folder,
-  are described in the companion document [5-styling-and-animation.md](5-styling-and-animation.md).
-- **Components by feature.** Group components into feature folders (`components/auth/`, `components/orders/`)
-  with a `shared/` folder for cross-feature primitives, rather than a flat `components/` directory, see
-  [§8.5](4-advanced-patterns.md#85-feature-based-component-organization-presentation).
+```ts
+// application/orders/cancelOrder.ts
+import { Order, ShippedOrderCannotBeCancelled } from '../../domain/orders/Order'
+
+export interface OrderRepository {
+  findById(id: string): Promise<{ order: Order; version: string } | null>
+  save(order: Order, expectedVersion: string): Promise<void>
+}
+export type CancelResult =
+  | { ok: true; status: 'cancelled' }
+  | { ok: false; reason: 'not-found' | 'shipped' | 'conflict' | 'unavailable' }
+export type CancelOrder = (id: string) => Promise<CancelResult>
+export class PersistenceFailure extends Error {
+  readonly reason: 'conflict' | 'unavailable'
+  constructor(reason: 'conflict' | 'unavailable') { super(reason); this.reason = reason }
+}
+export function makeCancelOrder(orders: OrderRepository): CancelOrder {
+  return async id => {
+    try {
+      const loaded = await orders.findById(id)
+      if (!loaded) return { ok: false, reason: 'not-found' }
+      loaded.order.cancel()
+      await orders.save(loaded.order, loaded.version)
+      return { ok: true, status: 'cancelled' }
+    } catch (error) {
+      if (error instanceof ShippedOrderCannotBeCancelled) return { ok: false, reason: 'shipped' }
+      if (error instanceof PersistenceFailure) return { ok: false, reason: error.reason }
+      throw error // programming defects are not normal business outcomes
+    }
+  }
+}
+```
+
+```ts
+// infrastructure/orders/HttpOrderRepository.ts
+import { Order, type OrderStatus } from '../../domain/orders/Order'
+import { PersistenceFailure, type OrderRepository } from '../../application/orders/cancelOrder'
+
+// Adapter-owned transport contract. A concrete fetch driver implements it.
+export interface OrderTransport {
+  get(path: string): Promise<{ data: unknown; version: string } | null>
+  put(path: string, data: unknown, version: string): Promise<void>
+}
+type ApiOrderDto = { id: string; status: OrderStatus }
+function parseOrderDto(data: unknown): ApiOrderDto {
+  if (typeof data !== 'object' || data === null) throw new PersistenceFailure('unavailable')
+  const dto = data as Record<string, unknown>
+  if (typeof dto.id !== 'string' || !['pending', 'shipped', 'cancelled'].includes(String(dto.status))) {
+    throw new PersistenceFailure('unavailable')
+  }
+  return { id: dto.id, status: dto.status as OrderStatus }
+}
+function toOrderDto(order: Order): ApiOrderDto { return { id: order.id, status: order.status } }
+
+export class HttpOrderRepository implements OrderRepository {
+  readonly #transport: OrderTransport
+  constructor(transport: OrderTransport) { this.#transport = transport }
+  async findById(id: string) {
+    const response = await this.#transport.get('/orders/' + encodeURIComponent(id))
+    if (!response) return null
+    const dto = parseOrderDto(response.data)
+    if (dto.id !== id) throw new PersistenceFailure('unavailable')
+    return { order: new Order(dto.id, dto.status), version: response.version }
+  }
+  async save(order: Order, expectedVersion: string): Promise<void> {
+    await this.#transport.put('/orders/' + encodeURIComponent(order.id), toOrderDto(order), expectedVersion)
+  }
+}
+```
+
+```ts
+// presentation/orders/CancelOrderButton.ts
+import type { CancelOrder } from '../../application/orders/cancelOrder'
+
+export function mountCancelOrderButton(root: HTMLElement, id: string, cancelOrder: CancelOrder) {
+  const button = document.createElement('button')
+  button.textContent = 'Cancel order'
+  const feedback = document.createElement('p')
+  feedback.setAttribute('role', 'status')
+  root.append(button, feedback)
+  let disposed = false
+  async function onCancel() {
+    if (button.disabled) return
+    button.disabled = true
+    feedback.textContent = 'Cancelling…'
+    try {
+      const result = await cancelOrder(id)
+      if (!disposed) feedback.textContent = result.ok ? 'Cancelled' : `Cannot cancel: ${result.reason}`
+    } catch {
+      if (!disposed) feedback.textContent = 'Unexpected failure'
+    } finally {
+      if (!disposed) button.disabled = false
+    }
+  }
+  button.addEventListener('click', onCancel)
+  return () => {
+    disposed = true
+    button.removeEventListener('click', onCancel)
+    button.remove(); feedback.remove()
+  }
+}
+```
+
+```ts
+// composition/bootstrap.ts
+import { makeCancelOrder, PersistenceFailure } from '../application/orders/cancelOrder'
+import { HttpOrderRepository, type OrderTransport } from '../infrastructure/orders/HttpOrderRepository'
+import { mountCancelOrderButton } from '../presentation/orders/CancelOrderButton'
+
+async function request(path: string, init?: RequestInit): Promise<Response> {
+  try { return await fetch(path, init) }
+  catch { throw new PersistenceFailure('unavailable') }
+}
+const transport: OrderTransport = {
+  async get(path) {
+    const response = await request(path)
+    if (response.status === 404) return null
+    const version = response.headers.get('ETag')
+    if (!response.ok || !version) throw new PersistenceFailure('unavailable')
+    try { return { data: await response.json(), version } }
+    catch { throw new PersistenceFailure('unavailable') }
+  },
+  async put(path, data, version) {
+    const response = await request(path, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'If-Match': version },
+      body: JSON.stringify(data),
+    })
+    if (response.status === 409 || response.status === 412) throw new PersistenceFailure('conflict')
+    if (!response.ok) throw new PersistenceFailure('unavailable')
+  },
+}
+export function startOrders(root: HTMLElement, orderId: string) {
+  const cancelOrder = makeCancelOrder(new HttpOrderRepository(transport))
+  return mountCancelOrderButton(root, orderId, cancelOrder)
+}
+```
+
+The executable entry calls `startOrders(root, 'order-1')` with an existing DOM element and retains the returned cleanup function.
+
+The API must return a strong ETag on GET and atomically enforce `If-Match` on PUT. It must authorize cancellation and reject shipped orders using authoritative current state; client validation alone cannot guarantee this under concurrent writes. This is a complete client feature, not a backend implementation. See [the expanded walkthrough](../clean-architecture/4-building-a-feature.md) for boundary explanations and limits.
+
+## 12. Testing the rings
+
+| Scope | What to test | Typical dependency |
+| --- | --- | --- |
+| [Domain](../GLOSSARY.md#domain) | [invariants](../GLOSSARY.md#invariant) and domain behavior | none outside [Domain](../GLOSSARY.md#domain) |
+| [Application](../GLOSSARY.md#application-layer) | use-case orchestration | [fake](../GLOSSARY.md#fake)/[stub](../GLOSSARY.md#stub) [ports](../GLOSSARY.md#port) |
+| [Infrastructure](../GLOSSARY.md#infrastructure) | mapping, persistence and transport integration | controlled external system |
+| [Presentation](../GLOSSARY.md#presentation-layer) | view state and rendering | [fake](../GLOSSARY.md#fake) application capability |
+| Architecture | import/dependency rules | source graph |
+| End-to-end | critical journey | complete executable graph |
+
+See **[Testing the Rings](./3-testing-in-onion.md)**.
+
+<a id="avoid"></a>
+
+## 13. Trade-offs and failure modes
+
+Costs:
+
+- more explicit boundaries and mapping;
+- additional modules/files;
+- object composition;
+- learning cost for teams unfamiliar with dependency inversion.
+
+Common failure modes:
+
+- **ORM-centered domain** — database schema dictates business objects;
+- **god [application service](../GLOSSARY.md#application-service)** — every capability enters one service;
+- **god [port](../GLOSSARY.md#port)** — one interface contains unrelated external conversations;
+- **[service locator](../GLOSSARY.md#service-locator)** — inner code reaches into the container;
+- **outer-type leakage** — browser/SDK/ORM/transport types appear inward;
+- **ceremonial onion** — directories exist but imports still point outward;
+- **over-modeling** — rich [Domain](../GLOSSARY.md#domain) abstractions are invented for behavior that does not exist.
+
+<a id="contents"></a>
+
+## 14. Progressive learning path
+
+Read in this order:
+
+1. **[The Rings](./1-the-rings.md)**
+2. **[Inward Dependencies](./2-inward-dependencies.md)**
+3. **[Testing the Rings](./3-testing-in-onion.md)**
+4. **[Advanced Patterns](./4-advanced-patterns.md)**
+5. **[Styling & Animation](./5-styling-and-animation.md)**
+6. **[Evolution & Scaling](./6-scaling.md)**
+
+The first two chapters deepen placement and dependency rules already introduced here. Advanced topics come later.
+
+## 15. Relationship to Clean and Hexagonal
+
+```mermaid
+flowchart TD
+    GOAL["Protect policy from volatile mechanisms"]
+    GOAL --> ONION["Onion: domain-centered rings"]
+    GOAL --> CLEAN["Clean: entities / use cases / adapters / frameworks"]
+    GOAL --> HEX["Hexagonal: ports + adapters around the application"]
+```
+
+They overlap strongly but are not identical taxonomies.
+
+## Sources
+
+- Jeffrey Palermo, "The [Onion Architecture](../GLOSSARY.md#onion-architecture)" series (2008): https://jeffreypalermo.com/2008/07/
+- Robert C. Martin, "The [Clean Architecture](../GLOSSARY.md#clean-architecture)": https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
+- Alistair Cockburn, "[Hexagonal Architecture](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters)": https://alistair.cockburn.us/hexagonal-architecture/
+- Mark Seemann, "[Composition Root](../GLOSSARY.md#composition-root)": https://blog.ploeh.dk/2011/07/28/CompositionRoot/

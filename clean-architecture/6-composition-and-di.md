@@ -1,98 +1,101 @@
-> **[Clean Architecture](README.md)** › Composition & Dependency Injection. Full reference list: [References](references.md).
+> **[Clean Architecture](README.md)** › Composition & [Dependency Injection](../GLOSSARY.md#dependency-injection-di).
 
-## 6. Composition & Dependency Injection
+<a id="6-composition--dependency-injection"></a>
 
-The Dependency Rule forbids a use case from naming a concrete adapter. But *something*, somewhere, must
-connect the two — the real `HttpUserGateway` has to reach the `createUser` use case eventually. Clean
-Architecture answers this with a single, deliberate exception: the **Composition Root**.
+# 6. Composition and Dependency Injection
 
-### 6.1 The inversion, concretely
+The canonical cross-architecture treatment now lives in **[Composition Root and Dependency Injection](../foundations/composition-root.md)**. This chapter keeps the [Clean Architecture](../GLOSSARY.md#clean-architecture) framing.
 
-A use case must never import the detail it uses. Compare:
+<a id="61-the-inversion-concretely"></a>
 
-```js
-// BEFORE: the use case depends on a concrete adapter (a detail) — forbidden
-import { UserRepository } from '@/adapters/gateways/UserRepository'
+## 6.1 Why composition exists
 
-export async function createUser(form) {
-  return UserRepository.create(toPayload(form))   // hard-wired to an outer circle
+An inner [use case](../GLOSSARY.md#use-case) should depend on a capability it owns:
+
+```ts
+export interface UserRepository {
+  findById(id: UserId): Promise<User | null>
 }
 ```
 
-```js
-// AFTER: the use case depends on an injected port (an abstraction)
-export function makeCreateUser({ userRepository }) {
-  return async function createUser(form) {
-    return userRepository.create(toPayload(form))  // any adapter satisfying the port
+These are boundary excerpts: `UserId`, `User`, the [mapper](../GLOSSARY.md#mapper) and transport interface are assumed. `HttpClient` is an [adapter](../GLOSSARY.md#adapter)-owned contract, supplied by concrete outer HTTP glue. The [complete feature](4-building-a-feature.md) defines all of its types and implementations.
+
+A concrete outer [adapter](../GLOSSARY.md#adapter) implements it:
+
+```ts
+export class HttpUserRepository implements UserRepository {
+  constructor(private readonly http: HttpClient) {}
+
+  async findById(id: UserId): Promise<User | null> {
+    const dto = await this.http.get('/users/' + encodeURIComponent(id.value))
+    return dto ? mapUserDto(dto) : null
   }
 }
 ```
 
-The "after" form names no detail. It can be tested with a fake repository, and its real adapter can be
-swapped — HTTP for GraphQL, or for an in-memory double — without editing the use case. The cost is a single
-factory plus a place to wire dependencies. That place is the Composition Root.
+Something must construct both and connect them. That location is the [Composition Root](../GLOSSARY.md#composition-root).
 
-### 6.2 The Composition Root
+<a id="62-the-composition-root"></a>
 
-The Composition Root is the **one place in the system allowed to name both a concrete adapter and the use
-case it feeds** [Martin 2017]. It sits at the outermost edge — the application's entry point — and assembles
-the object graph once, at startup:
+<a id="64-why-this-is-clean-architectures-signature"></a>
 
-```js
-// composition/bootstrap.js — the only place an outer circle meets a use case
-import { HttpUserGateway } from '@/adapters/gateways/HttpUserGateway'
-import { makeCreateUser } from '@/usecases/CreateUser'
+## 6.2 Composition is not an exception to the Dependency Rule
 
-const userRepository = new HttpUserGateway()
-export const createUser = makeCreateUser({ userRepository })
+The [Composition Root](../GLOSSARY.md#composition-root) sits at the outer edge. It is expected to know concrete mechanisms and the abstractions they satisfy.
+
+```ts
+const users = new HttpUserRepository(http)
+const getUser = makeGetUser({ users })
+
+const app = createApp({ getUser })
 ```
 
-Everything inward of `bootstrap.js` depends only on ports; everything is testable with fakes. This is
-simple, explicit, and entirely sufficient for most applications — wire the graph once, at the edge, and
-hand the assembled use cases to the UI.
+The [use case](../GLOSSARY.md#use-case) still does not import `HttpUserRepository`.
 
-### 6.3 When the wiring grows: a DI container
 
-The circles and the rule never change as a codebase scales — only *how the wiring is expressed* changes.
-When a hand-assembled root passes roughly a hundred dependencies and manual ordering becomes error-prone,
-the wiring becomes **declarative**: a container resolves the graph instead of you assembling it in order.
+## 6.3 Prefer injection over service location
 
-```js
-// composition/container.js
-const container = new Container()
-container.register('UserRepository', () => new HttpUserGateway())
-container.register('createUser', (c) =>
-  makeCreateUser({ userRepository: c.resolve('UserRepository') }))
+Avoid:
 
-// anywhere in the outer circles:
-const createUser = container.resolve('createUser')
+```ts
+export class GetUser {
+  execute(id: string) {
+    return container.resolve('users').findById(id)
+  }
+}
 ```
 
-Mature ecosystems formalize this with libraries (InversifyJS, tsyringe), but the principle is identical to
-the hand-written version — it is **still the Composition Root, just automated**. The win is that a hundred
-bindings no longer need a human to topologically sort them, and swapping an adapter for a test double
-becomes a one-line container override.
+Prefer explicit constructor/factory dependencies.
 
-**Introduce a container only when you feel the pain:** multiple teams colliding in one tree, or a wiring
-file that has become a bottleneck. A DI container in a three-person project buys complexity it cannot yet
-repay — the manual root is the right default.
 
-### 6.4 Why this is Clean Architecture's signature
+<a id="63-when-the-wiring-grows-a-di-container"></a>
 
-Dependency injection is not a framework feature here; it is the *mechanism that makes the Dependency Rule
-physically true*. Without a Composition Root, every use case that needs data would have to import an
-adapter, and the inward-only arrow would be a lie. With one, the entire inner system — Entities and Use
-Cases — depends on nothing but abstractions, and the messy business of choosing concrete implementations is
-confined to a single file at the edge. That confinement is what makes the core independent, testable, and
-durable [Martin 2017].
+## 6.4 Manual DI first
 
-> **The four circles never change. What changes is how dependencies are *wired* — and that changes in
-> response to codebase size and headcount, not taste.**
+A [DI container](../GLOSSARY.md#di-container) is not required by [Clean Architecture](../GLOSSARY.md#clean-architecture).
 
-How partitioning (by layer, then by feature, then by bounded context) evolves alongside the wiring as an
-organization grows is the subject of the next page.
+Manual wiring is often clearer:
 
----
+```ts
+const repository = new HttpUserRepository(http)
+const service = new UserService(repository)
+```
 
-Next: **[Scaling: Startup to Enterprise](7-scaling-and-patterns.md)** — how the structure and the wiring
-grow with the codebase and the team, and the red flags that say it's time.
+Adopt a container when it solves a real object-graph/lifetime/framework problem. Do not use an arbitrary count such as "after N dependencies" as an architectural threshold.
+
+## 6.5 Keep the root small
+
+The root should assemble the graph, not implement [use cases](../GLOSSARY.md#use-case):
+
+Typical [Composition Root](../GLOSSARY.md#composition-root) responsibilities are: create technical clients, create [adapters](../GLOSSARY.md#adapter), construct [application services](../GLOSSARY.md#application-service)/[use cases](../GLOSSARY.md#use-case), construct delivery/[store](../GLOSSARY.md#store)/controller objects, and finally start the framework/runtime.
+
+Business branching belongs elsewhere.
+
+## 6.6 One root per executable is reasonable
+
+A web server, worker, CLI and browser bundle are different executable graphs and can each own a [composition root](../GLOSSARY.md#composition-root).
+
+## Sources
+
+- Mark Seemann, "[Composition Root](../GLOSSARY.md#composition-root)": https://blog.ploeh.dk/2011/07/28/CompositionRoot/
+- Robert C. Martin, "The [Clean Architecture](../GLOSSARY.md#clean-architecture)": https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html

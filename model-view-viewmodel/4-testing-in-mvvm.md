@@ -1,116 +1,65 @@
-> **[Model-View-ViewModel](README.md)** › Testing. Full reference list: [References](references.md).
+> **[Model-View-ViewModel](README.md)** › Testing.
 
 ## 4. Testing in MVVM
 
-Testability is not a side benefit of MVVM; it is the pattern's founding motivation, in its authors'
-own words. Gossman: "the ViewModel is easier to unit test than code-behind or event driven code …
-you can test it without awkward UI automation and interaction" [Gossman 2006]. Smith: "the ease
-with which you can create unit tests for ViewModel classes is a huge selling point of the MVVM
-pattern," and — the sharpest formulation of the idea — "Views and unit tests are just two different
-types of ViewModel consumers" [Smith 2009]. If the tests described below are hard to write, the
-pattern has not been applied — only its vocabulary.
-
----
+The [ViewModel](../GLOSSARY.md#viewmodel) boundary lets tests exercise presentation behavior without concrete controls. Pure classes can be constructed directly; React Hooks must run inside a React harness.
 
 ### 4.1 The ViewModel tests headless
 
-The ViewModel holds display state and commands, and references no View. So the test is: construct
-it with a Model (real or fake), invoke a command the way a binding would, and assert on the exposed
-state — the same state the View would have rendered:
+This Vitest test uses `CancelOrderViewModel` from [The Three Parts](1-the-three-parts.md). The controlled promise makes the pending state observable; a synchronous catalog lookup would not test that behavior.
 
 ```js
-test('addItem exposes a busy flag while the add is in flight', async () => {
-  const cart = new Cart()                       // real Model: cheap and honest
-  const catalog = { find: () => ({ price: 10, qty: 1 }) }
-  const vm = useCartViewModel({ cart, catalog })
+import { expect, test } from 'vitest'
+import { CancelOrderViewModel } from './CancelOrderViewModel'
 
-  const pending = vm.addItem('sku-1')
-  expect(vm.isAdding.value).toBe(true)          // what the View would show now
-
-  await pending
-  expect(vm.isAdding.value).toBe(false)
-  expect(vm.formattedTotal.value).toBe('$10.00')
+test('shows pending state and the application outcome', async () => {
+  let complete
+  const pending = new Promise(resolve => { complete = resolve })
+  const vm = new CancelOrderViewModel(() => pending)
+  const operation = vm.cancel('1')
+  expect(vm.busy).toBe(true)
+  complete({ ok: false, reason: 'shipped' })
+  await operation
+  expect(vm.busy).toBe(false)
+  expect(vm.message).toBe('Cannot cancel: shipped')
 })
 ```
 
-No DOM, no mounting, no snapshot. The test reads like a user story — act, then look — because the
-ViewModel *is* the screen, minus the pixels. This is where most of a screen's tests should live: the
-display logic (formatting, filtering, flags, sequencing) is the part that carries screen-specific
-meaning, and here it is testable at unit-test speed.
-
----
+Test duplicate command suppression, unexpected failure, notifications and disposal of listeners as separate requirements. There is no universal count or percentage of [ViewModel](../GLOSSARY.md#viewmodel) tests.
 
 ### 4.2 The Model tests like a pure object
 
-Unchanged from [MVC](../model-view-controller/4-testing-in-mvc.md#41-the-model-tests-like-a-pure-object),
-and even simpler: in MVVM the Model does not carry change-notification machinery, so it is construction
-and assertion, nothing else:
+Test authoritative policy in its owner, independently of display text or framework rendering. See [Clean testing](../clean-architecture/5-testing-in-clean.md) for the same cancellation rule and persistence precondition.
 
-```js
-test('cart total sums price times quantity', () => {
-  const cart = new Cart()
-  cart.add({ price: 10, qty: 2 })
-  expect(cart.total).toBe(20)
-})
-```
+<a id="43-commands-test-the-seam-fakes-fill-it"></a>
 
-In a layered app these are the Domain and use-case tests of the
-[Clean Test Boundary](../clean-architecture/5-testing-in-clean.md) — the same tests, claimed by the
-inner rings.
+### 4.3 Commands test the seam, substitutes fill it
 
----
+A [stub](../GLOSSARY.md#stub) supplies application outcomes; a [spy](../GLOSSARY.md#spy) records command arguments; a [fake](../GLOSSARY.md#fake) implements simplified application behavior. `vi.fn().mockResolvedValue(...)` is not automatically a [fake](../GLOSSARY.md#fake).
 
-### 4.3 Commands test the seam, fakes fill it
+For a React Hook, use `renderHook` and `act` from React Testing Library. Supply any required Provider and await async updates. Do not call `useOrders()` as an ordinary function or assert Vue-style `.value` on a React state value. Framework-neutral behavior can be extracted if that boundary improves clarity.
 
-A command's job is translation: gesture in, the right inward call out. When the ViewModel sits
-inside a Clean/Onion app and its commands call use cases
-([§3.3](3-mvvm-on-the-frontend.md#33-how-mvvm-sits-inside-onion-and-clean)), the test substitutes a
-fake at exactly that seam:
+<a id="44-the-view-is-the-part-you-test-least"></a>
 
-```js
-test('addItem forwards to the use case with the selected product', async () => {
-  const addToCart = vi.fn().mockResolvedValue(undefined)   // fake use case
-  const vm = useCartViewModel({ addToCart })
+### 4.4 The View and binding need tests
 
-  await vm.addItem('sku-1')
-
-  expect(addToCart).toHaveBeenCalledWith({ productId: 'sku-1', qty: 1 })
-})
-```
-
-This is the port-and-fake substitution every guide here converges on — a test is a collaborator
-plugged into a known seam. The binding layer never appears in these tests, because the binding layer
-is the framework's code, not yours.
-
----
-
-### 4.4 The View is the part you test least
-
-A View reduced to bindings has almost nothing left to get wrong: the framework guarantees that bound
-state renders and that bound events fire. Keep a *few* component tests for what genuinely lives in
-the View — conditional markup structure, accessibility attributes, that gestures reach the right
-command — and resist re-testing ViewModel logic through the DOM at 100× the cost.
-
-The familiar diagnostic applies: a component that is hard to test is a component hoarding logic that
-belongs in the ViewModel or further inward. Test difficulty is feedback on the separation
-[Fowler].
-
----
+Framework correctness does not prove that the feature binds the right property, forwards the right id, disables during a command, releases subscriptions or exposes accessible feedback. Test those behaviors through rendered controls. Also cover async completion after unmount and critical integrated journeys where applicable.
 
 ### 4.5 The pyramid, restated for MVVM
 
-| Part | What you test | Setup cost |
-|---|---|---|
-| **Model** | rules, derived state | none — pure objects |
-| **ViewModel** | display state, command sequencing, use-case calls | a fake Model or use case |
-| **View** | bindings reach the right state and commands; a11y | a render harness; keep these few |
+| Scope | What it establishes |
+| --- | --- |
+| [Model](../GLOSSARY.md#model)/[Application](../GLOSSARY.md#application-layer)/[Domain](../GLOSSARY.md#domain) | business behavior independently of the screen |
+| [ViewModel](../GLOSSARY.md#viewmodel) | display derivation, commands, pending/error results |
+| [View](../GLOSSARY.md#view)/binding | rendered values, gestures, accessibility and lifetime |
+| Integration/journey | concrete application/framework/transport wiring |
 
-The shape matches every other guide here: most tests at the stable center, few at the volatile edge.
-MVVM's contribution is moving the *screen's own logic* into the cheap tier — which is, historically,
-exactly what it was invented to do [Gossman 2005].
+Use cost and risk to select coverage. Architecture checks complement behavior tests by enforcing the chosen source boundaries.
 
----
+Next: **[MVVM in React + Redux Toolkit](5-mvvm-in-react-redux.md)**.
 
-Next: **[MVVM in React + Redux Toolkit](5-mvvm-in-react-redux.md)** — the mapping pinned to one
-stack: slices, selectors, RTK Query at the infrastructure seam, and the use-case layer as a
-deliberate addition.
+## Sources
+
+- [Smith — WPF Apps With MVVM](https://learn.microsoft.com/en-us/archive/msdn-magazine/2009/february/patterns-wpf-apps-with-the-model-view-viewmodel-design-pattern)
+- [Testing Library — renderHook](https://testing-library.com/docs/react-testing-library/api/#renderhook)
+- [Fowler — Test Double](https://martinfowler.com/bliki/TestDouble.html)

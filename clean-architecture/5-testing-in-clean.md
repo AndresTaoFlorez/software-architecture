@@ -2,97 +2,90 @@
 
 ## 5. Testing in Clean Architecture
 
-Testability is not a separate discipline bolted onto Clean Architecture — it is the design's most
-immediate dividend. The same rule that forbids an inner circle from naming an outer one is what guarantees
-that, in a test, every outer collaborator can be replaced by a substitute under the test's control
-[Cockburn 2005; Martin 2017].
+Inward source dependencies help isolate policy. Injection supplies replacement points; a folder name alone does not guarantee substitutability.
 
 ### 5.1 A test is just another adapter
 
-Martin places automated tests in the outermost circle, as another kind of *detail* that consumes the
-application through the same boundaries the UI does — the **Test Boundary** [Martin 2017, ch. 28]. The
-consequence is liberating: **a test is just another adapter.** Where production plugs an HTTP gateway into
-a port, a test plugs a fake into the same port. Nothing in the Entities or Use Cases changes between the
-two configurations — which is the entire point of having a port there.
+An in-memory implementation and an HTTP implementation can satisfy the same inner contract. They are alternative runtime collaborators, not objects behind another “[port](../GLOSSARY.md#port)” node:
 
-```
-   Production wiring                     Test wiring
-   ────────────────                      ───────────
-   createUser ── port ── HttpUserGateway   createUser ── port ── FakeUserRepository
-                          (real network)                         (in-memory, instant)
+```mermaid
+flowchart LR
+    PUC["Production cancelOrder"] --> HTTP["HttpOrderRepository"] --> API["HTTP API"]
+    TUC["Test cancelOrder"] --> MEMORY["In-memory repository"]
 ```
 
-From this follows the rule of thumb that prevents fragile tests: **tests should depend on the stable inner
-circles, not on the volatile outer details.** A test that drives the UI to assert a business rule is
-coupled to two things that change for unrelated reasons — the rule and the markup. A test that calls the
-use case directly is coupled only to the rule.
+Business-rule tests can call policy directly. Journey tests still need the UI and external integration to detect wiring failures.
 
 ### 5.2 The test pyramid mapped onto the circles
 
-The classic test pyramid [Cohn 2009; Vocke 2018] maps cleanly onto the four circles. Cost rises and
-desired quantity falls as you move outward:
+| Boundary | What to test | Typical setup |
+| --- | --- | --- |
+| [Entities](../GLOSSARY.md#clean-entities-circle) | business rules and [invariant](../GLOSSARY.md#invariant) failures | domain values/objects |
+| [Use Cases](../GLOSSARY.md#use-case) | orchestration, missing data, persistence failures | supplied [port](../GLOSSARY.md#port) implementation |
+| [Interface Adapters](../GLOSSARY.md#interface-adapter) | mapping, input/output and result translation | controlled transport/view contract |
+| [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers) | framework, request and persistence integration | framework harness or external system |
 
-| Circle | What you test | Test double needed | Cost |
-|---|---|---|---|
-| **Entities** | invariants, derived state, rules | none | trivial — pure functions |
-| **Use Cases** | orchestration, validation, error mapping | a fake for each port | cheap — one fake, no network |
-| **Interface Adapters** | mapping JSON ↔ entities, controller wiring | a stubbed transport | moderate |
-| **Frameworks & Drivers** | that the framework is wired correctly | the real thing, or a harness | expensive — keep few |
-
-Most of your tests should sit in the bottom two rows, because that is where most of the *meaning* lives and
-where tests are cheapest to write and slowest to rot.
+The [test pyramid](../GLOSSARY.md#test-pyramid) is a cost/feedback heuristic, not a quota or a one-to-one mapping onto circles. Retain integration/journey tests for risks inner tests cannot observe.
 
 ### 5.3 Why the inner circles are cheap to test
 
-An Entity test needs no setup at all — construct the object, assert a getter:
+These Vitest tests use the exact signatures from [the cancellation feature](4-building-a-feature.md), colocated with the named source files.
 
-```js
-test('a pending order can be cancelled', () => {
-  const order = new Order({ id: '1', lines: [], status: 'pending' })
-  expect(order.canBeCancelled()).toBe(true)
+```ts
+// domain/orders/Order.test.ts
+import { expect, test } from 'vitest'
+import { Order, ShippedOrderCannotBeCancelled } from './Order'
+test('a shipped order cannot be cancelled', () => {
+  const order = new Order('1', 'shipped')
+  expect(() => order.cancel()).toThrow(ShippedOrderCannotBeCancelled)
+  expect(order.status).toBe('shipped')
 })
 ```
 
-A Use Case test supplies a fake for each port and asserts the orchestration — still no network, no
-framework, no DOM:
-
-```js
-test('createUser delegates to the repository', async () => {
-  const fake = { create: vi.fn().mockResolvedValue(new User({ id: '1' })) }
-  const createUser = makeCreateUser({ userRepository: fake })
-
-  await createUser({ firstName: 'Ada' })
-
-  expect(fake.create).toHaveBeenCalledOnce()
+```ts
+// application/orders/cancelOrder.test.ts
+import { expect, test } from 'vitest'
+import { Order } from '../../domain/orders/Order'
+import { makeCancelOrder, PersistenceFailure, type OrderRepository } from './cancelOrder'
+test('persists cancellation using the loaded version', async () => {
+  let saved: { status: string; version: string } | undefined
+  const orders: OrderRepository = {
+    async findById(id) { return { order: new Order(id, 'pending'), version: 'v1' } },
+    async save(order, version) { saved = { status: order.status, version } },
+  }
+  expect(await makeCancelOrder(orders)('1')).toEqual({ ok: true, status: 'cancelled' })
+  expect(saved).toEqual({ status: 'cancelled', version: 'v1' })
+})
+test('reports a concurrency conflict', async () => {
+  const orders: OrderRepository = {
+    async findById(id) { return { order: new Order(id, 'pending'), version: 'v1' } },
+    async save() { throw new PersistenceFailure('conflict') },
+  }
+  expect(await makeCancelOrder(orders)('1')).toEqual({ ok: false, reason: 'conflict' })
 })
 ```
 
-The fake is injected in **one line** because the use case depends on a port. The moment a use case instead
-imports a concrete adapter, this test can no longer inject a fake cleanly — it must intercept a module path
-at the bundler level, which is exactly the kind of brittle, implementation-coupled test the architecture
-exists to avoid. **The test you have to write is feedback on the design you chose** — if a unit is hard to
-test, it is usually depending outward.
+These substitutes supply answers and record outcomes. They do not prove production honors conditional writes; test the [adapter](../GLOSSARY.md#adapter)/backend contract separately. Hard tests may also expose time, randomness or poorly exposed behavior, rather than outward dependencies alone.
 
 ### 5.4 Test doubles, named
 
-Use the precise vocabulary [Meszaros 2007; Fowler 2007] rather than calling everything a "mock":
+- **[Fake](../GLOSSARY.md#fake):** a simplified working implementation, such as a stateful in-memory repository.
+- **[Stub](../GLOSSARY.md#stub):** supplies predetermined responses.
+- **[Spy](../GLOSSARY.md#spy):** records calls for later assertions.
+- **[Mock](../GLOSSARY.md#mock):** checks prearranged interaction expectations.
+- **Dummy:** fills an unused parameter.
 
-- **Fake** — a working but simplified implementation (an in-memory repository). The default for ports.
-- **Stub** — returns canned answers to calls made during the test.
-- **Spy** — a stub that also records how it was called.
-- **Mock** — a double pre-programmed with expectations that it verifies.
-- **Dummy** — passed to fill a parameter list but never used.
-
-Prefer **fakes and stubs over mocks** for port boundaries: assert the observable outcome, not the exact
-sequence of internal calls. Over-mocking couples a test to *how* a unit works rather than *what* it does,
-and that is the most common cause of tests that break on every refactor [Khorikov 2020].
+A `vi.fn().mockResolvedValue(...)` is normally a [stub](../GLOSSARY.md#stub) with [spy](../GLOSSARY.md#spy) capabilities. Assert outcomes when they describe the requirement; verify interactions when the interaction itself matters, such as passing a version precondition.
 
 ### 5.5 Where tests live
 
-Co-locate tests in `__tests__/` siblings, named `<Unit>.test.js`, mirroring the circle they cover. A test
-substitutes exactly one circle outward — the boundary the unit under test depends on — and no further.
+Prefer colocated `<Unit>.test.ts` / `<Component>.test.tsx` files here. A separate test tree also works if ownership stays clear. Substitute the boundaries needed for the scenario, rather than “exactly one circle outward”. Architecture tests inspect forbidden imports independently.
 
----
+Next: **[Composition & Dependency Injection](6-composition-and-di.md)** — where the executable selects implementations and injects them. An [adapter](../GLOSSARY.md#adapter) also names its inner [port](../GLOSSARY.md#port); composition is not the only place that knows both.
 
-Next: **[Composition & Dependency Injection](6-composition-and-di.md)** — the one place allowed to name
-both a port and its concrete adapter.
+## Sources
+
+- [Martin — The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+- [Fowler — Test Double](https://martinfowler.com/bliki/TestDouble.html)
+- [Fowler — Mocks Aren't Stubs](https://martinfowler.com/articles/mocksArentStubs.html)
+- [Fowler — The Practical Test Pyramid](https://martinfowler.com/articles/practical-test-pyramid.html)
