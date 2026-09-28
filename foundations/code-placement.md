@@ -189,7 +189,7 @@ Examples:
 | --- | --- | --- |
 | `ClosuresPage.tsx` | `presentation/pages/closures/` | route-level composition |
 | `QueryFilters.tsx` | `features/closures/ui/` | feature UI |
-| `useClosures.ts` | `features/closures/model/` | public [Presentation](../GLOSSARY.md#presentation-layer) facade |
+| `useClosures.ts` | `features/closures/model/` | public [Presentation](../GLOSSARY.md#presentation-layer) [facade](../GLOSSARY.md#facade-pattern) |
 | `closures.slice.ts` | `features/closures/model/` | shared client feature state |
 | `closure-validation.ts` | `features/closures/lib/` | helper still owned by the feature |
 | `Button.tsx` | `shared/ui/` | cross-feature primitive |
@@ -254,7 +254,7 @@ Requirement:
 | [repository](../GLOSSARY.md#repository) capability | `application/orders/ports/OrderRepository.ts` | required by application policy |
 | [use case](../GLOSSARY.md#use-case) | `application/orders/use-cases/cancelOrder.ts` | orchestrates operation |
 | HTTP [adapter](../GLOSSARY.md#adapter) | `infrastructure/orders/HttpOrderRepository.ts` | technical detail |
-| feature facade | `presentation/features/orders/model/useOrders.ts` | view-facing API |
+| feature [facade](../GLOSSARY.md#facade-pattern) | `presentation/features/orders/model/useOrders.ts` | view-facing API |
 | button | `presentation/features/orders/ui/CancelOrderButton.tsx` | rendering + interaction |
 | wiring | `composition/bootstrap.ts` | selects concrete [adapter](../GLOSSARY.md#adapter) |
 

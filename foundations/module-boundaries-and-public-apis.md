@@ -154,7 +154,7 @@ When two capabilities repeatedly depend on each other, consider:
 - defining an explicit public contract;
 - revisiting whether the original feature boundary is wrong.
 
-Do not solve coupling by adding more barrels.
+Do not solve coupling by adding more [barrels](../GLOSSARY.md#barrel-file).
 
 ## 8. Naming should reveal purpose
 

@@ -131,7 +131,7 @@ design — it is a translator between the user's intent and the [Model](../GLOSS
 
 ### 1.4 The one rule that holds it together
 
-Strip away the variants and [MVC](../GLOSSARY.md#model-view-controller-mvc) reduces to a single principle: **separated presentation** [Fowler]. The
+Strip away the variants and [MVC](../GLOSSARY.md#model-view-controller-mvc) reduces to a single principle: **[separated presentation](../GLOSSARY.md#separated-presentation)** [Fowler]. The
 [Model](../GLOSSARY.md#model) side is kept independent of concrete rendering/input mechanics; the [View](../GLOSSARY.md#view) and [Controller](../GLOSSARY.md#controller) stay focused
 on presentation responsibilities. In a Clean/Onion system, authoritative business rules normally live
 further inward than the [MVC](../GLOSSARY.md#model-view-controller-mvc) presentation boundary. Everything in [The Flow](2-the-flow.md) is a consequence of deciding *who notifies whom*
@@ -140,4 +140,4 @@ once that separation is in place.
 ---
 
 Next: **[The Flow](2-the-flow.md)** — how input, update, and render form a cycle, and how the variants
-(MVP, [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm)) differ only in how that cycle is wired.
+([MVP](../GLOSSARY.md#model-view-presenter-mvp), [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm)) differ only in how that cycle is wired.
