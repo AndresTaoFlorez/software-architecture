@@ -2,14 +2,14 @@
 
 # 3. The Rings
 
-This guide uses four practical areas to explain Onion Architecture:
+This guide uses four practical areas to explain [Onion Architecture](../GLOSSARY.md#onion-architecture):
 
 ```mermaid
 flowchart BT
     O["Presentation / Infrastructure"] --> A["Application"] --> D["Domain"]
 ```
 
-The drawing is a dependency model, not a call-stack diagram. Runtime control can move outward through injected ports while source dependencies still point inward.
+The drawing is a dependency model, not a call-stack diagram. Runtime control can move outward through injected [ports](../GLOSSARY.md#port) while source dependencies still point inward.
 
 ---
 
@@ -17,16 +17,16 @@ The drawing is a dependency model, not a call-stack diagram. Runtime control can
 
 ### Responsibility
 
-Own business concepts, invariants and behavior that are independent of delivery and infrastructure mechanisms.
+Own business concepts, [invariants](../GLOSSARY.md#invariant) and behavior that are independent of delivery and infrastructure mechanisms.
 
 Typical contents:
 
 - entities;
-- value objects;
-- domain services when behavior does not naturally belong to one entity/value object;
-- domain events;
-- domain errors;
-- policies/invariants.
+- [value objects](../GLOSSARY.md#value-object);
+- [domain services](../GLOSSARY.md#domain-service) when behavior does not naturally belong to one entity/[value object](../GLOSSARY.md#value-object);
+- [domain events](../GLOSSARY.md#domain-event);
+- [domain errors](../GLOSSARY.md#domain-error);
+- policies/[invariants](../GLOSSARY.md#invariant).
 
 Example:
 
@@ -49,7 +49,7 @@ export class ClosurePeriod {
 
 ### Must not know
 
-Domain should not import:
+[Domain](../GLOSSARY.md#domain) should not import:
 
 - React/Vue/Svelte;
 - Redux/Pinia/Zustand;
@@ -67,11 +67,11 @@ flowchart LR
     D["Domain"] --> D
 ```
 
-"Depends on nothing" is useful shorthand for "depends on no outer application layer". Domain code can of course depend on the language/runtime standard library and carefully chosen domain-safe libraries.
+"Depends on nothing" is useful shorthand for "depends on no outer [application layer](../GLOSSARY.md#application-layer)". [Domain](../GLOSSARY.md#domain) code can of course depend on the language/runtime standard library and carefully chosen domain-safe libraries.
 
 ### Do not manufacture a rich domain
 
-Not every application needs entity classes and domain services.
+Not every application needs entity classes and [domain services](../GLOSSARY.md#domain-service).
 
 If the system mainly transports data with little domain behavior, an anemic-looking model may honestly reflect the problem. Do not invent behavior merely to satisfy an architecture diagram.
 
@@ -85,12 +85,12 @@ Own application-specific policy: the operations the application performs and the
 
 Typical contents:
 
-- use cases/application services;
+- [use cases](../GLOSSARY.md#use-case)/[application services](../GLOSSARY.md#application-service);
 - commands/queries and results;
 - input/output boundaries;
-- ports for required external capabilities;
+- [ports](../GLOSSARY.md#port) for required external capabilities;
 - application errors;
-- orchestration across Domain objects and ports.
+- orchestration across [Domain](../GLOSSARY.md#domain) objects and [ports](../GLOSSARY.md#port).
 
 Example:
 
@@ -115,9 +115,9 @@ export function makeExecuteClosure(deps: {
 
 ### Must not know
 
-Application should not import:
+[Application](../GLOSSARY.md#application-layer) should not import:
 
-- concrete HTTP/database/storage adapters;
+- concrete HTTP/database/storage [adapters](../GLOSSARY.md#adapter);
 - React/Redux/UI framework state;
 - ORM models;
 - transport request/response objects;
@@ -131,9 +131,9 @@ flowchart LR
     A --> D["Domain"]
 ```
 
-Ports live here when they express capabilities required by application policy.
+[Ports](../GLOSSARY.md#port) live here when they express capabilities required by application policy.
 
-Do not create one port per endpoint automatically. Port granularity follows cohesive conversations/capabilities.
+Do not create one [port](../GLOSSARY.md#port) per endpoint automatically. [Port](../GLOSSARY.md#port) granularity follows cohesive conversations/capabilities.
 
 ---
 
@@ -145,12 +145,12 @@ Adapt external technology to contracts understood by inner policy.
 
 Typical contents:
 
-- HTTP/API clients and gateway implementations;
-- persistence adapters;
-- browser storage adapters;
+- HTTP/API clients and [gateway](../GLOSSARY.md#gateway) implementations;
+- persistence [adapters](../GLOSSARY.md#adapter);
+- browser storage [adapters](../GLOSSARY.md#adapter);
 - SDK wrappers;
-- external DTOs/generated types;
-- mappers;
+- external [DTOs](../GLOSSARY.md#data-transfer-object-dto)/generated types;
+- [mappers](../GLOSSARY.md#mapper);
 - message-broker or realtime protocol clients;
 - filesystem/object-storage implementations.
 
@@ -169,7 +169,7 @@ export class HttpClosureGateway implements ClosureGateway {
 }
 ```
 
-The adapter knows the inner contract. The Application layer does not know this class.
+The [adapter](../GLOSSARY.md#adapter) knows the inner contract. The [Application layer](../GLOSSARY.md#application-layer) does not know this class.
 
 ### Translation belongs at boundaries
 
@@ -191,7 +191,7 @@ flowchart LR
     I --> D["Domain"]
 ```
 
-Infrastructure must not depend on Presentation.
+[Infrastructure](../GLOSSARY.md#infrastructure) must not depend on [Presentation](../GLOSSARY.md#presentation-layer).
 
 ---
 
@@ -205,11 +205,11 @@ Typical contents:
 
 - pages/routes/layouts;
 - components;
-- view models / Presentation Models;
+- [view models](../GLOSSARY.md#viewmodel) / [Presentation Models](../GLOSSARY.md#presentation-model);
 - custom hooks/composables;
-- UI state stores/slices;
-- selectors/computed values;
-- design-system primitives and styles;
+- UI state [stores](../GLOSSARY.md#store)/slices;
+- [selectors](../GLOSSARY.md#selector)/computed values;
+- [design-system](../GLOSSARY.md#design-system) primitives and styles;
 - UI-specific validation/formatting.
 
 Example:
@@ -230,7 +230,7 @@ export function useClosures() {
 
 ### Presentation may contain real logic
 
-Examples of Presentation logic:
+Examples of [Presentation](../GLOSSARY.md#presentation-layer) logic:
 
 - modal visibility;
 - selected table rows;
@@ -252,7 +252,7 @@ flowchart LR
     I["Infrastructure adapter"] --> PORT
 ```
 
-If a project deliberately allows Presentation to use a technical adapter directly for a simple UI-only concern, document that as a scoped architectural decision. Do not present the leak as the canonical Onion boundary.
+If a project deliberately allows [Presentation](../GLOSSARY.md#presentation-layer) to use a technical [adapter](../GLOSSARY.md#adapter) directly for a simple UI-only concern, document that as a scoped architectural decision. Do not present the leak as the canonical Onion boundary.
 
 ### Dependency direction
 
@@ -264,11 +264,11 @@ flowchart LR
     P --> A["Application"]
 ```
 
-Some systems allow Presentation to import Domain types directly because Domain is inward. Others require all Presentation contracts to arrive through Application. Pick and enforce one policy.
+Some systems allow [Presentation](../GLOSSARY.md#presentation-layer) to import [Domain](../GLOSSARY.md#domain) types directly because [Domain](../GLOSSARY.md#domain) is inward. Others require all [Presentation](../GLOSSARY.md#presentation-layer) contracts to arrive through [Application](../GLOSSARY.md#application-layer). Pick and enforce one policy.
 
 ### Internal frontend architecture
 
-Onion does not specify how Presentation itself should scale.
+Onion does not specify how [Presentation](../GLOSSARY.md#presentation-layer) itself should scale.
 
 See:
 
@@ -314,7 +314,7 @@ Separate the policy from the mechanism.
 
 ## Sources
 
-- Jeffrey Palermo, Onion Architecture series: https://jeffreypalermo.com/2008/07/
-- Alistair Cockburn, Hexagonal Architecture: https://alistair.cockburn.us/hexagonal-architecture/
-- Robert C. Martin, The Clean Architecture: https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
-- Martin Fowler, Presentation Model: https://martinfowler.com/eaaDev/PresentationModel.html
+- Jeffrey Palermo, [Onion Architecture](../GLOSSARY.md#onion-architecture) series: https://jeffreypalermo.com/2008/07/
+- Alistair Cockburn, [Hexagonal Architecture](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters): https://alistair.cockburn.us/hexagonal-architecture/
+- Robert C. Martin, The [Clean Architecture](../GLOSSARY.md#clean-architecture): https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
+- Martin Fowler, [Presentation Model](../GLOSSARY.md#presentation-model): https://martinfowler.com/eaaDev/PresentationModel.html
