@@ -14,13 +14,13 @@ Terminology is centralized in the **[Architecture Glossary](./GLOSSARY.md)**.
 
 Read in this order:
 
-1. **[Code Placement: Where Does This Code Belong?](./foundations/code-placement.md)**  
+1. **[Code Placement: Where Does This Code Belong?](./foundations/code-placement.md)**\
    Learn where a function, type, class, hook, [adapter](./GLOSSARY.md#adapter), component, [DTO](./GLOSSARY.md#data-transfer-object-dto), or [use case](./GLOSSARY.md#use-case) should live.
 
-2. **[Naming and File Placement Conventions](./conventions/naming-and-file-placement.md)**  
+2. **[Naming and File Placement Conventions](./conventions/naming-and-file-placement.md)**\
    Learn how files and symbols are named in the examples.
 
-3. **[Architecture Foundations](./foundations/README.md)**  
+3. **[Architecture Foundations](./foundations/README.md)**\
    Learn dependency direction, composition, module boundaries, [public APIs](./GLOSSARY.md#public-api), tests, and scaling.
 
 4. Choose an architecture/presentation pattern:
