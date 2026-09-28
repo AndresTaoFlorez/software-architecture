@@ -5,10 +5,11 @@
 // stays bright while the rest dim. The core (Domain) gets a centred label.
 
 import { computed } from 'vue'
-import type { ArchitectureLayer, LayerId } from '../../domain/entities/ArchitectureLayer'
+import type { LayerId } from '../../application/use-cases/getLayers'
+import type { LayerView } from '../layerViews'
 
 const props = defineProps<{
-  layers: ArchitectureLayer[]
+  layers: LayerView[]
   spotlit: LayerId | null
 }>()
 const emit = defineEmits<{

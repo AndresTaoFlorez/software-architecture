@@ -3,9 +3,9 @@
 // it in plain language, with small graphics (emoji + a mini onion locator) to
 // make each layer scannable. No 3D, no data access; it just renders its input.
 
-import type { ArchitectureLayer } from '../../domain/entities/ArchitectureLayer'
+import type { LayerView } from '../layerViews'
 
-defineProps<{ layer: ArchitectureLayer | null }>()
+defineProps<{ layer: LayerView | null }>()
 
 // Concentric radii for the little locator onion (outer -> core).
 const ringR = [27, 20, 13, 6]
@@ -56,6 +56,7 @@ const ringR = [27, 20, 13, 6]
 
       <p class="rule"><span class="lbl">The rule</span> {{ layer.rule }}</p>
 
+      <span class="lbl">Illustrative excerpt</span>
       <pre class="code"><code>{{ layer.code }}</code></pre>
     </template>
 
