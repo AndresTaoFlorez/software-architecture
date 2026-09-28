@@ -8,12 +8,12 @@ Documentation explains *why*. CI prevents regressions.
 
 Good automated checks include:
 
-- Domain cannot import Application, Infrastructure or Presentation.
-- Application cannot import Infrastructure, Presentation or UI frameworks.
-- Presentation cannot import concrete Infrastructure adapters when the project requires use-case boundaries.
+- [Domain](../GLOSSARY.md#domain) cannot import [Application](../GLOSSARY.md#application-layer), [Infrastructure](../GLOSSARY.md#infrastructure) or [Presentation](../GLOSSARY.md#presentation-layer).
+- [Application](../GLOSSARY.md#application-layer) cannot import [Infrastructure](../GLOSSARY.md#infrastructure), [Presentation](../GLOSSARY.md#presentation-layer) or UI frameworks.
+- [Presentation](../GLOSSARY.md#presentation-layer) cannot import concrete [Infrastructure](../GLOSSARY.md#infrastructure) [adapters](../GLOSSARY.md#adapter) when the project requires use-case boundaries.
 - Feature consumers cannot deep-import another feature's internals.
-- UI components cannot import Redux internals when a public ViewModel/hook boundary is part of the architecture.
-- Domain/Application cannot import browser, ORM or generated transport types.
+- UI components cannot import Redux internals when a public [ViewModel](../GLOSSARY.md#viewmodel)/hook boundary is part of the architecture.
+- [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer) cannot import browser, ORM or generated transport types.
 - Circular dependencies are forbidden.
 - Deprecated folder names and legacy APIs cannot return.
 
@@ -59,7 +59,7 @@ Type-only imports still represent design-time coupling.
 
 ## 3. Dependency graph tools
 
-For JavaScript/TypeScript, dependency-cruiser can enforce `forbidden`, `allowed` and `required` dependency rules. Cross-feature rules that need to compare source and target feature identities may require a more specific tool/configuration or a custom AST check; do not assume a single regular expression compares capture groups across both sides.
+For JavaScript/TypeScript, dependency-cruiser can enforce `forbidden`, `allowed` and `required` dependency rules. Cross-feature rules that need to compare source and target feature identities may require a more specific tool/configuration or a custom [AST](../GLOSSARY.md#abstract-syntax-tree-ast) check; do not assume a single regular expression compares capture groups across both sides.
 
 Example:
 
@@ -86,7 +86,7 @@ Other ecosystems have equivalent tools. The tool is replaceable; the rule is the
 
 ## 4. Public API tests
 
-If each feature exposes only `index.ts`, enforce that cross-feature imports target that public API.
+If each feature exposes only `index.ts`, enforce that cross-feature imports target that [public API](../GLOSSARY.md#public-api).
 
 Allowed:
 
@@ -111,21 +111,21 @@ flowchart TD
     UI["Pages / layouts / feature UI"] --> VM["Public hook / ViewModel"] --> B["Feature bindings"] --> R["Redux Toolkit"]
 ```
 
-Tests can forbid `react-redux`, `@reduxjs/toolkit`, store modules and slices from UI surface folders.
+Tests can forbid `react-redux`, `@reduxjs/toolkit`, [store](../GLOSSARY.md#store) modules and slices from UI surface folders.
 
 This is stricter than Redux's general recommendation, which permits React components to use typed Redux hooks directly. It is therefore a **project architecture choice**, not a universal Redux rule. Document that distinction.
 
 ## 6. Test behavior and boundaries separately
 
-Architecture tests do not replace:
+[Architecture tests](../GLOSSARY.md#architecture-test) do not replace:
 
 - domain unit tests;
 - use-case tests;
-- adapter contract/integration tests;
+- [adapter](../GLOSSARY.md#adapter) contract/integration tests;
 - component tests;
 - end-to-end tests.
 
-They answer a different question: "Is the dependency graph still the one we designed?"
+They answer a different question: "Is the [dependency graph](../GLOSSARY.md#dependency-graph) still the one we designed?"
 
 ## 7. Keep the rules small and explainable
 
@@ -143,4 +143,4 @@ If developers cannot explain a rule, the rule will eventually be bypassed.
 
 - dependency-cruiser rules reference: https://github.com/sverweij/dependency-cruiser/blob/main/doc/rules-reference.md
 - Redux Style Guide: https://redux.js.org/style-guide/
-- Robert C. Martin, "The Clean Architecture": https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
+- Robert C. Martin, "The [Clean Architecture](../GLOSSARY.md#clean-architecture)": https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
