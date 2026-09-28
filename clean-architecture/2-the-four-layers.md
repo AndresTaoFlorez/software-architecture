@@ -128,14 +128,7 @@ export class HttpOrderRepository implements OrderRepository {
 
 Use `Repository` when the abstraction is actually repository-like. Other ports may be better named:
 
-```text
-PaymentGateway
-FileStorage
-Clock
-IdGenerator
-NotificationSender
-ClosureExecutor
-```
+Examples include `PaymentGateway`, `FileStorage`, `Clock`, `IdGenerator`, `NotificationSender`, and `ClosureExecutor`.
 
 The name should expose purpose.
 

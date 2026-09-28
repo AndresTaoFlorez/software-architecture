@@ -264,19 +264,15 @@ Promote it to `shared/ui` when it has a stable, feature-independent contract and
 
 Good candidates:
 
-```text
-shared/ui/Button
-shared/ui/TextField
-shared/ui/Dialog
-shared/ui/DataTable
-```
+- `shared/ui/Button`
+- `shared/ui/TextField`
+- `shared/ui/Dialog`
+- `shared/ui/DataTable`
 
 Poor candidates:
 
-```text
-shared/ui/ClosureHeader
-shared/ui/JusticeOfficePicker
-```
+- `shared/ui/ClosureHeader`
+- `shared/ui/JusticeOfficePicker`
 
 if they still encode one feature's vocabulary.
 
@@ -288,19 +284,15 @@ Avoid parallel generic buckets such as both `common` and `shared` unless their d
 
 Prefer:
 
-```text
-features/closures/lib/date-range-overlap.ts
-features/closures/lib/format-jxxi-message.ts
-```
+- `features/closures/lib/date-range-overlap.ts`
+- `features/closures/lib/format-jxxi-message.ts`
 
 until the code proves it has a broader owner.
 
 Only then promote focused utilities:
 
-```text
-shared/lib/date/
-shared/lib/format-bytes/
-```
+- `shared/lib/date/`
+- `shared/lib/format-bytes/`
 
 Avoid `helpers.ts`, `misc.ts`, `utils2.ts` and large generic utility barrels.
 
