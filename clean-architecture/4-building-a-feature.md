@@ -2,7 +2,7 @@
 
 # 4. Building a Feature End-to-End
 
-This chapter builds a policy-bearing feature from the inside out without turning the Composition Root into a global service locator.
+This chapter builds a policy-bearing feature from the inside out without turning the [Composition Root](../GLOSSARY.md#composition-root) into a global [service locator](../GLOSSARY.md#service-locator).
 
 Example capability: cancelling an order.
 
@@ -10,7 +10,7 @@ Example capability: cancelling an order.
 
 ## 4.1 Step 1 — model the business rule
 
-Only create Domain behavior if the problem actually has a rule worth protecting.
+Only create [Domain](../GLOSSARY.md#domain) behavior if the problem actually has a rule worth protecting.
 
 ```ts
 // domain/orders/Order.ts
@@ -36,7 +36,7 @@ No HTTP, Redux, database or UI concepts appear here.
 
 ## 4.2 Step 2 — define the Application capability
 
-The use case owns the external capability it needs:
+The [use case](../GLOSSARY.md#use-case) owns the external capability it needs:
 
 ```ts
 // application/orders/ports/OrderRepository.ts
@@ -64,7 +64,7 @@ export function makeCancelOrder(deps: {
 }
 ```
 
-The use case can be tested with an in-memory/fake port immediately.
+The [use case](../GLOSSARY.md#use-case) can be tested with an in-memory/[fake](../GLOSSARY.md#fake) [port](../GLOSSARY.md#port) immediately.
 
 ---
 
@@ -92,15 +92,15 @@ export class HttpOrderRepository implements OrderRepository {
 }
 ```
 
-External DTOs are translated at the boundary.
+External [DTOs](../GLOSSARY.md#data-transfer-object-dto) are translated at the boundary.
 
 ---
 
 ## 4.4 Step 4 — adapt Application to Presentation
 
-Presentation should consume a semantic operation, not import Infrastructure.
+[Presentation](../GLOSSARY.md#presentation-layer) should consume a semantic operation, not import [Infrastructure](../GLOSSARY.md#infrastructure).
 
-A simple React hook could receive the use case through a feature dependency object/context, or a Redux store could receive it through thunk `extraArgument`.
+A simple React hook could receive the [use case](../GLOSSARY.md#use-case) through a feature dependency object/context, or a Redux [store](../GLOSSARY.md#store) could receive it through [thunk](../GLOSSARY.md#thunk) `extraArgument`.
 
 Example feature facade shape:
 
@@ -113,7 +113,7 @@ export interface OrderActions {
 }
 ```
 
-The UI deals with a Presentation-appropriate result rather than HTTP status codes.
+The UI deals with a [Presentation](../GLOSSARY.md#presentation-layer)-appropriate result rather than HTTP status codes.
 
 For larger frontend organization, see **[Presentation Architecture](../frontend/presentation-architecture.md)**.
 
@@ -147,14 +147,14 @@ flowchart TD
     C --> P["Presentation bootstrap"]
 ```
 
-Presentation does **not** import the Composition Root:
+[Presentation](../GLOSSARY.md#presentation-layer) does **not** import the [Composition Root](../GLOSSARY.md#composition-root):
 
 ```ts
 // Avoid:
 import { cancelOrder } from '@/composition/container'
 ```
 
-If consumers reach into the container, composition stops being a root and becomes a service locator.
+If consumers reach into the container, composition stops being a root and becomes a [service locator](../GLOSSARY.md#service-locator).
 
 ---
 
@@ -183,7 +183,7 @@ and composition connects the runtime graph.
 
 Do not build all of these artifacts for every read-only request.
 
-If a screen only displays server state and has no meaningful application policy, a query/server-state adapter may be sufficient.
+If a screen only displays [server state](../GLOSSARY.md#server-state) and has no meaningful application policy, a query/[server-state](../GLOSSARY.md#server-state) [adapter](../GLOSSARY.md#adapter) may be sufficient.
 
 Architecture should protect complexity that exists, not create complexity to justify itself.
 
@@ -193,17 +193,17 @@ Architecture should protect complexity that exists, not create complexity to jus
 
 Before merging a policy-bearing feature:
 
-- [ ] Business invariants have a clear owner.
-- [ ] Application policy does not import concrete Infrastructure.
-- [ ] External DTOs/platform types stop at an outer boundary.
-- [ ] Ports describe cohesive capabilities.
-- [ ] Presentation receives semantic operations/results.
+- [ ] Business [invariants](../GLOSSARY.md#invariant) have a clear owner.
+- [ ] [Application](../GLOSSARY.md#application-layer) policy does not import concrete [Infrastructure](../GLOSSARY.md#infrastructure).
+- [ ] External [DTOs](../GLOSSARY.md#data-transfer-object-dto)/platform types stop at an outer boundary.
+- [ ] [Ports](../GLOSSARY.md#port) describe cohesive capabilities.
+- [ ] [Presentation](../GLOSSARY.md#presentation-layer) receives semantic operations/results.
 - [ ] Composition injects dependencies into consumers.
 - [ ] Consumers do not resolve dependencies from a global container.
 - [ ] Important import rules are enforced in CI.
 
 ## Sources
 
-- Robert C. Martin, "The Clean Architecture": https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
-- Mark Seemann, "Composition Root": https://blog.ploeh.dk/2011/07/28/CompositionRoot/
-- Alistair Cockburn, "Hexagonal Architecture": https://alistair.cockburn.us/hexagonal-architecture/
+- Robert C. Martin, "The [Clean Architecture](../GLOSSARY.md#clean-architecture)": https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
+- Mark Seemann, "[Composition Root](../GLOSSARY.md#composition-root)": https://blog.ploeh.dk/2011/07/28/CompositionRoot/
+- Alistair Cockburn, "[Hexagonal Architecture](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters)": https://alistair.cockburn.us/hexagonal-architecture/
