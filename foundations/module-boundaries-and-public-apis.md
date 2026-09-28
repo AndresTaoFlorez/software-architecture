@@ -20,7 +20,7 @@ flowchart TD
     R --> U["utils/closureHelpers.ts"]
 ```
 
-Every file belongs to the same capability, but changing that capability requires jumping across the entire Presentation tree.
+Every file belongs to the same capability, but changing that capability requires jumping across the entire [Presentation](../GLOSSARY.md#presentation-layer) tree.
 
 Prefer a feature-owned module:
 
@@ -39,9 +39,9 @@ flowchart TD
     N1 --> N5
 ```
 
-The exact segment names are conventions. The invariant is ownership.
+The exact segment names are conventions. The [invariant](../GLOSSARY.md#invariant) is ownership.
 
-Redux's official style guide independently recommends feature folders because colocating feature logic makes it easier to maintain. Feature-Sliced Design formalizes the same high-cohesion idea with slices and public APIs; this repository borrows that principle without requiring the full FSD layer taxonomy.
+Redux's official style guide independently recommends [feature folders](../GLOSSARY.md#feature-folder) because colocating feature logic makes it easier to maintain. Feature-Sliced Design formalizes the same high-cohesion idea with slices and [public APIs](../GLOSSARY.md#public-api); this [repository](../GLOSSARY.md#repository) borrows that principle without requiring the full FSD layer taxonomy.
 
 ## 2. Public API per non-trivial module
 
@@ -66,7 +66,7 @@ Avoid deep imports:
 import { executeClosureThunk } from '@/presentation/features/closures/model/closures.thunks'
 ```
 
-A public API makes internal refactors local.
+A [public API](../GLOSSARY.md#public-api) makes internal refactors local.
 
 ## 3. Barrels are contracts, not export dumpsters
 
@@ -176,7 +176,7 @@ Role suffixes are useful when they add information: `*.mapper.ts`, `*.selector.t
 
 ## Sources
 
-- Redux Style Guide — feature folders and state organization: https://redux.js.org/style-guide/
+- Redux Style Guide — [feature folders](../GLOSSARY.md#feature-folder) and state organization: https://redux.js.org/style-guide/
 - Redux FAQ — code structure: https://redux.js.org/faq/code-structure/
-- Feature-Sliced Design — slices and public APIs: https://feature-sliced.design/docs/reference/slices-segments
-- Feature-Sliced Design — public API: https://feature-sliced.design/docs/reference/public-api
+- Feature-Sliced Design — slices and [public APIs](../GLOSSARY.md#public-api): https://feature-sliced.design/docs/reference/slices-segments
+- Feature-Sliced Design — [public API](../GLOSSARY.md#public-api): https://feature-sliced.design/docs/reference/public-api
