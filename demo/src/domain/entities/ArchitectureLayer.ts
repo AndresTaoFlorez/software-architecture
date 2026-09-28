@@ -1,19 +1,16 @@
-// DOMAIN — the heart. Pure business knowledge with no framework, no 3D, no
-// I/O. An ArchitectureLayer models one ring of the onion and knows the single
-// rule that defines Onion Architecture: a layer may only depend on layers
-// deeper than itself.
+// Domain of the teaching app: lesson content and the selected dependency policy.
+// Display order is not dependency rank; Presentation and Infrastructure are peers.
 
 export type LayerId = 'presentation' | 'infrastructure' | 'application' | 'domain'
 
-/** One concrete thing that lives in a layer, with a glyph to make it scannable. */
+/** A concept taught by a lesson. Rendering glyphs belong to Presentation. */
 export interface LayerItem {
-  icon: string
   label: string
 }
 
 export class ArchitectureLayer {
   readonly id: LayerId
-  /** 0 = outer skin, 3 = core. Smaller is further out. */
+  /** Lesson display order, not canonical dependency rank. */
   readonly depth: number
   readonly name: string
   readonly tagline: string
@@ -22,13 +19,6 @@ export class ArchitectureLayer {
   readonly rule: string
   readonly livesHere: readonly LayerItem[]
   readonly code: string
-  readonly color: string
-  /** Radius of this shell in the 3D scene. */
-  readonly radius: number
-  /** Emoji that stands for the layer itself. */
-  readonly icon: string
-  /** Emoji that illustrates the analogy. */
-  readonly analogyIcon: string
 
   constructor(params: {
     id: LayerId
@@ -40,10 +30,6 @@ export class ArchitectureLayer {
     rule: string
     livesHere: readonly LayerItem[]
     code: string
-    color: string
-    radius: number
-    icon: string
-    analogyIcon: string
   }) {
     this.id = params.id
     this.depth = params.depth
@@ -54,21 +40,18 @@ export class ArchitectureLayer {
     this.rule = params.rule
     this.livesHere = params.livesHere
     this.code = params.code
-    this.color = params.color
-    this.radius = params.radius
-    this.icon = params.icon
-    this.analogyIcon = params.analogyIcon
   }
 
-  get isCore(): boolean {
-    return this.depth === 3
-  }
+  get isCore(): boolean { return this.id === 'domain' }
 
-  /**
-   * The dependency rule, made executable. A layer may point inward (to a
-   * deeper layer) but never outward. The core depends on no one.
-   */
+  /** Strict project policy: outer peers do not depend on one another. */
   canDependOn(other: ArchitectureLayer): boolean {
-    return other.depth > this.depth
+    const allowed: Record<LayerId, readonly LayerId[]> = {
+      domain: ['domain'],
+      application: ['application', 'domain'],
+      infrastructure: ['infrastructure', 'application', 'domain'],
+      presentation: ['presentation', 'application'],
+    }
+    return allowed[this.id].includes(other.id)
   }
 }

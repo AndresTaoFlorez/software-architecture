@@ -1,45 +1,46 @@
 # Onion Architecture — live demo
 
-A tiny Vue 3 app that puts the [Onion Architecture guide](../README.md) into practice. It is the
-single home for everything behind the GitHub Pages site.
-
-**Live:** https://andrestaoflorez.github.io/onion-architecture/
+A small Vue 3 app for exploring the [Onion Architecture guide](../onion-architecture/README.md). Select or hover a ring to read its role, analogy and illustrative code excerpt. The content is static; there is no persistence [adapter](../GLOSSARY.md#adapter) switch, data-flow tracer or user CRUD feature.
 
 ## What it shows
 
-- The **four layers** wired exactly as the guide prescribes, with dependencies pointing inward.
-- A **runtime [adapter](../GLOSSARY.md#adapter) swap** (in-memory ↔ localStorage): the same [port](../GLOSSARY.md#port), two implementations, and the
-  [Application](../GLOSSARY.md#application-layer) and [Presentation](../GLOSSARY.md#presentation-layer) layers never change.
-- A **data-flow tracer** that animates each request travelling `View → Store → UseCase → Repository`.
+The teaching app retrieves lessons through an injected synchronous application [port](../GLOSSARY.md#port), maps them to plain application results, and adds visual metadata in [Presentation](../GLOSSARY.md#presentation-layer). Its strict dependency policy treats [Presentation](../GLOSSARY.md#presentation-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) as peers. The four visual shell sizes indicate lesson/display order; they do not establish a dependency from [Presentation](../GLOSSARY.md#presentation-layer) to [Infrastructure](../GLOSSARY.md#infrastructure). The guide's project mapping is not Palermo's exact canonical taxonomy.
 
-## Layout (the four rings)
+<a id="layout-the-four-rings"></a>
+
+## Layout
 
 ```mermaid
 flowchart TD
-    SRC["src/"] --> D["domain/ — entities + domain errors"]
-    D --> DU["entities/User.ts"]
-    D --> DE["errors/DomainErrors.ts"]
-    SRC --> A["application/ — use cases + required port"]
-    A --> AP["ports/UserRepository.ts"]
-    A --> AU["use-cases/*.ts"]
-    SRC --> I["infrastructure/ — adapters"]
-    I --> IM["InMemoryUserRepository.ts"]
-    I --> IL["LocalStorageUserRepository.ts"]
-    SRC --> P["presentation/ — Vue UI"]
-    P --> PC["composition/container.ts"]
-    P --> PS["stores/*.ts"]
+    SRC["src/"] --> D["domain/ — lesson concepts and dependency policy"]
+    D --> DL["entities/ArchitectureLayer.ts"]
+    SRC --> A["application/ — content port and lesson result"]
+    A --> AP["ports/LayerContentPort.ts"]
+    A --> AU["use-cases/getLayers.ts"]
+    SRC --> I["infrastructure/ — static content adapter"]
+    I --> IC["StaticLayerContent.ts"]
+    SRC --> P["presentation/ — Vue controls and visual mapping"]
     P --> PV["components/*.vue"]
+    P --> PM["layerViews.ts"]
+    SRC --> C["composition/ — concrete assembly"]
+    C --> BOOT["container.ts"]
+    SRC --> MAIN["main.ts — executable bootstrap"]
 ```
+
+`main.ts` assembles the application and injects results into `App.vue`. Components receive data through props and never import the container. [Domain](../GLOSSARY.md#domain) code knows no Vue or styling metadata. Replacing static content with a remote CMS requires an asynchronous [port](../GLOSSARY.md#port) and UI pending/error behavior; the present contract does not promise a transparent async swap.
+
+The panel's short source samples are responsibility excerpts, not runnable order implementations. Use [the complete cancellation feature](../clean-architecture/4-building-a-feature.md) for full contracts, boundary translation and wiring.
 
 ## Run it locally
 
 ```bash
-bun install
-bun dev          # http://localhost:5173
-bun run build    # type-check + production build into dist/
+bun install --frozen-lockfile
+bun dev
+bun run build
 ```
+
+The development server normally uses [port](../GLOSSARY.md#port) 5173. The build runs Vue/TypeScript checks and writes production assets to `dist/`.
 
 ## Deployment
 
-A GitHub Actions workflow (`.github/workflows/deploy.yml` at the repo root) builds this folder with
-Bun and publishes `demo/dist` to GitHub Pages on every push to `main`.
+The [deployment workflow](../.github/workflows/deploy.yml) publishes the demo to GitHub Pages on matching pushes to `main`. This PR is not merged or deployed by the audit. Pages configuration and its public URL are repository settings; the source of truth for local behavior is this folder.
