@@ -1,8 +1,8 @@
-> **[Clean Architecture](README.md)** › The Dependency Rule.
+> **[Clean Architecture](README.md)** › The [Dependency Rule](../GLOSSARY.md#dependency-rule).
 
 # 1. The Dependency Rule
 
-Clean Architecture is best understood by separating its **canonical rule** from project-specific conventions built on top of it.
+[Clean Architecture](../GLOSSARY.md#clean-architecture) is best understood by separating its **canonical rule** from project-specific conventions built on top of it.
 
 ---
 
@@ -23,7 +23,7 @@ flowchart LR
 
 Inner circles contain higher-level policy. Outer circles contain mechanisms and details.
 
-Martin explicitly notes that the diagram is schematic: an application may have more than four circles. The same Dependency Rule applies across any additional boundary.
+Martin explicitly notes that the diagram is schematic: an application may have more than four circles. The same [Dependency Rule](../GLOSSARY.md#dependency-rule) applies across any additional boundary.
 
 ---
 
@@ -33,10 +33,10 @@ Martin explicitly notes that the diagram is schematic: an application may have m
 
 Consequences:
 
-- Entities do not name Use Cases, UI frameworks, databases or transports.
-- Use Cases do not name concrete outer adapters/frameworks.
-- Interface Adapters may depend on Use Cases/Entities.
-- Frameworks & Drivers may depend inward.
+- [Entities](../GLOSSARY.md#domain-entity) do not name [Use Cases](../GLOSSARY.md#use-case), UI frameworks, databases or transports.
+- [Use Cases](../GLOSSARY.md#use-case) do not name concrete outer [adapters](../GLOSSARY.md#adapter)/frameworks.
+- [Interface Adapters](../GLOSSARY.md#interface-adapter) may depend on [Use Cases](../GLOSSARY.md#use-case)/[Entities](../GLOSSARY.md#domain-entity).
+- [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers) may depend inward.
 
 An inner circle should not mention a class, function, schema or data representation owned by an outer circle.
 
@@ -46,7 +46,7 @@ This includes type-level dependencies.
 
 ## 1.3 Dependency direction is not runtime flow
 
-A use case can invoke a database at runtime without importing the database implementation.
+A [use case](../GLOSSARY.md#use-case) can invoke a database at runtime without importing the database implementation.
 
 Inner contract:
 
@@ -56,7 +56,7 @@ export interface UserRepository {
 }
 ```
 
-Outer adapter:
+Outer [adapter](../GLOSSARY.md#adapter):
 
 ```ts
 export class SqlUserRepository implements UserRepository {
@@ -99,7 +99,7 @@ Examples of outer representations:
 - database rows;
 - framework request/response objects;
 - ORM models;
-- raw API response DTOs;
+- raw API response [DTOs](../GLOSSARY.md#data-transfer-object-dto);
 - generated SDK types.
 
 Translate at the boundary:
@@ -118,18 +118,18 @@ This does not mean every crossing needs a class. A pure mapping function is ofte
 It does not say:
 
 - every project needs exactly four folders;
-- every external call needs a Repository interface;
-- frontend and backend must share Entities;
-- every View must be framework-free;
-- a DI container is required;
-- Redux is an Application layer;
+- every external call needs a [Repository](../GLOSSARY.md#repository) interface;
+- frontend and backend must share [Entities](../GLOSSARY.md#domain-entity);
+- every [View](../GLOSSARY.md#view) must be framework-free;
+- a [DI container](../GLOSSARY.md#di-container) is required;
+- Redux is an [Application layer](../GLOSSARY.md#application-layer);
 - a component may never import another outer-circle technical module.
 
 That last point matters.
 
-If a View and an HTTP client are both categorized as Frameworks & Drivers, a direct View -> HTTP-client import does not, by itself, point from an inner circle outward. It may still violate a **stricter application rule** such as "all business operations go through Application use cases".
+If a [View](../GLOSSARY.md#view) and an HTTP client are both categorized as [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers), a direct [View](../GLOSSARY.md#view) -> HTTP-client import does not, by itself, point from an inner circle outward. It may still violate a **stricter application rule** such as "all business operations go through [Application](../GLOSSARY.md#application-layer) [use cases](../GLOSSARY.md#use-case)".
 
-Document those stricter rules as project architecture, not as quotations from Clean Architecture.
+Document those stricter rules as project architecture, not as quotations from [Clean Architecture](../GLOSSARY.md#clean-architecture).
 
 ---
 
@@ -157,19 +157,19 @@ See **[Dependency Boundaries](../foundations/dependency-boundaries.md)**.
 
 ## 1.7 Dependency Inversion Principle
 
-The Dependency Inversion Principle and Clean Architecture's Dependency Rule reinforce each other but are not identical statements.
+The [Dependency Inversion Principle](../GLOSSARY.md#dependency-inversion-principle-dip) and [Clean Architecture](../GLOSSARY.md#clean-architecture)'s [Dependency Rule](../GLOSSARY.md#dependency-rule) reinforce each other but are not identical statements.
 
-DIP says high-level policy should not depend on low-level detail; both depend on abstractions. Clean uses that mechanism to cross architectural boundaries without reversing source dependencies.
+[DIP](../GLOSSARY.md#dependency-inversion-principle-dip) says high-level policy should not depend on low-level detail; both depend on abstractions. Clean uses that mechanism to cross [architectural boundaries](../GLOSSARY.md#architectural-boundary) without reversing source dependencies.
 
-A port is useful when it protects policy from a detail. Do not add interfaces indiscriminately.
+A [port](../GLOSSARY.md#port) is useful when it protects policy from a detail. Do not add interfaces indiscriminately.
 
 ---
 
 ## 1.8 Make the rule executable
 
-If a project says Application cannot import Infrastructure, CI should detect the import.
+If a project says [Application](../GLOSSARY.md#application-layer) cannot import [Infrastructure](../GLOSSARY.md#infrastructure), CI should detect the import.
 
-Architecture tests should consider:
+[Architecture tests](../GLOSSARY.md#architecture-test) should consider:
 
 - static imports;
 - re-exports;
@@ -182,6 +182,6 @@ See **[Executable Architecture](../foundations/architecture-testing.md)**.
 
 ## Sources
 
-- Robert C. Martin, "The Clean Architecture" (2012): https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
-- Robert C. Martin, *Clean Architecture* (2017)
-- Alistair Cockburn, "Hexagonal Architecture" (2005): https://alistair.cockburn.us/hexagonal-architecture/
+- Robert C. Martin, "The [Clean Architecture](../GLOSSARY.md#clean-architecture)" (2012): https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
+- Robert C. Martin, *[Clean Architecture](../GLOSSARY.md#clean-architecture)* (2017)
+- Alistair Cockburn, "[Hexagonal Architecture](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters)" (2005): https://alistair.cockburn.us/hexagonal-architecture/

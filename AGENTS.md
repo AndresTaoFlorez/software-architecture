@@ -1,6 +1,6 @@
 # Instructions for AI Agents
 
-Before editing this repository, read:
+Before editing this [repository](./GLOSSARY.md#repository), read:
 
 1. [CONTRIBUTING.md](./CONTRIBUTING.md)
 2. [GLOSSARY.md](./GLOSSARY.md)
@@ -12,7 +12,7 @@ Mandatory rules:
 - Follow the documentation order defined in `CONTRIBUTING.md`.
 - Use Mermaid for every diagram; never add ASCII/Unicode text diagrams.
 - Do not present folder layout as architecture without explaining responsibility and dependency direction.
-- Distinguish architectural invariants, recommended defaults, framework requirements, and repository conventions.
+- Distinguish architectural [invariants](./GLOSSARY.md#invariant), recommended defaults, framework requirements, and [repository](./GLOSSARY.md#repository) conventions.
 - Add sources for history, framework behavior, and non-obvious architectural claims.
 - Add/update glossary entries and run the glossary linker whenever concepts change.
 - Preserve stable anchors when rewriting sections referenced elsewhere.
