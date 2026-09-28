@@ -201,8 +201,6 @@ Cam Jackson's Martin Fowler article frames [microfrontends](../GLOSSARY.md#micro
 
 As systems grow, a giant shared library often becomes a coupling hub.
 
-Prefer one of:
-
 Possible ownership choices include a feature-local implementation, an explicit reusable library with a stable owner/API, a platform capability consumed as a product/service, or deliberate duplication of tiny code when sharing would create more coupling than value.
 
 "DRY" is not a reason to erase ownership boundaries.
