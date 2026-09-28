@@ -23,6 +23,26 @@ function escapeRe(value) {
   return value.replace(/[.*+?^$()|[\]\\{}]/g, '\\$&')
 }
 
+const seenTerms = new Set()
+const seenAnchors = new Set()
+const seenAliases = new Map()
+
+for (const term of terms) {
+  if (seenTerms.has(term.term)) throw new Error('Duplicate glossary term: ' + term.term)
+  if (seenAnchors.has(term.anchor)) throw new Error('Duplicate glossary anchor: ' + term.anchor)
+  seenTerms.add(term.term)
+  seenAnchors.add(term.anchor)
+
+  for (const alias of term.aliases) {
+    const key = alias.text.toLowerCase()
+    const existing = seenAliases.get(key)
+    if (existing && existing !== term.anchor) {
+      throw new Error('Glossary alias "' + alias.text + '" maps to both ' + existing + ' and ' + term.anchor)
+    }
+    seenAliases.set(key, term.anchor)
+  }
+}
+
 const aliases = terms
   .flatMap(term => term.aliases.map(alias => ({ ...alias, anchor: term.anchor })))
   .sort((a, b) => b.text.length - a.text.length)
@@ -55,7 +75,7 @@ function replaceAliases(segment, file) {
 }
 
 function linkText(text, file) {
-  const protectedRe = /(!?\[[^\]]*\]\([^)]*\)|!?\[[^\]]*\]\[[^\]]*\]|\`[^\`]*\`|<[^>]+>|https?:\/\/[^\s)]+)/g
+  const protectedRe = /(!?\[[^\]]*\]\([^)]*\)|!?\[[^\]]*\]\[[^\]]*\]|\[[^\]\n]+\]|\`[^\`]*\`|<[^>]+>|https?:\/\/[^\s)]+)/g
   const protectedParts = []
   let cursor = 0
   let result = ''
