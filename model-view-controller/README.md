@@ -6,15 +6,15 @@
 
 ## 1. History
 
-Trygve Reenskaug developed the original MVC ideas while visiting Xerox PARC in **1978–1979**. His December 1979 note *Models–Views–Controllers* defined Model, View and Controller in the context of interactive user interfaces.
+Trygve Reenskaug developed the original [MVC](../GLOSSARY.md#model-view-controller-mvc) ideas while visiting Xerox PARC in **1978–1979**. His December 1979 note *[Models](../GLOSSARY.md#model)–[Views](../GLOSSARY.md#view)–[Controllers](../GLOSSARY.md#controller)* defined [Model](../GLOSSARY.md#model), [View](../GLOSSARY.md#view) and [Controller](../GLOSSARY.md#controller) in the context of interactive user interfaces.
 
 Original report: https://doi.org/10.5281/zenodo.3676092
 
-The term later evolved across Smalltalk, desktop frameworks, server-side web frameworks and JavaScript libraries. Therefore "MVC" must always be interpreted in context.
+The term later evolved across Smalltalk, desktop frameworks, server-side web frameworks and JavaScript libraries. Therefore "[MVC](../GLOSSARY.md#model-view-controller-mvc)" must always be interpreted in context.
 
 ## 2. What problem does MVC solve?
 
-MVC separates:
+[MVC](../GLOSSARY.md#model-view-controller-mvc) separates:
 
 - the information/behavior being represented;
 - how it is presented;
@@ -31,18 +31,18 @@ flowchart LR
 
 ## 3. When it fits
 
-MVC is useful when:
+[MVC](../GLOSSARY.md#model-view-controller-mvc) is useful when:
 
-- one Model can have multiple Views;
+- one [Model](../GLOSSARY.md#model) can have multiple [Views](../GLOSSARY.md#view);
 - input interpretation deserves separation from rendering;
-- a framework explicitly follows an MVC-style interaction model;
+- a framework explicitly follows an [MVC](../GLOSSARY.md#model-view-controller-mvc)-style interaction model;
 - presentation responsibilities are becoming entangled.
 
 ## 4. When it is a poor label
 
-Avoid forcing "MVC" onto every component framework.
+Avoid forcing "[MVC](../GLOSSARY.md#model-view-controller-mvc)" onto every component framework.
 
-Modern React/Vue/Svelte component architectures combine responsibilities differently from classic Smalltalk MVC. Server-side "MVC" frameworks also use the term differently.
+Modern React/Vue/Svelte component architectures combine responsibilities differently from classic Smalltalk [MVC](../GLOSSARY.md#model-view-controller-mvc). Server-side "[MVC](../GLOSSARY.md#model-view-controller-mvc)" frameworks also use the term differently.
 
 If the mapping requires redefining every role, use the actual framework architecture instead of preserving the acronym.
 
@@ -50,11 +50,11 @@ If the mapping requires redefining every role, use the actual framework architec
 
 | Role | Owns | Should not own |
 | --- | --- | --- |
-| Model | represented data/behavior | concrete View/Controller mechanics |
-| View | presentation of Model/state | business/application policy |
-| Controller | interpretation of user input | rendering or persistent business state |
+| [Model](../GLOSSARY.md#model) | represented data/behavior | concrete [View](../GLOSSARY.md#view)/[Controller](../GLOSSARY.md#controller) mechanics |
+| [View](../GLOSSARY.md#view) | presentation of [Model](../GLOSSARY.md#model)/state | business/application policy |
+| [Controller](../GLOSSARY.md#controller) | interpretation of user input | rendering or persistent business state |
 
-In a Clean/Onion system, the MVC Model does **not** automatically equal the Domain layer. Presentation patterns and whole-application architectures operate at different scales.
+In a Clean/Onion system, the [MVC](../GLOSSARY.md#model-view-controller-mvc) [Model](../GLOSSARY.md#model) does **not** automatically equal the [Domain](../GLOSSARY.md#domain) layer. [Presentation](../GLOSSARY.md#presentation-layer) patterns and whole-application architectures operate at different scales.
 
 ## 6. A practical layered mapping
 
@@ -67,22 +67,22 @@ flowchart TD
     APP --> DOMAIN["Domain"]
 ```
 
-A controller can translate user intent into an Application command rather than directly embedding business policy.
+A controller can translate user intent into an [Application](../GLOSSARY.md#application-layer) command rather than directly embedding business policy.
 
 ## 7. File placement example
 
 | Artifact | Example path | Reason |
 | --- | --- | --- |
-| route/page View | `presentation/pages/orders/OrdersPage.tsx` | route rendering |
-| feature controller/event adapter | `presentation/features/orders/model/useOrderActions.ts` | interprets UI intent |
+| route/page [View](../GLOSSARY.md#view) | `presentation/pages/orders/OrdersPage.tsx` | route rendering |
+| feature controller/event [adapter](../GLOSSARY.md#adapter) | `presentation/features/orders/model/useOrderActions.ts` | interprets UI intent |
 | business operation | `application/orders/use-cases/cancelOrder.ts` | application policy |
-| business invariant | `domain/orders/Order.ts` | domain truth |
+| business [invariant](../GLOSSARY.md#invariant) | `domain/orders/Order.ts` | domain truth |
 
 Use [Code Placement](../foundations/code-placement.md) for cross-layer placement.
 
 ## 8. Where does a new function go?
 
-MVC only classifies **presentation roles**. In a layered application, decide the architectural owner first and the MVC role second.
+[MVC](../GLOSSARY.md#model-view-controller-mvc) only classifies **presentation roles**. In a layered application, decide the architectural owner first and the [MVC](../GLOSSARY.md#model-view-controller-mvc) role second.
 
 ```mermaid
 flowchart TD
@@ -97,10 +97,10 @@ Examples:
 
 | Code | Owner |
 | --- | --- |
-| render an order row | View |
-| turn a click into `cancelOrder(id)` | Controller/presentation action |
-| reject cancellation after shipment | Domain/Application |
-| perform the HTTP request | Infrastructure |
+| render an order row | [View](../GLOSSARY.md#view) |
+| turn a click into `cancelOrder(id)` | [Controller](../GLOSSARY.md#controller)/presentation action |
+| reject cancellation after shipment | [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer) |
+| perform the HTTP request | [Infrastructure](../GLOSSARY.md#infrastructure) |
 
 ## 9. Naming
 
@@ -108,9 +108,9 @@ Before creating a file, use **[Naming and File Placement Conventions](../convent
 
 Important distinction:
 
-- `OrdersPage.tsx` describes a View;
+- `OrdersPage.tsx` describes a [View](../GLOSSARY.md#view);
 - `useOrderActions.ts` can act as a presentation controller/action facade;
-- `cancelOrder.ts` is an application use case, not a Controller merely because a button invokes it.
+- `cancelOrder.ts` is an application [use case](../GLOSSARY.md#use-case), not a [Controller](../GLOSSARY.md#controller) merely because a button invokes it.
 
 ## 10. Learning path
 
@@ -121,5 +121,5 @@ Important distinction:
 
 ## Sources
 
-- Trygve Reenskaug, *Models–Views–Controllers* (1979): https://doi.org/10.5281/zenodo.3676092
+- Trygve Reenskaug, *[Models](../GLOSSARY.md#model)–[Views](../GLOSSARY.md#view)–[Controllers](../GLOSSARY.md#controller)* (1979): https://doi.org/10.5281/zenodo.3676092
 - Martin Fowler, *GUI Architectures*: https://martinfowler.com/eaaDev/uiArchs.html
