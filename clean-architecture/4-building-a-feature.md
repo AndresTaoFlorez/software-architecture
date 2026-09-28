@@ -1,172 +1,251 @@
-> **[Clean Architecture](README.md)** › Building a Feature End-to-End. Full reference list: [References](references.md).
+> **[Clean Architecture](README.md)** › Building a Feature End-to-End.
 
-## 4. Building a Feature End-to-End
+# 4. Building a Feature End-to-End
 
-Theory is easier to trust once you have built something with it. This page takes one small feature —
-**"create a user"** — and builds it from the center outward, one layer at a time, until a form submission
-reaches the API. It doubles as a getting-started guide: **the order the layers appear here is the order to
-build them in** on any new feature.
+Requirement: cancel a pending order, reject a shipped order, persist the change, and show pending/error feedback. This small browser feature uses manual injection and no state library. Each block is a complete file; paths assume these folders under `src/` and a TypeScript bundler resolving extensionless imports.
 
-The guiding principle is *build inside-out*. Start with what the feature *means* (the entity and the rule),
-then what it *does* (the use case), then how it *reaches the world* (the adapter), and only last how it is
-*delivered* (the framework and UI). Each step depends only on the ones before it, so at every stage you have
-something testable.
+<a id="41-step-1--the-entity-what-the-feature-is"></a>
 
----
+## 4.1 Step 1 — model the business rule
 
-### 4.1 Step 1 — the Entity (what the feature *is*)
-
-Begin at the core. A `User` is a plain class with no imports out of the entities folder — identity, a little
-derived state, and the rules that are true regardless of how the app is delivered.
-
-```js
-// entities/User.js
-export class User {
-  constructor({ id, firstName, lastName, email, isActive = true }) {
-    this.id = id
-    this.firstName = firstName
-    this.lastName = lastName
-    this.email = email
-    this.isActive = isActive
-  }
-
-  get fullName() {
-    return [this.firstName, this.lastName].filter(Boolean).join(' ')
-  }
-
-  get statusLabel() {
-    return this.isActive ? 'ACTIVE' : 'INACTIVE'
+```ts
+// domain/orders/Order.ts
+export type OrderStatus = 'pending' | 'shipped' | 'cancelled'
+export class ShippedOrderCannotBeCancelled extends Error {}
+export class Order {
+  readonly id: string
+  #status: OrderStatus
+  constructor(id: string, status: OrderStatus) { this.id = id; this.#status = status }
+  get status(): OrderStatus { return this.#status }
+  cancel(): void {
+    if (this.#status === 'shipped') throw new ShippedOrderCannotBeCancelled()
+    this.#status = 'cancelled'
   }
 }
 ```
 
-You can already unit-test this with no framework, no network, no mocks — construct one and assert `fullName`.
-That is the dividend of starting at the center.
+This file owns the business [invariant](../GLOSSARY.md#invariant). It knows no HTTP, UI or persistence format. Cancelling an already cancelled order leaves it cancelled; this alone does not guarantee [idempotency](../GLOSSARY.md#idempotency) of external [side effects](../GLOSSARY.md#side-effect).
 
----
+<a id="42-step-2--the-port-and-the-use-case-what-the-feature-does"></a>
 
-### 4.2 Step 2 — the Port and the Use Case (what the feature *does*)
+## 4.2 Step 2 — define the Application capability
 
-The use case orchestrates the operation. It must not know how a user is persisted, so it declares a **port**
-— the contract it needs — and receives an implementation by injection. In plain JS a port is an honest JSDoc
-`@typedef`; in TypeScript it is an `interface`.
+```ts
+// application/orders/cancelOrder.ts
+import { Order, ShippedOrderCannotBeCancelled } from '../../domain/orders/Order'
 
-```js
-// usecases/ports/UserRepository.js
-/**
- * A PORT: the contract the use case needs. An adapter must satisfy it.
- * @typedef {Object} UserRepository
- * @property {(payload: object) => Promise<import('@/entities/User').User>} create
- */
-```
-
-```js
-// usecases/CreateUser.js
-import { User } from '@/entities/User'
-
-/** @param {{ userRepository: UserRepository }} deps */
-export function makeCreateUser({ userRepository }) {
-  return async function createUser(form) {
-    // 1. Application-level validation — fail in the domain's language, not a generic Error:
-    if (!form.email) throw new Error('Email is required.')
-
-    // 2. Map the input into the shape the port expects:
-    const payload = {
-      first_name: form.firstName,
-      last_name: form.lastName,
-      email: form.email,
+export interface OrderRepository {
+  findById(id: string): Promise<{ order: Order; version: string } | null>
+  save(order: Order, expectedVersion: string): Promise<void>
+}
+export type CancelResult =
+  | { ok: true; status: 'cancelled' }
+  | { ok: false; reason: 'not-found' | 'shipped' | 'conflict' | 'unavailable' }
+export type CancelOrder = (id: string) => Promise<CancelResult>
+export class PersistenceFailure extends Error {
+  readonly reason: 'conflict' | 'unavailable'
+  constructor(reason: 'conflict' | 'unavailable') { super(reason); this.reason = reason }
+}
+export function makeCancelOrder(orders: OrderRepository): CancelOrder {
+  return async id => {
+    try {
+      const loaded = await orders.findById(id)
+      if (!loaded) return { ok: false, reason: 'not-found' }
+      loaded.order.cancel()
+      await orders.save(loaded.order, loaded.version)
+      return { ok: true, status: 'cancelled' }
+    } catch (error) {
+      if (error instanceof ShippedOrderCannotBeCancelled) return { ok: false, reason: 'shipped' }
+      if (error instanceof PersistenceFailure) return { ok: false, reason: error.reason }
+      throw error // programming defects are not normal business outcomes
     }
-
-    // 3. Delegate persistence to the injected port — no HTTP named here:
-    return userRepository.create(payload)
   }
 }
 ```
 
-`makeCreateUser` is a **factory**: it takes its dependencies and returns the function that does the work.
-That is what lets a test inject a fake `userRepository` in one line, and what lets the
-[Composition Root](6-composition-and-di.md) inject the real one. At this point the feature is fully testable
-though nothing talks to a server yet.
+The repository [port](../GLOSSARY.md#port) protects loading/persisting business objects. Its version precondition expresses concurrency without naming HTTP. The UI receives an application-owned string command and result, not a domain object or raw response.
 
----
+<a id="43-step-3--the-adapter-how-the-feature-reaches-the-world"></a>
 
-### 4.3 Step 3 — the Adapter (how the feature *reaches the world*)
+## 4.3 Step 3 — implement the outer adapter
 
-Now provide a concrete implementation of the port. The gateway is the only place that knows the API exists;
-it maps the raw response into a `User` so nothing outward ever sees JSON.
+```ts
+// infrastructure/orders/HttpOrderRepository.ts
+import { Order, type OrderStatus } from '../../domain/orders/Order'
+import { PersistenceFailure, type OrderRepository } from '../../application/orders/cancelOrder'
 
-```js
-// adapters/gateways/HttpUserRepository.js
-import client from '@/frameworks/http/client'
-import { User } from '@/entities/User'
+// Adapter-owned transport contract. A concrete fetch driver implements it.
+export interface OrderTransport {
+  get(path: string): Promise<{ data: unknown; version: string } | null>
+  put(path: string, data: unknown, version: string): Promise<void>
+}
+type ApiOrderDto = { id: string; status: OrderStatus }
+function parseOrderDto(data: unknown): ApiOrderDto {
+  if (typeof data !== 'object' || data === null) throw new PersistenceFailure('unavailable')
+  const dto = data as Record<string, unknown>
+  if (typeof dto.id !== 'string' || !['pending', 'shipped', 'cancelled'].includes(String(dto.status))) {
+    throw new PersistenceFailure('unavailable')
+  }
+  return { id: dto.id, status: dto.status as OrderStatus }
+}
+function toOrderDto(order: Order): ApiOrderDto { return { id: order.id, status: order.status } }
 
-/** @implements {import('@/usecases/ports/UserRepository').UserRepository} */
-export const HttpUserRepository = {
-  async create(payload) {
-    const { data } = await client.post('/users', payload)
-    return new User(data)   // map at the boundary
+export class HttpOrderRepository implements OrderRepository {
+  readonly #transport: OrderTransport
+  constructor(transport: OrderTransport) { this.#transport = transport }
+  async findById(id: string) {
+    const response = await this.#transport.get('/orders/' + encodeURIComponent(id))
+    if (!response) return null
+    const dto = parseOrderDto(response.data)
+    if (dto.id !== id) throw new PersistenceFailure('unavailable')
+    return { order: new Order(dto.id, dto.status), version: response.version }
+  }
+  async save(order: Order, expectedVersion: string): Promise<void> {
+    await this.#transport.put('/orders/' + encodeURIComponent(order.id), toOrderDto(order), expectedVersion)
+  }
+}
+```
+
+The [DTO](../GLOSSARY.md#data-transfer-object-dto), validation and [mapper](../GLOSSARY.md#mapper) stay with the [adapter](../GLOSSARY.md#adapter). The inner [port](../GLOSSARY.md#port) does not import them. This physical [Infrastructure](../GLOSSARY.md#infrastructure) file implements the canonical [Interface Adapter](../GLOSSARY.md#interface-adapter) role.
+
+<a id="44-step-4--the-framework--the-ui-how-the-feature-is-delivered"></a>
+
+## 4.4 Step 4 — adapt Application to Presentation
+
+```ts
+// presentation/orders/CancelOrderButton.ts
+import type { CancelOrder } from '../../application/orders/cancelOrder'
+
+export function mountCancelOrderButton(root: HTMLElement, id: string, cancelOrder: CancelOrder) {
+  const button = document.createElement('button')
+  button.textContent = 'Cancel order'
+  const feedback = document.createElement('p')
+  feedback.setAttribute('role', 'status')
+  root.append(button, feedback)
+  let disposed = false
+  async function onCancel() {
+    if (button.disabled) return
+    button.disabled = true
+    feedback.textContent = 'Cancelling…'
+    try {
+      const result = await cancelOrder(id)
+      if (!disposed) feedback.textContent = result.ok ? 'Cancelled' : `Cannot cancel: ${result.reason}`
+    } catch {
+      if (!disposed) feedback.textContent = 'Unexpected failure'
+    } finally {
+      if (!disposed) button.disabled = false
+    }
+  }
+  button.addEventListener('click', onCancel)
+  return () => {
+    disposed = true
+    button.removeEventListener('click', onCancel)
+    button.remove(); feedback.remove()
+  }
+}
+```
+
+The button owns feedback and gestures; [Application](../GLOSSARY.md#application-layer) owns the cancellation decision. This physical module combines a presentation [adapter](../GLOSSARY.md#adapter) with DOM glue. For separate canonical modules, put rendering behind a presentation-owned contract implemented by the outer driver.
+
+A React feature can receive `CancelOrder` via props/context; Redux bindings can receive it through `extraArgument`. Consumers must not import a container to retrieve it.
+
+## 4.5 Step 5 — compose at the edge
+
+```ts
+// composition/bootstrap.ts
+import { makeCancelOrder, PersistenceFailure } from '../application/orders/cancelOrder'
+import { HttpOrderRepository, type OrderTransport } from '../infrastructure/orders/HttpOrderRepository'
+import { mountCancelOrderButton } from '../presentation/orders/CancelOrderButton'
+
+async function request(path: string, init?: RequestInit): Promise<Response> {
+  try { return await fetch(path, init) }
+  catch { throw new PersistenceFailure('unavailable') }
+}
+const transport: OrderTransport = {
+  async get(path) {
+    const response = await request(path)
+    if (response.status === 404) return null
+    const version = response.headers.get('ETag')
+    if (!response.ok || !version) throw new PersistenceFailure('unavailable')
+    try { return { data: await response.json(), version } }
+    catch { throw new PersistenceFailure('unavailable') }
+  },
+  async put(path, data, version) {
+    const response = await request(path, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'If-Match': version },
+      body: JSON.stringify(data),
+    })
+    if (response.status === 409 || response.status === 412) throw new PersistenceFailure('conflict')
+    if (!response.ok) throw new PersistenceFailure('unavailable')
   },
 }
+export function startOrders(root: HTMLElement, orderId: string) {
+  const cancelOrder = makeCancelOrder(new HttpOrderRepository(transport))
+  return mountCancelOrderButton(root, orderId, cancelOrder)
+}
 ```
 
-Swapping REST for GraphQL, or the real API for an in-memory fake, is a change to *this file only*. The use
-case and the entity do not move.
+The entry point calls `startOrders(root, 'order-1')` with an existing element and receives cleanup. Concrete fetch glue at the outer executable boundary implements the [adapter](../GLOSSARY.md#adapter)-owned transport contract. Composition follows the inward rule.
 
----
+**API assumptions and limits.** GET returns an order and a strong ETag; PUT atomically honors `If-Match`. The backend must also authorize cancellation and enforce the shipped-order rule against its own current state. A browser check followed by an unconditional write cannot guarantee that [invariant](../GLOSSARY.md#invariant) when shipping and cancellation race. Authentication, retries, telemetry and the backend implementation are outside this small client example. A dedicated atomic cancellation endpoint may be preferable.
 
-### 4.4 Step 4 — the Framework & the UI (how the feature is *delivered*)
+<a id="45-the-whole-flow"></a>
 
-The outermost layer captures intent and renders results. A store (Presentation state) calls the use case and
-never touches HTTP; the view calls the store. First, the wiring that hands the assembled use case to the UI:
+## 4.6 The runtime flow
 
-```js
-// composition/container.js — the one place that names both an adapter and a use case
-import { HttpUserRepository } from '@/adapters/gateways/HttpUserRepository'
-import { makeCreateUser } from '@/usecases/CreateUser'
-
-export const createUser = makeCreateUser({ userRepository: HttpUserRepository })
+```mermaid
+sequenceDiagram
+    actor User
+    participant View as CancelOrderButton
+    participant UC as cancelOrder
+    participant Repo as HttpOrderRepository
+    participant Driver as fetch transport
+    participant API as HTTP API
+    User->>View: click Cancel
+    View->>UC: cancelOrder(id)
+    UC->>Repo: findById(id)
+    Repo->>Driver: get(path)
+    Driver->>API: GET
+    API-->>Driver: DTO and ETag
+    Driver-->>Repo: response
+    Repo-->>UC: Order and version
+    UC->>UC: order.cancel()
+    UC->>Repo: save(order, version)
+    Repo->>Driver: put(DTO, version)
+    Driver->>API: conditional PUT
+    API-->>Driver: success or conflict
+    Driver-->>Repo: completion
+    Repo-->>UC: completion
+    UC-->>View: application result
 ```
 
-```js
-// frameworks/ui/stores/useUsersStore.js  (Vue + Pinia)
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import { createUser } from '@/composition/container'
+The [port](../GLOSSARY.md#port) is a source contract, not another runtime object:
 
-export const useUsersStore = defineStore('users', () => {
-  const users = ref([])
-  async function add(form) {
-    const user = await createUser(form)   // delegate inward — no HTTP, no mapping here
-    users.value.push(user)
-  }
-  return { users, add }
-})
+```mermaid
+flowchart LR
+    UC["cancelOrder"] --> PORT["OrderRepository (Application)"]
+    HTTP["HttpOrderRepository"] --> PORT
+    ROOT["Composition"] --> UC
+    ROOT --> HTTP
+    ROOT --> UI["Presentation"]
+    UI --> APP["CancelOrder result/operation (Application)"]
 ```
 
-The view calls `usersStore.add(form)` and renders `user.fullName`; it has no idea a network exists.
+## 4.7 When the feature is simpler
 
----
+A read-only screen without meaningful application policy may need only a query [adapter](../GLOSSARY.md#adapter). Create a [port](../GLOSSARY.md#port) because it protects policy or an integration boundary, rather than to populate folders.
 
-### 4.5 The whole flow
+## 4.8 Feature checklist
 
-Read from the outside in, a user submitting the form triggers a straight line inward — and every arrow points
-toward the center, exactly as the Dependency Rule requires:
+- Test shipped rejection and successful persistence through the application [port](../GLOSSARY.md#port).
+- Test conflict results; never silently overwrite newer state.
+- Test [DTO](../GLOSSARY.md#data-transfer-object-dto) parsing and conditional request headers at the [adapter](../GLOSSARY.md#adapter) boundary.
+- Test pending/error feedback, event forwarding and cleanup in the UI.
+- Enforce imports: [Domain](../GLOSSARY.md#domain) knows no outer modules; [Application](../GLOSSARY.md#application-layer) knows no concrete [adapter](../GLOSSARY.md#adapter); [Presentation](../GLOSSARY.md#presentation-layer) receives [Application](../GLOSSARY.md#application-layer) operations; the executable root selects implementations.
 
-```
-View  →  Store  →  createUser (Use Case)  →  HttpUserRepository (Adapter)  →  HTTP client  →  API
- UI       state        application rule            translation                  transport
-└──────────── Frameworks & Drivers ───────────┘└─── Interface Adapters ───┘└─ Frameworks & Drivers ─┘
-```
+## Sources
 
-- Nothing inward of the store imports a framework.
-- Nothing inward of the gateway imports HTTP.
-- The entity imports nothing at all.
-
-That is a complete, robust vertical slice. Every subsequent feature is the same four steps in the same order,
-and the [next page](5-testing-in-clean.md) shows how cheaply each step can be tested because you built it this
-way.
-
----
-
-Next: **[Testing in Clean Architecture](5-testing-in-clean.md)** — why building inside-out makes each layer
-trivial to test.
+- [Martin — The Clean Architecture (2012)](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+- [Seemann — Composition Root](https://blog.ploeh.dk/2011/07/28/CompositionRoot/)
+- [HTTP Semantics — If-Match](https://www.rfc-editor.org/rfc/rfc9110.html#section-13.1.1)
