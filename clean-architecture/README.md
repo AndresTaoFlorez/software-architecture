@@ -87,11 +87,13 @@ The arrow means **source dependency**, not runtime call direction.
 
 The canonical circles are conceptual. A real codebase can split one circle across multiple modules or place several outer mechanisms in one physical area.
 
+Do not confuse the canonical circles with this repository's physical `infrastructure/` folder. A concrete HTTP/database adapter may contain both translation behavior and framework/driver glue in one physical module. That pragmatic module is still outer code; it does **not** justify making a canonical Interface Adapter depend outward on Frameworks & Drivers.
+
 | Clean concept | Owns | Put here | Do not put here | May depend on |
 | --- | --- | --- | --- | --- |
 | [Entities](../GLOSSARY.md#domain-entity) | enterprise/domain rules that survive delivery changes | entities, [value objects](../GLOSSARY.md#value-object), [invariants](../GLOSSARY.md#invariant), domain policies | React, Redux, HTTP, ORM, API [DTOs](../GLOSSARY.md#data-transfer-object-dto), use-case orchestration | other inner domain concepts |
 | [Use Cases](../GLOSSARY.md#use-case) | application-specific operations | commands/results, [application services](../GLOSSARY.md#application-service), required [ports](../GLOSSARY.md#port) | concrete DB/HTTP/UI implementations | entities/domain policy |
-| [Interface Adapters](../GLOSSARY.md#interface-adapter) | translation across boundaries | controllers, presenters, [mappers](../GLOSSARY.md#mapper), [gateway](../GLOSSARY.md#gateway)/repository [adapters](../GLOSSARY.md#adapter) | authoritative business rules | [use cases](../GLOSSARY.md#use-case)/entities plus the outer mechanism being adapted |
+| [Interface Adapters](../GLOSSARY.md#interface-adapter) | translation across boundaries | controllers, presenters, [mappers](../GLOSSARY.md#mapper), boundary-facing adapters | authoritative business rules or framework/driver dependencies that would reverse the canonical circle direction | [use cases](../GLOSSARY.md#use-case)/entities and adapter-owned translation code |
 | [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers) | replaceable technology mechanisms | React, routers, HTTP servers, DB drivers, SDKs, CSS systems | inner policy that only exists because the framework made it convenient | inward abstractions/[adapters](../GLOSSARY.md#adapter) as needed |
 
 ### Why isolate them?
@@ -254,17 +256,15 @@ sequenceDiagram
     participant VM as useOrders
     participant UC as cancelOrder
     participant Order as Order
-    participant Port as OrderRepository
-    participant Http as HttpOrderRepository
+    participant Adapter as HttpOrderRepository
 
     User->>View: click Cancel
     View->>VM: cancel(orderId)
     VM->>UC: execute(orderId)
-    UC->>Port: findById(orderId)
-    Port->>Http: delegated implementation
-    Http-->>UC: Order
+    UC->>Adapter: findById(orderId) through OrderRepository contract
+    Adapter-->>UC: Order
     UC->>Order: cancel()
-    UC->>Port: save(order)
+    UC->>Adapter: save(order) through OrderRepository contract
 ```
 
 Source dependencies remain inward even though runtime control reaches the outer [adapter](../GLOSSARY.md#adapter).

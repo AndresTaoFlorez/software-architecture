@@ -1250,5 +1250,147 @@
         "caseSensitive": false
       }
     ]
+  },
+  {
+    "term": "Barrel File",
+    "anchor": "barrel-file",
+    "aliases": [
+      {
+        "text": "barrel",
+        "caseSensitive": false
+      },
+      {
+        "text": "barrels",
+        "caseSensitive": false
+      },
+      {
+        "text": "barrel file",
+        "caseSensitive": false
+      },
+      {
+        "text": "barrel files",
+        "caseSensitive": false
+      }
+    ]
+  },
+  {
+    "term": "Command Query Responsibility Segregation (CQRS)",
+    "anchor": "cqrs",
+    "aliases": [
+      {
+        "text": "CQRS",
+        "caseSensitive": true
+      },
+      {
+        "text": "Command Query Responsibility Segregation",
+        "caseSensitive": false
+      }
+    ]
+  },
+  {
+    "term": "Event Sourcing",
+    "anchor": "event-sourcing",
+    "aliases": [
+      {
+        "text": "event sourcing",
+        "caseSensitive": false
+      }
+    ]
+  },
+  {
+    "term": "Facade Pattern",
+    "anchor": "facade-pattern",
+    "aliases": [
+      {
+        "text": "facade",
+        "caseSensitive": false
+      },
+      {
+        "text": "facades",
+        "caseSensitive": false
+      }
+    ]
+  },
+  {
+    "term": "Factory Pattern",
+    "anchor": "factory-pattern",
+    "aliases": [
+      {
+        "text": "factory pattern",
+        "caseSensitive": false
+      },
+      {
+        "text": "factory patterns",
+        "caseSensitive": false
+      }
+    ]
+  },
+  {
+    "term": "Model-View-Presenter (MVP)",
+    "anchor": "model-view-presenter-mvp",
+    "aliases": [
+      {
+        "text": "MVP",
+        "caseSensitive": true
+      },
+      {
+        "text": "Model-View-Presenter",
+        "caseSensitive": false
+      }
+    ]
+  },
+  {
+    "term": "Observer Pattern",
+    "anchor": "observer-pattern",
+    "aliases": [
+      {
+        "text": "Observer pattern",
+        "caseSensitive": false
+      }
+    ]
+  },
+  {
+    "term": "Observer Synchronization",
+    "anchor": "observer-synchronization",
+    "aliases": [
+      {
+        "text": "observer synchronization",
+        "caseSensitive": false
+      }
+    ]
+  },
+  {
+    "term": "Passive View",
+    "anchor": "passive-view",
+    "aliases": [
+      {
+        "text": "Passive View",
+        "caseSensitive": false
+      }
+    ]
+  },
+  {
+    "term": "Presenter",
+    "anchor": "presenter",
+    "aliases": [
+      {
+        "text": "presenter",
+        "caseSensitive": false
+      },
+      {
+        "text": "presenters",
+        "caseSensitive": false
+      }
+    ]
+  },
+  {
+    "term": "Separated Presentation",
+    "anchor": "separated-presentation",
+    "aliases": [
+      {
+        "text": "separated presentation",
+        "caseSensitive": false
+      }
+    ]
   }
 ]

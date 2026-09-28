@@ -30,6 +30,57 @@ function headings(content) {
     .map(line => line.replace(/^#{1,6}\s+/, ''))
 }
 
+function normalizeHeadingText(value) {
+  return value
+    .replace(/<[^>]+>/g, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/`([^`]*)`/g, '$1')
+    .replace(/[\*_~]/g, '')
+    .trim()
+}
+
+function githubSlug(value) {
+  return normalizeHeadingText(value)
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s_-]/gu, '')
+    .trim()
+    .replace(/\s+/g, '-')
+}
+
+const anchorCache = new Map()
+
+function anchorsFor(file) {
+  const key = path.resolve(file)
+  if (anchorCache.has(key)) return anchorCache.get(key)
+
+  const content = fs.readFileSync(key, 'utf8')
+  const anchors = new Set()
+  const explicit = /<a\s+(?:id|name)=["']([^"']+)["'][^>]*>/gi
+  let match
+
+  while ((match = explicit.exec(content))) anchors.add(match[1])
+
+  const counts = new Map()
+  for (const heading of headings(content)) {
+    const base = githubSlug(heading)
+    if (!base) continue
+    const count = counts.get(base) ?? 0
+    counts.set(base, count + 1)
+    anchors.add(count === 0 ? base : base + '-' + count)
+  }
+
+  anchorCache.set(key, anchors)
+  return anchors
+}
+
+function decodeFragment(value) {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
 const architectureGuides = {
   'clean-architecture/README.md': [
     /History/i,
@@ -101,11 +152,20 @@ for (const [guide, required] of Object.entries(architectureGuides)) {
     fail(guide, 'missing architecture landing page')
     continue
   }
+
   const content = fs.readFileSync(file, 'utf8')
   const hs = headings(content)
+  let cursor = -1
+
   for (const pattern of required) {
-    if (!hs.some(h => pattern.test(h))) fail(guide, 'missing required section matching ' + pattern)
+    const index = hs.findIndex((heading, i) => i > cursor && pattern.test(heading))
+    if (index === -1) {
+      fail(guide, 'missing or out-of-order required section matching ' + pattern)
+      break
+    }
+    cursor = index
   }
+
   if (!content.includes('```mermaid')) fail(guide, 'must contain at least one Mermaid diagram')
   if (!/^## Sources\s*$/m.test(content)) fail(guide, 'must contain an explicit Sources section')
 }
@@ -117,6 +177,12 @@ for (const file of walk(root)) {
   const fileRel = relative(file)
   const content = fs.readFileSync(file, 'utf8')
 
+  if (/\[\[[^\]\n]+\]\([^)]+\)\]/.test(content)) {
+    fail(fileRel, 'contains a malformed nested Markdown link such as [[text](target)]')
+  }
+  if (/\[[^\]\n]*\]\(\s*\)/.test(content)) {
+    fail(fileRel, 'contains an empty Markdown link target')
+  }
   if (boxDrawing.test(content)) fail(fileRel, 'contains box-drawing diagram glyphs; use Mermaid')
 
   const lines = content.split('\n')
@@ -139,8 +205,15 @@ for (const file of walk(root)) {
         if ((language === '' || language === 'text') && (boxDrawing.test(value) || arrowDiagram.test(value))) {
           fail(fileRel, 'diagram-like fenced block near line ' + start + ' must use Mermaid')
         }
-        if (language === 'mermaid' && boxDrawing.test(value)) {
-          fail(fileRel, 'Mermaid block near line ' + start + ' embeds box-drawing glyphs')
+        if (language === 'mermaid') {
+          if (boxDrawing.test(value)) {
+            fail(fileRel, 'Mermaid block near line ' + start + ' embeds box-drawing glyphs')
+          }
+          const first = body.find(line => line.trim())?.trim() ?? ''
+          const supported = /^(?:flowchart|graph|sequenceDiagram|classDiagram|stateDiagram(?:-v2)?|erDiagram|mindmap|timeline|gitGraph|quadrantChart|journey|pie|xychart-beta|block-beta|architecture-beta)\b/
+          if (!supported.test(first)) {
+            fail(fileRel, 'Mermaid block near line ' + start + ' has an unknown or missing diagram declaration: ' + first)
+          }
         }
         inFence = false
         language = ''
@@ -162,12 +235,26 @@ for (const file of walk(root)) {
   const base = path.dirname(file)
   const linkRe = /\[[^\]]*\]\(([^)]+)\)/g
   let match
+
   while ((match = linkRe.exec(content))) {
-    let target = match[1].trim()
-    if (!target || target.startsWith('#') || /^(https?:|mailto:)/.test(target)) continue
-    target = target.split('#')[0].split('?')[0]
-    if (!target) continue
-    if (!fs.existsSync(path.resolve(base, target))) fail(fileRel, 'broken relative link: ' + match[1])
+    const rawTarget = match[1].trim()
+    if (!rawTarget || /^(https?:|mailto:)/.test(rawTarget)) continue
+
+    const hashIndex = rawTarget.indexOf('#')
+    const pathPart = (hashIndex === -1 ? rawTarget : rawTarget.slice(0, hashIndex)).split('?')[0]
+    const fragment = hashIndex === -1 ? '' : decodeFragment(rawTarget.slice(hashIndex + 1))
+    const resolved = pathPart ? path.resolve(base, pathPart) : path.resolve(file)
+
+    if (!fs.existsSync(resolved)) {
+      fail(fileRel, 'broken relative link: ' + rawTarget)
+      continue
+    }
+
+    if (fragment && fs.statSync(resolved).isFile() && resolved.endsWith('.md')) {
+      if (!anchorsFor(resolved).has(fragment)) {
+        fail(fileRel, 'broken Markdown anchor: ' + rawTarget)
+      }
+    }
   }
 }
 

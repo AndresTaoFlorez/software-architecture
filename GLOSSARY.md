@@ -14,28 +14,33 @@ Each entry contains a concise definition, a repository-oriented example, and pri
 - [Application Service](#application-service)
 - [Architectural Boundary](#architectural-boundary)
 - [Architecture Test](#architecture-test)
+- [Barrel File](#barrel-file)
 - [Bounded Context](#bounded-context)
 - [Clean Architecture](#clean-architecture)
 - [Colocation](#colocation)
+- [Command Query Responsibility Segregation (CQRS)](#cqrs)
 - [Composition Root](#composition-root)
+- [Conflict-Free Replicated Data Type (CRDT)](#crdt)
 - [Contract Test](#contract-test)
 - [Controller](#controller)
-- [Conflict-Free Replicated Data Type (CRDT)](#crdt)
 - [Cross-Cutting Concern](#cross-cutting-concern)
 - [Data Transfer Object (DTO)](#data-transfer-object-dto)
 - [Dependency Graph](#dependency-graph)
 - [Dependency Injection (DI)](#dependency-injection-di)
-- [DI Container](#di-container)
 - [Dependency Inversion Principle (DIP)](#dependency-inversion-principle-dip)
 - [Dependency Rule](#dependency-rule)
 - [Design System](#design-system)
 - [Design Token](#design-token)
+- [DI Container](#di-container)
 - [Domain](#domain)
-- [Domain-Driven Design (DDD)](#domain-driven-design-ddd)
 - [Domain Entity](#domain-entity)
 - [Domain Error](#domain-error)
 - [Domain Event](#domain-event)
 - [Domain Service](#domain-service)
+- [Domain-Driven Design (DDD)](#domain-driven-design-ddd)
+- [Event Sourcing](#event-sourcing)
+- [Facade Pattern](#facade-pattern)
+- [Factory Pattern](#factory-pattern)
 - [Fake](#fake)
 - [Feature Folder](#feature-folder)
 - [Feature Slice](#feature-slice)
@@ -57,14 +62,19 @@ Each entry contains a concise definition, a repository-oriented example, and pri
 - [Mock](#mock)
 - [Model](#model)
 - [Model-View-Controller (MVC)](#model-view-controller-mvc)
+- [Model-View-Presenter (MVP)](#model-view-presenter-mvp)
 - [Model-View-ViewModel (MVVM)](#model-view-viewmodel-mvvm)
 - [Modular Monolith](#modular-monolith)
 - [Monorepo](#monorepo)
+- [Observer Pattern](#observer-pattern)
+- [Observer Synchronization](#observer-synchronization)
 - [Onion Architecture](#onion-architecture)
 - [Optimistic Update](#optimistic-update)
+- [Passive View](#passive-view)
 - [Port](#port)
 - [Presentation Layer](#presentation-layer)
 - [Presentation Model](#presentation-model)
+- [Presenter](#presenter)
 - [Public API](#public-api)
 - [Recipe](#recipe)
 - [Reducer](#reducer)
@@ -72,6 +82,7 @@ Each entry contains a concise definition, a repository-oriented example, and pri
 - [RTK Query](#rtk-query)
 - [Selector](#selector)
 - [Semantic Token](#semantic-token)
+- [Separated Presentation](#separated-presentation)
 - [Server State](#server-state)
 - [Service Locator](#service-locator)
 - [Side Effect](#side-effect)
@@ -1048,3 +1059,135 @@ In MVVM, a view-oriented state/behavior holder that does not reference concrete 
 **Example.** `useAuth()` exposes `isAuthenticated`, `login()` and `logout()` while hiding Redux actions and HTTP details.
 
 **Sources.** [Fowler — Presentation Model](https://martinfowler.com/eaaDev/PresentationModel.html) · [Fowler — GUI Architectures](https://martinfowler.com/eaaDev/uiArchs.html)
+
+---
+
+<a id="barrel-file"></a>
+
+## Barrel File
+
+A module whose primary job is to re-export symbols from other modules so consumers can depend on one deliberate entry point. A barrel is useful when it defines a real public API; indiscriminate `export *` barrels can hide ownership and increase coupling.
+
+**Example.** `features/orders/index.ts` exports `useOrders` and `OrdersPage` while keeping `orders.slice.ts` internal.
+
+**Sources.** [TypeScript — Re-exporting](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-1-5.html) · [Feature-Sliced Design — Public API](https://feature-sliced.design/docs/reference/public-api)
+
+---
+
+<a id="cqrs"></a>
+
+## Command Query Responsibility Segregation (CQRS)
+
+A pattern that separates the model used to change state from the model used to read state. CQRS does not inherently require separate databases or services, and it adds enough complexity that it should be introduced only when the different read/write models solve a concrete problem.
+
+**Example.** Order updates use a task-oriented write model while a reporting dashboard reads from a separate projection optimized for queries.
+
+**Sources.** [Martin Fowler — CQRS](https://martinfowler.com/bliki/CQRS.html)
+
+---
+
+<a id="event-sourcing"></a>
+
+## Event Sourcing
+
+A persistence approach in which application state changes are captured and stored as a sequence of events from which current or historical state can be reconstructed.
+
+**Example.** Instead of storing only the current shipment status, the system stores events such as `ShipmentCreated`, `DepartedPort`, and `ArrivedPort` and derives state by replaying them.
+
+**Sources.** [Martin Fowler — Event Sourcing](https://martinfowler.com/eaaDev/EventSourcing.html)
+
+---
+
+<a id="facade-pattern"></a>
+
+## Facade Pattern
+
+A design pattern that exposes a simpler, purpose-oriented interface over a larger or more complicated subsystem. A facade reduces what consumers need to know, but should not become a god object that owns unrelated policy.
+
+**Example.** `useOrders()` can expose `rows`, `busy`, and `cancel()` while hiding Redux selectors, dispatch and thunk lifecycle details.
+
+**Sources.** [Microsoft Learn — Adapter and Facade patterns](https://learn.microsoft.com/en-us/shows/visual-studio-toolbox/design-patterns-adapterfaade)
+
+---
+
+<a id="factory-pattern"></a>
+
+## Factory Pattern
+
+A family of creational patterns that centralize or defer object-construction decisions instead of forcing callers to know concrete construction details. The exact variant—such as Factory Method or Abstract Factory—should be named when it matters.
+
+**Example.** `makeOrderRepository(config)` chooses the concrete persistence adapter from configuration while callers depend on the returned capability.
+
+**Sources.** [Microsoft Learn — Factory patterns](https://learn.microsoft.com/en-us/shows/visual-studio-toolbox/design-patterns-factories) · Gamma et al., *Design Patterns: Elements of Reusable Object-Oriented Software* (1994)
+
+---
+
+<a id="model-view-presenter-mvp"></a>
+
+## Model-View-Presenter (MVP)
+
+A family of separated-presentation patterns in which a Presenter mediates between a View and the model/application behavior. Fowler later retired his single MVP pattern description and split the useful variants into patterns including Supervising Controller and Passive View.
+
+**Example.** A presenter receives a Save gesture, invokes the application operation, and updates an interface implemented by the View.
+
+**Sources.** [Martin Fowler — Model View Presenter retirement note](https://martinfowler.com/eaaDev/ModelViewPresenter.html) · [Martin Fowler — GUI Architectures](https://martinfowler.com/eaaDev/uiArchs.html)
+
+---
+
+<a id="observer-pattern"></a>
+
+## Observer Pattern
+
+A design pattern in which a subject maintains dependent observers and notifies them when relevant state changes, allowing dependents to react without the subject naming each concrete reaction.
+
+**Example.** A model emits a change notification and several views refresh without those views calling each other.
+
+**Sources.** [Microsoft Learn — Observer and Publish-Subscribe](https://learn.microsoft.com/en-us/shows/visual-studio-toolbox/design-patterns-observer-publish-subscribe) · Gamma et al., *Design Patterns* (1994)
+
+---
+
+<a id="observer-synchronization"></a>
+
+## Observer Synchronization
+
+A presentation synchronization style in which screens or views observe underlying model/state changes and refresh themselves when notified. Fowler describes it as a fundamental part of classic MVC-style synchronization.
+
+**Example.** Two views subscribe to the same cart model; adding an item notifies both so each independently refreshes its displayed total.
+
+**Sources.** [Martin Fowler — Organizing Presentation Logic](https://martinfowler.com/eaaDev/OrganizingPresentations.html) · [Martin Fowler — GUI Architectures](https://martinfowler.com/eaaDev/uiArchs.html)
+
+---
+
+<a id="passive-view"></a>
+
+## Passive View
+
+A presentation pattern in which the View contains minimal application-specific behavior and a controller/presenter is responsible for updating it. The main motivation is to move behavior out of difficult-to-test UI widgets.
+
+**Example.** A presenter calculates which controls are enabled and calls methods on a thin View interface rather than letting the View derive that behavior itself.
+
+**Sources.** [Martin Fowler — Passive View](https://martinfowler.com/eaaDev/PassiveScreen.html)
+
+---
+
+<a id="presenter"></a>
+
+## Presenter
+
+A presentation component that translates application/model state into a form suitable for a View and handles presentation-oriented interaction. The exact responsibility depends on the presentation pattern; in MVP it mediates between View and model/application behavior.
+
+**Example.** `CheckoutPresenter` invokes the checkout use case and converts its result into fields and messages exposed to a View.
+
+**Sources.** [Martin Fowler — GUI Architectures](https://martinfowler.com/eaaDev/uiArchs.html) · [Robert C. Martin — The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+
+---
+
+<a id="separated-presentation"></a>
+
+## Separated Presentation
+
+The principle of keeping presentation concerns separate from domain/application logic so each can evolve and be tested for its own reasons.
+
+**Example.** A web View and a CLI both invoke the same application operation without either UI owning the business invariant.
+
+**Sources.** [Martin Fowler — Presentation Domain Separation](https://martinfowler.com/bliki/PresentationDomainSeparation.html) · [Martin Fowler — GUI Architectures](https://martinfowler.com/eaaDev/uiArchs.html)
