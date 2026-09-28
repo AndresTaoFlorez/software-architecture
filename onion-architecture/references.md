@@ -32,14 +32,16 @@
 - **Martin, R. C.** (2012). *The [Clean Architecture](../GLOSSARY.md#clean-architecture)*. The Clean Code Blog. (The [Dependency Rule](../GLOSSARY.md#dependency-rule).)
   https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
 - **Martin, R. C.** (2017). *[Clean Architecture](../GLOSSARY.md#clean-architecture): A Craftsman's Guide to Software Structure and Design*.
-  Prentice Hall. ([Entities](../GLOSSARY.md#domain-entity), [use cases](../GLOSSARY.md#use-case), frameworks as details; "screaming architecture"; the Test Boundary,
+  Prentice Hall. ([Clean Entities](../GLOSSARY.md#clean-entities-circle), [use cases](../GLOSSARY.md#use-case), frameworks as details; "screaming architecture"; the Test Boundary,
   ch. 28.)
 - **Meszaros, G.** (2007). *xUnit Test Patterns: Refactoring Test Code*. Addison-Wesley. (The [Test Double](../GLOSSARY.md#test-double)
   taxonomy: dummy, [stub](../GLOSSARY.md#stub), [spy](../GLOSSARY.md#spy), [mock](../GLOSSARY.md#mock), [fake](../GLOSSARY.md#fake).)
-- **Nx & Turborepo documentation.** *[Monorepo](../GLOSSARY.md#monorepo) build systems with enforced project boundaries.* (Module-
-  boundary lint rules that make the [Dependency Rule](../GLOSSARY.md#dependency-rule) checkable in CI.) https://nx.dev/ · https://turborepo.com/
-- **Palermo, J.** (2008). *The [Onion Architecture](../GLOSSARY.md#onion-architecture)* (Parts 1–4).
+- **Nx.** [Enforce Module Boundaries](https://nx.dev/docs/features/enforce-module-boundaries). Configure constraints for the intended architecture.
+- **Turborepo.** [Boundaries](https://turborepo.dev/docs/reference/boundaries). Experimental workspace and tag checks; architectural constraints are project-defined.
+- **Palermo, J.** (2008). *The [Onion Architecture](../GLOSSARY.md#onion-architecture)* (Part 1; the original series).
   https://jeffreypalermo.com/2008/07/the-onion-architecture-part-1/
+- **Palermo, J.** (2013). *[Onion Architecture](../GLOSSARY.md#onion-architecture): Part 4 — After Four Years.* (A later clarification, including variable layer counts and optional [DI containers](../GLOSSARY.md#di-container).)
+  https://jeffreypalermo.com/2013/08/onion-architecture-part-4-after-four-years/
 - **Shapiro, M., Preguiça, N., Baquero, C., & Zawirski, M.** (2011). *Conflict-free Replicated Data Types*.
   INRIA Research Report RR-7687. https://hal.inria.fr/inria-00609399
 - **Skelton, M. & Pais, M.** (2019). *Team Topologies: Organizing Business and Technology Teams for Fast

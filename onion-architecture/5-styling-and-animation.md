@@ -1,3 +1,6 @@
+<a id="styling--animation-architecture-presentation"></a>
+<a id="approach-a-a-mirrored-styles-tree"></a>
+
 # Styling & Animation in an Onion Application
 
 Styling and animation live in the **[Presentation](../GLOSSARY.md#presentation-layer) ring** because they exist to render and communicate UI state.
@@ -51,6 +54,10 @@ function closureTone(status: ClosureStatus): BadgeTone {
 
 Do not put `color: 'green'` or `badgeVariant` into the [Domain](../GLOSSARY.md#domain) object.
 
+<a id="approach-b-colocation-inside-the-feature-folder"></a>
+
+<a id="choosing"></a>
+
 ## Colocation
 
 Component-local visual concerns should normally travel with the component:
@@ -66,6 +73,8 @@ flowchart TD
 Shared [design-system](../GLOSSARY.md#design-system) primitives belong to a shared [design-system](../GLOSSARY.md#design-system) owner.
 
 That is a [Presentation](../GLOSSARY.md#presentation-layer) organization choice, not a new ring.
+
+<a id="references"></a>
 
 ## Sources
 
