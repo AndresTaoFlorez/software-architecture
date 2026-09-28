@@ -98,13 +98,13 @@ flowchart TD
     Q -->|"Reason C"| C["Area C"]
 ```
 
-Cover at minimum a business rule, use-case workflow, HTTP/database/SDK code, UI rendering/state, type/DTO, helper/utility, and composition/bootstrap.
+Cover at minimum a business rule, use-case workflow, HTTP/database/SDK code, UI rendering/state, type/[DTO](../GLOSSARY.md#data-transfer-object-dto), helper/utility, and composition/bootstrap.
 
 If the architecture is only a presentation pattern, state which decisions are outside its scope and point to the layered architecture/code-placement guide.
 
 ## 9. Naming
 
-Link to [Naming and File Placement Conventions](../conventions/naming-and-file-placement.md). Separate architecture-defined vocabulary, framework naming requirements, and repository naming conventions.
+Link to [Naming and File Placement Conventions](../conventions/naming-and-file-placement.md). Separate architecture-defined vocabulary, framework naming requirements, and [repository](../GLOSSARY.md#repository) naming conventions.
 
 ## 10. One feature end to end
 
@@ -113,19 +113,19 @@ Start from one requirement and build progressively.
 | Artifact | File | Owner | Why here | Why not elsewhere |
 | --- | --- | --- | --- | --- |
 
-Show the rule/model, use case/workflow, justified ports/contracts, adapter, presentation, composition, and runtime flow versus source dependency direction. Use Mermaid for all flows.
+Show the rule/model, [use case](../GLOSSARY.md#use-case)/workflow, justified [ports](../GLOSSARY.md#port)/contracts, [adapter](../GLOSSARY.md#adapter), presentation, composition, and runtime flow versus source dependency direction. Use Mermaid for all flows.
 
 ## 11. Testing
 
-Explain pure/domain tests, application/use-case tests, adapter/integration tests, presentation tests, architecture/dependency tests, and end-to-end tests where relevant. Do not prescribe arbitrary percentages.
+Explain pure/domain tests, application/use-case tests, [adapter](../GLOSSARY.md#adapter)/integration tests, presentation tests, architecture/dependency tests, and end-to-end tests where relevant. Do not prescribe arbitrary percentages.
 
 ## 12. Trade-offs and failure modes
 
-Document real decay modes such as god services, god ViewModels, generic utility buckets, service locator, technology types leaking inward, ceremonial interfaces, or duplicated models without boundary translation.
+Document real decay modes such as god services, god [ViewModels](../GLOSSARY.md#viewmodel), generic utility buckets, [service locator](../GLOSSARY.md#service-locator), technology types leaking inward, ceremonial interfaces, or duplicated models without boundary translation.
 
 ## 13. Advanced topics
 
-Only now introduce optional topics such as CQRS, domain events, offline synchronization, microservices, microfrontends, DI containers, or event sourcing. State the force that justifies each option.
+Only now introduce optional topics such as CQRS, [domain events](../GLOSSARY.md#domain-event), offline synchronization, [microservices](../GLOSSARY.md#microservice), [microfrontends](../GLOSSARY.md#microfrontend), [DI containers](../GLOSSARY.md#di-container), or event sourcing. State the force that justifies each option.
 
 ## 14. Learning path
 
@@ -135,4 +135,4 @@ List chapters from fundamentals to advanced material. A reader must be able to p
 
 Primary source first, then official framework/standards documentation, then high-quality secondary sources.
 
-For every claim ask: is this a historical fact, framework rule, architectural invariant, recommended default, or repository convention? Make that status clear.
+For every claim ask: is this a historical fact, framework rule, architectural [invariant](../GLOSSARY.md#invariant), recommended default, or [repository](../GLOSSARY.md#repository) convention? Make that status clear.

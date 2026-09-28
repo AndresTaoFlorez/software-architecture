@@ -1,12 +1,12 @@
 # Naming and File Placement Conventions
 
-These are the repository's default conventions for TypeScript-heavy frontend/backend examples.
+These are the [repository](../GLOSSARY.md#repository)'s default conventions for TypeScript-heavy frontend/backend examples.
 
 They are intentionally split into:
 
 - **framework requirements**;
 - **ecosystem-backed conventions**;
-- **repository conventions**.
+- **[repository](../GLOSSARY.md#repository) conventions**.
 
 There is no universal architecture-mandated file naming scheme.
 
@@ -48,7 +48,7 @@ function useClosures() {
 }
 ```
 
-These are React rules, not repository preferences.
+These are React rules, not [repository](../GLOSSARY.md#repository) preferences.
 
 Sources:
 
@@ -57,23 +57,23 @@ Sources:
 
 ## 3. File naming — repository convention
 
-This repository uses names that reveal architectural role.
+This [repository](../GLOSSARY.md#repository) uses names that reveal architectural role.
 
 | Role | Example |
 | --- | --- |
-| domain entity/value object | `Order.ts`, `Money.ts` |
-| application use case | `cancelOrder.ts` |
-| application port | `OrderRepository.ts`, `PaymentGateway.ts` |
-| concrete adapter | `HttpOrderRepository.ts`, `StripePaymentGateway.ts` |
-| mapper | `orderApi.mapper.ts` |
-| DTO | `orderApi.dto.ts` |
+| [domain entity](../GLOSSARY.md#domain-entity)/[value object](../GLOSSARY.md#value-object) | `Order.ts`, `Money.ts` |
+| application [use case](../GLOSSARY.md#use-case) | `cancelOrder.ts` |
+| application [port](../GLOSSARY.md#port) | `OrderRepository.ts`, `PaymentGateway.ts` |
+| concrete [adapter](../GLOSSARY.md#adapter) | `HttpOrderRepository.ts`, `StripePaymentGateway.ts` |
+| [mapper](../GLOSSARY.md#mapper) | `orderApi.mapper.ts` |
+| [DTO](../GLOSSARY.md#data-transfer-object-dto) | `orderApi.dto.ts` |
 | React component | `QueryFilters.tsx` |
 | component styles | `QueryFilters.styles.ts` |
 | component types | `QueryFilters.types.ts` |
 | feature hook/facade | `useClosures.ts` |
 | Redux slice | `closures.slice.ts` |
-| selectors | `closures.selectors.ts` |
-| thunks | `closures.thunks.ts` |
+| [selectors](../GLOSSARY.md#selector) | `closures.selectors.ts` |
+| [thunks](../GLOSSARY.md#thunk) | `closures.thunks.ts` |
 | listeners | `closures.listeners.ts` |
 | bindings | `closures.bindings.ts` |
 | test | `cancelOrder.test.ts`, `QueryFilters.test.tsx` |
@@ -100,7 +100,7 @@ Avoid vague buckets when a more precise owner exists:
 
 ## 5. Ports and adapters
 
-Name a port by the capability it represents.
+Name a [port](../GLOSSARY.md#port) by the capability it represents.
 
 Prefer:
 
@@ -116,7 +116,7 @@ Avoid:
 - `CommonRepository`
 - `GenericManager`
 
-Use `Repository` only when the abstraction is genuinely repository-like.
+Use `Repository` only when the abstraction is genuinely [repository](../GLOSSARY.md#repository)-like.
 
 ## 6. Use-case names
 
@@ -149,7 +149,7 @@ Avoid:
 - `BigCard`
 - `LeftPanel2`
 
-A reusable design-system primitive can use generic visual vocabulary such as `Button`, `Dialog`, or `Stack` because that is its explicit purpose.
+A reusable [design-system](../GLOSSARY.md#design-system) primitive can use generic visual vocabulary such as `Button`, `Dialog`, or `Stack` because that is its explicit purpose.
 
 ## 8. Placement is more important than suffix
 
