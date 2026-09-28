@@ -924,15 +924,19 @@
     ]
   },
   {
-    "term": "Repository",
+    "term": "Repository Pattern",
     "anchor": "repository",
     "aliases": [
       {
-        "text": "repository",
+        "text": "Repository",
+        "caseSensitive": true
+      },
+      {
+        "text": "repository pattern",
         "caseSensitive": false
       },
       {
-        "text": "repositories",
+        "text": "repository patterns",
         "caseSensitive": false
       }
     ]
