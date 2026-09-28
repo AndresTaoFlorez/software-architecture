@@ -30,13 +30,13 @@ flowchart TD
     SRC --> C["composition/"]
 ```
 
-with architecture tests that verify import direction.
+with [architecture tests](../GLOSSARY.md#architecture-test) that verify import direction.
 
 That is stronger than a folder diagram alone.
 
 ### 1.2 Explicit Composition Root
 
-Concrete Infrastructure is wired to Application and the UI store in one outer composition module.
+Concrete [Infrastructure](../GLOSSARY.md#infrastructure) is wired to [Application](../GLOSSARY.md#application-layer) and the UI [store](../GLOSSARY.md#store) in one outer composition module.
 
 The pattern should be retained; the concrete classes are project-specific.
 
@@ -61,7 +61,7 @@ flowchart TD
 
 are materially better than one flat component directory.
 
-The generalized version in this repository goes further: when a feature becomes large, its hooks, selectors, state and helpers should migrate under the same feature owner rather than remaining distributed across application-wide technical folders.
+The generalized version in this [repository](../GLOSSARY.md#repository) goes further: when a feature becomes large, its hooks, [selectors](../GLOSSARY.md#selector), state and helpers should migrate under the same feature owner rather than remaining distributed across application-wide technical folders.
 
 ### 1.4 Complex component colocation
 
@@ -88,15 +88,15 @@ Files remain optional. A component with no dedicated types file should not recei
 
 Hooks such as `useAuth`, `useClosures`, `useTheme`, `useToast` and `useUi` give React a semantic interface over state machinery.
 
-That is a useful Presentation Model/ViewModel-style boundary.
+That is a useful [Presentation Model](../GLOSSARY.md#presentation-model)/[ViewModel](../GLOSSARY.md#viewmodel)-style boundary.
 
 ### 1.6 Selectors separate derivation from mutation
 
-Dedicated selectors keep derived state outside reducers and components.
+Dedicated [selectors](../GLOSSARY.md#selector) keep derived state outside [reducers](../GLOSSARY.md#reducer) and components.
 
 ### 1.7 Architecture tests
 
-The project checks import boundaries with the TypeScript AST, including relative and type-only imports. It also protects public hook boundaries and rejects direct Redux imports from selected UI surfaces.
+The project checks import boundaries with the TypeScript [AST](../GLOSSARY.md#abstract-syntax-tree-ast), including relative and type-only imports. It also protects public hook boundaries and rejects direct Redux imports from selected UI surfaces.
 
 This should become a first-class architectural practice.
 
@@ -109,7 +109,7 @@ flowchart LR
     T["Tokens"] --> S["Semantic tokens"] --> TS["Text / layer styles"] --> R["sva slot recipes"] --> C["Components"]
 ```
 
-The local `sva` pattern for multipart components is worth preserving after duplicate recipes are removed.
+The local `sva` pattern for multipart components is worth preserving after duplicate [recipes](../GLOSSARY.md#recipe) are removed.
 
 ---
 
@@ -121,7 +121,7 @@ At the reviewed snapshot, one interface owns authentication, environment switchi
 
 That is no longer a session capability.
 
-Refactor conceptually toward coherent ports:
+Refactor conceptually toward coherent [ports](../GLOSSARY.md#port):
 
 ```mermaid
 flowchart TD
@@ -146,7 +146,7 @@ flowchart TD
     N8 --> N9
 ```
 
-Do not mechanically create one interface per endpoint. Port granularity follows cohesive external conversations.
+Do not mechanically create one interface per endpoint. [Port](../GLOSSARY.md#port) granularity follows cohesive external conversations.
 
 ### 2.2 `SessionUseCases` became an application god-service
 
@@ -165,11 +165,11 @@ flowchart TD
     N0 --> N3
 ```
 
-A class containing several strongly cohesive use cases may still be reasonable. The rule is cohesion, not "one class per method".
+A class containing several strongly cohesive [use cases](../GLOSSARY.md#use-case) may still be reasonable. The rule is cohesion, not "one class per method".
 
 ### 2.3 `domain/session.ts` mixes unrelated ownership
 
-The reviewed Domain file contains session concepts alongside:
+The reviewed [Domain](../GLOSSARY.md#domain) file contains session concepts alongside:
 
 - `ClosureFormState`;
 - `UploadQueueItem`;
@@ -216,17 +216,17 @@ flowchart TD
 
 ### 2.4 Browser `File` leaks into Application
 
-An Application port currently receives the browser `File` type.
+An [Application](../GLOSSARY.md#application-layer) [port](../GLOSSARY.md#port) currently receives the browser `File` type.
 
-`File` belongs to the Web File API. The outer adapter should translate it to an application-owned content/stream abstraction.
+`File` belongs to the Web File API. The outer [adapter](../GLOSSARY.md#adapter) should translate it to an application-owned content/stream abstraction.
 
 ### 2.5 The application-wide `contract.ts` hides ownership
 
-A large barrel re-exports Domain and Application types to Presentation.
+A large barrel re-exports [Domain](../GLOSSARY.md#domain) and [Application](../GLOSSARY.md#application-layer) types to [Presentation](../GLOSSARY.md#presentation-layer).
 
 That can make imports look clean while preserving conceptual coupling.
 
-Prefer explicit capability public APIs:
+Prefer explicit capability [public APIs](../GLOSSARY.md#public-api):
 
 - `application/auth/index.ts`
 - `application/closures/index.ts`
@@ -269,16 +269,16 @@ type Result<T, E> =
   | { ok: false; error: E }
 ```
 
-The knowledge of `fulfilled` / `rejected` ends at the Redux adapter boundary.
+The knowledge of `fulfilled` / `rejected` ends at the Redux [adapter](../GLOSSARY.md#adapter) boundary.
 
 ### 2.8 A slice owns too many mechanisms
 
 The large closures slice contains or coordinates:
 
-- Redux reducers/state;
-- async thunks;
+- Redux [reducers](../GLOSSARY.md#reducer)/state;
+- async [thunks](../GLOSSARY.md#thunk);
 - React bindings;
-- selectors through imports;
+- [selectors](../GLOSSARY.md#selector) through imports;
 - browser draft persistence.
 
 As the feature grows, keep these responsibilities colocated under `features/closures/model`, but split them into meaningful files.
@@ -287,7 +287,7 @@ As the feature grows, keep these responsibilities colocated under `features/clos
 
 Draft persistence currently reaches `sessionStorage` from slice helpers and is triggered by a public hook effect.
 
-Prefer a storage adapter and, when Redux owns the state transition, a listener/middleware workflow.
+Prefer a storage [adapter](../GLOSSARY.md#adapter) and, when Redux owns the state transition, a listener/[middleware](../GLOSSARY.md#middleware) workflow.
 
 ### 2.10 Panda recipes are duplicated
 
@@ -309,13 +309,13 @@ flowchart LR
     G["Shared config / design-system recipe"] --> R["defineRecipe / defineSlotRecipe"]
 ```
 
-Never both for the same recipe.
+Never both for the same [recipe](../GLOSSARY.md#recipe).
 
 ### 2.11 `global.css` competes with Panda
 
 A manual global stylesheet redefines theme variables that are also owned by `panda.config.ts`.
 
-If Panda owns the design system, semantic tokens, global styles and keyframes should have one source of truth.
+If Panda owns the [design system](../GLOSSARY.md#design-system), [semantic tokens](../GLOSSARY.md#semantic-token), global styles and keyframes should have one source of truth.
 
 ### 2.12 `common` and `shared` are ambiguous
 
@@ -406,6 +406,6 @@ Do not route every checkbox through the entire onion.
 
 A reference architecture becomes dangerous when example code is treated as scripture.
 
-The XXI project is valuable because it demonstrates real growth pressure: state, uploads, persistence, feature UI, design-system work and import enforcement. Those pressures expose both strong patterns and accidental coupling.
+The XXI project is valuable because it demonstrates real growth pressure: state, uploads, persistence, feature UI, [design-system](../GLOSSARY.md#design-system) work and import enforcement. Those pressures expose both strong patterns and accidental coupling.
 
 The documentation promotes the former and names the latter explicitly.

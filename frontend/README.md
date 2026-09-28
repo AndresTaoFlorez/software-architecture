@@ -1,8 +1,8 @@
 # Frontend Architecture
 
-This section is the canonical frontend guidance for this repository.
+This section is the canonical frontend guidance for this [repository](../GLOSSARY.md#repository).
 
-Clean Architecture and Onion Architecture define **dependency direction across application boundaries**. They do not prescribe how a large React/Vue/Svelte Presentation layer must be organized internally. This section fills that gap without pretending framework conventions are part of Clean or Onion.
+[Clean Architecture](../GLOSSARY.md#clean-architecture) and [Onion Architecture](../GLOSSARY.md#onion-architecture) define **dependency direction across application boundaries**. They do not prescribe how a large React/Vue/Svelte [Presentation layer](../GLOSSARY.md#presentation-layer) must be organized internally. This section fills that gap without pretending framework conventions are part of Clean or Onion.
 
 The examples use React, Redux Toolkit and Panda CSS because they make the boundaries concrete. The underlying rules are framework-independent.
 
@@ -72,7 +72,7 @@ This is a recommended default, not a law. Folder names may change. Ownership and
 
 ## Feature ownership
 
-A feature owns the Presentation code that changes with that capability:
+A feature owns the [Presentation](../GLOSSARY.md#presentation-layer) code that changes with that capability:
 
 ```mermaid
 flowchart TD
@@ -87,9 +87,9 @@ flowchart TD
     N0 --> N4
 ```
 
-This keeps `closures` UI, state, selectors, bindings and feature-specific helpers close together instead of scattering them across global `components/`, `hooks/`, `state/`, `types/` and `utils/` trees.
+This keeps `closures` UI, state, [selectors](../GLOSSARY.md#selector), bindings and feature-specific helpers close together instead of scattering them across global `components/`, `hooks/`, `state/`, `types/` and `utils/` trees.
 
-This repository borrows the **high-cohesion feature slice** and **public API** ideas found in Redux's feature-folder guidance and Feature-Sliced Design. It does **not** require the complete FSD taxonomy; in particular, using a second unrelated meaning of `entities` beside Domain-Driven Design often creates needless vocabulary collisions.
+This [repository](../GLOSSARY.md#repository) borrows the **high-cohesion [feature slice](../GLOSSARY.md#feature-slice)** and **[public API](../GLOSSARY.md#public-api)** ideas found in Redux's feature-folder guidance and Feature-Sliced Design. It does **not** require the complete FSD taxonomy; in particular, using a second unrelated meaning of `entities` beside [Domain-Driven Design](../GLOSSARY.md#domain-driven-design-ddd) often creates needless vocabulary collisions.
 
 ## Public Presentation facade
 
@@ -106,9 +106,9 @@ It is deliberately stricter than what React Redux itself requires. A smaller app
 
 ## Read next
 
-1. **[Presentation architecture](./presentation-architecture.md)** — pages, features, shared UI, public hooks/ViewModels and feature APIs.
-2. **[State management](./state-management.md)** — local state, Redux, selectors, thunks, listeners, server state and persistence.
-3. **[Styling and design systems](./styling-and-design-system.md)** — token hierarchy, Panda CSS, `sva`, config recipes and component ownership.
+1. **[Presentation architecture](./presentation-architecture.md)** — pages, features, shared UI, public hooks/[ViewModels](../GLOSSARY.md#viewmodel) and feature APIs.
+2. **[State management](./state-management.md)** — [local state](../GLOSSARY.md#local-state), Redux, [selectors](../GLOSSARY.md#selector), [thunks](../GLOSSARY.md#thunk), listeners, [server state](../GLOSSARY.md#server-state) and persistence.
+3. **[Styling and design systems](./styling-and-design-system.md)** — token hierarchy, Panda CSS, `sva`, config [recipes](../GLOSSARY.md#recipe) and component ownership.
 4. **[Reference case study](./reference-case-study.md)** — lessons extracted from the XXI web UI: what to promote and what to correct.
 5. **[References](./references.md)** — primary and framework sources.
 

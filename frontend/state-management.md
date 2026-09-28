@@ -1,8 +1,8 @@
 # State Management and Side Effects
 
-State management is not a layer of Clean or Onion Architecture. It is a Presentation mechanism.
+[State management](../GLOSSARY.md#state-management) is not a layer of Clean or [Onion Architecture](../GLOSSARY.md#onion-architecture). It is a [Presentation](../GLOSSARY.md#presentation-layer) mechanism.
 
-The first design question is not "which store?". It is **who owns this state and why does it need to live?**
+The first design question is not "which [store](../GLOSSARY.md#store)?". It is **who owns this state and why does it need to live?**
 
 ---
 
@@ -14,11 +14,11 @@ A practical default:
 | --- | --- |
 | ephemeral component interaction | local component state |
 | route/page-only transient state | Page or route state |
-| shared client feature state | feature store/slice |
-| derived values | selector / computed value |
-| remote cache | server-state/query mechanism |
-| application workflow policy | Application use case |
-| durable browser persistence | storage adapter + controlled side effect |
+| shared client feature state | feature [store](../GLOSSARY.md#store)/slice |
+| derived values | [selector](../GLOSSARY.md#selector) / computed value |
+| remote cache | [server-state](../GLOSSARY.md#server-state)/query mechanism |
+| application workflow policy | [Application](../GLOSSARY.md#application-layer) [use case](../GLOSSARY.md#use-case) |
+| durable browser persistence | storage [adapter](../GLOSSARY.md#adapter) + controlled [side effect](../GLOSSARY.md#side-effect) |
 
 Examples:
 
@@ -31,7 +31,7 @@ flowchart LR
     P["May the business operation execute?"] --> AP["Application / Domain policy"]
 ```
 
-Redux's official style guide recommends keeping global state minimal, deriving additional values, and keeping most form state local unless sharing it globally has a concrete benefit.
+Redux's official style guide recommends keeping [global state](../GLOSSARY.md#global-state) minimal, deriving additional values, and keeping most form state local unless sharing it globally has a concrete benefit.
 
 ---
 
@@ -46,7 +46,7 @@ flowchart TD
     N0 --> N1
 ```
 
-Redux Toolkit intentionally encourages colocating reducer logic and generated actions in `createSlice`.
+Redux Toolkit intentionally encourages colocating [reducer](../GLOSSARY.md#reducer) logic and generated actions in `createSlice`.
 
 As complexity grows, split by responsibility **inside the feature**, not back into application-wide technical folders:
 
@@ -73,7 +73,7 @@ This is a scaling technique, not a mandatory template. A five-line feature does 
 
 ## 3. Reducers are pure state transitions
 
-Reducers should calculate next state from previous state + action.
+[Reducers](../GLOSSARY.md#reducer) should calculate next state from previous state + action.
 
 They should not:
 
@@ -83,13 +83,13 @@ They should not:
 - read random/global mutable state;
 - manipulate the DOM.
 
-Redux's style guide requires reducers to be free of side effects.
+Redux's style guide requires [reducers](../GLOSSARY.md#reducer) to be free of [side effects](../GLOSSARY.md#side-effect).
 
 ---
 
 ## 4. Selectors own derivation
 
-Do not store data that can be reliably calculated from existing state.
+Do not [store](../GLOSSARY.md#store) data that can be reliably calculated from existing state.
 
 Bad:
 
@@ -113,15 +113,15 @@ export const selectFilteredCount = createSelector(
 )
 ```
 
-Memoize selectors when derivation is expensive or referential stability matters. Do not use memoization as decoration.
+Memoize [selectors](../GLOSSARY.md#selector) when derivation is expensive or referential stability matters. Do not use [memoization](../GLOSSARY.md#memoization) as decoration.
 
 ---
 
 ## 5. Thunks: one-shot asynchronous orchestration
 
-Redux recommends thunks for imperative async logic that needs `dispatch`/`getState`.
+Redux recommends [thunks](../GLOSSARY.md#thunk) for imperative async logic that needs `dispatch`/`getState`.
 
-In a layered application, thunks are a useful Presentation adapter around Application operations:
+In a layered application, [thunks](../GLOSSARY.md#thunk) are a useful [Presentation](../GLOSSARY.md#presentation-layer) [adapter](../GLOSSARY.md#adapter) around [Application](../GLOSSARY.md#application-layer) operations:
 
 ```ts
 export const executeClosureThunk = createAsyncThunk<
@@ -140,15 +140,15 @@ export const executeClosureThunk = createAsyncThunk<
 )
 ```
 
-The concrete infrastructure dependency is assembled at the Composition Root and injected through thunk `extraArgument`. Redux Toolkit supports this directly.
+The concrete infrastructure dependency is assembled at the [Composition Root](../GLOSSARY.md#composition-root) and injected through [thunk](../GLOSSARY.md#thunk) `extraArgument`. Redux Toolkit supports this directly.
 
-Do not import `HttpClosureGateway` from a thunk.
+Do not import `HttpClosureGateway` from a [thunk](../GLOSSARY.md#thunk).
 
 ---
 
 ## 6. Listener middleware: reactive workflows and persistence
 
-When behavior reacts to actions/state over time, Redux Toolkit's listener middleware is usually a better fit than putting store synchronization into a React effect.
+When behavior reacts to actions/state over time, Redux Toolkit's [listener middleware](../GLOSSARY.md#listener-middleware) is usually a better fit than putting [store](../GLOSSARY.md#store) synchronization into a React effect.
 
 Example:
 
@@ -165,28 +165,28 @@ startAppListening({
 })
 ```
 
-Good listener use cases include:
+Good listener [use cases](../GLOSSARY.md#use-case) include:
 
 - persistence after state changes;
 - debounced workflows;
 - reacting to multiple actions;
-- timers/delays tied to store events;
-- coordinating state-driven side effects.
+- timers/delays tied to [store](../GLOSSARY.md#store) events;
+- coordinating state-driven [side effects](../GLOSSARY.md#side-effect).
 
-A persistence adapter still owns browser storage details.
+A persistence [adapter](../GLOSSARY.md#adapter) still owns browser storage details.
 
 ---
 
 ## 7. Browser persistence is an external detail
 
-Do not let a slice become the browser storage adapter:
+Do not let a slice become the browser storage [adapter](../GLOSSARY.md#adapter):
 
 ```ts
 // Avoid inside the reducer/slice module as the persistence mechanism:
 window.sessionStorage.setItem(KEY, JSON.stringify(state))
 ```
 
-Prefer an explicit adapter:
+Prefer an explicit [adapter](../GLOSSARY.md#adapter):
 
 ```ts
 export interface ClosureDraftStorage {
@@ -200,13 +200,13 @@ with a browser implementation:
 
 `SessionStorageClosureDraftStorage`
 
-Depending on the application's boundary policy, the port can live in Application or the persistence contract can remain entirely inside Presentation if the draft itself is purely UI state. What matters is that browser I/O is not hidden inside a pure state transition.
+Depending on the application's boundary policy, the [port](../GLOSSARY.md#port) can live in [Application](../GLOSSARY.md#application-layer) or the persistence contract can remain entirely inside [Presentation](../GLOSSARY.md#presentation-layer) if the draft itself is purely UI state. What matters is that browser I/O is not hidden inside a pure state transition.
 
 ---
 
 ## 8. Bindings isolate the state library when the project needs that boundary
 
-A strict Presentation architecture can keep React Redux behind feature bindings:
+A strict [Presentation](../GLOSSARY.md#presentation-layer) architecture can keep React Redux behind feature bindings:
 
 ```ts
 export function useClosuresState() {
@@ -241,9 +241,9 @@ This boundary is optional. For smaller applications, direct typed `useSelector`/
 
 ## 9. Server state vs. application policy
 
-Redux Toolkit recommends RTK Query as the default Redux solution for data fetching/caching.
+Redux Toolkit recommends [RTK Query](../GLOSSARY.md#rtk-query) as the default Redux solution for data fetching/caching.
 
-That does not mean every server call should bypass Application.
+That does not mean every server call should bypass [Application](../GLOSSARY.md#application-layer).
 
 ### Server-state dominant operation
 
@@ -254,7 +254,7 @@ flowchart LR
     V["View / feature"] --> Q["Query adapter"] --> API["API"]
 ```
 
-RTK Query, TanStack Query or another server-state library may be enough.
+[RTK Query](../GLOSSARY.md#rtk-query), TanStack Query or another [server-state](../GLOSSARY.md#server-state) library may be enough.
 
 ### Policy-bearing operation
 
@@ -294,9 +294,9 @@ Promote state when there is a real requirement such as:
 
 React describes Effects as a way to synchronize a component with an external system.
 
-Do not use an Effect merely to derive one piece of React state from another. Calculate derived state during rendering or in selectors.
+Do not use an Effect merely to derive one piece of React state from another. Calculate derived state during rendering or in [selectors](../GLOSSARY.md#selector).
 
-If a side effect belongs to the store rather than the component lifecycle, middleware/listeners may be a better owner.
+If a [side effect](../GLOSSARY.md#side-effect) belongs to the [store](../GLOSSARY.md#store) rather than the component lifecycle, [middleware](../GLOSSARY.md#middleware)/listeners may be a better owner.
 
 ---
 
@@ -304,22 +304,22 @@ If a side effect belongs to the store rather than the component lifecycle, middl
 
 Do not standardize "every callback uses `useCallback`" or "every derived value uses `useMemo`".
 
-Use memoization when:
+Use [memoization](../GLOSSARY.md#memoization) when:
 
 - a calculation is actually expensive;
 - a stable identity is required by an API or memoized child;
 - profiling shows meaningful benefit;
 - the framework/compiler cannot safely optimize the case.
 
-Modern React Compiler can automatically memoize many values/functions in compiled code, so manual memoization should remain intentional.
+Modern React Compiler can automatically memoize many values/functions in compiled code, so manual [memoization](../GLOSSARY.md#memoization) should remain intentional.
 
 ## Sources
 
 - Redux Style Guide: https://redux.js.org/style-guide/
-- Redux, "Side Effects Approaches": https://redux.js.org/usage/side-effects-approaches
+- Redux, "[Side Effects](../GLOSSARY.md#side-effect) Approaches": https://redux.js.org/usage/side-effects-approaches
 - Redux Toolkit, `createAsyncThunk`: https://redux-toolkit.js.org/api/createAsyncThunk
-- Redux Toolkit, listener middleware: https://redux-toolkit.js.org/api/createListenerMiddleware
-- Redux Toolkit, RTK Query overview: https://redux-toolkit.js.org/rtk-query/overview
+- Redux Toolkit, [listener middleware](../GLOSSARY.md#listener-middleware): https://redux-toolkit.js.org/api/createListenerMiddleware
+- Redux Toolkit, [RTK Query](../GLOSSARY.md#rtk-query) overview: https://redux-toolkit.js.org/rtk-query/overview
 - React, "You Might Not Need an Effect": https://react.dev/learn/you-might-not-need-an-effect
 - React, "Synchronizing with Effects": https://react.dev/learn/synchronizing-with-effects
 - React Compiler: https://react.dev/learn/react-compiler/introduction
