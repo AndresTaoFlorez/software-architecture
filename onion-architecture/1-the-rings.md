@@ -1,6 +1,11 @@
 > **[Onion Architecture](README.md)** › The Rings.
 
-# 3. The Rings
+<a id="3-the-rings-the-four-layers"></a>
+<a id="3-the-rings"></a>
+
+<a id="3-the-four-layers"></a>
+
+# 1. The Rings
 
 This guide uses four practical areas to explain [Onion Architecture](../GLOSSARY.md#onion-architecture):
 
@@ -13,7 +18,9 @@ The drawing is a dependency model, not a call-stack diagram. Runtime control can
 
 ---
 
-## 3.1 Domain (innermost)
+<a id="31-domain-innermost"></a>
+
+## 1.1 Domain (innermost)
 
 ### Responsibility
 
@@ -27,6 +34,8 @@ Typical contents:
 - [domain events](../GLOSSARY.md#domain-event);
 - [domain errors](../GLOSSARY.md#domain-error);
 - policies/[invariants](../GLOSSARY.md#invariant).
+
+The following is a responsibility excerpt; imports and supporting types are omitted. For a complete executable feature, follow the [cancellation walkthrough](../clean-architecture/4-building-a-feature.md).
 
 Example:
 
@@ -77,7 +86,9 @@ If the system mainly transports data with little domain behavior, an anemic-look
 
 ---
 
-## 3.2 Application
+<a id="32-application"></a>
+
+## 1.2 Application
 
 ### Responsibility
 
@@ -92,11 +103,24 @@ Typical contents:
 - application errors;
 - orchestration across [Domain](../GLOSSARY.md#domain) objects and [ports](../GLOSSARY.md#port).
 
+The following is a responsibility excerpt; imports and supporting types are omitted. For a complete executable feature, follow the [cancellation walkthrough](../clean-architecture/4-building-a-feature.md).
+
 Example:
 
 ```ts
+export interface ExecuteClosureCommand {
+  startsOn: LocalDate
+  endsOn: LocalDate
+  officeId: string
+}
+
+export interface ValidatedClosure {
+  period: ClosurePeriod
+  officeId: string
+}
+
 export interface ClosureGateway {
-  enqueue(command: ExecuteClosureCommand): Promise<ClosureJob>
+  enqueue(command: ValidatedClosure): Promise<ClosureJob>
 }
 
 export function makeExecuteClosure(deps: {
@@ -106,7 +130,7 @@ export function makeExecuteClosure(deps: {
     const period = ClosurePeriod.create(command.startsOn, command.endsOn)
 
     return deps.gateway.enqueue({
-      ...command,
+      officeId: command.officeId,
       period,
     })
   }
@@ -137,7 +161,9 @@ Do not create one [port](../GLOSSARY.md#port) per endpoint automatically. [Port]
 
 ---
 
-## 3.3 Infrastructure
+<a id="33-infrastructure"></a>
+
+## 1.3 Infrastructure
 
 ### Responsibility
 
@@ -154,13 +180,15 @@ Typical contents:
 - message-broker or realtime protocol clients;
 - filesystem/object-storage implementations.
 
+The following is a responsibility excerpt; imports and supporting types are omitted. For a complete executable feature, follow the [cancellation walkthrough](../clean-architecture/4-building-a-feature.md).
+
 Example:
 
 ```ts
 export class HttpClosureGateway implements ClosureGateway {
   constructor(private readonly http: HttpClient) {}
 
-  async enqueue(command: ExecuteClosureCommand): Promise<ClosureJob> {
+  async enqueue(command: ValidatedClosure): Promise<ClosureJob> {
     const dto = toExecuteClosureDto(command)
     const response = await this.http.post('/closures', dto)
 
@@ -195,7 +223,9 @@ flowchart LR
 
 ---
 
-## 3.4 Presentation (outermost)
+<a id="34-presentation-outermost"></a>
+
+## 1.4 Presentation (outermost)
 
 ### Responsibility
 
@@ -206,11 +236,13 @@ Typical contents:
 - pages/routes/layouts;
 - components;
 - [view models](../GLOSSARY.md#viewmodel) / [Presentation Models](../GLOSSARY.md#presentation-model);
-- custom hooks/composables;
+- [custom hooks](../GLOSSARY.md#custom-hook)/composables;
 - UI state [stores](../GLOSSARY.md#store)/slices;
 - [selectors](../GLOSSARY.md#selector)/computed values;
 - [design-system](../GLOSSARY.md#design-system) primitives and styles;
 - UI-specific validation/formatting.
+
+The following is a responsibility excerpt; imports and supporting types are omitted. For a complete executable feature, follow the [cancellation walkthrough](../clean-architecture/4-building-a-feature.md).
 
 Example:
 
@@ -221,7 +253,7 @@ export function useClosures() {
 
   return {
     rows: state.rows,
-    busy: state.status !== 'idle',
+    busy: state.status === 'pending',
     query: actions.query,
     reset: actions.reset,
   }
@@ -278,7 +310,9 @@ See:
 
 ---
 
-## 3.5 Composition is outside the rings' business policy
+<a id="35-composition-is-outside-the-rings-business-policy"></a>
+
+## 1.5 Composition is outside the rings' business policy
 
 The executable still needs a bootstrap location that knows concrete implementations:
 
@@ -294,7 +328,9 @@ See **[Composition Root](../foundations/composition-root.md)**.
 
 ---
 
-## 3.6 Cross-cutting concerns still need owners
+<a id="36-cross-cutting-concerns-still-need-owners"></a>
+
+## 1.6 Cross-cutting concerns still need owners
 
 "Cross-cutting" is not a license to create a globally imported utility layer.
 

@@ -1,12 +1,18 @@
 > **[Onion Architecture](README.md)** › Advanced Patterns.
 
-# 8. Advanced Patterns
+<a id="8-appendix-advanced-patterns-bonus"></a>
+<a id="8-advanced-patterns"></a>
+
+# 4. Advanced Patterns
 
 These patterns are **not part of the definition of [Onion Architecture](../GLOSSARY.md#onion-architecture)**. They are examples of production concerns that should be assigned to an owner without reversing dependency direction.
 
 ---
 
-## 8.1 Offline data and synchronization
+<a id="81-offline-first-synchronization-with-crdt--last-write-wins-infrastructure"></a>
+<a id="81-offline-data-and-synchronization"></a>
+
+## 4.1 Offline data and synchronization
 
 Offline caching, conflict resolution and synchronization are not automatically [Domain](../GLOSSARY.md#domain) concerns.
 
@@ -25,7 +31,10 @@ A true [CRDT](../GLOSSARY.md#crdt) has mathematical convergence properties; a si
 
 ---
 
-## 8.2 Optimistic updates
+<a id="82-optimistic-updates-presentation--infrastructure"></a>
+<a id="82-optimistic-updates"></a>
+
+## 4.2 Optimistic updates
 
 Optimistic feedback usually spans concerns:
 
@@ -42,7 +51,10 @@ A generic [server-state](../GLOSSARY.md#server-state) library can own purely tec
 
 ---
 
-## 8.3 Token refresh and request deduplication
+<a id="83-transparent-token-refresh--request-deduplication-infrastructure"></a>
+<a id="83-token-refresh-and-request-deduplication"></a>
+
+## 4.3 Token refresh and request deduplication
 
 Transparent HTTP token refresh, request coalescing and transport retries are normally [Infrastructure](../GLOSSARY.md#infrastructure) concerns.
 
@@ -59,7 +71,11 @@ Inner policy should not receive raw `401`, Axios errors or retry counters unless
 
 ---
 
-## 8.4 Feature ownership in Presentation
+<a id="84-shell-boards-pattern-presentation"></a>
+<a id="85-feature-based-component-organization-presentation"></a>
+<a id="84-feature-ownership-in-presentation"></a>
+
+## 4.4 Feature ownership in Presentation
 
 A growing [Presentation layer](../GLOSSARY.md#presentation-layer) benefits from feature ownership, but that is **frontend architecture inside the outer ring**, not an Onion ring.
 
@@ -83,7 +99,9 @@ Do not duplicate the full frontend folder specification inside the Onion guide.
 
 ---
 
-## 8.5 State libraries
+<a id="85-state-libraries"></a>
+
+## 4.5 State libraries
 
 Redux, Pinia, Zustand and equivalent state libraries are [Presentation](../GLOSSARY.md#presentation-layer) mechanisms.
 
@@ -93,7 +111,11 @@ See **[State Management and Side Effects](../frontend/state-management.md)**.
 
 ---
 
-## 8.6 Design systems
+<a id="86-design-systems"></a>
+
+<a id="86-styling--animation-architecture-presentation"></a>
+
+## 4.6 Design systems
 
 CSS, Panda CSS, Tailwind, CSS Modules and component [recipes](../GLOSSARY.md#recipe) are [Presentation](../GLOSSARY.md#presentation-layer) mechanisms.
 
@@ -103,7 +125,9 @@ Token/[recipe](../GLOSSARY.md#recipe) architecture is documented centrally in:
 
 ---
 
-## 8.7 Background and realtime work
+<a id="87-background-and-realtime-work"></a>
+
+## 4.7 Background and realtime work
 
 WebSocket/SSE clients, message subscriptions and browser workers are outer mechanisms.
 
@@ -120,7 +144,9 @@ If reconnect policy itself is a product requirement, elevate that policy appropr
 
 ---
 
-## 8.8 Do not add patterns by fashion
+<a id="88-do-not-add-patterns-by-fashion"></a>
+
+## 4.8 Do not add patterns by fashion
 
 Before introducing [CQRS](../GLOSSARY.md#cqrs), [event sourcing](../GLOSSARY.md#event-sourcing), [CRDTs](../GLOSSARY.md#crdt), a [global state](../GLOSSARY.md#global-state) machine or a complex sync engine, identify the actual force:
 
