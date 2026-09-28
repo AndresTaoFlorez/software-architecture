@@ -38,10 +38,6 @@
       {
         "text": "Application Layer",
         "caseSensitive": false
-      },
-      {
-        "text": "application layer",
-        "caseSensitive": false
       }
     ]
   },
@@ -132,10 +128,6 @@
       {
         "text": "Composition Root",
         "caseSensitive": false
-      },
-      {
-        "text": "composition root",
-        "caseSensitive": false
       }
     ]
   },
@@ -181,10 +173,6 @@
       },
       {
         "text": "Conflict-Free Replicated Data Type",
-        "caseSensitive": false
-      },
-      {
-        "text": "Conflict-free Replicated Data Type",
         "caseSensitive": false
       }
     ]
@@ -248,10 +236,6 @@
         "caseSensitive": false
       },
       {
-        "text": "dependency injection",
-        "caseSensitive": false
-      },
-      {
         "text": "DI",
         "caseSensitive": true
       }
@@ -299,10 +283,6 @@
     "aliases": [
       {
         "text": "Dependency Rule",
-        "caseSensitive": false
-      },
-      {
-        "text": "dependency rule",
         "caseSensitive": false
       }
     ]
@@ -376,20 +356,8 @@
         "caseSensitive": false
       },
       {
-        "text": "domain entity",
-        "caseSensitive": false
-      },
-      {
         "text": "domain entities",
         "caseSensitive": false
-      },
-      {
-        "text": "Entity",
-        "caseSensitive": true
-      },
-      {
-        "text": "Entities",
-        "caseSensitive": true
       }
     ]
   },
@@ -403,14 +371,6 @@
       },
       {
         "text": "domain errors",
-        "caseSensitive": false
-      },
-      {
-        "text": "Domain Error",
-        "caseSensitive": false
-      },
-      {
-        "text": "Domain Errors",
         "caseSensitive": false
       }
     ]
@@ -426,14 +386,6 @@
       {
         "text": "domain events",
         "caseSensitive": false
-      },
-      {
-        "text": "Domain Event",
-        "caseSensitive": false
-      },
-      {
-        "text": "Domain Events",
-        "caseSensitive": false
       }
     ]
   },
@@ -447,14 +399,6 @@
       },
       {
         "text": "domain services",
-        "caseSensitive": false
-      },
-      {
-        "text": "Domain Service",
-        "caseSensitive": false
-      },
-      {
-        "text": "Domain Services",
         "caseSensitive": false
       }
     ]
@@ -578,14 +522,6 @@
       {
         "text": "Interface Adapters",
         "caseSensitive": false
-      },
-      {
-        "text": "interface adapter",
-        "caseSensitive": false
-      },
-      {
-        "text": "interface adapters",
-        "caseSensitive": false
       }
     ]
   },
@@ -612,10 +548,6 @@
         "caseSensitive": false
       },
       {
-        "text": "last-write-wins",
-        "caseSensitive": false
-      },
-      {
         "text": "LWW",
         "caseSensitive": true
       }
@@ -627,10 +559,6 @@
     "aliases": [
       {
         "text": "listener middleware",
-        "caseSensitive": false
-      },
-      {
-        "text": "Listener Middleware",
         "caseSensitive": false
       }
     ]
@@ -848,10 +776,6 @@
       {
         "text": "Presentation Layer",
         "caseSensitive": false
-      },
-      {
-        "text": "presentation layer",
-        "caseSensitive": false
       }
     ]
   },
@@ -861,10 +785,6 @@
     "aliases": [
       {
         "text": "Presentation Model",
-        "caseSensitive": false
-      },
-      {
-        "text": "presentation model",
         "caseSensitive": false
       },
       {
@@ -883,14 +803,6 @@
       },
       {
         "text": "public APIs",
-        "caseSensitive": false
-      },
-      {
-        "text": "Public API",
-        "caseSensitive": false
-      },
-      {
-        "text": "Public APIs",
         "caseSensitive": false
       }
     ]
@@ -927,10 +839,6 @@
     "term": "Repository Pattern",
     "anchor": "repository",
     "aliases": [
-      {
-        "text": "Repository",
-        "caseSensitive": true
-      },
       {
         "text": "repository pattern",
         "caseSensitive": false
@@ -999,10 +907,6 @@
     "aliases": [
       {
         "text": "Service Locator",
-        "caseSensitive": false
-      },
-      {
-        "text": "service locator",
         "caseSensitive": false
       },
       {
@@ -1084,11 +988,11 @@
     "anchor": "store",
     "aliases": [
       {
-        "text": "store",
+        "text": "Redux store",
         "caseSensitive": false
       },
       {
-        "text": "stores",
+        "text": "state store",
         "caseSensitive": false
       }
     ]
@@ -1118,14 +1022,6 @@
       {
         "text": "Test Doubles",
         "caseSensitive": false
-      },
-      {
-        "text": "test double",
-        "caseSensitive": false
-      },
-      {
-        "text": "test doubles",
-        "caseSensitive": false
       }
     ]
   },
@@ -1135,10 +1031,6 @@
     "aliases": [
       {
         "text": "Test Pyramid",
-        "caseSensitive": false
-      },
-      {
-        "text": "test pyramid",
         "caseSensitive": false
       }
     ]
@@ -1164,10 +1056,6 @@
       {
         "text": "Unit of Work",
         "caseSensitive": false
-      },
-      {
-        "text": "unit of work",
-        "caseSensitive": false
       }
     ]
   },
@@ -1182,14 +1070,6 @@
       {
         "text": "use cases",
         "caseSensitive": false
-      },
-      {
-        "text": "Use Case",
-        "caseSensitive": false
-      },
-      {
-        "text": "Use Cases",
-        "caseSensitive": false
       }
     ]
   },
@@ -1203,14 +1083,6 @@
       },
       {
         "text": "Value Objects",
-        "caseSensitive": false
-      },
-      {
-        "text": "value object",
-        "caseSensitive": false
-      },
-      {
-        "text": "value objects",
         "caseSensitive": false
       }
     ]
@@ -1389,6 +1261,110 @@
     "aliases": [
       {
         "text": "separated presentation",
+        "caseSensitive": false
+      }
+    ]
+  },
+  {
+    "term": "Clean Entities Circle",
+    "anchor": "clean-entities-circle",
+    "aliases": [
+      {
+        "text": "Clean Entities",
+        "caseSensitive": false
+      },
+      {
+        "text": "Entities circle",
+        "caseSensitive": false
+      },
+      {
+        "text": "Entities",
+        "caseSensitive": true
+      }
+    ]
+  },
+  {
+    "term": "Supervising Controller",
+    "anchor": "supervising-controller",
+    "aliases": [
+      {
+        "text": "Supervising Controller",
+        "caseSensitive": false
+      }
+    ]
+  },
+  {
+    "term": "Data Binding",
+    "anchor": "data-binding",
+    "aliases": [
+      {
+        "text": "data binding",
+        "caseSensitive": false
+      },
+      {
+        "text": "data-binding",
+        "caseSensitive": false
+      }
+    ]
+  },
+  {
+    "term": "CSS Selector",
+    "anchor": "css-selector",
+    "aliases": [
+      {
+        "text": "CSS selector",
+        "caseSensitive": false
+      },
+      {
+        "text": "CSS selectors",
+        "caseSensitive": false
+      }
+    ]
+  },
+  {
+    "term": "Optimistic Concurrency",
+    "anchor": "optimistic-concurrency",
+    "aliases": [
+      {
+        "text": "optimistic concurrency",
+        "caseSensitive": false
+      }
+    ]
+  },
+  {
+    "term": "Idempotency",
+    "anchor": "idempotency",
+    "aliases": [
+      {
+        "text": "idempotency",
+        "caseSensitive": false
+      }
+    ]
+  },
+  {
+    "term": "Custom Hook",
+    "anchor": "custom-hook",
+    "aliases": [
+      {
+        "text": "custom Hook",
+        "caseSensitive": false
+      },
+      {
+        "text": "custom Hooks",
+        "caseSensitive": false
+      }
+    ]
+  },
+  {
+    "term": "Type-only Import",
+    "anchor": "type-only-import",
+    "aliases": [
+      {
+        "text": "type-only import",
+        "caseSensitive": false
+      },
+      {
+        "text": "type-only imports",
         "caseSensitive": false
       }
     ]
