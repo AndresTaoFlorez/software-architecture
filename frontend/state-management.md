@@ -89,7 +89,7 @@ Redux's style guide requires [reducers](../GLOSSARY.md#reducer) to be free of [s
 
 ## 4. Selectors own derivation
 
-Do not [store](../GLOSSARY.md#store) data that can be reliably calculated from existing state.
+Do not store data that can be reliably calculated from existing state.
 
 Bad:
 

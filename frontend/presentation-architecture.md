@@ -177,7 +177,7 @@ Benefits:
 
 ## 5. Public hook / ViewModel facade
 
-For feature-heavy screens, a public custom hook can act as a [Presentation Model](../GLOSSARY.md#presentation-model) / [ViewModel](../GLOSSARY.md#viewmodel) [facade](../GLOSSARY.md#facade-pattern).
+For feature-heavy screens, a public [custom hook](../GLOSSARY.md#custom-hook) can act as a [Presentation Model](../GLOSSARY.md#presentation-model) / [ViewModel](../GLOSSARY.md#viewmodel) [facade](../GLOSSARY.md#facade-pattern).
 
 ```mermaid
 flowchart TD
@@ -196,14 +196,13 @@ export interface ClosuresViewModel {
   readonly busy: boolean
   readonly canSave: boolean
 
-  query(input: ClosureQueryInput): Promise<void>
+  query(input: ClosureQueryInput): Promise<Result<ClosureQueryResult, UiError>>
   save(): Promise<Result<ClosureId, ClosureError>>
   reset(): void
 }
 
-export function useClosures(): ClosuresViewModel {
-  // compose internal Presentation concerns
-}
+// A real implementation composes Presentation bindings and returns
+// this contract. Types above are signature excerpts, not an implementation.
 ```
 
 React's custom-hook guidance recommends hooks that express concrete, high-level [use cases](../GLOSSARY.md#use-case) rather than generic wrappers around lifecycle primitives. That maps well to feature [facades](../GLOSSARY.md#facade-pattern) such as `useAuth`, `useClosures` and `useTheme`.
@@ -287,7 +286,7 @@ Prefer:
 - `features/closures/lib/date-range-overlap.ts`
 - `features/closures/lib/format-jxxi-message.ts`
 
-until the code proves it has a broader owner.
+when they are UI-only helpers. A date-overlap rule that determines whether an operation is legally valid belongs inward, even if the first caller is a form. The UI may preview the result, but must not become its authoritative owner. Promote a helper only when its meaning proves it has a broader owner.
 
 Only then promote focused utilities:
 
@@ -348,7 +347,7 @@ See **[Executable Architecture](../foundations/architecture-testing.md)**.
 
 ## Sources
 
-- React, "Reusing Logic with Custom Hooks": https://react.dev/learn/reusing-logic-with-custom-hooks
+- React, "Reusing Logic with [Custom Hooks](../GLOSSARY.md#custom-hook)": https://react.dev/learn/reusing-logic-with-custom-hooks
 - Redux Style Guide: https://redux.js.org/style-guide/
 - Martin Fowler, "[Presentation Model](../GLOSSARY.md#presentation-model)": https://martinfowler.com/eaaDev/PresentationModel.html
 - Feature-Sliced Design, slices/segments: https://feature-sliced.design/docs/reference/slices-segments
