@@ -8,8 +8,8 @@ single home for everything behind the GitHub Pages site.
 ## What it shows
 
 - The **four layers** wired exactly as the guide prescribes, with dependencies pointing inward.
-- A **runtime adapter swap** (in-memory ↔ localStorage): the same port, two implementations, and the
-  Application and Presentation layers never change.
+- A **runtime [adapter](../GLOSSARY.md#adapter) swap** (in-memory ↔ localStorage): the same [port](../GLOSSARY.md#port), two implementations, and the
+  [Application](../GLOSSARY.md#application-layer) and [Presentation](../GLOSSARY.md#presentation-layer) layers never change.
 - A **data-flow tracer** that animates each request travelling `View → Store → UseCase → Repository`.
 
 ## Layout (the four rings)
