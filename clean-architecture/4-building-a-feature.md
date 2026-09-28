@@ -102,7 +102,7 @@ External [DTOs](../GLOSSARY.md#data-transfer-object-dto) are translated at the b
 
 A simple React hook could receive the [use case](../GLOSSARY.md#use-case) through a feature dependency object/context, or a Redux [store](../GLOSSARY.md#store) could receive it through [thunk](../GLOSSARY.md#thunk) `extraArgument`.
 
-Example feature facade shape:
+Example feature [facade](../GLOSSARY.md#facade-pattern) shape:
 
 ```ts
 export interface OrderActions {

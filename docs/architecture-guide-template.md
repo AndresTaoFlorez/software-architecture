@@ -125,7 +125,7 @@ Document real decay modes such as god services, god [ViewModels](../GLOSSARY.md#
 
 ## 13. Advanced topics
 
-Only now introduce optional topics such as CQRS, [domain events](../GLOSSARY.md#domain-event), offline synchronization, [microservices](../GLOSSARY.md#microservice), [microfrontends](../GLOSSARY.md#microfrontend), [DI containers](../GLOSSARY.md#di-container), or event sourcing. State the force that justifies each option.
+Only now introduce optional topics such as [CQRS](../GLOSSARY.md#cqrs), [domain events](../GLOSSARY.md#domain-event), offline synchronization, [microservices](../GLOSSARY.md#microservice), [microfrontends](../GLOSSARY.md#microfrontend), [DI containers](../GLOSSARY.md#di-container), or [event sourcing](../GLOSSARY.md#event-sourcing). State the force that justifies each option.
 
 ## 14. Learning path
 

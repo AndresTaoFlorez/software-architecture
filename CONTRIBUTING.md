@@ -222,11 +222,11 @@ Prefer one stable example domain per guide and evolve it progressively.
 Do not introduce:
 
 - [DI container](./GLOSSARY.md#di-container),
-- CQRS,
+- [CQRS](./GLOSSARY.md#cqrs),
 - [microservices](./GLOSSARY.md#microservice),
-- event sourcing,
+- [event sourcing](./GLOSSARY.md#event-sourcing),
 - [global state](./GLOSSARY.md#global-state),
-- factories,
+- [Factory patterns](./GLOSSARY.md#factory-pattern),
 - [repositories](./GLOSSARY.md#repository),
 
 unless the problem in the example actually requires them.
