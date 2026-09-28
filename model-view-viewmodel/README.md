@@ -6,9 +6,9 @@
 
 ## 1. History
 
-Martin Fowler described **Presentation Model** in 2004: an abstraction containing the state and behavior of a View while remaining independent of concrete UI controls.
+Martin Fowler described **[Presentation Model](../GLOSSARY.md#presentation-model)** in 2004: an abstraction containing the state and behavior of a [View](../GLOSSARY.md#view) while remaining independent of concrete UI controls.
 
-In **2005**, John Gossman introduced the MVVM name in the WPF ecosystem. Microsoft literature later described MVVM as closely related to/specialized from Presentation Model for WPF-style binding.
+In **2005**, John Gossman introduced the [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) name in the WPF ecosystem. Microsoft literature later described [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) as closely related to/specialized from [Presentation Model](../GLOSSARY.md#presentation-model) for WPF-style binding.
 
 References:
 
@@ -27,7 +27,7 @@ UI components often accumulate:
 - business rules;
 - transport calls.
 
-MVVM separates the rendering surface from the state/behavior needed by that rendering surface.
+[MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) separates the rendering surface from the state/behavior needed by that rendering surface.
 
 ```mermaid
 flowchart LR
@@ -48,28 +48,28 @@ Strong fit:
 
 ## 4. When it is unnecessary
 
-A dedicated ViewModel can be overhead when:
+A dedicated [ViewModel](../GLOSSARY.md#viewmodel) can be overhead when:
 
 - the screen is tiny;
 - UI state is trivial;
 - direct local component state is clearer;
-- creating a ViewModel only forwards values without adding a useful boundary.
+- creating a [ViewModel](../GLOSSARY.md#viewmodel) only forwards values without adding a useful boundary.
 
-Microsoft's own MVVM literature explicitly discusses the overhead for simple models/screens.
+Microsoft's own [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) literature explicitly discusses the overhead for simple models/screens.
 
 ## 5. Roles
 
 | Role | Owns | Does not automatically own |
 | --- | --- | --- |
-| View | rendering + user gestures | domain/application rules |
-| ViewModel | view-oriented state, derived display values, commands | HTTP/DB details or authoritative business invariants |
-| Model | non-view application/domain capabilities | concrete View controls |
+| [View](../GLOSSARY.md#view) | rendering + user gestures | domain/application rules |
+| [ViewModel](../GLOSSARY.md#viewmodel) | view-oriented state, derived display values, commands | HTTP/DB details or authoritative business [invariants](../GLOSSARY.md#invariant) |
+| [Model](../GLOSSARY.md#model) | non-view application/domain capabilities | concrete [View](../GLOSSARY.md#view) controls |
 
-The word "Model" is overloaded. In a Clean/Onion application it is not automatically identical to `domain/`.
+The word "[Model](../GLOSSARY.md#model)" is overloaded. In a Clean/Onion application it is not automatically identical to `domain/`.
 
 ## 6. React mapping used in this repository
 
-React is **not MVVM by default**.
+React is **not [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) by default**.
 
 A feature may intentionally use this mapping:
 
@@ -87,17 +87,17 @@ flowchart TD
     APP --> DOMAIN
 ```
 
-The hook is a ViewModel only when it genuinely exposes a view-oriented contract and hides lower-level mechanisms.
+The hook is a [ViewModel](../GLOSSARY.md#viewmodel) only when it genuinely exposes a view-oriented contract and hides lower-level mechanisms.
 
 ## 7. Where files go
 
 | Artifact | Example path |
 | --- | --- |
-| View | `features/closures/ui/QueryFilters/QueryFilters.tsx` |
-| public ViewModel facade | `features/closures/model/useClosures.ts` |
-| selectors | `features/closures/model/closures.selectors.ts` |
+| [View](../GLOSSARY.md#view) | `features/closures/ui/QueryFilters/QueryFilters.tsx` |
+| public [ViewModel](../GLOSSARY.md#viewmodel) facade | `features/closures/model/useClosures.ts` |
+| [selectors](../GLOSSARY.md#selector) | `features/closures/model/closures.selectors.ts` |
 | Redux binding | `features/closures/model/closures.bindings.ts` |
-| use case | `application/closures/use-cases/executeClosure.ts` |
+| [use case](../GLOSSARY.md#use-case) | `application/closures/use-cases/executeClosure.ts` |
 
 ## 8. Naming
 
@@ -118,6 +118,6 @@ See [Naming and File Placement Conventions](../conventions/naming-and-file-place
 
 ## Sources
 
-- Martin Fowler, *Presentation Model*: https://martinfowler.com/eaaDev/PresentationModel.html
+- Martin Fowler, *[Presentation Model](../GLOSSARY.md#presentation-model)*: https://martinfowler.com/eaaDev/PresentationModel.html
 - Martin Fowler, *GUI Architectures*: https://martinfowler.com/eaaDev/uiArchs.html
-- Microsoft, *WPF Apps With The Model-View-ViewModel Design Pattern*: https://learn.microsoft.com/en-us/archive/msdn-magazine/2009/february/patterns-wpf-apps-with-the-model-view-viewmodel-design-pattern
+- Microsoft, *WPF Apps With The [Model-View-ViewModel](../GLOSSARY.md#model-view-viewmodel-mvvm) Design Pattern*: https://learn.microsoft.com/en-us/archive/msdn-magazine/2009/february/patterns-wpf-apps-with-the-model-view-viewmodel-design-pattern
