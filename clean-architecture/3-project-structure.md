@@ -2,7 +2,7 @@
 
 # 3. Project Structure & Conventions
 
-Clean Architecture constrains dependencies; it does not prescribe one filesystem tree.
+[Clean Architecture](../GLOSSARY.md#clean-architecture) constrains dependencies; it does not prescribe one filesystem tree.
 
 A folder structure is useful when it makes architectural ownership visible and gives tooling something stable to enforce. It becomes harmful when developers mistake the folder names for the architecture itself.
 
@@ -51,7 +51,7 @@ flowchart LR
     C -. wires .-> A
 ```
 
-Whether Presentation may import Domain types directly is a project decision. A stricter application-contract boundary may forbid it to reduce coupling between UI and domain representation.
+Whether [Presentation](../GLOSSARY.md#presentation-layer) may import [Domain](../GLOSSARY.md#domain) types directly is a project decision. A stricter application-contract boundary may forbid it to reduce coupling between UI and domain representation.
 
 ---
 
@@ -110,9 +110,9 @@ See **[Module Boundaries and Public APIs](../foundations/module-boundaries-and-p
 
 ## 3.4 Structuring the outermost circle: the Presentation UI
 
-Clean Architecture tells us that UI technology is an outer detail. It does **not** define how a large Presentation codebase should organize pages, components, hooks, state, selectors or design-system code.
+[Clean Architecture](../GLOSSARY.md#clean-architecture) tells us that UI technology is an outer detail. It does **not** define how a large [Presentation](../GLOSSARY.md#presentation-layer) codebase should organize pages, components, hooks, state, [selectors](../GLOSSARY.md#selector) or [design-system](../GLOSSARY.md#design-system) code.
 
-The canonical repository guidance is therefore centralized in:
+The canonical [repository](../GLOSSARY.md#repository) guidance is therefore centralized in:
 
 - **[Frontend Architecture](../frontend/README.md)**
 - **[Presentation Architecture](../frontend/presentation-architecture.md)**
@@ -135,17 +135,17 @@ flowchart TD
     SHARED --> SLIB["lib/"]
 ```
 
-This is a Presentation organization strategy, not a fifth Clean Architecture circle.
+This is a [Presentation](../GLOSSARY.md#presentation-layer) organization strategy, not a fifth [Clean Architecture](../GLOSSARY.md#clean-architecture) circle.
 
 ---
 
 ## 3.5 Styles and animation
 
-Styling stays in Presentation, but the repository no longer prescribes generic CSS placement from the Clean guide.
+Styling stays in [Presentation](../GLOSSARY.md#presentation-layer), but the [repository](../GLOSSARY.md#repository) no longer prescribes generic CSS placement from the Clean guide.
 
 Use the central **[Styling and Design-System Architecture](../frontend/styling-and-design-system.md)**.
 
-The default principle is **ownership and colocation**:
+The default principle is **ownership and [colocation](../GLOSSARY.md#colocation)**:
 
 ```mermaid
 flowchart TD
@@ -155,7 +155,7 @@ flowchart TD
     C --> IX["index.ts"]
 ```
 
-Shared design-system recipes have a different owner from feature-local styles. Do not duplicate a recipe in both places.
+Shared [design-system](../GLOSSARY.md#design-system) [recipes](../GLOSSARY.md#recipe) have a different owner from feature-local styles. Do not duplicate a [recipe](../GLOSSARY.md#recipe) in both places.
 
 ---
 
@@ -186,9 +186,9 @@ flowchart TD
     C["composition/"] --> CT["container.ts"]
 ```
 
-The Composition Root may import concrete Infrastructure plus Application contracts and Presentation bootstrap/store code as needed to assemble the executable.
+The [Composition Root](../GLOSSARY.md#composition-root) may import concrete [Infrastructure](../GLOSSARY.md#infrastructure) plus [Application](../GLOSSARY.md#application-layer) contracts and [Presentation](../GLOSSARY.md#presentation-layer) bootstrap/[store](../GLOSSARY.md#store) code as needed to assemble the executable.
 
-It is not a business layer and it is not a service locator.
+It is not a business layer and it is not a [service locator](../GLOSSARY.md#service-locator).
 
 See **[Composition Root](../foundations/composition-root.md)**.
 
@@ -196,11 +196,11 @@ See **[Composition Root](../foundations/composition-root.md)**.
 
 ## 3.8 Enforce the graph
 
-A dependency rule that can be automated should be automated.
+A [dependency rule](../GLOSSARY.md#dependency-rule) that can be automated should be automated.
 
 Options include:
 
-- AST-based architecture tests;
+- [AST](../GLOSSARY.md#abstract-syntax-tree-ast)-based [architecture tests](../GLOSSARY.md#architecture-test);
 - dependency-cruiser;
 - ESLint boundary plugins;
 - Nx module-boundary rules;
@@ -224,9 +224,9 @@ See **[Executable Architecture](../foundations/architecture-testing.md)**.
 
 | Rule type | Example |
 | --- | --- |
-| Architecture | Domain cannot depend on Infrastructure. |
-| Architecture | Application cannot import a concrete HTTP client. |
-| Architecture | A concrete outer adapter implements or consumes an inner-owned contract. |
+| Architecture | [Domain](../GLOSSARY.md#domain) cannot depend on [Infrastructure](../GLOSSARY.md#infrastructure). |
+| Architecture | [Application](../GLOSSARY.md#application-layer) cannot import a concrete HTTP client. |
+| Architecture | A concrete outer [adapter](../GLOSSARY.md#adapter) implements or consumes an inner-owned contract. |
 
 ### Recommended convention
 
@@ -248,6 +248,6 @@ Treating all three as equally fundamental creates cargo-cult architecture.
 
 ## Sources
 
-- Robert C. Martin, "The Clean Architecture": https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
+- Robert C. Martin, "The [Clean Architecture](../GLOSSARY.md#clean-architecture)": https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
 - Redux Style Guide: https://redux.js.org/style-guide/
 - Feature-Sliced Design, slices/segments: https://feature-sliced.design/docs/reference/slices-segments

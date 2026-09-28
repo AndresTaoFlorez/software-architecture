@@ -2,7 +2,7 @@
 
 # 2. The Four Circles
 
-The canonical Clean Architecture diagram contains four concentric circles. They are conceptual boundaries, not mandatory directory names.
+The canonical [Clean Architecture](../GLOSSARY.md#clean-architecture) diagram contains four concentric circles. They are conceptual boundaries, not mandatory directory names.
 
 ---
 
@@ -10,17 +10,17 @@ The canonical Clean Architecture diagram contains four concentric circles. They 
 
 ### Responsibility
 
-Martin describes Entities as encapsulating enterprise-wide critical business rules.
+Martin describes [Entities](../GLOSSARY.md#domain-entity) as encapsulating enterprise-wide critical business rules.
 
-In modern domain-oriented systems, interpret that carefully: the relevant policy may be scoped to a product or bounded context rather than literally one enterprise-wide class shared by every application.
+In modern domain-oriented systems, interpret that carefully: the relevant policy may be scoped to a product or [bounded context](../GLOSSARY.md#bounded-context) rather than literally one enterprise-wide class shared by every application.
 
 Typical contents:
 
 - entities with identity;
-- value objects;
-- business invariants;
+- [value objects](../GLOSSARY.md#value-object);
+- business [invariants](../GLOSSARY.md#invariant);
 - domain policies;
-- domain errors/events where appropriate.
+- [domain errors](../GLOSSARY.md#domain-error)/events where appropriate.
 
 Example:
 
@@ -38,7 +38,7 @@ export class Money {
 }
 ```
 
-Entities should not know delivery, persistence or framework details.
+[Entities](../GLOSSARY.md#domain-entity) should not know delivery, persistence or framework details.
 
 They do **not** have to be classes. Functional/immutable domain models can satisfy the same boundary.
 
@@ -48,13 +48,13 @@ They do **not** have to be classes. Functional/immutable domain models can satis
 
 ### Responsibility
 
-Use Cases contain application-specific business rules and orchestrate an operation.
+[Use Cases](../GLOSSARY.md#use-case) contain application-specific business rules and orchestrate an operation.
 
 Typical contents:
 
-- application services/interactors;
+- [application services](../GLOSSARY.md#application-service)/interactors;
 - commands/queries;
-- required ports/boundaries;
+- required [ports](../GLOSSARY.md#port)/boundaries;
 - application-level validation and orchestration;
 - application results/errors.
 
@@ -80,11 +80,11 @@ export function makeCancelOrder(deps: {
 }
 ```
 
-The use case does not import the database, HTTP client, UI framework or concrete repository.
+The [use case](../GLOSSARY.md#use-case) does not import the database, HTTP client, UI framework or concrete [repository](../GLOSSARY.md#repository).
 
 ### Error ownership
 
-Do not map every external failure into a Domain error.
+Do not map every external failure into a [Domain error](../GLOSSARY.md#domain-error).
 
 Use meaning:
 
@@ -107,11 +107,11 @@ Examples:
 
 - controllers;
 - presenters;
-- gateways/repository adapters;
-- mappers;
-- framework-facing state adapters.
+- [gateways](../GLOSSARY.md#gateway)/[repository](../GLOSSARY.md#repository) [adapters](../GLOSSARY.md#adapter);
+- [mappers](../GLOSSARY.md#mapper);
+- framework-facing state [adapters](../GLOSSARY.md#adapter).
 
-An adapter can implement an inner port:
+An [adapter](../GLOSSARY.md#adapter) can implement an inner [port](../GLOSSARY.md#port):
 
 ```ts
 export class HttpOrderRepository implements OrderRepository {
@@ -126,7 +126,7 @@ export class HttpOrderRepository implements OrderRepository {
 
 ### Repository is not a synonym for adapter
 
-Use `Repository` when the abstraction is actually repository-like. Other ports may be better named:
+Use `Repository` when the abstraction is actually [repository](../GLOSSARY.md#repository)-like. Other [ports](../GLOSSARY.md#port) may be better named:
 
 Examples include `PaymentGateway`, `FileStorage`, `Clock`, `IdGenerator`, `NotificationSender`, and `ClosureExecutor`.
 
@@ -166,24 +166,24 @@ as "every request must call exactly one thing in each circle".
 
 It is a source dependency model.
 
-A UI component can call a Presentation adapter that calls a use case. An Infrastructure adapter can be invoked by that use case through a port. Runtime calls can move both directions across boundaries while source dependencies remain inward.
+A UI component can call a [Presentation](../GLOSSARY.md#presentation-layer) [adapter](../GLOSSARY.md#adapter) that calls a [use case](../GLOSSARY.md#use-case). An [Infrastructure](../GLOSSARY.md#infrastructure) [adapter](../GLOSSARY.md#adapter) can be invoked by that [use case](../GLOSSARY.md#use-case) through a [port](../GLOSSARY.md#port). Runtime calls can move both directions across boundaries while source dependencies remain inward.
 
 ---
 
 ## 2.6 Mapping to common project folders
 
-This repository often uses:
+This [repository](../GLOSSARY.md#repository) often uses:
 
 | Clean concept | Practical area |
 | --- | --- |
-| Entities | Domain |
-| Use Cases | Application |
-| Interface Adapters | parts of Presentation + Infrastructure |
-| Frameworks & Drivers | concrete UI/HTTP/DB/storage/framework code |
+| [Entities](../GLOSSARY.md#domain-entity) | [Domain](../GLOSSARY.md#domain) |
+| [Use Cases](../GLOSSARY.md#use-case) | [Application](../GLOSSARY.md#application-layer) |
+| [Interface Adapters](../GLOSSARY.md#interface-adapter) | parts of [Presentation](../GLOSSARY.md#presentation-layer) + [Infrastructure](../GLOSSARY.md#infrastructure) |
+| [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers) | concrete UI/HTTP/DB/storage/framework code |
 
 The mapping is not one-to-one.
 
-For example, "Presentation" in a project may contain both Interface Adapter behavior (ViewModels/presenters) and Framework/Driver behavior (React components).
+For example, "[Presentation](../GLOSSARY.md#presentation-layer)" in a project may contain both [Interface Adapter](../GLOSSARY.md#interface-adapter) behavior ([ViewModels](../GLOSSARY.md#viewmodel)/presenters) and Framework/Driver behavior (React components).
 
 Therefore, do not insist that every project folder corresponds to exactly one canonical circle.
 
@@ -193,30 +193,30 @@ Therefore, do not insist that every project folder corresponds to exactly one ca
 
 A real frontend can contain hundreds of files inside the outer UI area.
 
-Clean Architecture does not define:
+[Clean Architecture](../GLOSSARY.md#clean-architecture) does not define:
 
 - page hierarchy;
-- feature folders;
+- [feature folders](../GLOSSARY.md#feature-folder);
 - hooks;
 - Redux slices;
-- selectors;
-- design tokens;
-- CSS recipes.
+- [selectors](../GLOSSARY.md#selector);
+- [design tokens](../GLOSSARY.md#design-token);
+- CSS [recipes](../GLOSSARY.md#recipe).
 
 Those are documented in **[Frontend Architecture](../frontend/README.md)**.
 
-They should preserve the cross-layer boundary but are not themselves Clean Architecture circles.
+They should preserve the cross-layer boundary but are not themselves [Clean Architecture](../GLOSSARY.md#clean-architecture) circles.
 
 ---
 
 ## 2.8 Backend organization is similarly concrete
 
-Controllers, transport DTOs, ORM mappings, transactions and messaging adapters are outer concerns.
+[Controllers](../GLOSSARY.md#controller), transport [DTOs](../GLOSSARY.md#data-transfer-object-dto), ORM mappings, transactions and messaging [adapters](../GLOSSARY.md#adapter) are outer concerns.
 
 See **[Clean Architecture on the Backend](8-clean-on-the-backend.md)**.
 
 ## Sources
 
-- Robert C. Martin, "The Clean Architecture" (2012): https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
-- Robert C. Martin, *Clean Architecture* (2017)
-- Martin Fowler, Repository: https://martinfowler.com/eaaCatalog/repository.html
+- Robert C. Martin, "The [Clean Architecture](../GLOSSARY.md#clean-architecture)" (2012): https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
+- Robert C. Martin, *[Clean Architecture](../GLOSSARY.md#clean-architecture)* (2017)
+- Martin Fowler, [Repository](../GLOSSARY.md#repository): https://martinfowler.com/eaaCatalog/repository.html
