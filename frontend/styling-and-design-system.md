@@ -1,8 +1,8 @@
 # Styling and Design-System Architecture
 
-Styling is a Presentation concern, but a mature styling system still needs architecture: ownership, layers of abstraction, public APIs and one source of truth.
+Styling is a [Presentation](../GLOSSARY.md#presentation-layer) concern, but a mature styling system still needs architecture: ownership, layers of abstraction, [public APIs](../GLOSSARY.md#public-api) and one source of truth.
 
-This guide uses Panda CSS for concrete examples. The model also applies to other token/recipe/component systems.
+This guide uses Panda CSS for concrete examples. The model also applies to other token/[recipe](../GLOSSARY.md#recipe)/component systems.
 
 ---
 
@@ -53,9 +53,9 @@ semanticTokens: {
 }
 ```
 
-Panda's documentation explicitly positions semantic tokens as context-dependent aliases and supports references back to raw tokens.
+Panda's documentation explicitly positions [semantic tokens](../GLOSSARY.md#semantic-token) as context-dependent aliases and supports references back to raw tokens.
 
-A semantic token should usually answer **what the value means**, not merely duplicate a hex value under another name.
+A [semantic token](../GLOSSARY.md#semantic-token) should usually answer **what the value means**, not merely duplicate a hex value under another name.
 
 ---
 
@@ -95,7 +95,7 @@ Avoid baking layout or contextual color into every text style. Panda's text-styl
 
 ## 3. Local atomic slot recipes: `sva`
 
-Panda's `sva` creates an atomic slot recipe.
+Panda's `sva` creates an [atomic slot recipe](../GLOSSARY.md#slot-recipe).
 
 Use it for a multipart component whose styling belongs to that component/feature:
 
@@ -134,15 +134,15 @@ flowchart TD
     Q --> I["index.ts"]
 ```
 
-Use variants and compound variants to model visual states rather than creating a web of descendant selectors.
+Use variants and compound variants to model visual states rather than creating a web of descendant [selectors](../GLOSSARY.md#selector).
 
 ---
 
 ## 4. Config recipes: shared design-system API
 
-Panda also provides `defineRecipe` and `defineSlotRecipe` for config recipes registered in `theme.recipes` / `theme.slotRecipes`.
+Panda also provides `defineRecipe` and `defineSlotRecipe` for config [recipes](../GLOSSARY.md#recipe) registered in `theme.recipes` / `theme.slotRecipes`.
 
-Use them when the recipe is part of the reusable design-system contract:
+Use them when the [recipe](../GLOSSARY.md#recipe) is part of the reusable [design-system](../GLOSSARY.md#design-system) contract:
 
 ```ts
 // design-system/button.recipe.ts
@@ -181,13 +181,13 @@ export default defineConfig({
 })
 ```
 
-Panda documents config recipes as useful for design systems, shared presets and JIT-friendly reuse.
+Panda documents config [recipes](../GLOSSARY.md#recipe) as useful for [design systems](../GLOSSARY.md#design-system), shared presets and JIT-friendly reuse.
 
 ---
 
 ## 5. One recipe, one owner
 
-Do **not** define the same visual recipe twice:
+Do **not** define the same visual [recipe](../GLOSSARY.md#recipe) twice:
 
 ```mermaid
 flowchart LR
@@ -205,13 +205,13 @@ flowchart LR
     G["Cross-feature design-system contract"] --> R["defineRecipe / defineSlotRecipe"] --> P["Register in Panda config"]
 ```
 
-Promotion from local to shared should be deliberate. Move the recipe; do not copy it.
+Promotion from local to shared should be deliberate. Move the [recipe](../GLOSSARY.md#recipe); do not copy it.
 
 ---
 
 ## 6. Slot recipes for multipart components
 
-Slot recipes are a strong fit for components whose parts must vary together:
+[Slot recipes](../GLOSSARY.md#slot-recipe) are a strong fit for components whose parts must vary together:
 
 ```mermaid
 flowchart TD
@@ -238,7 +238,7 @@ flowchart TD
 
 Slots give each part a stable style contract while variants coordinate the complete component.
 
-Do not use a slot recipe simply because a component has many DOM nodes. Use it when the parts form one reusable visual unit.
+Do not use a [slot recipe](../GLOSSARY.md#slot-recipe) simply because a component has many DOM nodes. Use it when the parts form one reusable visual unit.
 
 ---
 
@@ -271,7 +271,7 @@ variants: {
 }
 ```
 
-Use `data-*` attributes when they represent genuine runtime/semantic state that CSS needs to observe. Avoid using them to compensate for missing recipe variants.
+Use `data-*` attributes when they represent genuine runtime/semantic state that CSS needs to observe. Avoid using them to compensate for missing [recipe](../GLOSSARY.md#recipe) variants.
 
 Treat `!important` as an escape hatch, not a normal specificity strategy.
 
@@ -298,7 +298,7 @@ That creates competing sources of truth.
 Prefer Panda's:
 
 - `globalCss`;
-- semantic tokens;
+- [semantic tokens](../GLOSSARY.md#semantic-token);
 - conditions;
 - keyframes;
 - global variables where appropriate.
@@ -311,7 +311,7 @@ Raw CSS remains valid for explicit integration boundaries such as:
 - legacy migration boundaries;
 - deliberately external stylesheets.
 
-Therefore the repository does **not** establish "zero CSS files" as a universal architectural rule.
+Therefore the [repository](../GLOSSARY.md#repository) does **not** establish "zero CSS files" as a universal architectural rule.
 
 ---
 
@@ -333,7 +333,7 @@ theme: {
 
 Reduced-motion behavior is a cross-cutting accessibility concern. Prefer a central condition/global rule rather than reimplementing it component by component.
 
-Animations that encode component-specific choreography may remain colocated with the component, but they should still consume design tokens and accessibility policy where practical.
+Animations that encode component-specific choreography may remain colocated with the component, but they should still consume [design tokens](../GLOSSARY.md#design-token) and accessibility policy where practical.
 
 ---
 
@@ -349,11 +349,11 @@ gridTemplateColumns: {
 }
 ```
 
-Do not proliferate one-off raw media queries when the design system already defines the same breakpoint concept.
+Do not proliferate one-off raw media queries when the [design system](../GLOSSARY.md#design-system) already defines the same breakpoint concept.
 
 For a reusable component whose behavior depends on **its own available width**, prefer container-query/container-condition techniques rather than coupling it unnecessarily to the viewport.
 
-Breakpoints are design-system decisions, not architectural laws. Do not add intermediate breakpoints simply to make a scale look complete; add them when the layout has a real transition.
+Breakpoints are [design-system](../GLOSSARY.md#design-system) decisions, not architectural laws. Do not add intermediate breakpoints simply to make a scale look complete; add them when the layout has a real transition.
 
 ---
 
@@ -361,7 +361,7 @@ Breakpoints are design-system decisions, not architectural laws. Do not add inte
 
 Do not prohibit inline styles categorically.
 
-They are appropriate for values that are genuinely calculated at runtime and are not meaningful design tokens, for example:
+They are appropriate for values that are genuinely calculated at runtime and are not meaningful [design tokens](../GLOSSARY.md#design-token), for example:
 
 ```tsx
 <th style={{ width: column.width }} />
@@ -377,7 +377,7 @@ They are poor substitutes for reusable visual policy:
 }} />
 ```
 
-The distinction is ownership: runtime data may stay runtime; design decisions belong in the design system/component style owner.
+The distinction is ownership: runtime data may stay runtime; design decisions belong in the [design system](../GLOSSARY.md#design-system)/component style owner.
 
 ---
 
@@ -402,8 +402,8 @@ Do not create a second abstraction layer merely to move `panda.config.ts` into a
 
 ## Sources
 
-- Panda CSS, Recipes: https://panda-css.com/docs/concepts/recipes
-- Panda CSS, Slot Recipes: https://panda-css.com/docs/concepts/slot-recipes
+- Panda CSS, [Recipes](../GLOSSARY.md#recipe): https://panda-css.com/docs/concepts/recipes
+- Panda CSS, [Slot Recipes](../GLOSSARY.md#slot-recipe): https://panda-css.com/docs/concepts/slot-recipes
 - Panda CSS, Tokens: https://panda-css.com/docs/theming/tokens
 - Panda CSS, Text Styles: https://panda-css.com/docs/theming/text-styles
 - Panda CSS, Global Styles: https://panda-css.com/docs/concepts/writing-styles

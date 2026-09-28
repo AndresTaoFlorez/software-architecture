@@ -2,7 +2,7 @@
 
 ## 1. The Three Parts
 
-MVC was first described by Trygve Reenskaug at Xerox PARC in 1979 and codified for Smalltalk-80 by Krasner
+[MVC](../GLOSSARY.md#model-view-controller-mvc) was first described by Trygve Reenskaug at Xerox PARC in 1979 and codified for Smalltalk-80 by Krasner
 and Pope in 1988 [Reenskaug 1979; Krasner & Pope 1988]. Its goal was narrow and durable: keep the *domain*
 (what the program is about) separate from the *presentation* (how it appears on a screen). The three parts
 divide that responsibility.
@@ -12,15 +12,15 @@ divide that responsibility.
 ### 1.1 Model
 
 **Responsibility.** Hold the application's data and the rules that govern it, independent of any screen.
-The Model is the part that would still make sense if the UI were deleted.
+The [Model](../GLOSSARY.md#model) is the part that would still make sense if the UI were deleted.
 
 **What lives here.**
 - The data being worked on (a `Cart`, a `User`, a list of orders).
 - The rules and derived state over that data (a cart's total, whether an order can be cancelled).
 - A way to **announce that it changed** — classically, the observer/subject mechanism.
 
-**What it must not do.** Reference a View or a Controller, format itself for display, or reach into the
-DOM. In classic MVC the Model does not know who is observing it; it broadcasts "I changed" and lets
+**What it must not do.** Reference a [View](../GLOSSARY.md#view) or a [Controller](../GLOSSARY.md#controller), format itself for display, or reach into the
+DOM. In classic [MVC](../GLOSSARY.md#model-view-controller-mvc) the [Model](../GLOSSARY.md#model) does not know who is observing it; it broadcasts "I changed" and lets
 observers react [Krasner & Pope 1988].
 
 **Generic example.** A model that owns its state and notifies on change:
@@ -44,29 +44,29 @@ class CartModel {
 }
 ```
 
-The word **Model** is intentionally broader than a Clean/Onion layer name. In classic MVC it is the
+The word **[Model](../GLOSSARY.md#model)** is intentionally broader than a Clean/Onion layer name. In classic [MVC](../GLOSSARY.md#model-view-controller-mvc) it is the
 non-presentation state/behavior being presented. In a layered application that role may be backed by
-Domain objects, Application results, a dedicated presentation model, or a combination of them.
+[Domain](../GLOSSARY.md#domain) objects, [Application](../GLOSSARY.md#application-layer) results, a dedicated [presentation model](../GLOSSARY.md#presentation-model), or a combination of them.
 
 Do **not** conclude that `MVC Model === Domain` or `MVC Model === Clean Entities`. Those taxonomies
-describe different scopes. If the Model carries UI change-notification machinery, that mechanism is a
-presentation concern even when the represented business concepts ultimately come from Domain.
+describe different scopes. If the [Model](../GLOSSARY.md#model) carries UI change-notification machinery, that mechanism is a
+presentation concern even when the represented business concepts ultimately come from [Domain](../GLOSSARY.md#domain).
 
 ---
 
 ### 1.2 View
 
-**Responsibility.** Present the Model to the user. The View reads from the Model and renders it; when the
-Model announces a change, the View redraws.
+**Responsibility.** Present the [Model](../GLOSSARY.md#model) to the user. The [View](../GLOSSARY.md#view) reads from the [Model](../GLOSSARY.md#model) and renders it; when the
+[Model](../GLOSSARY.md#model) announces a change, the [View](../GLOSSARY.md#view) redraws.
 
 **What lives here.**
-- The markup/templates and the code that maps Model state onto pixels.
-- Observation of the Model: the View subscribes and re-reads on notification.
-- Forwarding of raw user gestures to the Controller (a click handler that calls a controller method).
+- The markup/templates and the code that maps [Model](../GLOSSARY.md#model) state onto pixels.
+- Observation of the [Model](../GLOSSARY.md#model): the [View](../GLOSSARY.md#view) subscribes and re-reads on notification.
+- Forwarding of raw user gestures to the [Controller](../GLOSSARY.md#controller) (a click handler that calls a controller method).
 
-**What it must not do.** Hold business rules or decide what a user action *means*. A View that computes a
-discount, validates an order, or talks to a server has absorbed responsibilities that belong to the Model
-and the Controller. The strictest form of this rule is Fowler's **Passive View**: the View holds no logic
+**What it must not do.** Hold business rules or decide what a user action *means*. A [View](../GLOSSARY.md#view) that computes a
+discount, validates an order, or talks to a server has absorbed responsibilities that belong to the [Model](../GLOSSARY.md#model)
+and the [Controller](../GLOSSARY.md#controller). The strictest form of this rule is Fowler's **Passive [View](../GLOSSARY.md#view)**: the [View](../GLOSSARY.md#view) holds no logic
 at all and is driven entirely from outside [Fowler].
 
 **Generic example.** A view that observes and redraws, and delegates intent:
@@ -89,26 +89,26 @@ class CartView {
 }
 ```
 
-The View knows *how* to draw the total; it does not know *how* the total is computed, nor *what* a click
+The [View](../GLOSSARY.md#view) knows *how* to draw the total; it does not know *how* the total is computed, nor *what* a click
 should accomplish. It only reads state and forwards gestures.
 
 ---
 
 ### 1.3 Controller
 
-**Responsibility.** Interpret user input and translate it into operations on the Model. The Controller is
+**Responsibility.** Interpret user input and translate it into operations on the [Model](../GLOSSARY.md#model). The [Controller](../GLOSSARY.md#controller) is
 the part that decides what a gesture *means*.
 
 **What lives here.**
 - Input handling logic: what to do when the user clicks "add", submits a form, or navigates.
-- Coordination of Model updates in response to that input.
-- In classic Smalltalk MVC, the Controller also owned the input devices (mouse, keyboard) for its View.
+- Coordination of [Model](../GLOSSARY.md#model) updates in response to that input.
+- In classic Smalltalk [MVC](../GLOSSARY.md#model-view-controller-mvc), the [Controller](../GLOSSARY.md#controller) also owned the input devices (mouse, keyboard) for its [View](../GLOSSARY.md#view).
 
-**What it must not do.** Render, or hold domain rules. The Controller orchestrates; it asks the Model to
-do the work and lets the View observe the result. A "fat controller" that accumulates business logic is
-the most common way MVC decays — that logic belongs in the Model [Fowler].
+**What it must not do.** Render, or hold domain rules. The [Controller](../GLOSSARY.md#controller) orchestrates; it asks the [Model](../GLOSSARY.md#model) to
+do the work and lets the [View](../GLOSSARY.md#view) observe the result. A "fat controller" that accumulates business logic is
+the most common way [MVC](../GLOSSARY.md#model-view-controller-mvc) decays — that logic belongs in the [Model](../GLOSSARY.md#model) [Fowler].
 
-**Generic example.** A controller that turns a gesture into a Model operation:
+**Generic example.** A controller that turns a gesture into a [Model](../GLOSSARY.md#model) operation:
 
 ```js
 class CartController {
@@ -124,20 +124,20 @@ class CartController {
 }
 ```
 
-Note what is absent: no rendering, and no rule about *how* a total is formed. The Controller is thin by
-design — it is a translator between the user's intent and the Model's vocabulary.
+Note what is absent: no rendering, and no rule about *how* a total is formed. The [Controller](../GLOSSARY.md#controller) is thin by
+design — it is a translator between the user's intent and the [Model](../GLOSSARY.md#model)'s vocabulary.
 
 ---
 
 ### 1.4 The one rule that holds it together
 
-Strip away the variants and MVC reduces to a single principle: **separated presentation** [Fowler]. The
-Model side is kept independent of concrete rendering/input mechanics; the View and Controller stay focused
+Strip away the variants and [MVC](../GLOSSARY.md#model-view-controller-mvc) reduces to a single principle: **separated presentation** [Fowler]. The
+[Model](../GLOSSARY.md#model) side is kept independent of concrete rendering/input mechanics; the [View](../GLOSSARY.md#view) and [Controller](../GLOSSARY.md#controller) stay focused
 on presentation responsibilities. In a Clean/Onion system, authoritative business rules normally live
-further inward than the MVC presentation boundary. Everything in [The Flow](2-the-flow.md) is a consequence of deciding *who notifies whom*
+further inward than the [MVC](../GLOSSARY.md#model-view-controller-mvc) presentation boundary. Everything in [The Flow](2-the-flow.md) is a consequence of deciding *who notifies whom*
 once that separation is in place.
 
 ---
 
 Next: **[The Flow](2-the-flow.md)** — how input, update, and render form a cycle, and how the variants
-(MVP, MVVM) differ only in how that cycle is wired.
+(MVP, [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm)) differ only in how that cycle is wired.
