@@ -73,14 +73,14 @@ flowchart LR
 | Role | Owns | Put here | Do not put here |
 | --- | --- | --- | --- |
 | [View](../GLOSSARY.md#view) | rendering and user gestures | component/template, local visual state | authoritative business rules, transport clients |
-| [ViewModel](../GLOSSARY.md#viewmodel) | view-oriented state and behavior | loading flags, display derivation, commands/facade, UI-specific orchestration | database/HTTP implementations, business [invariants](../GLOSSARY.md#invariant) |
+| [ViewModel](../GLOSSARY.md#viewmodel) | view-oriented state and behavior | loading flags, display derivation, commands/[facade](../GLOSSARY.md#facade-pattern), UI-specific orchestration | database/HTTP implementations, business [invariants](../GLOSSARY.md#invariant) |
 | [Model](../GLOSSARY.md#model) | non-[View](../GLOSSARY.md#view) application/domain capabilities | domain/application state and operations according to the wider architecture | concrete [View](../GLOSSARY.md#view) controls |
 
 "[Model](../GLOSSARY.md#model)" is overloaded. In a Clean/Onion application it is not automatically identical to `domain/`.
 
 ## 6. Isolation in a layered React application
 
-This repository uses a [ViewModel](../GLOSSARY.md#viewmodel)-like **public feature facade** when a screen is complex enough to justify it:
+This repository uses a [ViewModel](../GLOSSARY.md#viewmodel)-like **public feature [facade](../GLOSSARY.md#facade-pattern)** when a screen is complex enough to justify it:
 
 ```mermaid
 flowchart TD
@@ -159,7 +159,7 @@ Examples:
 | --- | --- |
 | `formatTotalForScreen()` | [ViewModel](../GLOSSARY.md#viewmodel)/[Presentation](../GLOSSARY.md#presentation-layer) helper |
 | `isSaving` derived flag | [ViewModel](../GLOSSARY.md#viewmodel)/[selector](../GLOSSARY.md#selector) |
-| `cancel()` command exposed to the [View](../GLOSSARY.md#view) | [ViewModel](../GLOSSARY.md#viewmodel) facade |
+| `cancel()` command exposed to the [View](../GLOSSARY.md#view) | [ViewModel](../GLOSSARY.md#viewmodel) [facade](../GLOSSARY.md#facade-pattern) |
 | `cancelOrder(id)` workflow | [Application](../GLOSSARY.md#application-layer) |
 | `Order.cancel()` [invariant](../GLOSSARY.md#invariant) | [Domain](../GLOSSARY.md#domain) |
 | HTTP request implementation | [Infrastructure](../GLOSSARY.md#infrastructure) |
@@ -243,7 +243,7 @@ Costs:
 
 - another abstraction between [View](../GLOSSARY.md#view) and application/model;
 - possible duplication between local component state and [ViewModel](../GLOSSARY.md#viewmodel) state;
-- temptation to move every operation into one facade.
+- temptation to move every operation into one [facade](../GLOSSARY.md#facade-pattern).
 
 Common failures:
 

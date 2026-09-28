@@ -2,7 +2,7 @@
 
 ## 4. Testing in MVC
 
-Separated presentation is, in the end, a testability decision. The reason to keep the [Model](../GLOSSARY.md#model) ignorant of the
+[Separated presentation](../GLOSSARY.md#separated-presentation) is, in the end, a testability decision. The reason to keep the [Model](../GLOSSARY.md#model) ignorant of the
 [View](../GLOSSARY.md#view) is the same reason to keep [Entities](../GLOSSARY.md#domain-entity) ignorant of frameworks in [Clean Architecture](../GLOSSARY.md#clean-architecture): it lets the part
 that carries the meaning be tested with nothing else attached.
 
@@ -68,7 +68,7 @@ feedback on the separation, exactly as it is in the layered architectures.
 | Part | What you test | Setup cost |
 |---|---|---|
 | **[Model](../GLOSSARY.md#model)** | rules, derived state, change notification | none — pure objects |
-| **[Controller](../GLOSSARY.md#controller) / Presenter** | input → correct [Model](../GLOSSARY.md#model) operation | a [fake](../GLOSSARY.md#fake) [Model](../GLOSSARY.md#model) |
+| **[Controller](../GLOSSARY.md#controller) / [Presenter](../GLOSSARY.md#presenter)** | input → correct [Model](../GLOSSARY.md#model) operation | a [fake](../GLOSSARY.md#fake) [Model](../GLOSSARY.md#model) |
 | **[View](../GLOSSARY.md#view)** | renders given state; forwards gestures | a render harness; keep these few |
 
 The shape matches every other guide here: most tests at the stable center, few at the volatile edge. [MVC](../GLOSSARY.md#model-view-controller-mvc)

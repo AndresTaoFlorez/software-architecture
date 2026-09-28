@@ -33,8 +33,8 @@ Use role names only when the responsibilities really match:
 | Role | Possible frontend implementation |
 |---|---|
 | **[View](../GLOSSARY.md#view)** | component/template whose main job is rendering and forwarding intent |
-| **[Controller](../GLOSSARY.md#controller)-like presentation action** | event/action facade that interprets a gesture |
-| **[ViewModel](../GLOSSARY.md#viewmodel) / [Presentation Model](../GLOSSARY.md#presentation-model)** | hook/composable/[store](../GLOSSARY.md#store) facade that exposes view-oriented state and commands |
+| **[Controller](../GLOSSARY.md#controller)-like presentation action** | event/action [facade](../GLOSSARY.md#facade-pattern) that interprets a gesture |
+| **[ViewModel](../GLOSSARY.md#viewmodel) / [Presentation Model](../GLOSSARY.md#presentation-model)** | hook/composable/[store](../GLOSSARY.md#store) [facade](../GLOSSARY.md#facade-pattern) that exposes view-oriented state and commands |
 | **[Model](../GLOSSARY.md#model) side** | application/domain capabilities or another non-rendering model — not necessarily one object |
 
 The same application does not need to use all four labels. Prefer the smallest vocabulary that makes
@@ -87,5 +87,5 @@ boundaries to decide where application/domain policy and infrastructure belong.
 
 ---
 
-Next: **[Testing in MVC](4-testing-in-mvc.md)** — why separated presentation is, above all, a testability
+Next: **[Testing in MVC](4-testing-in-mvc.md)** — why [separated presentation](../GLOSSARY.md#separated-presentation) is, above all, a testability
 decision.
