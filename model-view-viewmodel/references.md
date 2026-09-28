@@ -20,7 +20,7 @@ The sources most central to [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) are
   "a fully self-contained class that represents all the data and behavior of the UI window, but
   without any of the controls used to render that UI on the screen.")
   https://martinfowler.com/eaaDev/PresentationModel.html
-- ★ **Fowler, M.** *GUI Architectures*. martinfowler.com. (The definitive map of [MVC](../GLOSSARY.md#model-view-controller-mvc), MVP, [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm),
+- ★ **Fowler, M.** *GUI Architectures*. martinfowler.com. (The definitive map of [MVC](../GLOSSARY.md#model-view-controller-mvc), [MVP](../GLOSSARY.md#model-view-presenter-mvp), [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm),
   Passive [View](../GLOSSARY.md#view), and [Presentation Model](../GLOSSARY.md#presentation-model) — and where the [Controller](../GLOSSARY.md#controller)'s responsibilities went.)
   https://martinfowler.com/eaaDev/uiArchs.html
 - **Smith, J.** (2009). *Patterns — WPF Apps With The [Model-View-ViewModel](../GLOSSARY.md#model-view-viewmodel-mvvm) Design Pattern*. MSDN
@@ -33,9 +33,9 @@ The sources most central to [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) are
 
 - **Krasner, G. E., & Pope, S. T.** (1988). *A Cookbook for Using the [Model-View-Controller](../GLOSSARY.md#model-view-controller-mvc) User
   Interface Paradigm in Smalltalk-80*. Journal of Object-Oriented Programming, 1(3). (The ancestor
-  pattern and the observer synchronization [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) automates.)
+  pattern and the [observer synchronization](../GLOSSARY.md#observer-synchronization) [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) automates.)
 - **Gamma, E., Helm, R., Johnson, R., & Vlissides, J.** (1994). *Design Patterns: Elements of
-  Reusable Object-Oriented Software*. Addison-Wesley. (The Observer pattern — the manual mechanism
+  Reusable Object-Oriented Software*. Addison-Wesley. (The [Observer pattern](../GLOSSARY.md#observer-pattern) — the manual mechanism
   binding layers replaced.)
 
 ### The pattern in industry (cited in [§3.4](3-mvvm-on-the-frontend.md#34-the-pattern-in-the-wild))

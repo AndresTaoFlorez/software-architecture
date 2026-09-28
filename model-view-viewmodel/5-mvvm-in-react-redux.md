@@ -2,7 +2,7 @@
 
 # 5. MVVM in React + Redux Toolkit
 
-React and Redux Toolkit do not prescribe [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm). This chapter demonstrates **one optional mapping** when a project intentionally uses a [ViewModel](../GLOSSARY.md#viewmodel)/[Presentation](../GLOSSARY.md#presentation-layer) facade boundary.
+React and Redux Toolkit do not prescribe [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm). This chapter demonstrates **one optional mapping** when a project intentionally uses a [ViewModel](../GLOSSARY.md#viewmodel)/[Presentation](../GLOSSARY.md#presentation-layer) [facade](../GLOSSARY.md#facade-pattern) boundary.
 
 For the repository's current Redux guidance, also read **[State Management and Side Effects](../frontend/state-management.md)**.
 
@@ -15,14 +15,14 @@ A possible mapping:
 | [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) role | React/Redux owner |
 | --- | --- |
 | [View](../GLOSSARY.md#view) | React component rendering + local rendering concerns |
-| [ViewModel](../GLOSSARY.md#viewmodel) facade | feature hook such as `useClosures()` |
+| [ViewModel](../GLOSSARY.md#viewmodel) [facade](../GLOSSARY.md#facade-pattern) | feature hook such as `useClosures()` |
 | shared view state | Redux slice + [selectors](../GLOSSARY.md#selector) |
 | binding | React Redux subscriptions/hooks, hidden or exposed according to project policy |
 | [Model](../GLOSSARY.md#model)/[Application](../GLOSSARY.md#application-layer) | inner application/domain modules where the chosen architecture defines them |
 
 This is not the only valid Redux architecture.
 
-Redux's official guidance commonly allows components to use typed Redux hooks directly. Hiding Redux behind a feature facade is a **stricter project boundary** that can be valuable when framework replaceability/test seams justify it.
+Redux's official guidance commonly allows components to use typed Redux hooks directly. Hiding Redux behind a feature [facade](../GLOSSARY.md#facade-pattern) is a **stricter project boundary** that can be valuable when framework replaceability/test seams justify it.
 
 ---
 
@@ -130,7 +130,7 @@ type Result<T, E> =
   | { ok: false; error: E }
 ```
 
-The [View](../GLOSSARY.md#view) should not need `cancelOrderThunk.fulfilled.match(...)` if the facade's purpose is to hide Redux.
+The [View](../GLOSSARY.md#view) should not need `cancelOrderThunk.fulfilled.match(...)` if the [facade](../GLOSSARY.md#facade-pattern)'s purpose is to hide Redux.
 
 ---
 
@@ -145,7 +145,7 @@ Local component state remains appropriate for:
 
 Redux recommends keeping [global state](../GLOSSARY.md#global-state) minimal and deriving values where possible.
 
-A [ViewModel](../GLOSSARY.md#viewmodel) facade may compose local React state and Redux-backed feature state without pretending they are the same ownership scope.
+A [ViewModel](../GLOSSARY.md#viewmodel) [facade](../GLOSSARY.md#facade-pattern) may compose local React state and Redux-backed feature state without pretending they are the same ownership scope.
 
 ## Sources
 

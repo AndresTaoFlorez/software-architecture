@@ -122,7 +122,7 @@ If reconnect policy itself is a product requirement, elevate that policy appropr
 
 ## 8.8 Do not add patterns by fashion
 
-Before introducing CQRS, event sourcing, [CRDTs](../GLOSSARY.md#crdt), a [global state](../GLOSSARY.md#global-state) machine or a complex sync engine, identify the actual force:
+Before introducing [CQRS](../GLOSSARY.md#cqrs), [event sourcing](../GLOSSARY.md#event-sourcing), [CRDTs](../GLOSSARY.md#crdt), a [global state](../GLOSSARY.md#global-state) machine or a complex sync engine, identify the actual force:
 
 - contention?
 - offline editing?

@@ -146,7 +146,7 @@ flowchart TD
 | `OrderRepository` [port](../GLOSSARY.md#port) | [Application](../GLOSSARY.md#application-layer) | required capability expressed inward |
 | `HttpOrderRepository` | [Infrastructure](../GLOSSARY.md#infrastructure) | concrete transport |
 | `ApiOrderDto` | [Infrastructure](../GLOSSARY.md#infrastructure) | wire shape |
-| `useOrders()` | [Presentation](../GLOSSARY.md#presentation-layer) | view-oriented facade |
+| `useOrders()` | [Presentation](../GLOSSARY.md#presentation-layer) | view-oriented [facade](../GLOSSARY.md#facade-pattern) |
 | `CancelOrderButton.tsx` | [Presentation](../GLOSSARY.md#presentation-layer) | rendering/gesture |
 | dependency construction | Composition | outer assembly |
 
@@ -199,7 +199,7 @@ Follow **[Naming and File Placement Conventions](../conventions/naming-and-file-
 | [DTO](../GLOSSARY.md#data-transfer-object-dto) | `orderApi.dto.ts` |
 | [mapper](../GLOSSARY.md#mapper) | `orderApi.mapper.ts` |
 | React component | `CancelOrderButton.tsx` |
-| feature facade | `useOrders.ts` |
+| feature [facade](../GLOSSARY.md#facade-pattern) | `useOrders.ts` |
 
 Avoid generic names such as `GenericService`, `CommonRepository`, `Manager` and `helpers.ts` when a capability owner can be named.
 
@@ -215,7 +215,7 @@ Requirement:
 | required persistence capability | `application/orders/ports/OrderRepository.ts` | [Application](../GLOSSARY.md#application-layer) | [use case](../GLOSSARY.md#use-case) defines what it needs | [Infrastructure](../GLOSSARY.md#infrastructure) should not define inward policy |
 | operation | `application/orders/use-cases/cancelOrder.ts` | [Application](../GLOSSARY.md#application-layer) | orchestrates load → domain behavior → save | [Domain](../GLOSSARY.md#domain) should not do I/O |
 | HTTP [adapter](../GLOSSARY.md#adapter) | `infrastructure/orders/HttpOrderRepository.ts` | [Infrastructure](../GLOSSARY.md#infrastructure) | speaks transport | [Application](../GLOSSARY.md#application-layer) should not know HTTP |
-| feature facade | `presentation/features/orders/model/useOrders.ts` | [Presentation](../GLOSSARY.md#presentation-layer) | exposes UI-ready operation/state | [Application](../GLOSSARY.md#application-layer) should not know React |
+| feature [facade](../GLOSSARY.md#facade-pattern) | `presentation/features/orders/model/useOrders.ts` | [Presentation](../GLOSSARY.md#presentation-layer) | exposes UI-ready operation/state | [Application](../GLOSSARY.md#application-layer) should not know React |
 | button | `presentation/features/orders/ui/CancelOrderButton.tsx` | [Presentation](../GLOSSARY.md#presentation-layer) | renders + captures gesture | [invariant](../GLOSSARY.md#invariant) must not live in JSX |
 | assembly | `composition/bootstrap.ts` | Composition | wires concrete objects | inner modules should not resolve dependencies |
 
