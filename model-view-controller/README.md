@@ -14,7 +14,7 @@ The label later evolved across Smalltalk, desktop frameworks, server-side web fr
 
 ## 2. What problem does MVC solve?
 
-The original problem is **separated presentation**: avoid mixing the information/behavior being represented with how it is displayed and how input is interpreted.
+The original problem is **[separated presentation](../GLOSSARY.md#separated-presentation)**: avoid mixing the information/behavior being represented with how it is displayed and how input is interpreted.
 
 ```mermaid
 flowchart LR
@@ -168,7 +168,7 @@ Recommended examples:
 | --- | --- |
 | route [View](../GLOSSARY.md#view) | `OrdersPage.tsx` |
 | feature [View](../GLOSSARY.md#view) | `OrderRow.tsx` |
-| controller-like hook/facade | `useOrderActions.ts` |
+| controller-like hook/[facade](../GLOSSARY.md#facade-pattern) | `useOrderActions.ts` |
 | application operation | `cancelOrder.ts` |
 | [domain entity](../GLOSSARY.md#domain-entity) | `Order.ts` |
 

@@ -222,7 +222,7 @@ An [Application](../GLOSSARY.md#application-layer) [port](../GLOSSARY.md#port) c
 
 ### 2.5 The application-wide `contract.ts` hides ownership
 
-A large barrel re-exports [Domain](../GLOSSARY.md#domain) and [Application](../GLOSSARY.md#application-layer) types to [Presentation](../GLOSSARY.md#presentation-layer).
+A large [barrel](../GLOSSARY.md#barrel-file) re-exports [Domain](../GLOSSARY.md#domain) and [Application](../GLOSSARY.md#application-layer) types to [Presentation](../GLOSSARY.md#presentation-layer).
 
 That can make imports look clean while preserving conceptual coupling.
 
@@ -236,9 +236,9 @@ with deliberate exports.
 
 ### 2.6 `useClosures` has become a God ViewModel
 
-The public facade is a good idea, but it accumulates query logic, draft behavior, uploads, execution, history, validation and UI feedback.
+The public [facade](../GLOSSARY.md#facade-pattern) is a good idea, but it accumulates query logic, draft behavior, uploads, execution, history, validation and UI feedback.
 
-Keep the facade while splitting internal concerns:
+Keep the [facade](../GLOSSARY.md#facade-pattern) while splitting internal concerns:
 
 ```mermaid
 flowchart TD
