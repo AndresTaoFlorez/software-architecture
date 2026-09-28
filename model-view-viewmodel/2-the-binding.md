@@ -75,7 +75,7 @@ synchronization code*:
 | Pattern | Sync mechanism | Who writes it |
 |---|---|---|
 | **[MVC](../GLOSSARY.md#model-view-controller-mvc)** (classic) | [View](../GLOSSARY.md#view) observes [Model](../GLOSSARY.md#model) | you |
-| **MVP** | Presenter pushes into a passive [View](../GLOSSARY.md#view) | you |
+| **[MVP](../GLOSSARY.md#model-view-presenter-mvp)** | [Presenter](../GLOSSARY.md#presenter) pushes into a passive [View](../GLOSSARY.md#view) | you |
 | **[MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm)** | binding layer syncs [View](../GLOSSARY.md#view) ↔ [ViewModel](../GLOSSARY.md#viewmodel) | the framework |
 
 All three share the [Model](../GLOSSARY.md#model) and the separated-presentation principle. [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) is simply the point where
