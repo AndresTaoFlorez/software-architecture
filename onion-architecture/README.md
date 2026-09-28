@@ -6,7 +6,7 @@
 
 ## 1. History and origin
 
-Jeffrey Palermo published the Onion Architecture series in **2008**. The central observation was that long-lived business applications often become coupled to database/UI/framework choices when infrastructure is allowed to define the application's shape.
+Jeffrey Palermo published the [Onion Architecture](../GLOSSARY.md#onion-architecture) series in **2008**. The central observation was that long-lived business applications often become coupled to database/UI/framework choices when infrastructure is allowed to define the application's shape.
 
 Palermo's framing puts the **domain model at the center** and requires dependencies to point inward.
 
@@ -31,7 +31,7 @@ When ORM/API/framework models become the application's language:
 - technology migrations become business rewrites;
 - application policy becomes difficult to identify.
 
-Onion Architecture reverses that ownership: infrastructure adapts to the application/domain.
+[Onion Architecture](../GLOSSARY.md#onion-architecture) reverses that ownership: infrastructure adapts to the application/domain.
 
 ## 3. Strong-fit scenarios
 
@@ -41,7 +41,7 @@ Use Onion when:
 - the application is expected to live for years;
 - infrastructure choices may change;
 - multiple external mechanisms surround the same business policy;
-- independent testing of Domain/Application matters.
+- independent testing of [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer) matters.
 
 ## 4. Weak-fit scenarios
 
@@ -66,7 +66,7 @@ flowchart BT
     APP --> DOMAIN
 ```
 
-Presentation and Infrastructure are outer concerns. Application surrounds Domain.
+[Presentation](../GLOSSARY.md#presentation-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) are outer concerns. [Application](../GLOSSARY.md#application-layer) surrounds [Domain](../GLOSSARY.md#domain).
 
 The important rule:
 
@@ -76,10 +76,10 @@ The important rule:
 
 | Area | Owns | Typical files | Must not know |
 | --- | --- | --- | --- |
-| Domain | concepts, invariants, value objects, entities | `Order.ts`, `Money.ts` | React, Redux, HTTP, ORM |
-| Application | use cases, required ports, application results | `cancelOrder.ts`, `OrderRepository.ts` | concrete HTTP/DB/UI |
-| Infrastructure | adapters and external representations | `HttpOrderRepository.ts`, DTO/mappers | Presentation |
-| Presentation | views, view state, feature hooks, UI store | `useOrders.ts`, components | concrete Infrastructure in strict mode |
+| [Domain](../GLOSSARY.md#domain) | concepts, [invariants](../GLOSSARY.md#invariant), [value objects](../GLOSSARY.md#value-object), entities | `Order.ts`, `Money.ts` | React, Redux, HTTP, ORM |
+| [Application](../GLOSSARY.md#application-layer) | [use cases](../GLOSSARY.md#use-case), required [ports](../GLOSSARY.md#port), application results | `cancelOrder.ts`, `OrderRepository.ts` | concrete HTTP/DB/UI |
+| [Infrastructure](../GLOSSARY.md#infrastructure) | [adapters](../GLOSSARY.md#adapter) and external representations | `HttpOrderRepository.ts`, [DTO](../GLOSSARY.md#data-transfer-object-dto)/[mappers](../GLOSSARY.md#mapper) | [Presentation](../GLOSSARY.md#presentation-layer) |
+| [Presentation](../GLOSSARY.md#presentation-layer) | views, view state, feature hooks, UI [store](../GLOSSARY.md#store) | `useOrders.ts`, components | concrete [Infrastructure](../GLOSSARY.md#infrastructure) in strict mode |
 | Composition | concrete assembly | `bootstrap.ts` | business policy |
 
 ## 7. Recommended physical structure
@@ -102,7 +102,7 @@ flowchart TD
     COMP --> BOOT["bootstrap.ts"]
 ```
 
-The names are repository conventions; inward dependency direction is the architecture.
+The names are [repository](../GLOSSARY.md#repository) conventions; inward dependency direction is the architecture.
 
 ## 8. Where does code go?
 
@@ -116,13 +116,13 @@ flowchart TD
     Q -->|"Construction / wiring"| C["Composition"]
 ```
 
-Use the full **[Code Placement Guide](../foundations/code-placement.md)** for functions, types, adapters and UI code.
+Use the full **[Code Placement Guide](../foundations/code-placement.md)** for functions, types, [adapters](../GLOSSARY.md#adapter) and UI code.
 
 ## 9. Why ports are inside Application
 
 Suppose cancellation needs persistence.
 
-Application needs the capability:
+[Application](../GLOSSARY.md#application-layer) needs the capability:
 
 ```ts
 export interface OrderRepository {
@@ -131,7 +131,7 @@ export interface OrderRepository {
 }
 ```
 
-Infrastructure implements it:
+[Infrastructure](../GLOSSARY.md#infrastructure) implements it:
 
 ```ts
 export class HttpOrderRepository implements OrderRepository {
@@ -146,7 +146,7 @@ flowchart LR
     HTTP --> API["HTTP API"]
 ```
 
-The port belongs inward because **Application defines what it needs**. Infrastructure adapts to that need.
+The [port](../GLOSSARY.md#port) belongs inward because **[Application](../GLOSSARY.md#application-layer) defines what it needs**. [Infrastructure](../GLOSSARY.md#infrastructure) adapts to that need.
 
 ## 10. Naming
 
@@ -177,6 +177,6 @@ They overlap strongly but are not identical taxonomies.
 
 ## Sources
 
-- Jeffrey Palermo, Onion Architecture series (2008): https://jeffreypalermo.com/2008/07/
-- Robert C. Martin, "The Clean Architecture": https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
-- Alistair Cockburn, "Hexagonal Architecture": https://alistair.cockburn.us/hexagonal-architecture/
+- Jeffrey Palermo, [Onion Architecture](../GLOSSARY.md#onion-architecture) series (2008): https://jeffreypalermo.com/2008/07/
+- Robert C. Martin, "The [Clean Architecture](../GLOSSARY.md#clean-architecture)": https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
+- Alistair Cockburn, "[Hexagonal Architecture](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters)": https://alistair.cockburn.us/hexagonal-architecture/
