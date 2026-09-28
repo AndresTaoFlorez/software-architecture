@@ -17,7 +17,6 @@ After editing prose, run `node scripts/glossary-links.mjs --write`, inspect the 
 | Complete feature examples | TypeScript compilation and cancellation behavior for the four landings and the Clean feature chapter |
 | `check:glossary` | registry/entry/index consistency, required purpose/example/source fields, incompatible aliases and missing eligible prose links |
 | `check:docs` | local link/image/reference targets, explicit and GitHub-style heading anchors, malformed known link forms, closed fences, prohibited text diagrams and ordered guide sections |
-| Demo tests and build | source dependency matrix, lesson dependency policy, Vue/TypeScript and Vite build on every triggered workflow run |
 
 The parser uses CommonMark syntax and preserves source offsets. The linker does not serialize Markdown. It protects headings, existing links/images, reference definitions, bracketed contents, HTML, code and bare URLs. Ambiguous words such as “repository” require context or an unambiguous registered phrase. Removing a broad alias does not rewrite existing manual links: review their meanings separately.
 
