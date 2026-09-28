@@ -168,7 +168,7 @@ When a naming rule comes from a framework, cite that framework. When it is our c
 Examples:
 
 - React component names start with a capital letter: framework requirement.
-- React custom hooks start with `use`: framework requirement.
+- React [custom hooks](./GLOSSARY.md#custom-hook) start with `use`: framework requirement.
 - `closures.selectors.ts`: documentation convention.
 - descriptive TypeScript identifiers and PascalCase/camelCase choices: style convention backed by TypeScript ecosystem guidance.
 
@@ -181,14 +181,19 @@ The exceptions are:
 - fenced source code;
 - inline code;
 - URLs;
+- headings, including setext headings;
+- existing links/images and reference definitions;
+- bracketed content (including citation/reference labels);
+- HTML elements/comments;
 - the glossary entry itself;
 - cases where adding a link would make Markdown invalid.
 
-Headings may contain glossary links only if an explicit stable anchor is retained.
+The autolinker preserves headings byte for byte. Manually changing a heading requires preserving meaningful historical anchors. Ambiguous homonyms are linked manually or through an unambiguous registered phrase; the word “repository” is not automatically the [Repository Pattern](./GLOSSARY.md#repository).
 
 After editing docs:
 
 ```bash
+npm ci --ignore-scripts
 node scripts/glossary-links.mjs --write
 node scripts/glossary-links.mjs --check
 ```
@@ -196,6 +201,7 @@ node scripts/glossary-links.mjs --check
 If a concept is used repeatedly and lacks a glossary entry, add it with:
 
 - definition;
+- purpose;
 - example;
 - sources;
 - aliases in `glossary/terms.json`.
@@ -254,7 +260,7 @@ Every substantial documentation PR must be reviewed three times.
 ### Pass 3 — mechanical consistency
 
 - No ASCII/text diagrams.
-- Mermaid blocks parse conceptually and use stable labels.
+- Mermaid syntax is checked with a real Mermaid parser and meanings are reviewed by a person/agent. The lightweight CI check only validates declarations and fences; see [Documentation Validation](./docs/validation.md).
 - Glossary links are current.
 - Relative links are valid.
 - Headings/anchors used by other docs remain stable.
