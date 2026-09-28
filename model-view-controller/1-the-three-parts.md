@@ -44,10 +44,13 @@ class CartModel {
 }
 ```
 
-The Model contains the business meaning. If this looks like the **Domain** of an Onion app or the
-**Entities** of a Clean app, that is not a coincidence — MVC's Model is the same idea seen from the
-presentation tier. The difference is that MVC's Model usually also carries the change-notification needed
-to drive a UI, a concern the inner rings of Clean/Onion push outward.
+The word **Model** is intentionally broader than a Clean/Onion layer name. In classic MVC it is the
+non-presentation state/behavior being presented. In a layered application that role may be backed by
+Domain objects, Application results, a dedicated presentation model, or a combination of them.
+
+Do **not** conclude that `MVC Model === Domain` or `MVC Model === Clean Entities`. Those taxonomies
+describe different scopes. If the Model carries UI change-notification machinery, that mechanism is a
+presentation concern even when the represented business concepts ultimately come from Domain.
 
 ---
 
@@ -129,8 +132,9 @@ design — it is a translator between the user's intent and the Model's vocabula
 ### 1.4 The one rule that holds it together
 
 Strip away the variants and MVC reduces to a single principle: **separated presentation** [Fowler]. The
-Model is the domain, kept ignorant of the screen; the View and Controller are the presentation, kept free
-of domain rules. Everything in [The Flow](2-the-flow.md) is a consequence of deciding *who notifies whom*
+Model side is kept independent of concrete rendering/input mechanics; the View and Controller stay focused
+on presentation responsibilities. In a Clean/Onion system, authoritative business rules normally live
+further inward than the MVC presentation boundary. Everything in [The Flow](2-the-flow.md) is a consequence of deciding *who notifies whom*
 once that separation is in place.
 
 ---

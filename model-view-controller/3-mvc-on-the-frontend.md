@@ -2,19 +2,21 @@
 
 ## 3. MVC on the Frontend
 
-Modern component frameworks are routinely called "MVC," but that label is imprecise. This page names what
-they actually are, then shows how to apply MVC's real value — separated presentation — inside a component
-app, and inside an Onion or Clean architecture. The pattern this page concludes frameworks really use has
-a dedicated guide of its own: **[Model-View-ViewModel](../model-view-viewmodel)**.
+Modern component frameworks are routinely described with MVC/MVVM vocabulary, but the frameworks
+themselves do not choose one historical presentation pattern for the application. This page extracts the
+part that remains useful: explicit separation between rendering, interpretation of user intent, and the
+application/model capabilities those interactions use.
 
 ---
 
-### 3.1 A component is closer to MVVM than to classic MVC
+### 3.1 Component frameworks do not automatically implement MVC or MVVM
 
-In Vue, React, or Svelte you rarely write an Observer by hand to sync a View with a Model. You declare
-reactive state, bind it into the template, and the framework re-renders when the state changes. That
-automatic synchronization is the defining trait of **MVVM**, not classic MVC [Fowler's Presentation Model;
-Gossman 2005].
+Vue, React and Svelte provide reactive rendering mechanisms, so developers rarely reproduce the exact
+observer/controller wiring of Smalltalk-era MVC. That does **not** make those frameworks MVVM by default.
+Reactivity is a mechanism; MVC/MVVM are responsibility patterns.
+
+A project may intentionally implement MVC-like controllers, MVVM-like ViewModels, Presentation Model, or
+a simpler component/state design on top of the same framework.
 
 ```mermaid
 flowchart LR
@@ -26,18 +28,17 @@ flowchart LR
     end
 ```
 
-So when a tutorial labels a component "the View" and a store "the Model," the missing piece — the manual
-Controller-and-Observer plumbing — has been absorbed by the framework's reactivity. The honest mapping is:
+Use role names only when the responsibilities really match:
 
-| MVC / MVVM role | Typical frontend home |
+| Role | Possible frontend implementation |
 |---|---|
-| **Model** | a domain entity or a plain data module, framework-free |
-| **ViewModel** | a store (Pinia/Redux/signals) or a composable holding display state |
-| **View** | the component template + its render |
-| **Controller** | event handlers / actions that interpret input and call the Model |
+| **View** | component/template whose main job is rendering and forwarding intent |
+| **Controller-like presentation action** | event/action facade that interprets a gesture |
+| **ViewModel / Presentation Model** | hook/composable/store facade that exposes view-oriented state and commands |
+| **Model side** | application/domain capabilities or another non-rendering model — not necessarily one object |
 
-The Controller has not vanished; it has shrunk into the event handlers and store actions that translate a
-gesture into a state change.
+The same application does not need to use all four labels. Prefer the smallest vocabulary that makes
+ownership clearer.
 
 ---
 
@@ -51,8 +52,9 @@ the network. It has collapsed all three parts into one, losing every benefit of 
 - the same rule gets re-implemented in the next component that needs it;
 - a design change risks breaking business behavior, because they share a file.
 
-The fix is the same separation MVC has prescribed since 1979: move the rules into a framework-free Model,
-keep display state in a store/ViewModel, and let the component render and forward gestures. A component
+The fix is separated responsibilities: move authoritative business/application rules inward, keep
+view-specific state in Presentation, isolate technical I/O behind its proper boundary, and let the
+component focus on rendering and forwarding intent. A component
 that only reads state and emits events is a **Passive View**, the most testable arrangement there is
 [Fowler].
 
@@ -67,22 +69,21 @@ flowchart TD
     N0["Onion / Clean outer ring (Presentation)"]
     N1["View → component template"]
     N2["ViewModel → store / composable (display state)"]
-    N3["Controller → event handlers that call a USE CASE, not the Model directly"]
-    N4["…inner rings (Application, Domain) — unchanged, framework-free"]
+    N3["Controller-like action → interprets user intent"]
+    N4["Application use case"]
+    N5["Domain"]
+    N3 --> N4 --> N5
     N0 --> N1
     N0 --> N2
     N0 --> N3
 ```
 
-The one adjustment when MVC lives inside a layered architecture: the Controller should call an
-**application use case**, not reach into the domain Model itself. In a standalone MVC screen the Controller
-talks straight to the Model; in an Onion/Clean app that conversation is routed through the Application
-layer, so the dependency rule still holds and the business orchestration stays in one place. The View and
-the display-state ViewModel are pure Presentation; the Model's *rules* belong to the inner rings, even
-though MVC's vocabulary draws them as one box.
+When MVC-style presentation lives inside Clean/Onion, a controller-like action normally delegates
+policy-bearing work to an **Application use case** rather than embedding the rule itself. The UI may still
+have local Presentation state; the Domain/Application boundaries remain independently defined.
 
-Put plainly: **use MVVM-style separation to structure each screen, and Onion/Clean to structure the system
-those screens live in.** They answer different questions and were never meant to be chosen between.
+Put plainly: use MVC terminology only where it improves the presentation design, and use Clean/Onion
+boundaries to decide where application/domain policy and infrastructure belong.
 
 ---
 

@@ -260,3 +260,12 @@ Every substantial documentation PR must be reviewed three times.
 - Examples do not contradict architecture tests.
 
 A contribution is not ready until all three passes are clean.
+
+
+## 12. Canonical architecture-guide template
+
+When adding a new architecture or substantially rewriting one, start from **[Architecture Guide Template](./docs/architecture-guide-template.md)** rather than inventing a new documentation order.
+
+The template is intentionally verbose. Remove sections only when they truly do not apply; do not move foundational placement/dependency guidance behind advanced material.
+
+For presentation patterns such as MVC/MVVM, adapt "layers" to "roles", but preserve the same teaching order: history → problem → fit → mental model → responsibilities → physical placement → progressive example → testing → advanced topics.

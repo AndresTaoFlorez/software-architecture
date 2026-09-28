@@ -10,13 +10,14 @@ Code that changes for the same reason should be easy to find together. Code owne
 
 A common frontend failure mode is technically neat but behaviorally scattered:
 
-```text
-components/closures/
-hooks/useClosures.ts
-state/slices/closuresSlice.ts
-state/selectors/closuresSelectors.ts
-types/closures.types.ts
-utils/closureHelpers.ts
+```mermaid
+flowchart TD
+    R["Presentation split by technical type"] --> C["components/closures/"]
+    R --> H["hooks/useClosures.ts"]
+    R --> S["state/slices/closuresSlice.ts"]
+    R --> SEL["state/selectors/closuresSelectors.ts"]
+    R --> T["types/closures.types.ts"]
+    R --> U["utils/closureHelpers.ts"]
 ```
 
 Every file belongs to the same capability, but changing that capability requires jumping across the entire Presentation tree.
@@ -99,21 +100,17 @@ Move code to `shared` only when it is genuinely independent of the originating f
 
 Good:
 
-```text
-shared/ui/Button
-shared/ui/DataTable
-shared/lib/date
-shared/lib/format-bytes
-```
+- `shared/ui/Button`
+- `shared/ui/DataTable`
+- `shared/lib/date`
+- `shared/lib/format-bytes`
 
 Suspicious:
 
-```text
-shared/helpers.ts
-shared/common.ts
-shared/misc.ts
-shared/utils.ts
-```
+- `shared/helpers.ts`
+- `shared/common.ts`
+- `shared/misc.ts`
+- `shared/utils.ts`
 
 A shared library should be nameable by purpose. If its purpose is "things used in many places", it is not a coherent module.
 
@@ -163,21 +160,17 @@ Do not solve coupling by adding more barrels.
 
 Prefer:
 
-```text
-closure-validation.ts
-judicial-date-range.ts
-catalog-normalization.ts
-```
+- `closure-validation.ts`
+- `judicial-date-range.ts`
+- `catalog-normalization.ts`
 
 over:
 
-```text
-helpers.ts
-utils2.ts
-common.ts
-manager.ts
-service.ts
-```
+- `helpers.ts`
+- `utils2.ts`
+- `common.ts`
+- `manager.ts`
+- `service.ts`
 
 Role suffixes are useful when they add information: `*.mapper.ts`, `*.selector.ts`, `*.adapter.ts`, `*.recipe.ts`.
 

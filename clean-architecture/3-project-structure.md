@@ -29,12 +29,7 @@ flowchart TD
 
 Equivalent projects may use Martin's vocabulary:
 
-```text
-entities/
-usecases/
-adapters/
-frameworks/
-```
+Possible Martin-style names include `entities/`, `usecases/`, `adapters/`, and `frameworks/`.
 
 or a package/module-based layout.
 
@@ -91,12 +86,7 @@ flowchart TD
 
 Do not create global dumping grounds such as:
 
-```text
-services/
-helpers/
-managers/
-common/
-```
+Avoid generic dumping grounds such as `services/`, `helpers/`, `managers/`, or `common/` when the files have a clear capability owner.
 
 when the files have clear capability ownership.
 
@@ -232,27 +222,27 @@ See **[Executable Architecture](../foundations/architecture-testing.md)**.
 
 ### Architecture
 
-```text
-Domain cannot depend on Infrastructure.
-Application cannot import an HTTP client.
-A concrete adapter implements an inner contract.
-```
+| Rule type | Example |
+| --- | --- |
+| Architecture | Domain cannot depend on Infrastructure. |
+| Architecture | Application cannot import a concrete HTTP client. |
+| Architecture | A concrete outer adapter implements or consumes an inner-owned contract. |
 
 ### Recommended convention
 
-```text
-features/orders/model/
-Component/Component.styles.ts
-index.ts as public API
-```
+| Convention | Example |
+| --- | --- |
+| Feature model location | `features/orders/model/` |
+| Colocated component style file | `Component/Component.styles.ts` |
+| Feature public entry point | `index.ts` |
 
 ### Framework convention
 
-```text
-Redux Toolkit createSlice
-Panda sva
-React custom hooks
-```
+| Framework mechanism | Example |
+| --- | --- |
+| Redux Toolkit | `createSlice` |
+| Panda CSS | `sva` |
+| React | custom Hooks |
 
 Treating all three as equally fundamental creates cargo-cult architecture.
 

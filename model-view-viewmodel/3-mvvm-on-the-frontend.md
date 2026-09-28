@@ -103,15 +103,11 @@ MVVM and Clean/Onion answer different questions.
 
 MVVM:
 
-```text
-How is presentation state/behavior separated from rendering?
-```
+> **MVVM question:** How is presentation state/behavior separated from rendering?
 
 Clean/Onion:
 
-```text
-How do application/domain policies depend on external mechanisms?
-```
+> **Clean/Onion question:** How do application/domain policies depend on external mechanisms?
 
 A strict layered mapping can be:
 

@@ -80,7 +80,39 @@ A controller can translate user intent into an Application command rather than d
 
 Use [Code Placement](../foundations/code-placement.md) for cross-layer placement.
 
-## 8. Learning path
+## 8. Where does a new function go?
+
+MVC only classifies **presentation roles**. In a layered application, decide the architectural owner first and the MVC role second.
+
+```mermaid
+flowchart TD
+    Q{"Why does this code exist?"}
+    Q -->|"Renders state"| V["View"]
+    Q -->|"Interprets a UI gesture"| C["Controller / presentation action"]
+    Q -->|"Business/application rule"| INNER["Application or Domain — not MVC Presentation"]
+    Q -->|"HTTP / DB / SDK detail"| OUTER["Infrastructure — not the MVC Model"]
+```
+
+Examples:
+
+| Code | Owner |
+| --- | --- |
+| render an order row | View |
+| turn a click into `cancelOrder(id)` | Controller/presentation action |
+| reject cancellation after shipment | Domain/Application |
+| perform the HTTP request | Infrastructure |
+
+## 9. Naming
+
+Before creating a file, use **[Naming and File Placement Conventions](../conventions/naming-and-file-placement.md)**.
+
+Important distinction:
+
+- `OrdersPage.tsx` describes a View;
+- `useOrderActions.ts` can act as a presentation controller/action facade;
+- `cancelOrder.ts` is an application use case, not a Controller merely because a button invokes it.
+
+## 10. Learning path
 
 1. [The Three Parts](./1-the-three-parts.md)
 2. [The Flow](./2-the-flow.md)

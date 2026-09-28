@@ -72,13 +72,7 @@ Adopt a container when it solves a real object-graph/lifetime/framework problem.
 
 The root should assemble the graph, not implement use cases:
 
-```text
-create clients
-create adapters
-create application services
-create store/controllers
-start framework
-```
+Typical Composition Root responsibilities are: create technical clients, create adapters, construct application services/use cases, construct delivery/store/controller objects, and finally start the framework/runtime.
 
 Business branching belongs elsewhere.
 

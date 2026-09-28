@@ -94,16 +94,7 @@ Repository is a specific pattern: it presents persistence or retrieval in domain
 
 Other external capabilities deserve names that express what they do:
 
-```text
-PaymentGateway
-Clock
-IdGenerator
-ClosureExecutor
-FileStorage
-JudicialCatalogGateway
-Telemetry
-SessionStore
-```
+Examples include `PaymentGateway`, `Clock`, `IdGenerator`, `ClosureExecutor`, `FileStorage`, `JudicialCatalogGateway`, `Telemetry`, and `SessionStore`.
 
 Calling every dependency `Repository` hides intent.
 

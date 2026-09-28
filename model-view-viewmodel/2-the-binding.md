@@ -28,10 +28,11 @@ automated. No View subscribes to anything; no Model broadcasts to anyone. The de
 ```mermaid
 flowchart TD
     N0["gesture command"]
-    N1["User ────────► View ────────────────► ViewModel ────► Model"]
-    N2["▲ ▲ │"]
-    N3["│ sees │ re-render (automatic) │ reactive change"]
-    N4["────── binding ◀────────┘"]
+    USER["User"] -->|"gestures"| VIEW["View"]
+    VIEW -->|"commands / intent"| VM["ViewModel"]
+    VM -->|"model operations"| MODEL["Model / Application"]
+    VM -->|"view state"| VIEW
+    VIEW -->|"rendered UI"| USER
 ```
 
 ---

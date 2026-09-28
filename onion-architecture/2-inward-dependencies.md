@@ -78,24 +78,12 @@ No contradiction exists because dependency direction and control flow are differ
 
 ## 2.3 Recommended import policy
 
-```text
-Domain
-  allowed: Domain
-  forbidden: Application, Infrastructure, Presentation
-
-Application
-  allowed: Application, Domain
-  forbidden: Infrastructure, Presentation
-
-Infrastructure
-  allowed: Infrastructure, Application, Domain
-  forbidden: Presentation
-
-Presentation
-  allowed: Presentation, Application
-  optional project policy: Domain
-  forbidden by strict default: Infrastructure
-```
+| Area | Allowed dependencies | Forbidden by the default policy |
+| --- | --- | --- |
+| Domain | Domain | Application, Infrastructure, Presentation |
+| Application | Application, Domain | Infrastructure, Presentation |
+| Infrastructure | Infrastructure, Application, Domain | Presentation |
+| Presentation | Presentation, Application; Domain only if the project explicitly allows it | Infrastructure |
 
 Composition is allowed to know the concrete modules required to assemble the executable.
 

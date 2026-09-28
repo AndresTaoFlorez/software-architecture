@@ -106,14 +106,9 @@ The feature itself may freely import its own internals.
 
 When the UI architecture intentionally hides Redux behind a feature facade, make that rule executable:
 
-```text
-pages / layouts / feature UI
-        ↓
-public hook / ViewModel
-        ↓
-feature bindings
-        ↓
-Redux Toolkit
+```mermaid
+flowchart TD
+    UI["Pages / layouts / feature UI"] --> VM["Public hook / ViewModel"] --> B["Feature bindings"] --> R["Redux Toolkit"]
 ```
 
 Tests can forbid `react-redux`, `@reduxjs/toolkit`, store modules and slices from UI surface folders.

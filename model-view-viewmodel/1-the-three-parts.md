@@ -13,8 +13,9 @@ awkward UI automation and interaction" [Gossman 2006]. The three parts divide th
 
 ### 1.1 Model
 
-**Responsibility.** Hold the application's data and the rules that govern it, independent of any
-screen. Identical to MVC's Model: the part that would still make sense if the UI were deleted.
+**Responsibility.** Represent the non-ViewModel state/behavior that the ViewModel works with. In the
+original pattern this is independent of the concrete View, but in a layered application it should not be
+blindly equated with one architecture layer.
 
 **What lives here.**
 - The data being worked on (a `Cart`, a `User`, a list of orders).
@@ -36,9 +37,9 @@ class Cart {
 }
 ```
 
-If this looks like the **Domain** of an Onion app or the **Entities** of a Clean app, that is not a
-coincidence — it is the same idea seen from the presentation tier, and in a layered app it *is* those
-inner rings (see [MVVM on the Frontend §3.3](3-mvvm-on-the-frontend.md#33-how-mvvm-sits-inside-onion-and-clean)).
+The MVVM **Model** can be backed by Application services/use cases, Domain objects, data sources, or a
+combination of them. It is a presentation-pattern role, not a synonym for `domain/` or Clean Entities.
+See [MVVM on the Frontend §3.3](3-mvvm-on-the-frontend.md#33-how-mvvm-sits-inside-onion-and-clean).
 
 ---
 
@@ -90,9 +91,10 @@ exposes exactly what the View needs to render (display-ready values) and exactly
 
 **What it must not do.** Two prohibitions define the pattern:
 
-1. **Never reference the View.** No DOM handles, no component instances, no toolkit imports. The
-   ViewModel must be constructible and drivable in a test with no UI attached — that is the
-   pattern's entire payoff [Gossman 2006; Smith 2009].
+1. **Do not depend on concrete View instances/controls.** A classic WPF-style ViewModel is UI-toolkit
+   agnostic and can be tested without a View [Gossman 2006; Smith 2009]. A modern framework-specific
+   Presentation facade such as a React custom Hook may legitimately import React; in that case it is
+   playing a ViewModel-like role rather than being a framework-free historical ViewModel implementation.
 2. **Never absorb the Model's rules.** The ViewModel *reshapes and coordinates*; it does not decide
    domain outcomes. A ViewModel that computes prices or validates business invariants has become a
    "fat ViewModel" — MVVM's own decay mode, examined in
@@ -137,8 +139,9 @@ input* to *owning display state* [Fowler, GUI Architectures].
 ### 1.5 The one rule that holds it together
 
 Strip away the binding machinery and MVVM reduces to the same principle as its ancestor:
-**separated presentation** [Fowler]. The Model is the domain, ignorant of screens; the ViewModel is
-the screen's state, ignorant of pixels; the View is pixels, ignorant of meaning. Everything in
+**separated presentation** [Fowler]. The Model side is independent of the concrete View; the ViewModel
+shapes state/behavior for presentation; the View renders and captures interaction. A separate
+Clean/Onion architecture may place authoritative application/domain policy further inward. Everything in
 [The Binding](2-the-binding.md) is a consequence of deciding that a framework, not a programmer,
 keeps the first two in sync with the third.
 
