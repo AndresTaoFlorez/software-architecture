@@ -41,7 +41,7 @@ flowchart TD
 
 The exact segment names are conventions. The [invariant](../GLOSSARY.md#invariant) is ownership.
 
-Redux's official style guide independently recommends [feature folders](../GLOSSARY.md#feature-folder) because colocating feature logic makes it easier to maintain. Feature-Sliced Design formalizes the same high-cohesion idea with slices and [public APIs](../GLOSSARY.md#public-api); this [repository](../GLOSSARY.md#repository) borrows that principle without requiring the full FSD layer taxonomy.
+Redux's official style guide independently recommends [feature folders](../GLOSSARY.md#feature-folder) because colocating feature logic makes it easier to maintain. Feature-Sliced Design formalizes the same high-cohesion idea with slices and [public APIs](../GLOSSARY.md#public-api); this repository borrows that principle without requiring the full FSD layer taxonomy.
 
 ## 2. Public API per non-trivial module
 

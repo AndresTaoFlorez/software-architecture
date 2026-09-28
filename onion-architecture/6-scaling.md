@@ -6,7 +6,7 @@
 
 The original Onion guidance is about protecting a domain model and externalizing infrastructure. Scaling decisions should respond to actual coupling, ownership, deployment and runtime forces.
 
-The canonical [repository](../GLOSSARY.md#repository) guidance is:
+The canonical repository guidance is:
 
 **[Architecture Evolution and Scaling](../foundations/evolution-and-scaling.md)**
 

@@ -104,7 +104,7 @@ If the architecture is only a presentation pattern, state which decisions are ou
 
 ## 9. Naming
 
-Link to [Naming and File Placement Conventions](../conventions/naming-and-file-placement.md). Separate architecture-defined vocabulary, framework naming requirements, and [repository](../GLOSSARY.md#repository) naming conventions.
+Link to [Naming and File Placement Conventions](../conventions/naming-and-file-placement.md). Separate architecture-defined vocabulary, framework naming requirements, and documentation naming conventions.
 
 ## 10. One feature end to end
 
@@ -135,4 +135,4 @@ List chapters from fundamentals to advanced material. A reader must be able to p
 
 Primary source first, then official framework/standards documentation, then high-quality secondary sources.
 
-For every claim ask: is this a historical fact, framework rule, architectural [invariant](../GLOSSARY.md#invariant), recommended default, or [repository](../GLOSSARY.md#repository) convention? Make that status clear.
+For every claim ask: is this a historical fact, framework rule, architectural [invariant](../GLOSSARY.md#invariant), recommended default, or documentation convention? Make that status clear.

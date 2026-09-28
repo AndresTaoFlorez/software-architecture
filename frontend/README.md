@@ -1,6 +1,6 @@
 # Frontend Architecture
 
-This section is the canonical frontend guidance for this [repository](../GLOSSARY.md#repository).
+This section is the canonical frontend guidance for this repository.
 
 [Clean Architecture](../GLOSSARY.md#clean-architecture) and [Onion Architecture](../GLOSSARY.md#onion-architecture) define **dependency direction across application boundaries**. They do not prescribe how a large React/Vue/Svelte [Presentation layer](../GLOSSARY.md#presentation-layer) must be organized internally. This section fills that gap without pretending framework conventions are part of Clean or Onion.
 
@@ -89,7 +89,7 @@ flowchart TD
 
 This keeps `closures` UI, state, [selectors](../GLOSSARY.md#selector), bindings and feature-specific helpers close together instead of scattering them across global `components/`, `hooks/`, `state/`, `types/` and `utils/` trees.
 
-This [repository](../GLOSSARY.md#repository) borrows the **high-cohesion [feature slice](../GLOSSARY.md#feature-slice)** and **[public API](../GLOSSARY.md#public-api)** ideas found in Redux's feature-folder guidance and Feature-Sliced Design. It does **not** require the complete FSD taxonomy; in particular, using a second unrelated meaning of `entities` beside [Domain-Driven Design](../GLOSSARY.md#domain-driven-design-ddd) often creates needless vocabulary collisions.
+This repository borrows the **high-cohesion [feature slice](../GLOSSARY.md#feature-slice)** and **[public API](../GLOSSARY.md#public-api)** ideas found in Redux's feature-folder guidance and Feature-Sliced Design. It does **not** require the complete FSD taxonomy; in particular, using a second unrelated meaning of `entities` beside [Domain-Driven Design](../GLOSSARY.md#domain-driven-design-ddd) often creates needless vocabulary collisions.
 
 ## Public Presentation facade
 

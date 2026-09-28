@@ -177,9 +177,9 @@ Keep many fast tests around stable policy and fewer expensive tests around compl
 
 Risk should determine coverage:
 
-- pure [invariant](../GLOSSARY.md#invariant) -> cheap unit tests;
-- mapping/database behavior -> integration tests;
-- critical user journey -> end-to-end tests.
+- pure [invariant](../GLOSSARY.md#invariant): cheap unit tests;
+- mapping/database behavior: integration tests;
+- critical user journey: end-to-end tests.
 
 ## Sources
 

@@ -311,7 +311,7 @@ Raw CSS remains valid for explicit integration boundaries such as:
 - legacy migration boundaries;
 - deliberately external stylesheets.
 
-Therefore the [repository](../GLOSSARY.md#repository) does **not** establish "zero CSS files" as a universal architectural rule.
+Therefore the repository does **not** establish "zero CSS files" as a universal architectural rule.
 
 ---
 

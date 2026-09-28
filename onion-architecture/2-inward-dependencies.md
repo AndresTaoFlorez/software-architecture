@@ -87,7 +87,7 @@ No contradiction exists because dependency direction and control flow are differ
 
 Composition is allowed to know the concrete modules required to assemble the executable.
 
-This table is a [repository](../GLOSSARY.md#repository) convention for implementing Onion cleanly; Palermo's articles define the inward principle, not these exact folder names.
+This table is a documentation convention for implementing Onion cleanly; Palermo's articles define the inward principle, not these exact folder names.
 
 ---
 
