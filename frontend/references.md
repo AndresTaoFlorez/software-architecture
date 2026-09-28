@@ -20,7 +20,7 @@ This section separates primary architectural sources from framework/tool documen
 
 ## React
 
-- Reusing Logic with Custom Hooks.  
+- Reusing Logic with [Custom Hooks](../GLOSSARY.md#custom-hook).
   https://react.dev/learn/reusing-logic-with-custom-hooks
 - Choosing the State Structure.  
   https://react.dev/learn/choosing-the-state-structure

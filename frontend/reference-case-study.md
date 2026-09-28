@@ -1,411 +1,142 @@
 # Reference Case Study: XXI Web UI
 
-This case study records architectural lessons extracted from:
-
-```mermaid
-flowchart TD
-    N0["AndresTaoFlorez/tyba-support-platform"]
-    N1["experiments/xxi/web-ui"]
-    N0 --> N1
-```
-
-The reviewed snapshot is a **reference implementation, not the specification**.
-
-Its useful patterns are generalized here. Its accidental complexity and boundary leaks are documented explicitly so they are not copied into new projects.
-
----
+Reviewed source: `AndresTaoFlorez/tyba-support-platform`, `experiments/xxi/web-ui`, **commit `982d861d442024331c84041c5a08c147ce2a01ec`**. Evidence below comes from that committed snapshot, not local uncommitted work. This is a reference implementation, not the architecture specification or an instruction to migrate that repository.
 
 ## 1. What should be promoted
 
 ### 1.1 Explicit application boundaries
 
-The project uses:
-
-```mermaid
-flowchart TD
-    SRC["src/"] --> D["domain/"]
-    SRC --> A["application/"]
-    SRC --> I["infrastructure/"]
-    SRC --> P["presentation/"]
-    SRC --> C["composition/"]
-```
-
-with [architecture tests](../GLOSSARY.md#architecture-test) that verify import direction.
-
-That is stronger than a folder diagram alone.
+The snapshot has [Domain](../GLOSSARY.md#domain), [Application](../GLOSSARY.md#application-layer), [Infrastructure](../GLOSSARY.md#infrastructure), [Presentation](../GLOSSARY.md#presentation-layer) and Composition areas. Its [architecture tests](https://github.com/AndresTaoFlorez/tyba-support-platform/blob/982d861d442024331c84041c5a08c147ce2a01ec/experiments/xxi/web-ui/tests/architecture.test.ts) inspect TypeScript import/export declarations and dynamic imports, resolve local references, and protect selected UI/hook boundaries. These checks establish the rules they implement, not every possible conceptual leak.
 
 ### 1.2 Explicit Composition Root
 
-Concrete [Infrastructure](../GLOSSARY.md#infrastructure) is wired to [Application](../GLOSSARY.md#application-layer) and the UI [store](../GLOSSARY.md#store) in one outer composition module.
-
-The pattern should be retained; the concrete classes are project-specific.
+[The composition module](https://github.com/AndresTaoFlorez/tyba-support-platform/blob/982d861d442024331c84041c5a08c147ce2a01ec/experiments/xxi/web-ui/src/composition/container.ts) assembles concrete [adapters](../GLOSSARY.md#adapter), [use cases](../GLOSSARY.md#use-case) and presentation state. Retain injection into consumers rather than importing that module as a [service locator](../GLOSSARY.md#service-locator).
 
 ### 1.3 UI components grouped by capability
 
-Examples such as:
-
-```mermaid
-flowchart TD
-    N0["components/"]
-    N1["auth/"]
-    N2["closures/"]
-    N3["profile/"]
-    N4["token/"]
-    N5["shared/"]
-    N0 --> N1
-    N0 --> N2
-    N0 --> N3
-    N0 --> N4
-    N0 --> N5
-```
-
-are materially better than one flat component directory.
-
-The generalized version in this repository goes further: when a feature becomes large, its hooks, [selectors](../GLOSSARY.md#selector), state and helpers should migrate under the same feature owner rather than remaining distributed across application-wide technical folders.
+Auth, closures, profile and token components have recognizable owners. When a capability grows, its state, bindings and helpers can move under the same feature owner. This is a recommended evolution, not a required folder count.
 
 ### 1.4 Complex component colocation
 
-The pattern:
-
-```mermaid
-flowchart TD
-    N0["Component/"]
-    N1["Component.tsx"]
-    N2["Component.styles.ts"]
-    N3["Component.types.ts"]
-    N4["index.ts"]
-    N0 --> N1
-    N0 --> N2
-    N0 --> N3
-    N0 --> N4
-```
-
-is a good default for non-trivial components.
-
-Files remain optional. A component with no dedicated types file should not receive an empty one.
+DataTable keeps its rendering and style definitions together. Component-only types and tests can also be colocated when needed; empty files are unnecessary.
 
 ### 1.5 Public feature hooks
 
-Hooks such as `useAuth`, `useClosures`, `useTheme`, `useToast` and `useUi` give React a semantic interface over state machinery.
-
-That is a useful [Presentation Model](../GLOSSARY.md#presentation-model)/[ViewModel](../GLOSSARY.md#viewmodel)-style boundary.
+[`useClosures`](https://github.com/AndresTaoFlorez/tyba-support-platform/blob/982d861d442024331c84041c5a08c147ce2a01ec/experiments/xxi/web-ui/src/presentation/hooks/useClosures.ts) offers screen-oriented state and operations. This is an intentional [ViewModel](../GLOSSARY.md#viewmodel)-like [facade](../GLOSSARY.md#facade-pattern), not a role inferred from the `use` prefix.
 
 ### 1.6 Selectors separate derivation from mutation
 
-Dedicated [selectors](../GLOSSARY.md#selector) keep derived state outside [reducers](../GLOSSARY.md#reducer) and components.
+The presentation state area separates derived values from update logic. Derivation remains a presentation concern unless it owns an authoritative business rule.
 
 ### 1.7 Architecture tests
 
-The project checks import boundaries with the TypeScript [AST](../GLOSSARY.md#abstract-syntax-tree-ast), including relative and type-only imports. It also protects public hook boundaries and rejects direct Redux imports from selected UI surfaces.
-
-This should become a first-class architectural practice.
+[AST](../GLOSSARY.md#abstract-syntax-tree-ast)-based checks cover more than a folder drawing or a search for `import`. Type-only references also create coupling. A complete check must still account for the language constructs, resolution and package policy of its project.
 
 ### 1.8 Panda semantic tokens and slot recipes
 
-The project has a mature direction:
-
-```mermaid
-flowchart LR
-    T["Tokens"] --> S["Semantic tokens"] --> TS["Text / layer styles"] --> R["sva slot recipes"] --> C["Components"]
-```
-
-The local `sva` pattern for multipart components is worth preserving after duplicate [recipes](../GLOSSARY.md#recipe) are removed.
-
----
+Panda tokens and multipart [recipes](../GLOSSARY.md#recipe) provide reusable visual contracts. Keep one owner for each decision. Local atomic [recipes](../GLOSSARY.md#recipe) and registered config [recipes](../GLOSSARY.md#recipe) are both valid mechanisms; ownership determines which this guide recommends.
 
 ## 2. What should not be promoted unchanged
 
-### 2.1 `SessionRepository` became a capability god-interface
+<a id="21-sessionrepository-became-a-capability-god-interface"></a>
 
-At the reviewed snapshot, one interface owns authentication, environment switching, preferences, catalogs, office queries, account recovery, closure execution, upload, jobs and history.
+### 2.1 Port cohesion still needs review
 
-That is no longer a session capability.
+The snapshot already has **AuthRepository, ClosuresRepository and PreferencesRepository**. It does not have the previously claimed all-purpose `SessionRepository`. [`ClosuresRepository`](https://github.com/AndresTaoFlorez/tyba-support-platform/blob/982d861d442024331c84041c5a08c147ce2a01ec/experiments/xxi/web-ui/src/application/ports/ClosuresRepository.ts) still combines catalogs, office lookup, search, execution, upload, jobs and history. Consider splitting conversations that have independently meaningful consumers or lifetimes; do not create a [port](../GLOSSARY.md#port) per endpoint mechanically.
 
-Refactor conceptually toward coherent [ports](../GLOSSARY.md#port):
+<a id="22-sessionusecases-became-an-application-god-service"></a>
 
-```mermaid
-flowchart TD
-    N0["application/"]
-    N1["auth/"]
-    N2["ports/AuthGateway.ts"]
-    N3["catalogs/"]
-    N4["ports/JudicialCatalogGateway.ts"]
-    N5["closures/"]
-    N6["ports/ClosureGateway.ts"]
-    N7["ports/ClosureFileGateway.ts"]
-    N8["preferences/"]
-    N9["ports/PreferencesStore.ts"]
-    N0 --> N1
-    N1 --> N2
-    N0 --> N3
-    N3 --> N4
-    N0 --> N5
-    N5 --> N6
-    N5 --> N7
-    N0 --> N8
-    N8 --> N9
-```
+### 2.2 Use-case cohesion follows capabilities
 
-Do not mechanically create one interface per endpoint. [Port](../GLOSSARY.md#port) granularity follows cohesive external conversations.
-
-### 2.2 `SessionUseCases` became an application god-service
-
-The same capability sprawl appears in the use-case class.
-
-Prefer use-case/capability ownership:
-
-```mermaid
-flowchart TD
-    N0["application/closures/"]
-    N1["execute-closure.ts"]
-    N2["get-closure-history.ts"]
-    N3["..."]
-    N0 --> N1
-    N0 --> N2
-    N0 --> N3
-```
-
-A class containing several strongly cohesive [use cases](../GLOSSARY.md#use-case) may still be reasonable. The rule is cohesion, not "one class per method".
+[`closuresUseCases.ts`](https://github.com/AndresTaoFlorez/tyba-support-platform/blob/982d861d442024331c84041c5a08c147ce2a01ec/experiments/xxi/web-ui/src/application/use-cases/closuresUseCases.ts) contains several closure operations and draft validation. Auth and Preferences are already separate. Further separation should follow independently understandable policy, not a claim that `SessionUseCases` still exists or a one-class-per-method rule.
 
 ### 2.3 `domain/session.ts` mixes unrelated ownership
 
-The reviewed [Domain](../GLOSSARY.md#domain) file contains session concepts alongside:
-
-- `ClosureFormState`;
-- `UploadQueueItem`;
-- table/cache representations;
-- closure execution transport/application shapes.
-
-Names such as `FormState`, `UploadQueueItem` and `WebTable` indicate UI or boundary concerns, not stable domain meaning.
-
-A normalized model would separate:
-
-```mermaid
-flowchart TD
-    N0["domain/"]
-    N1["auth/"]
-    N2["closures/"]
-    N3["Closure.ts"]
-    N4["ClosurePeriod.ts"]
-    N5["ClosureStatus.ts"]
-    N6["judicial-office/"]
-    N7["application/"]
-    N8["closures/"]
-    N9["ExecuteClosureCommand.ts"]
-    N10["ports/"]
-    N11["..."]
-    N12["presentation/features/closures/model/"]
-    N13["closure-form.types.ts"]
-    N14["upload-queue.types.ts"]
-    N15["infrastructure/"]
-    N16["..."]
-    N0 --> N1
-    N0 --> N2
-    N2 --> N3
-    N2 --> N4
-    N2 --> N5
-    N0 --> N6
-    N7 --> N8
-    N8 --> N9
-    N8 --> N10
-    N7 --> N11
-    N12 --> N13
-    N12 --> N14
-    N15 --> N16
-```
+[`domain/session.ts`](https://github.com/AndresTaoFlorez/tyba-support-platform/blob/982d861d442024331c84041c5a08c147ce2a01ec/experiments/xxi/web-ui/src/domain/session.ts) declares `ClosureFormState`, `UploadQueueItem`, `WebTable`, catalogs and execution shapes alongside session concepts. Review each by meaning: form/upload display state belongs in [Presentation](../GLOSSARY.md#presentation-layer); wire data belongs with [Infrastructure](../GLOSSARY.md#infrastructure); operation contracts belong in [Application](../GLOSSARY.md#application-layer); stable business meaning belongs in [Domain](../GLOSSARY.md#domain). Names alone are clues, not proof of ownership.
 
 ### 2.4 Browser `File` leaks into Application
 
-An [Application](../GLOSSARY.md#application-layer) [port](../GLOSSARY.md#port) currently receives the browser `File` type.
-
-`File` belongs to the Web File API. The outer [adapter](../GLOSSARY.md#adapter) should translate it to an application-owned content/stream abstraction.
+`ClosuresRepository.uploadClosureFile` receives `File` and a progress callback. That conflicts with this guide's platform-independent [Application](../GLOSSARY.md#application-layer) default. A browser-specific application can intentionally choose otherwise, but must document the coupling. Translate to application-owned content metadata/bytes or a suitable stream contract when platform independence is required.
 
 ### 2.5 The application-wide `contract.ts` hides ownership
 
-A large [barrel](../GLOSSARY.md#barrel-file) re-exports [Domain](../GLOSSARY.md#domain) and [Application](../GLOSSARY.md#application-layer) types to [Presentation](../GLOSSARY.md#presentation-layer).
+[`application/contract.ts`](https://github.com/AndresTaoFlorez/tyba-support-platform/blob/982d861d442024331c84041c5a08c147ce2a01ec/experiments/xxi/web-ui/src/application/contract.ts) re-exports many `domain/session` types. An inward-looking import path does not correct mixed semantic ownership. Prefer deliberate capability APIs with the representations the consumer needs.
 
-That can make imports look clean while preserving conceptual coupling.
+<a id="26-useclosures-has-become-a-god-viewmodel"></a>
 
-Prefer explicit capability [public APIs](../GLOSSARY.md#public-api):
+### 2.6 The public facade coordinates many concerns
 
-- `application/auth/index.ts`
-- `application/closures/index.ts`
-- `application/catalogs/index.ts`
+`useClosures` coordinates query inputs, catalogs, drafts, uploads, execution monitoring, history, previews and feedback. It may retain one public surface while separating internals by independently changing responsibilities. This is a cohesion judgment, not a line-count threshold.
 
-with deliberate exports.
+<a id="27-redux-toolkit-mechanics-leak-through-the-facade"></a>
 
-### 2.6 `useClosures` has become a God ViewModel
+### 2.7 Redux result translation is already inside bindings
 
-The public [facade](../GLOSSARY.md#facade-pattern) is a good idea, but it accumulates query logic, draft behavior, uploads, execution, history, validation and UI feedback.
+[`closuresSlice.ts`](https://github.com/AndresTaoFlorez/tyba-support-platform/blob/982d861d442024331c84041c5a08c147ce2a01ec/experiments/xxi/web-ui/src/presentation/state/slices/closuresSlice.ts) performs `queryOfficeClassesThunk.rejected.match(...)` inside `useClosuresActions`, returning semantic `ok` outcomes. The public hook uses those outcomes; the previous claim that this matcher leaked into `useClosures` was stale. Preserve this boundary and examine other exported action results individually.
 
-Keep the [facade](../GLOSSARY.md#facade-pattern) while splitting internal concerns:
+<a id="28-a-slice-owns-too-many-mechanisms"></a>
 
-```mermaid
-flowchart TD
-    N0["presentation/features/closures/model/"]
-    N1["useClosureQuery.ts"]
-    N2["useClosureDraft.ts"]
-    N3["useClosureUploads.ts"]
-    N4["useClosureExecution.ts"]
-    N5["useClosureHistory.ts"]
-    N6["useClosures.ts"]
-    N0 --> N1
-    N0 --> N2
-    N0 --> N3
-    N0 --> N4
-    N0 --> N5
-    N0 --> N6
-```
+### 2.8 A slice file owns several mechanisms
 
-### 2.7 Redux Toolkit mechanics leak through the facade
+The same file contains [reducers](../GLOSSARY.md#reducer), async [thunks](../GLOSSARY.md#thunk) and React bindings. They can stay colocated under the feature while being separated into focused files when that improves understanding. A [reducer](../GLOSSARY.md#reducer) itself should remain free of I/O.
 
-The public hook inspects `queryOfficeClassesThunk.rejected.match(...)`.
+<a id="29-browser-persistence-is-mixed-with-react-lifecyclestate"></a>
 
-A public feature hook should receive a semantic result from bindings:
+### 2.9 Browser persistence has an explicit utility, but hook-owned orchestration
 
-```ts
-type Result<T, E> =
-  | { ok: true; value: T }
-  | { ok: false; error: E }
-```
+[`closureWorkspaceStorage.ts`](https://github.com/AndresTaoFlorez/tyba-support-platform/blob/982d861d442024331c84041c5a08c147ce2a01ec/experiments/xxi/web-ui/src/presentation/utils/closureWorkspaceStorage.ts) reads/writes `sessionStorage`; `useClosures` triggers it through effects. The snapshot does not put those storage calls in [reducers](../GLOSSARY.md#reducer). For a UI-only workspace, keeping this in [Presentation](../GLOSSARY.md#presentation-layer) can be deliberate. Isolate storage and consider [listener middleware](../GLOSSARY.md#listener-middleware) only when state-driven persistence warrants it; business persistence needs its own application boundary.
 
-The knowledge of `fulfilled` / `rejected` ends at the Redux [adapter](../GLOSSARY.md#adapter) boundary.
+<a id="210-panda-recipes-are-duplicated"></a>
 
-### 2.8 A slice owns too many mechanisms
+### 2.10 DataTable recipes have overlapping owners
 
-The large closures slice contains or coordinates:
+[`DataTable.styles.ts`](https://github.com/AndresTaoFlorez/tyba-support-platform/blob/982d861d442024331c84041c5a08c147ce2a01ec/experiments/xxi/web-ui/src/presentation/components/shared/DataTable/DataTable.styles.ts) defines an atomic `dataTableRecipe`; [`shared.recipes.ts`](https://github.com/AndresTaoFlorez/tyba-support-platform/blob/982d861d442024331c84041c5a08c147ce2a01ec/experiments/xxi/web-ui/src/presentation/recipes/shared.recipes.ts) defines another config `dataTableRecipe`. Consolidate overlapping contracts rather than copying fixes between them. This is an ownership finding, not a Panda prohibition on sharing atomic [recipes](../GLOSSARY.md#recipe).
 
-- Redux [reducers](../GLOSSARY.md#reducer)/state;
-- async [thunks](../GLOSSARY.md#thunk);
-- React bindings;
-- [selectors](../GLOSSARY.md#selector) through imports;
-- browser draft persistence.
+<a id="211-globalcss-competes-with-panda"></a>
 
-As the feature grows, keep these responsibilities colocated under `features/closures/model`, but split them into meaningful files.
+### 2.11 `global.css` also owns theme variables
 
-### 2.9 Browser persistence is mixed with React lifecycle/state
+[`global.css`](https://github.com/AndresTaoFlorez/tyba-support-platform/blob/982d861d442024331c84041c5a08c147ce2a01ec/experiments/xxi/web-ui/src/presentation/global.css) overrides theme colors such as `--colors-canvas`. Consolidate overlapping theme decisions with Panda configuration. CSS resets, fonts and vendor integration remain legitimate CSS owners.
 
-Draft persistence currently reaches `sessionStorage` from slice helpers and is triggered by a public hook effect.
+<a id="212-common-and-shared-are-ambiguous"></a>
 
-Prefer a storage [adapter](../GLOSSARY.md#adapter) and, when Redux owns the state transition, a listener/[middleware](../GLOSSARY.md#middleware) workflow.
+### 2.12 `common` and `shared` need distinct meanings
 
-### 2.10 Panda recipes are duplicated
-
-The project contains both:
-
-```mermaid
-flowchart LR
-    LOCAL["Component.styles.ts"] --> SVA["sva(...)"]
-    GLOBAL["presentation/recipes/*.recipes.ts"] --> SLOT["defineSlotRecipe(...)"]
-```
-
-for overlapping visual definitions.
-
-The corrected rule is:
-
-```mermaid
-flowchart LR
-    L["Local feature / component"] --> S["sva"]
-    G["Shared config / design-system recipe"] --> R["defineRecipe / defineSlotRecipe"]
-```
-
-Never both for the same [recipe](../GLOSSARY.md#recipe).
-
-### 2.11 `global.css` competes with Panda
-
-A manual global stylesheet redefines theme variables that are also owned by `panda.config.ts`.
-
-If Panda owns the [design system](../GLOSSARY.md#design-system), [semantic tokens](../GLOSSARY.md#semantic-token), global styles and keyframes should have one source of truth.
-
-### 2.12 `common` and `shared` are ambiguous
-
-Both categories exist.
-
-Prefer:
-
-- `shared/ui/`
-- `shared/lib/`
-- feature-local `lib/`
-
-and remove a generic `common` bucket unless the project can define a non-overlapping responsibility for it.
-
----
+Both component categories exist. Either document distinct contracts or consolidate them. Shared visual primitives should be feature-independent; domain-specific components stay with their capability.
 
 ## 3. Normalized target
 
-The generalized structure is:
-
 ```mermaid
 flowchart TD
-    SRC["src/"] --> D["domain/"]
-    SRC --> A["application/"]
-    SRC --> I["infrastructure/"]
-    SRC --> C["composition/"]
+    SRC["src/"] --> D["domain/ — business meaning"]
+    SRC --> A["application/ — operations and contracts"]
+    SRC --> I["infrastructure/ — technical adapters"]
+    SRC --> C["composition/ — assembly"]
     SRC --> P["presentation/"]
-    D --> DA["auth/"]
-    D --> DC["closures/"]
-    D --> DJ["judicial-office/"]
-    A --> AA["auth/"]
-    AA --> AAP["ports/"]
-    AA --> AAU["use-cases/"]
-    A --> ACAT["catalogs/"]
-    A --> ACL["closures/"]
-    ACL --> ACLP["ports/"]
-    ACL --> ACLU["use-cases/"]
-    I --> IA["auth/"]
-    I --> ICAT["catalogs/"]
-    I --> ICL["closures/"]
-    I --> IS["storage/"]
-    C --> CT["container.ts"]
-    P --> APP["app/"]
-    P --> PAGE["pages/"]
-    P --> FTR["features/"]
-    P --> SH["shared/"]
-    FTR --> FA["auth/"]
-    FA --> FAUI["ui/"]
-    FA --> FAM["model/"]
-    FA --> FAI["index.ts"]
-    FTR --> FC["closures/"]
-    FC --> FCUI["ui/"]
-    FC --> FCM["model/"]
-    FC --> FCL["lib/"]
-    FC --> FCI["index.ts"]
-    SH --> SHUI["ui/"]
-    SH --> SHLIB["lib/"]
+    P --> APP["app/ — providers and routes"]
+    P --> PAGES["pages/ — screen composition"]
+    P --> F["features/ — capability UI, model and lib"]
+    P --> S["shared/ — independent visual primitives and helpers"]
 ```
 
-This structure is not a migration command for the XXI project. It is the **conceptual reference** extracted from it for future projects.
-
----
+This is a conceptual target for future projects. It is not a migration command for the referenced snapshot.
 
 ## 4. Canonical flow
 
-For a policy-bearing closure operation:
-
-```mermaid
-flowchart TD
-    PAGE["ClosuresPage"] --> VM["useClosures() — Presentation facade"] --> STATE["Closure bindings / state — Presentation adapter"] --> UC["ExecuteClosure — Application use case"] --> PORT["ClosureGateway — Application port"]
-    HTTP["HttpClosureGateway — Infrastructure adapter"] --> PORT
-    ROOT["Composition Root"] -. wires .-> HTTP
-    ROOT -. wires .-> UC
-    ROOT -. wires .-> STATE
-```
-
-For a purely local visual concern:
+Source dependencies for a policy-bearing operation:
 
 ```mermaid
 flowchart LR
-    C["Component"] --> L["Local state"]
+    PAGE["ClosuresPage"] --> VM["Presentation facade"] --> B["Presentation bindings"] --> UC["Application operation"]
+    UC --> PORT["Application-owned port"]
+    HTTP["Infrastructure adapter"] --> PORT
+    ROOT["Composition"] --> HTTP
+    ROOT --> UC
+    ROOT --> B
 ```
 
-Do not route every checkbox through the entire onion.
-
----
+At runtime the operation invokes the injected [adapter](../GLOSSARY.md#adapter) object. The [port](../GLOSSARY.md#port) is its source contract, not an extra runtime intermediary. A local checkbox may simply update local visual state.
 
 ## 5. Why this case study exists
 
-A reference architecture becomes dangerous when example code is treated as scripture.
-
-The XXI project is valuable because it demonstrates real growth pressure: state, uploads, persistence, feature UI, [design-system](../GLOSSARY.md#design-system) work and import enforcement. Those pressures expose both strong patterns and accidental coupling.
-
-The documentation promotes the former and names the latter explicitly.
+Real growth pressure reveals both useful boundaries and accidental coupling. Promote demonstrated patterns, distinguish review judgments from facts, and pin evidence so later refactors do not silently change what a finding means.

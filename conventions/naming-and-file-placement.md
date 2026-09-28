@@ -40,7 +40,7 @@ function QueryFilters() {
 }
 ```
 
-Custom Hook names must begin with `use` followed by a capitalized word:
+[Custom Hook](../GLOSSARY.md#custom-hook) names must begin with `use` followed by a capitalized word:
 
 ```ts
 function useClosures() {
@@ -70,7 +70,7 @@ This documentation project uses names that reveal architectural role.
 | React component | `QueryFilters.tsx` |
 | component styles | `QueryFilters.styles.ts` |
 | component types | `QueryFilters.types.ts` |
-| feature hook/facade | `useClosures.ts` |
+| feature hook/[facade](../GLOSSARY.md#facade-pattern) | `useClosures.ts` |
 | Redux slice | `closures.slice.ts` |
 | [selectors](../GLOSSARY.md#selector) | `closures.selectors.ts` |
 | [thunks](../GLOSSARY.md#thunk) | `closures.thunks.ts` |
