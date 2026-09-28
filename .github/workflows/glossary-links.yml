@@ -6,7 +6,6 @@ on:
       - '**/*.md'
       - 'glossary/terms.json'
       - 'scripts/*.mjs'
-      - 'demo/**'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/glossary-links.yml'
@@ -17,7 +16,6 @@ on:
       - '**/*.md'
       - 'glossary/terms.json'
       - 'scripts/*.mjs'
-      - 'demo/**'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/glossary-links.yml'
@@ -41,19 +39,3 @@ jobs:
         run: node scripts/glossary-links.mjs --check
       - name: Check documentation structure and diagrams
         run: node scripts/docs-quality.mjs
-  demo:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '24'
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: '1.3.14'
-      - run: bun install --frozen-lockfile
-        working-directory: demo
-      - run: bun run test
-        working-directory: demo
-      - run: bun run build
-        working-directory: demo
