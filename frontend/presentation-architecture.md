@@ -2,7 +2,7 @@
 
 ## 1. Presentation is an architectural boundary
 
-Presentation is not merely "the folder containing JSX".
+[Presentation](../GLOSSARY.md#presentation-layer) is not merely "the folder containing JSX".
 
 It owns concerns whose meaning exists because a user interface exists:
 
@@ -17,13 +17,13 @@ It owns concerns whose meaning exists because a user interface exists:
 - transient feedback;
 - UI framework bindings.
 
-Business invariants and application workflow policy do not move into Presentation just because the browser triggers them.
+Business [invariants](../GLOSSARY.md#invariant) and application workflow policy do not move into [Presentation](../GLOSSARY.md#presentation-layer) just because the browser triggers them.
 
 A useful test is:
 
 > Would this rule still be required if the current UI were replaced by a CLI, API or another frontend?
 
-If yes, inspect whether it belongs in Application or Domain instead.
+If yes, inspect whether it belongs in [Application](../GLOSSARY.md#application-layer) or [Domain](../GLOSSARY.md#domain) instead.
 
 ---
 
@@ -147,7 +147,7 @@ A Page may own ephemeral state that has no meaning outside that page:
 const [isHistoryOpen, setHistoryOpen] = useState(false)
 ```
 
-It should not become the place where HTTP orchestration, domain validation, persistence and store implementation details accumulate.
+It should not become the place where HTTP orchestration, domain validation, persistence and [store](../GLOSSARY.md#store) implementation details accumulate.
 
 ---
 
@@ -177,7 +177,7 @@ Benefits:
 
 ## 5. Public hook / ViewModel facade
 
-For feature-heavy screens, a public custom hook can act as a Presentation Model / ViewModel facade.
+For feature-heavy screens, a public custom hook can act as a [Presentation Model](../GLOSSARY.md#presentation-model) / [ViewModel](../GLOSSARY.md#viewmodel) facade.
 
 ```mermaid
 flowchart TD
@@ -206,11 +206,11 @@ export function useClosures(): ClosuresViewModel {
 }
 ```
 
-React's custom-hook guidance recommends hooks that express concrete, high-level use cases rather than generic wrappers around lifecycle primitives. That maps well to feature facades such as `useAuth`, `useClosures` and `useTheme`.
+React's custom-hook guidance recommends hooks that express concrete, high-level [use cases](../GLOSSARY.md#use-case) rather than generic wrappers around lifecycle primitives. That maps well to feature facades such as `useAuth`, `useClosures` and `useTheme`.
 
 ### Do not expose state-library mechanics
 
-Bad public API:
+Bad [public API](../GLOSSARY.md#public-api):
 
 ```ts
 const result = await actions.query(input)
@@ -317,7 +317,7 @@ import { closureSlice } from '@/presentation/features/closures/model/closures.sl
 
 The feature's `index.ts` is an intentional contract, not an automatic export of every internal symbol.
 
-This makes it possible to replace Redux, split a hook or reorganize selectors without changing consumers.
+This makes it possible to replace Redux, split a hook or reorganize [selectors](../GLOSSARY.md#selector) without changing consumers.
 
 ---
 
@@ -334,7 +334,7 @@ flowchart LR
     DTO["External DTO"] --> IA["infrastructure adapter"]
 ```
 
-Do not move a type into Domain merely because several UI files use it.
+Do not move a type into [Domain](../GLOSSARY.md#domain) merely because several UI files use it.
 
 ---
 
@@ -342,7 +342,7 @@ Do not move a type into Domain merely because several UI files use it.
 
 If the architecture says Pages/UI cannot know Redux internals, make imports fail CI.
 
-If the architecture says features expose only public APIs, reject cross-feature deep imports.
+If the architecture says features expose only [public APIs](../GLOSSARY.md#public-api), reject cross-feature deep imports.
 
 See **[Executable Architecture](../foundations/architecture-testing.md)**.
 
@@ -350,6 +350,6 @@ See **[Executable Architecture](../foundations/architecture-testing.md)**.
 
 - React, "Reusing Logic with Custom Hooks": https://react.dev/learn/reusing-logic-with-custom-hooks
 - Redux Style Guide: https://redux.js.org/style-guide/
-- Martin Fowler, "Presentation Model": https://martinfowler.com/eaaDev/PresentationModel.html
+- Martin Fowler, "[Presentation Model](../GLOSSARY.md#presentation-model)": https://martinfowler.com/eaaDev/PresentationModel.html
 - Feature-Sliced Design, slices/segments: https://feature-sliced.design/docs/reference/slices-segments
-- Feature-Sliced Design, public API: https://feature-sliced.design/docs/reference/public-api
+- Feature-Sliced Design, [public API](../GLOSSARY.md#public-api): https://feature-sliced.design/docs/reference/public-api
