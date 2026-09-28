@@ -177,7 +177,7 @@ Benefits:
 
 ## 5. Public hook / ViewModel facade
 
-For feature-heavy screens, a public custom hook can act as a [Presentation Model](../GLOSSARY.md#presentation-model) / [ViewModel](../GLOSSARY.md#viewmodel) facade.
+For feature-heavy screens, a public custom hook can act as a [Presentation Model](../GLOSSARY.md#presentation-model) / [ViewModel](../GLOSSARY.md#viewmodel) [facade](../GLOSSARY.md#facade-pattern).
 
 ```mermaid
 flowchart TD
@@ -206,7 +206,7 @@ export function useClosures(): ClosuresViewModel {
 }
 ```
 
-React's custom-hook guidance recommends hooks that express concrete, high-level [use cases](../GLOSSARY.md#use-case) rather than generic wrappers around lifecycle primitives. That maps well to feature facades such as `useAuth`, `useClosures` and `useTheme`.
+React's custom-hook guidance recommends hooks that express concrete, high-level [use cases](../GLOSSARY.md#use-case) rather than generic wrappers around lifecycle primitives. That maps well to feature [facades](../GLOSSARY.md#facade-pattern) such as `useAuth`, `useClosures` and `useTheme`.
 
 ### Do not expose state-library mechanics
 
@@ -236,7 +236,7 @@ The binding layer converts framework-specific outcomes to a semantic result.
 
 ## 6. Avoid the God ViewModel
 
-A facade can become too large.
+A [facade](../GLOSSARY.md#facade-pattern) can become too large.
 
 If one hook owns query orchestration, draft persistence, file uploads, history, validation, modal state, polling and execution, split internal concerns:
 
@@ -294,7 +294,7 @@ Only then promote focused utilities:
 - `shared/lib/date/`
 - `shared/lib/format-bytes/`
 
-Avoid `helpers.ts`, `misc.ts`, `utils2.ts` and large generic utility barrels.
+Avoid `helpers.ts`, `misc.ts`, `utils2.ts` and large generic utility [barrels](../GLOSSARY.md#barrel-file).
 
 ---
 

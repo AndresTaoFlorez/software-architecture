@@ -102,7 +102,7 @@ flowchart TD
 
 This makes the rendering surface depend on semantic operations such as `saveClosure()` instead of Redux actions, HTTP clients or framework internals.
 
-It is deliberately stricter than what React Redux itself requires. A smaller application may legitimately let components call typed Redux hooks directly. When a project chooses the facade boundary, enforce it consistently.
+It is deliberately stricter than what React Redux itself requires. A smaller application may legitimately let components call typed Redux hooks directly. When a project chooses the [facade](../GLOSSARY.md#facade-pattern) boundary, enforce it consistently.
 
 ## Read next
 
