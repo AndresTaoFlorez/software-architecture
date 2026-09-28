@@ -1,3 +1,6 @@
+<a id="model-view-controller-for-the-frontend"></a>
+<a id="read-this-first-mvc-is-a-different-kind-of-thing"></a>
+
 # Model-View-Controller (MVC)
 
 > A presentation pattern with a long history and many incompatible modern interpretations.
@@ -50,6 +53,8 @@ It is a weak fit when:
 
 Modern React/Vue/Svelte applications can apply separated-presentation ideas without literally reproducing classic Smalltalk [MVC](../GLOSSARY.md#model-view-controller-mvc).
 
+<a id="the-triad-in-one-picture"></a>
+
 ## 5. Mental model and roles
 
 ```mermaid
@@ -66,6 +71,8 @@ flowchart LR
 | [Model](../GLOSSARY.md#model) | represented information and behavior | state/rules independent from concrete UI | DOM/widget rendering, controller-specific input handling |
 | [View](../GLOSSARY.md#view) | presentation of state | rendering, templates, display formatting, forwarding gestures | authoritative business/application policy |
 | [Controller](../GLOSSARY.md#controller) | interpretation of input | deciding what a gesture means and invoking the relevant operation | rendering, persistent domain state, business [invariants](../GLOSSARY.md#invariant) |
+
+<a id="a-warning-about-the-acronym"></a>
 
 ### Important scope rule
 
@@ -135,6 +142,7 @@ flowchart TD
 
 This is one practical mapping, not a claim that classic [MVC](../GLOSSARY.md#model-view-controller-mvc) defined these folders.
 
+
 ## 8. Where does a new function go?
 
 First decide whether the function is even an [MVC](../GLOSSARY.md#model-view-controller-mvc) [Presentation](../GLOSSARY.md#presentation-layer) concern:
@@ -157,6 +165,19 @@ flowchart TD
 | `requestCancelOrder()` HTTP implementation | [Infrastructure](../GLOSSARY.md#infrastructure) | transport detail |
 
 Do not create a `controllers/` folder merely because a function receives an event. The folder should exist only if [Controller](../GLOSSARY.md#controller) is a stable responsibility in the chosen UI architecture.
+
+Types and helpers follow the same ownership rule:
+
+| Artifact | Owner | Reason |
+| --- | --- | --- |
+| component props, focus helper | [Presentation](../GLOSSARY.md#presentation-layer) UI | concrete control needs |
+| view state, display formatter, [facade](../GLOSSARY.md#facade-pattern) hook | [Presentation model](../GLOSSARY.md#presentation-model)/controller boundary | screen-oriented behavior |
+| command/result and [port](../GLOSSARY.md#port) | [Application](../GLOSSARY.md#application-layer) | operation contract |
+| business value and [invariant](../GLOSSARY.md#invariant) helper | [Domain](../GLOSSARY.md#domain) | authoritative business meaning |
+| API [DTO](../GLOSSARY.md#data-transfer-object-dto) and [DTO](../GLOSSARY.md#data-transfer-object-dto) [mapper](../GLOSSARY.md#mapper) | [Infrastructure](../GLOSSARY.md#infrastructure) | external representation |
+| concrete construction | Composition | executable assembly |
+
+Source references may point from [View](../GLOSSARY.md#view)/[Controller](../GLOSSARY.md#controller) or [ViewModel](../GLOSSARY.md#viewmodel) to their inward model/application contract. The represented [Model](../GLOSSARY.md#model) must not name concrete controls. In the strict layering convention here, [Presentation](../GLOSSARY.md#presentation-layer) cannot import [Infrastructure](../GLOSSARY.md#infrastructure) or a container; [type-only imports](../GLOSSARY.md#type-only-import) count. Runtime state notifications are distinct from these source references.
 
 ## 9. Naming
 
@@ -191,20 +212,222 @@ Requirement:
 ```mermaid
 sequenceDiagram
     actor User
-    participant View as CancelOrderButton
-    participant Controller as useOrderActions
+    participant View as OrderView
+    participant Controller as OrderController
+    participant Model as CancellationModel
     participant UseCase as cancelOrder
     participant Order as Order
-    participant Repo as OrderRepository
+    participant Repo as HttpOrderRepository
 
     User->>View: click Cancel
     View->>Controller: onCancel(orderId)
-    Controller->>UseCase: cancelOrder(orderId)
+    Controller->>Model: cancel(orderId)
+    Model->>UseCase: cancelOrder(orderId)
+    UseCase->>Repo: findById(id)
+    Repo-->>UseCase: Order and version
     UseCase->>Order: cancel()
-    UseCase->>Repo: save(order)
+    UseCase->>Repo: save(order, version)
+    Repo-->>UseCase: completion
+    UseCase-->>Model: result
+    Model-->>View: change notification
+    View->>Model: read current state
 ```
 
 The [Controller](../GLOSSARY.md#controller)-like [Presentation](../GLOSSARY.md#presentation-layer) code interprets the gesture. It does not become the owner of the business rule.
+
+The table above gives a possible React adaptation. The implementation below uses DOM controls with an observing [Model](../GLOSSARY.md#model) and explicit [Controller](../GLOSSARY.md#controller), so its filenames differ deliberately.
+
+### Complete client implementation
+
+This example chooses an observing [View](../GLOSSARY.md#view): it reads represented state, the [Controller](../GLOSSARY.md#controller) interprets input, and the [Model](../GLOSSARY.md#model) delegates cancellation to [Application](../GLOSSARY.md#application-layer). The small wrapper contains represented operation state; it is not the whole [Domain](../GLOSSARY.md#domain) layer.
+
+The business rule belongs in `domain/orders/Order.ts`; the operation, result, persistence failure and [port](../GLOSSARY.md#port) belong in `application/orders/cancelOrder.ts`. [DTO](../GLOSSARY.md#data-transfer-object-dto) validation/mapping and the concrete repository belong in `infrastructure/orders/HttpOrderRepository.ts`. [Presentation](../GLOSSARY.md#presentation-layer) owns gestures and feedback; `composition/bootstrap.ts` selects implementations. These are documentation conventions. A small file may contain cohesive contracts and functions; split them when ownership or change pressure requires it.
+
+```ts
+// domain/orders/Order.ts
+export type OrderStatus = 'pending' | 'shipped' | 'cancelled'
+export class ShippedOrderCannotBeCancelled extends Error {}
+export class Order {
+  readonly id: string
+  #status: OrderStatus
+  constructor(id: string, status: OrderStatus) { this.id = id; this.#status = status }
+  get status(): OrderStatus { return this.#status }
+  cancel(): void {
+    if (this.#status === 'shipped') throw new ShippedOrderCannotBeCancelled()
+    this.#status = 'cancelled'
+  }
+}
+```
+
+```ts
+// application/orders/cancelOrder.ts
+import { Order, ShippedOrderCannotBeCancelled } from '../../domain/orders/Order'
+
+export interface OrderRepository {
+  findById(id: string): Promise<{ order: Order; version: string } | null>
+  save(order: Order, expectedVersion: string): Promise<void>
+}
+export type CancelResult =
+  | { ok: true; status: 'cancelled' }
+  | { ok: false; reason: 'not-found' | 'shipped' | 'conflict' | 'unavailable' }
+export type CancelOrder = (id: string) => Promise<CancelResult>
+export class PersistenceFailure extends Error {
+  readonly reason: 'conflict' | 'unavailable'
+  constructor(reason: 'conflict' | 'unavailable') { super(reason); this.reason = reason }
+}
+export function makeCancelOrder(orders: OrderRepository): CancelOrder {
+  return async id => {
+    try {
+      const loaded = await orders.findById(id)
+      if (!loaded) return { ok: false, reason: 'not-found' }
+      loaded.order.cancel()
+      await orders.save(loaded.order, loaded.version)
+      return { ok: true, status: 'cancelled' }
+    } catch (error) {
+      if (error instanceof ShippedOrderCannotBeCancelled) return { ok: false, reason: 'shipped' }
+      if (error instanceof PersistenceFailure) return { ok: false, reason: error.reason }
+      throw error // programming defects are not normal business outcomes
+    }
+  }
+}
+```
+
+```ts
+// infrastructure/orders/HttpOrderRepository.ts
+import { Order, type OrderStatus } from '../../domain/orders/Order'
+import { PersistenceFailure, type OrderRepository } from '../../application/orders/cancelOrder'
+
+// Adapter-owned transport contract. A concrete fetch driver implements it.
+export interface OrderTransport {
+  get(path: string): Promise<{ data: unknown; version: string } | null>
+  put(path: string, data: unknown, version: string): Promise<void>
+}
+type ApiOrderDto = { id: string; status: OrderStatus }
+function parseOrderDto(data: unknown): ApiOrderDto {
+  if (typeof data !== 'object' || data === null) throw new PersistenceFailure('unavailable')
+  const dto = data as Record<string, unknown>
+  if (typeof dto.id !== 'string' || !['pending', 'shipped', 'cancelled'].includes(String(dto.status))) {
+    throw new PersistenceFailure('unavailable')
+  }
+  return { id: dto.id, status: dto.status as OrderStatus }
+}
+function toOrderDto(order: Order): ApiOrderDto { return { id: order.id, status: order.status } }
+
+export class HttpOrderRepository implements OrderRepository {
+  readonly #transport: OrderTransport
+  constructor(transport: OrderTransport) { this.#transport = transport }
+  async findById(id: string) {
+    const response = await this.#transport.get('/orders/' + encodeURIComponent(id))
+    if (!response) return null
+    const dto = parseOrderDto(response.data)
+    if (dto.id !== id) throw new PersistenceFailure('unavailable')
+    return { order: new Order(dto.id, dto.status), version: response.version }
+  }
+  async save(order: Order, expectedVersion: string): Promise<void> {
+    await this.#transport.put('/orders/' + encodeURIComponent(order.id), toOrderDto(order), expectedVersion)
+  }
+}
+```
+
+```ts
+// presentation/orders/CancellationModel.ts
+import type { CancelOrder } from '../../application/orders/cancelOrder'
+export class CancellationModel {
+  busy = false
+  message = ''
+  readonly #cancelOrder: CancelOrder
+  readonly #listeners = new Set<() => void>()
+  constructor(cancelOrder: CancelOrder) { this.#cancelOrder = cancelOrder }
+  subscribe(listener: () => void) {
+    this.#listeners.add(listener)
+    return () => { this.#listeners.delete(listener) }
+  }
+  #changed() { for (const listener of this.#listeners) listener() }
+  async cancel(id: string) {
+    if (this.busy) return
+    this.busy = true; this.message = ''; this.#changed()
+    try {
+      const result = await this.#cancelOrder(id)
+      this.message = result.ok ? 'Cancelled' : 'Cannot cancel: ' + result.reason
+    } catch { this.message = 'Unexpected failure' }
+    finally { this.busy = false; this.#changed() }
+  }
+}
+```
+
+```ts
+// presentation/orders/OrderController.ts
+import type { CancellationModel } from './CancellationModel'
+export function makeOrderController(model: CancellationModel) {
+  return { onCancel: (id: string) => model.cancel(id) }
+}
+```
+
+```ts
+// presentation/orders/OrderView.ts
+import type { CancellationModel } from './CancellationModel'
+export function mountOrderView(root: HTMLElement, id: string, model: CancellationModel, controller: { onCancel(id: string): Promise<void> }) {
+  const button = document.createElement('button')
+  button.textContent = 'Cancel order'
+  const feedback = document.createElement('p')
+  feedback.setAttribute('role', 'status')
+  root.append(button, feedback)
+  const render = () => {
+    button.disabled = model.busy
+    feedback.textContent = model.busy ? 'Cancelling…' : model.message
+  }
+  const onClick = () => { void controller.onCancel(id) }
+  const unsubscribe = model.subscribe(render)
+  button.addEventListener('click', onClick)
+  render()
+  return () => {
+    unsubscribe(); button.removeEventListener('click', onClick)
+    button.remove(); feedback.remove()
+  }
+}
+```
+
+```ts
+// composition/bootstrap.ts
+import { makeCancelOrder, PersistenceFailure } from '../application/orders/cancelOrder'
+import { HttpOrderRepository, type OrderTransport } from '../infrastructure/orders/HttpOrderRepository'
+import { CancellationModel } from '../presentation/orders/CancellationModel'
+import { makeOrderController } from '../presentation/orders/OrderController'
+import { mountOrderView } from '../presentation/orders/OrderView'
+
+async function request(path: string, init?: RequestInit): Promise<Response> {
+  try { return await fetch(path, init) }
+  catch { throw new PersistenceFailure('unavailable') }
+}
+const transport: OrderTransport = {
+  async get(path) {
+    const response = await request(path)
+    if (response.status === 404) return null
+    const version = response.headers.get('ETag')
+    if (!response.ok || !version) throw new PersistenceFailure('unavailable')
+    try { return { data: await response.json(), version } }
+    catch { throw new PersistenceFailure('unavailable') }
+  },
+  async put(path, data, version) {
+    const response = await request(path, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'If-Match': version },
+      body: JSON.stringify(data),
+    })
+    if (response.status === 409 || response.status === 412) throw new PersistenceFailure('conflict')
+    if (!response.ok) throw new PersistenceFailure('unavailable')
+  },
+}
+export function startOrders(root: HTMLElement, orderId: string) {
+  const cancelOrder = makeCancelOrder(new HttpOrderRepository(transport))
+  const model = new CancellationModel(cancelOrder)
+  return mountOrderView(root, orderId, model, makeOrderController(model))
+}
+```
+
+Call `startOrders(root, 'order-1')` and retain cleanup. The [View](../GLOSSARY.md#view) renders initially, observes changes and unsubscribes. The [Controller](../GLOSSARY.md#controller) does not compute the business [invariant](../GLOSSARY.md#invariant); the application operation invokes [Domain](../GLOSSARY.md#domain).
+
+The API must return a strong ETag on GET and atomically enforce `If-Match` on PUT. It must authorize cancellation and reject shipped orders using authoritative current state; client validation alone cannot guarantee this under concurrent writes. This is a complete client feature, not a backend implementation. See [the expanded walkthrough](../clean-architecture/4-building-a-feature.md) for boundary explanations and limits.
 
 ## 11. Testing
 
@@ -229,6 +452,10 @@ Common decay modes:
 - **duplicate orchestration** — [Controllers](../GLOSSARY.md#controller) reimplement [Application](../GLOSSARY.md#application-layer) [use cases](../GLOSSARY.md#use-case).
 
 [MVC](../GLOSSARY.md#model-view-controller-mvc) is useful only when the role separation makes ownership clearer than the framework's simpler native structure.
+
+<a id="contents"></a>
+
+<a id="where-to-start"></a>
 
 ## 13. Learning path
 

@@ -20,7 +20,7 @@ The sources most central to [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) are
   "a fully self-contained class that represents all the data and behavior of the UI window, but
   without any of the controls used to render that UI on the screen.")
   https://martinfowler.com/eaaDev/PresentationModel.html
-- ★ **Fowler, M.** *GUI Architectures*. martinfowler.com. (The definitive map of [MVC](../GLOSSARY.md#model-view-controller-mvc), [MVP](../GLOSSARY.md#model-view-presenter-mvp), [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm),
+- ★ **Fowler, M.** *GUI Architectures*. martinfowler.com. (A comparison of [MVC](../GLOSSARY.md#model-view-controller-mvc), [MVP](../GLOSSARY.md#model-view-presenter-mvp),
   Passive [View](../GLOSSARY.md#view), and [Presentation Model](../GLOSSARY.md#presentation-model) — and where the [Controller](../GLOSSARY.md#controller)'s responsibilities went.)
   https://martinfowler.com/eaaDev/uiArchs.html
 - **Smith, J.** (2009). *Patterns — WPF Apps With The [Model-View-ViewModel](../GLOSSARY.md#model-view-viewmodel-mvvm) Design Pattern*. MSDN
@@ -57,7 +57,7 @@ The sources most central to [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) are
 ### The pattern in Redux Toolkit (cited in [§5](5-mvvm-in-react-redux.md))
 
 - **Redux.** *Redux Style Guide*. redux.js.org. ("Put as Much Logic as Possible in [Reducers](../GLOSSARY.md#reducer)";
-  "Use [Selector](../GLOSSARY.md#selector) Functions to Read from [Store](../GLOSSARY.md#store) State" — the extraction [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) gives a name to.)
+  "Use [Selector](../GLOSSARY.md#selector) Functions to Read from [Store](../GLOSSARY.md#store) State" — Redux recommendations, not a prescription of [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) or Clean/Onion layers.)
   https://redux.js.org/style-guide/
 - **Redux Toolkit.** *[RTK Query](../GLOSSARY.md#rtk-query) Overview*. redux-toolkit.js.org. ("[RTK Query](../GLOSSARY.md#rtk-query) is a powerful data
   fetching and caching tool" — the [store](../GLOSSARY.md#store)-resident HTTP client split at the infrastructure seam in
