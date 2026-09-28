@@ -66,8 +66,9 @@ presentation concern even when the represented business concepts ultimately come
 
 **What it must not do.** Hold business rules or decide what a user action *means*. A [View](../GLOSSARY.md#view) that computes a
 discount, validates an order, or talks to a server has absorbed responsibilities that belong to the [Model](../GLOSSARY.md#model)
-and the [Controller](../GLOSSARY.md#controller). The strictest form of this rule is Fowler's **Passive [View](../GLOSSARY.md#view)**: the [View](../GLOSSARY.md#view) holds no logic
-at all and is driven entirely from outside [Fowler].
+and application policy. Fowler's [Passive View](../GLOSSARY.md#passive-view) is a distinct presentation variant: it has no [Model](../GLOSSARY.md#model) access and is driven through a view interface. Classic [MVC](../GLOSSARY.md#model-view-controller-mvc) instead permits the [View](../GLOSSARY.md#view) to observe/read its [Model](../GLOSSARY.md#model).
+
+The following fragment assumes an existing `.total` element and a `format` display helper; the [landing feature](README.md#10-first-feature-end-to-end) supplies complete wiring.
 
 **Generic example.** A view that observes and redraws, and delegates intent:
 
@@ -77,10 +78,19 @@ class CartView {
     this.model = model
     this.controller = controller
     this.root = root
-    model.subscribe(() => this.render())          // redraw on Model change
-    root.addEventListener('click', (e) => {
-      if (e.target.matches('.add')) this.controller.onAdd(e.target.dataset.id)  // forward intent
-    })
+    this.unsubscribe = model.subscribe(() => this.render())
+    this.onClick = (e) => {
+      if (!(e.target instanceof Element)) return
+      const button = e.target.closest('.add')
+      if (button && root.contains(button)) this.controller.onAdd(button.dataset.id)
+    }
+    root.addEventListener('click', this.onClick)
+    this.render()          // initial render
+  }
+
+  dispose() {
+    this.unsubscribe()
+    this.root.removeEventListener('click', this.onClick)
   }
 
   render() {
@@ -119,6 +129,7 @@ class CartController {
 
   onAdd(productId) {
     const product = this.catalog.find(productId)   // decide what the click means
+    if (!product) return // no matching product; UI feedback policy can be added
     this.model.add({ price: product.price, qty: 1 })  // delegate the change to the Model
   }
 }
@@ -139,5 +150,4 @@ once that separation is in place.
 
 ---
 
-Next: **[The Flow](2-the-flow.md)** — how input, update, and render form a cycle, and how the variants
-([MVP](../GLOSSARY.md#model-view-presenter-mvp), [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm)) differ only in how that cycle is wired.
+Next: **[The Flow](2-the-flow.md)** — input, update, observation and the distinct presentation variants.

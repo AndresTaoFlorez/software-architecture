@@ -1,80 +1,61 @@
-> **[Model-View-Controller](README.md)** › Testing. Full reference list: [References](references.md).
+> **[Model-View-Controller](README.md)** › Testing.
 
 ## 4. Testing in MVC
 
-[Separated presentation](../GLOSSARY.md#separated-presentation) is, in the end, a testability decision. The reason to keep the [Model](../GLOSSARY.md#model) ignorant of the
-[View](../GLOSSARY.md#view) is the same reason to keep [Entities](../GLOSSARY.md#domain-entity) ignorant of frameworks in [Clean Architecture](../GLOSSARY.md#clean-architecture): it lets the part
-that carries the meaning be tested with nothing else attached.
-
----
+Test the responsibilities you actually implemented. A presentation pattern creates useful seams; it does not prescribe a fixed distribution of tests or eliminate rendering risk.
 
 ### 4.1 The Model tests like a pure object
 
-Because the [Model](../GLOSSARY.md#model) holds no reference to a [View](../GLOSSARY.md#view) or the DOM, its rules are tested by construction and
-assertion — no rendering, no mounting, no [mocks](../GLOSSARY.md#mock):
+For the cart in [The Three Parts](1-the-three-parts.md), exercise pricing/quantity behavior without a DOM:
 
 ```js
-test('cart total sums price times quantity', () => {
+// Vitest excerpt: CartModel is imported from the feature's model module.
+test('total includes quantity', () => {
   const cart = new CartModel()
-  cart.add({ price: 10, qty: 2 })
-  cart.add({ price: 5, qty: 1 })
-  expect(cart.total).toBe(25)
+  cart.add({ price: 12, qty: 2 })
+  expect(cart.total).toBe(24)
 })
 ```
 
-This is where most [MVC](../GLOSSARY.md#model-view-controller-mvc) tests should live. The [Model](../GLOSSARY.md#model) is the densest, most stable part — the rules change for
-business reasons, not for UI reasons — so tests pinned to it are both valuable and durable.
+Also test change notifications if observation is part of that contract. In a layered system, authoritative policy tests belong with [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer), even if [MVC](../GLOSSARY.md#model-view-controller-mvc) presents their results.
 
----
+<a id="42-the-controller-tests-against-a-fake-model"></a>
 
-### 4.2 The Controller tests against a fake Model
-
-A [Controller](../GLOSSARY.md#controller)'s job is to translate input into the right [Model](../GLOSSARY.md#model) operation. Test it by giving it a [Model](../GLOSSARY.md#model) (real
-or a [spy](../GLOSSARY.md#spy)) and asserting the operation it triggers — still no UI:
+### 4.2 The Controller tests against a controlled Model
 
 ```js
-test('onAdd looks up the product and adds it to the cart', () => {
-  const cart = { add: vi.fn() }
-  const catalog = { find: () => ({ price: 10 }) }
-  const controller = new CartController(cart, catalog)
-
-  controller.onAdd('sku-1')
-
-  expect(cart.add).toHaveBeenCalledWith({ price: 10, qty: 1 })
+// CartController is the class from The Three Parts.
+test('adding interprets the selected product', () => {
+  const added = []
+  const model = { add: item => added.push(item) }
+  const catalog = { find: id => id === 'book' ? { price: 12 } : undefined }
+  const controller = new CartController(model, catalog)
+  controller.onAdd('book')
+  expect(added).toEqual([{ price: 12, qty: 1 }])
 })
 ```
 
-Note the seam: the [Controller](../GLOSSARY.md#controller) depends on the [Model](../GLOSSARY.md#model) through its public methods, so a [fake](../GLOSSARY.md#fake) slots in exactly
-where the real [Model](../GLOSSARY.md#model) would. This is the same [port](../GLOSSARY.md#port)-and-[fake](../GLOSSARY.md#fake) substitution that
-[Clean Architecture's Test Boundary](../clean-architecture/5-testing-in-clean.md) describes — a test is just
-another collaborator plugged into a known seam.
+This substitute records outcomes. A canned `vi.fn()` answer is a [stub](../GLOSSARY.md#stub)/[spy](../GLOSSARY.md#spy); a [fake](../GLOSSARY.md#fake) implements simplified working behavior. Test missing input, errors and asynchronous operations when the real controller handles them.
 
----
+<a id="43-the-view-is-the-part-you-test-least"></a>
 
-### 4.3 The View is the part you test least
+### 4.3 The View needs its own tests
 
-A [View](../GLOSSARY.md#view) that holds no logic — a **Passive [View](../GLOSSARY.md#view)** — barely needs testing: there is little to get wrong beyond
-"does it render the state it was given." That is by design. The more logic you pull out of the [View](../GLOSSARY.md#view) and into
-the [Model](../GLOSSARY.md#model) and [Controller](../GLOSSARY.md#controller), the smaller and cheaper the [View](../GLOSSARY.md#view)'s tests become, and the more your test effort
-concentrates where the meaning is [Fowler].
-
-If a [View](../GLOSSARY.md#view) is hard to test, it is usually carrying logic that belongs elsewhere — the test difficulty is
-feedback on the separation, exactly as it is in the layered architectures.
-
----
+Even a [Passive View](../GLOSSARY.md#passive-view) can bind the wrong value, forward the wrong id, leak subscriptions, mishandle pending state or produce inaccessible controls. Verify initial rendering, model-driven updates, gesture forwarding, cleanup and accessibility. Retain critical integrated journeys for the actual wiring; do not infer that a thin [View](../GLOSSARY.md#view) “barely needs testing”.
 
 ### 4.4 The pyramid, restated for MVC
 
-| Part | What you test | Setup cost |
-|---|---|---|
-| **[Model](../GLOSSARY.md#model)** | rules, derived state, change notification | none — pure objects |
-| **[Controller](../GLOSSARY.md#controller) / [Presenter](../GLOSSARY.md#presenter)** | input → correct [Model](../GLOSSARY.md#model) operation | a [fake](../GLOSSARY.md#fake) [Model](../GLOSSARY.md#model) |
-| **[View](../GLOSSARY.md#view)** | renders given state; forwards gestures | a render harness; keep these few |
+| Responsibility | Evidence |
+| --- | --- |
+| [Model](../GLOSSARY.md#model)/policy | behavior and [invariant](../GLOSSARY.md#invariant) outcomes |
+| [Controller](../GLOSSARY.md#controller)/[Presenter](../GLOSSARY.md#presenter) | intent translation and error/result handling |
+| [View](../GLOSSARY.md#view) | rendering, event arguments, lifetime and accessibility |
+| Integration | subscriptions, concrete bindings and critical journeys |
 
-The shape matches every other guide here: most tests at the stable center, few at the volatile edge. [MVC](../GLOSSARY.md#model-view-controller-mvc)
-arrives at that shape from the presentation side; Clean and Onion arrive at it from the whole-system side.
-Both are describing the same dividend of keeping the domain separate from its delivery.
+Use the [test pyramid](../GLOSSARY.md#test-pyramid) as a feedback/cost heuristic, not a quota. Import-boundary tests complement these behavior tests.
 
----
+## Sources
 
-Back to the **[MVC index](README.md)** · See the full **[References](references.md)**.
+- [Fowler — Passive View](https://martinfowler.com/eaaDev/PassiveScreen.html)
+- [Fowler — Test Double](https://martinfowler.com/bliki/TestDouble.html)
+- [Testing Library — Guiding Principles](https://testing-library.com/docs/guiding-principles/)

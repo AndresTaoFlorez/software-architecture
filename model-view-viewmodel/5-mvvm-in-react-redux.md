@@ -28,6 +28,7 @@ Redux's official guidance commonly allows components to use typed Redux hooks di
 
 <a id="52-rtk-query-sits-at-the-infrastructure-seam"></a>
 
+
 ## 5.2 RTK Query and the infrastructure seam
 
 [RTK Query](../GLOSSARY.md#rtk-query) is Redux Toolkit's [server-state](../GLOSSARY.md#server-state) fetching/caching solution.
@@ -61,6 +62,8 @@ Document the chosen boundary.
 
 ---
 
+<a id="53-the-use-case-layer-is-added-not-inherited"></a>
+
 ## 5.3 The use-case layer is added by Clean/Onion, not Redux or MVVM
 
 Redux Toolkit does not require an [Application layer](../GLOSSARY.md#application-layer). [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) does not require one either.
@@ -80,6 +83,8 @@ For a simple UI-only state transition, Redux can handle it directly without inve
 The rule is proportionality.
 
 ---
+
+<a id="54-selectors-are-where-reshape-lives"></a>
 
 ## 5.4 Selectors reshape Presentation state
 
@@ -105,9 +110,11 @@ Move authoritative business rules inward when they must be consistent across int
 
 ---
 
+<a id="55-the-31-example-restated"></a>
+
 ## 5.5 Public facade example
 
-A strict [ViewModel](../GLOSSARY.md#viewmodel)-style boundary:
+A strict [ViewModel](../GLOSSARY.md#viewmodel)-style boundary excerpt; `useOrdersState` and `useOrdersActions` are existing feature bindings with semantic result contracts:
 
 ```ts
 export function useOrders() {
@@ -133,6 +140,8 @@ type Result<T, E> =
 The [View](../GLOSSARY.md#view) should not need `cancelOrderThunk.fulfilled.match(...)` if the [facade](../GLOSSARY.md#facade-pattern)'s purpose is to hide Redux.
 
 ---
+
+<a id="56-testing-the-rtk-dividend-and-one-react-tax"></a>
 
 ## 5.6 Do not force everything through Redux
 

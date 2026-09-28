@@ -15,7 +15,7 @@ A useful mapping in a layered frontend is:
 | [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) role | Possible frontend owner |
 | --- | --- |
 | [View](../GLOSSARY.md#view) | component render/template + strictly local rendering behavior |
-| [ViewModel](../GLOSSARY.md#viewmodel) | feature [facade](../GLOSSARY.md#facade-pattern)/custom hook/composable/state holder exposing view-oriented state + operations |
+| [ViewModel](../GLOSSARY.md#viewmodel) | feature [facade](../GLOSSARY.md#facade-pattern)/[custom hook](../GLOSSARY.md#custom-hook)/composable/state holder exposing view-oriented state + operations |
 | [Model](../GLOSSARY.md#model) | application/domain capabilities consumed behind the [ViewModel](../GLOSSARY.md#viewmodel); not necessarily one object |
 
 The mapping is role-based, not class-based.
@@ -36,6 +36,8 @@ flowchart TD
 ```
 
 The public [facade](../GLOSSARY.md#facade-pattern) is what the [View](../GLOSSARY.md#view) depends on.
+
+Signature/ownership excerpt: surrounding row/input types and the state/action bindings are assumed, rather than a complete implementation.
 
 Example:
 

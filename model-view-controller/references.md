@@ -10,7 +10,7 @@ The sources most central to [MVC](../GLOSSARY.md#model-view-controller-mvc) and 
 - ★ **Krasner, G. E., & Pope, S. T.** (1988). *A Cookbook for Using the [Model-View-Controller](../GLOSSARY.md#model-view-controller-mvc) User
   Interface Paradigm in Smalltalk-80*. Journal of Object-Oriented Programming, 1(3). (The canonical
   description of classic [MVC](../GLOSSARY.md#model-view-controller-mvc) and its [observer synchronization](../GLOSSARY.md#observer-synchronization).)
-- ★ **Fowler, M.** *GUI Architectures*. martinfowler.com. (The definitive modern map of [MVC](../GLOSSARY.md#model-view-controller-mvc), [MVP](../GLOSSARY.md#model-view-presenter-mvp), [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm),
+- ★ **Fowler, M.** *GUI Architectures*. martinfowler.com. (A comparison of [MVC](../GLOSSARY.md#model-view-controller-mvc), [MVP](../GLOSSARY.md#model-view-presenter-mvp),
   Passive [View](../GLOSSARY.md#view), Supervising [Controller](../GLOSSARY.md#controller), and [Presentation Model](../GLOSSARY.md#presentation-model) — and why "[MVC](../GLOSSARY.md#model-view-controller-mvc)" means several different
   things.) https://martinfowler.com/eaaDev/uiArchs.html
 - **Gamma, E., Helm, R., Johnson, R., & Vlissides, J.** (1994). *Design Patterns: Elements of Reusable
@@ -22,9 +22,8 @@ The sources most central to [MVC](../GLOSSARY.md#model-view-controller-mvc) and 
 - **Fowler, M.** (2004). *[Presentation Model](../GLOSSARY.md#presentation-model)*. martinfowler.com. (The pattern [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) is based on.)
   https://martinfowler.com/eaaDev/PresentationModel.html
 - **Vue.js & Pinia documentation.** https://vuejs.org/ · https://pinia.vuejs.org/ (Reactive binding and
-  [stores](../GLOSSARY.md#store) — the framework machinery that automates [MVC](../GLOSSARY.md#model-view-controller-mvc)'s observer step into [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm).)
+  [stores](../GLOSSARY.md#store) — mechanisms that can support several intentional presentation patterns.)
 
-For [MVC](../GLOSSARY.md#model-view-controller-mvc)'s direct descendant — the pattern component frameworks actually implement — see the
-companion **[MVVM guide](../model-view-viewmodel)**. For the whole-application architectures this
+For a related presentation pattern, see the companion **[MVVM guide](../model-view-viewmodel)**. For the whole-application architectures this
 pattern fits inside, see the **[Clean](../clean-architecture)** and **[Onion](../onion-architecture)**
 guides.
