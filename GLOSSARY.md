@@ -68,7 +68,7 @@ Each entry contains a concise definition, a repository-oriented example, and pri
 - [Public API](#public-api)
 - [Recipe](#recipe)
 - [Reducer](#reducer)
-- [Repository](#repository)
+- [Repository Pattern](#repository)
 - [RTK Query](#rtk-query)
 - [Selector](#selector)
 - [Semantic Token](#semantic-token)
@@ -813,9 +813,9 @@ A pure function that calculates next state from previous state and an action. Re
 
 <a id="repository"></a>
 
-## Repository
+## Repository Pattern
 
-A pattern that mediates between domain/application code and data access using collection-like domain terms. Not every external integration should be named Repository.
+A pattern that mediates between domain/application code and data access using collection-like domain terms. Not every external integration should be named Repository. In this glossary, **Repository** means the software design pattern—not a Git/source-code repository.
 
 **Example.** `OrderRepository.findById()` and `save()` hide whether orders are stored in SQL or memory.
 

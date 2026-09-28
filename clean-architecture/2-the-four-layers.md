@@ -172,7 +172,7 @@ A UI component can call a [Presentation](../GLOSSARY.md#presentation-layer) [ada
 
 ## 2.6 Mapping to common project folders
 
-This [repository](../GLOSSARY.md#repository) often uses:
+This repository often uses:
 
 | Clean concept | Practical area |
 | --- | --- |

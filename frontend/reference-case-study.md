@@ -61,7 +61,7 @@ flowchart TD
 
 are materially better than one flat component directory.
 
-The generalized version in this [repository](../GLOSSARY.md#repository) goes further: when a feature becomes large, its hooks, [selectors](../GLOSSARY.md#selector), state and helpers should migrate under the same feature owner rather than remaining distributed across application-wide technical folders.
+The generalized version in this repository goes further: when a feature becomes large, its hooks, [selectors](../GLOSSARY.md#selector), state and helpers should migrate under the same feature owner rather than remaining distributed across application-wide technical folders.
 
 ### 1.4 Complex component colocation
 

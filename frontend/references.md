@@ -65,7 +65,7 @@ This section separates primary architectural sources from framework/tool documen
 
 - Redux Style Guide — official feature-folder recommendation.  
   https://redux.js.org/style-guide/
-- Feature-Sliced Design — slices/segments and [public API](../GLOSSARY.md#public-api) concepts. Used here as a secondary organizational reference, **not** as a mandatory architecture for this [repository](../GLOSSARY.md#repository).  
+- Feature-Sliced Design — slices/segments and [public API](../GLOSSARY.md#public-api) concepts. Used here as a secondary organizational reference, **not** as a mandatory architecture for this repository.  
   https://feature-sliced.design/docs/reference/slices-segments  
   https://feature-sliced.design/docs/reference/public-api
 - Kent C. Dodds, "[Colocation](../GLOSSARY.md#colocation)" (2019).  

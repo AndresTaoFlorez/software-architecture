@@ -4,7 +4,7 @@
 
 React and Redux Toolkit do not prescribe [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm). This chapter demonstrates **one optional mapping** when a project intentionally uses a [ViewModel](../GLOSSARY.md#viewmodel)/[Presentation](../GLOSSARY.md#presentation-layer) facade boundary.
 
-For the [repository](../GLOSSARY.md#repository)'s current Redux guidance, also read **[State Management and Side Effects](../frontend/state-management.md)**.
+For the repository's current Redux guidance, also read **[State Management and Side Effects](../frontend/state-management.md)**.
 
 ---
 

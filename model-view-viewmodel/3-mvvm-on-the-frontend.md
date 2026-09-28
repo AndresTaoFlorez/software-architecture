@@ -122,9 +122,9 @@ flowchart TD
 
 That does **not** mean an [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) command must always be exactly one use-case call. A [ViewModel](../GLOSSARY.md#viewmodel) can coordinate UI-only concerns around an application operation. The boundary is semantic: business/application policy stays inward; view behavior stays in [Presentation](../GLOSSARY.md#presentation-layer).
 
-Likewise, not every application needs an explicit use-case layer. This [repository](../GLOSSARY.md#repository) adds one when following Clean/Onion because those architectural styles require a place for application policy; [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) alone does not.
+Likewise, not every application needs an explicit use-case layer. This repository adds one when following Clean/Onion because those architectural styles require a place for application policy; [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) alone does not.
 
-See **[Frontend Architecture](../frontend/README.md)** for the [repository](../GLOSSARY.md#repository)'s current feature/state organization guidance.
+See **[Frontend Architecture](../frontend/README.md)** for the repository's current feature/state organization guidance.
 
 ---
 

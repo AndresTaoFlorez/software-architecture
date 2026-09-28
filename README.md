@@ -2,7 +2,7 @@
 
 A practical, source-backed reference for learning and applying software architecture from first principles.
 
-The [repository](./GLOSSARY.md#repository) is intentionally progressive: a programmer who has never studied architecture should be able to start here, understand **why boundaries exist**, learn **where code belongs**, and only then move into advanced patterns.
+The repository is intentionally progressive: a programmer who has never studied architecture should be able to start here, understand **why boundaries exist**, learn **where code belongs**, and only then move into advanced patterns.
 
 Terminology is centralized in the **[Architecture Glossary](./GLOSSARY.md)**.
 
@@ -123,7 +123,7 @@ AI agents must additionally follow **[AGENTS.md](./AGENTS.md)**.
 
 ## Primary source families
 
-The guides cite sources locally. The [repository](./GLOSSARY.md#repository) primarily relies on:
+The guides cite sources locally. The repository primarily relies on:
 
 - Robert C. Martin — *The [Clean Architecture](./GLOSSARY.md#clean-architecture)* / *[Clean Architecture](./GLOSSARY.md#clean-architecture)*;
 - Jeffrey Palermo — *The [Onion Architecture](./GLOSSARY.md#onion-architecture)*;

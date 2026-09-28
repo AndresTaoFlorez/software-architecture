@@ -4,7 +4,7 @@ Styling and animation live in the **[Presentation](../GLOSSARY.md#presentation-l
 
 [Onion Architecture](../GLOSSARY.md#onion-architecture) does not prescribe CSS files, CSS-in-JS, Panda CSS, Tailwind, CSS Modules, GSAP or a particular folder tree.
 
-The canonical [repository](../GLOSSARY.md#repository) guidance now lives in:
+The canonical repository guidance now lives in:
 
 **[Frontend Styling and Design-System Architecture](../frontend/styling-and-design-system.md)**
 

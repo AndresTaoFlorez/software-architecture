@@ -4,7 +4,7 @@ This guide answers the question a beginner encounters first:
 
 > I have a function, type, class, hook, [adapter](../GLOSSARY.md#adapter), or component. Which folder owns it, and why?
 
-The default layered structure used throughout this [repository](../GLOSSARY.md#repository) is:
+The default layered structure used throughout this repository is:
 
 ```mermaid
 flowchart TD

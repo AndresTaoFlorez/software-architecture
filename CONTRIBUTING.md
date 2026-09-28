@@ -1,8 +1,8 @@
 # Contributing to the Software Architecture Reference
 
-This [repository](./GLOSSARY.md#repository) is documentation-first. A contribution is correct only when it is **architecturally accurate, source-backed, teachable from first principles, internally consistent, and maintainable**.
+This repository is documentation-first. A contribution is correct only when it is **architecturally accurate, source-backed, teachable from first principles, internally consistent, and maintainable**.
 
-This file is the mandatory standard for humans and AI agents contributing to the [repository](./GLOSSARY.md#repository).
+This file is the mandatory standard for humans and AI agents contributing to the repository.
 
 ## 1. Audience
 
@@ -14,7 +14,7 @@ Never require the reader to infer:
 - what a folder means;
 - where a function/type/class belongs;
 - why one dependency direction is allowed and another is not;
-- whether a rule comes from an architecture, a framework, or this [repository](./GLOSSARY.md#repository);
+- whether a rule comes from an architecture, a framework, or this documentation project;
 - how files should be named.
 
 When a new concept appears, link it to the [Glossary](./GLOSSARY.md).
@@ -89,6 +89,8 @@ A beginner should be able to place a simple function correctly after the first c
 
 Do not hide essential folder/layout guidance in an "advanced" chapter.
 
+A landing page must be operationally useful on its own. Deeper chapters may expand a concept, but a beginner should not need to read an advanced chapter to learn basic responsibilities, allowed/forbidden dependencies, folder placement, naming, or the first end-to-end feature.
+
 ## 4. Distinguish rule types
 
 Every prescriptive statement should be classifiable as one of:
@@ -98,10 +100,10 @@ Every prescriptive statement should be classifiable as one of:
 | Architectural [invariant](./GLOSSARY.md#invariant) | Violating it changes the architecture or breaks an explicit boundary. |
 | Recommended default | Strong default with legitimate alternatives. |
 | Framework requirement | Required by React, Redux, Panda, TypeScript, etc. |
-| [Repository](./GLOSSARY.md#repository) convention | Chosen here for consistency; not universal. |
+| Documentation convention | Chosen here for consistency; not universal. |
 | Example only | Illustrative; not normative. |
 
-Do not write a [repository](./GLOSSARY.md#repository) preference as if Robert C. Martin, Palermo, React, Redux, or Panda mandated it.
+Do not write a documentation-project preference as if Robert C. Martin, Palermo, React, Redux, or Panda mandated it.
 
 ## 5. Diagrams
 
@@ -167,7 +169,7 @@ Examples:
 
 - React component names start with a capital letter: framework requirement.
 - React custom hooks start with `use`: framework requirement.
-- `closures.selectors.ts`: [repository](./GLOSSARY.md#repository) convention.
+- `closures.selectors.ts`: documentation convention.
 - descriptive TypeScript identifiers and PascalCase/camelCase choices: style convention backed by TypeScript ecosystem guidance.
 
 ## 8. Glossary
@@ -209,7 +211,7 @@ Prefer:
 
 Do not cite a blog merely because it agrees with the intended conclusion.
 
-Every historical claim, framework rule, or non-obvious prescriptive claim must be traceable to a source or explicitly labelled a [repository](./GLOSSARY.md#repository) convention.
+Every historical claim, framework rule, or non-obvious prescriptive claim must be traceable to a source or explicitly labelled a documentation convention.
 
 ## 10. Examples
 

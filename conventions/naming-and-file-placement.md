@@ -1,12 +1,12 @@
 # Naming and File Placement Conventions
 
-These are the [repository](../GLOSSARY.md#repository)'s default conventions for TypeScript-heavy frontend/backend examples.
+These are this documentation project's default conventions for TypeScript-heavy frontend/backend examples.
 
 They are intentionally split into:
 
 - **framework requirements**;
 - **ecosystem-backed conventions**;
-- **[repository](../GLOSSARY.md#repository) conventions**.
+- **documentation conventions**.
 
 There is no universal architecture-mandated file naming scheme.
 
@@ -48,7 +48,7 @@ function useClosures() {
 }
 ```
 
-These are React rules, not [repository](../GLOSSARY.md#repository) preferences.
+These are React rules, not documentation-project preferences.
 
 Sources:
 
@@ -57,7 +57,7 @@ Sources:
 
 ## 3. File naming — repository convention
 
-This [repository](../GLOSSARY.md#repository) uses names that reveal architectural role.
+This documentation project uses names that reveal architectural role.
 
 | Role | Example |
 | --- | --- |

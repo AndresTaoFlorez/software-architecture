@@ -112,7 +112,7 @@ See **[Module Boundaries and Public APIs](../foundations/module-boundaries-and-p
 
 [Clean Architecture](../GLOSSARY.md#clean-architecture) tells us that UI technology is an outer detail. It does **not** define how a large [Presentation](../GLOSSARY.md#presentation-layer) codebase should organize pages, components, hooks, state, [selectors](../GLOSSARY.md#selector) or [design-system](../GLOSSARY.md#design-system) code.
 
-The canonical [repository](../GLOSSARY.md#repository) guidance is therefore centralized in:
+The canonical repository guidance is therefore centralized in:
 
 - **[Frontend Architecture](../frontend/README.md)**
 - **[Presentation Architecture](../frontend/presentation-architecture.md)**
@@ -141,7 +141,7 @@ This is a [Presentation](../GLOSSARY.md#presentation-layer) organization strateg
 
 ## 3.5 Styles and animation
 
-Styling stays in [Presentation](../GLOSSARY.md#presentation-layer), but the [repository](../GLOSSARY.md#repository) no longer prescribes generic CSS placement from the Clean guide.
+Styling stays in [Presentation](../GLOSSARY.md#presentation-layer), but the repository no longer prescribes generic CSS placement from the Clean guide.
 
 Use the central **[Styling and Design-System Architecture](../frontend/styling-and-design-system.md)**.
 
