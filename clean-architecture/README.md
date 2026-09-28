@@ -6,7 +6,7 @@
 
 ## 1. History and origin
 
-Robert C. Martin published **"The Clean Architecture"** in 2012 as a synthesis of related ideas from Hexagonal Architecture, Onion Architecture, Boundary-Control-Entity and other approaches. He later expanded the subject in the 2017 book *Clean Architecture*.
+Robert C. Martin published **"The [Clean Architecture](../GLOSSARY.md#clean-architecture)"** in 2012 as a synthesis of related ideas from [Hexagonal Architecture](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters), [Onion Architecture](../GLOSSARY.md#onion-architecture), Boundary-Control-[Entity](../GLOSSARY.md#domain-entity) and other approaches. He later expanded the subject in the 2017 book *[Clean Architecture](../GLOSSARY.md#clean-architecture)*.
 
 The recurring problem is older than the name:
 
@@ -35,7 +35,7 @@ The consequences are familiar:
 - changing a framework changes unrelated policy;
 - dependencies become cyclic and difficult to reason about.
 
-Clean Architecture protects the policy from those mechanisms.
+[Clean Architecture](../GLOSSARY.md#clean-architecture) protects the policy from those mechanisms.
 
 ## 3. When Clean Architecture is a strong fit
 
@@ -55,9 +55,9 @@ It may be excessive when:
 - the application is a tiny prototype;
 - almost all behavior is straightforward data display/transport;
 - no meaningful policy exists to isolate;
-- extra interfaces/mappers create more complexity than the external technology itself.
+- extra interfaces/[mappers](../GLOSSARY.md#mapper) create more complexity than the external technology itself.
 
-Clean Architecture is not a score for "seriousness". Use it where boundaries protect something valuable.
+[Clean Architecture](../GLOSSARY.md#clean-architecture) is not a score for "seriousness". Use it where boundaries protect something valuable.
 
 ## 5. The fundamental model
 
@@ -83,10 +83,10 @@ The essential rule is not "exactly four folders". It is:
 
 | Clean concept | Responsibility | Typical examples | Must not depend on |
 | --- | --- | --- | --- |
-| Entities | core business rules | `Order`, `Money`, invariants | use cases, UI, DB/frameworks |
-| Use Cases | application-specific operations | `cancelOrder`, input/output contracts | concrete adapters/frameworks |
-| Interface Adapters | translate representations | controller, presenter, mapper, gateway adapter | outer framework details leaking inward |
-| Frameworks & Drivers | replaceable mechanisms | React, database driver, HTTP server, SDK | — |
+| [Entities](../GLOSSARY.md#domain-entity) | core business rules | `Order`, `Money`, [invariants](../GLOSSARY.md#invariant) | [use cases](../GLOSSARY.md#use-case), UI, DB/frameworks |
+| [Use Cases](../GLOSSARY.md#use-case) | application-specific operations | `cancelOrder`, input/output contracts | concrete [adapters](../GLOSSARY.md#adapter)/frameworks |
+| [Interface Adapters](../GLOSSARY.md#interface-adapter) | translate representations | controller, presenter, [mapper](../GLOSSARY.md#mapper), [gateway](../GLOSSARY.md#gateway) [adapter](../GLOSSARY.md#adapter) | outer framework details leaking inward |
+| [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers) | replaceable mechanisms | React, database driver, HTTP server, SDK | — |
 
 A real TypeScript project commonly maps those ideas into `domain/`, `application/`, `infrastructure/`, `presentation/`, plus `composition/`.
 
@@ -114,7 +114,7 @@ flowchart TD
 | --- | --- |
 | `domain/` | protects business meaning from technology |
 | `application/` | owns application operations and the capabilities they require |
-| `infrastructure/` | contains concrete I/O adapters and external representations |
+| `infrastructure/` | contains concrete I/O [adapters](../GLOSSARY.md#adapter) and external representations |
 | `presentation/` | owns rendering, interaction and view state |
 | `composition/` | selects and connects concrete implementations |
 
@@ -134,10 +134,10 @@ flowchart TD
 
 Examples:
 
-- `order.cancel()` → Domain.
-- `cancelOrder(id)` → Application.
-- `HttpOrderRepository.save()` → Infrastructure.
-- `useOrders()` → Presentation.
+- `order.cancel()` → [Domain](../GLOSSARY.md#domain).
+- `cancelOrder(id)` → [Application](../GLOSSARY.md#application-layer).
+- `HttpOrderRepository.save()` → [Infrastructure](../GLOSSARY.md#infrastructure).
+- `useOrders()` → [Presentation](../GLOSSARY.md#presentation-layer).
 - constructing `HttpOrderRepository` → Composition.
 
 ## 9. Dependency isolation
@@ -152,7 +152,7 @@ flowchart LR
     ROOT -. "constructs" .-> APP
 ```
 
-Runtime calls may go outward through an injected port. Source dependencies still remain inward.
+Runtime calls may go outward through an injected [port](../GLOSSARY.md#port). Source dependencies still remain inward.
 
 That distinction is explained in **[The Dependency Rule](./1-the-dependency-rule.md)**.
 
@@ -164,10 +164,10 @@ Typical names:
 
 | Role | Example |
 | --- | --- |
-| entity/value object | `Order.ts`, `Money.ts` |
-| use case | `cancelOrder.ts` |
-| port | `OrderRepository.ts` |
-| adapter | `HttpOrderRepository.ts` |
+| entity/[value object](../GLOSSARY.md#value-object) | `Order.ts`, `Money.ts` |
+| [use case](../GLOSSARY.md#use-case) | `cancelOrder.ts` |
+| [port](../GLOSSARY.md#port) | `OrderRepository.ts` |
+| [adapter](../GLOSSARY.md#adapter) | `HttpOrderRepository.ts` |
 | React component | `CancelOrderButton.tsx` |
 | feature hook | `useOrders.ts` |
 
@@ -189,18 +189,18 @@ Advanced topics come after the structure and dependency rules, not before them.
 It does not require:
 
 - frontend/backend source files to be identical;
-- a class for every use case;
-- a Repository for every endpoint;
-- a DI container;
+- a class for every [use case](../GLOSSARY.md#use-case);
+- a [Repository](../GLOSSARY.md#repository) for every endpoint;
+- a [DI container](../GLOSSARY.md#di-container);
 - a specific framework;
 - a fixed folder count;
-- microservices.
+- [microservices](../GLOSSARY.md#microservice).
 
 Those are separate design decisions.
 
 ## Sources
 
-- Robert C. Martin, "The Clean Architecture" (2012): https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
-- Robert C. Martin, *Clean Architecture: A Craftsman's Guide to Software Structure and Design* (2017)
-- Alistair Cockburn, "Hexagonal Architecture": https://alistair.cockburn.us/hexagonal-architecture/
-- Jeffrey Palermo, Onion Architecture series: https://jeffreypalermo.com/2008/07/
+- Robert C. Martin, "The [Clean Architecture](../GLOSSARY.md#clean-architecture)" (2012): https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
+- Robert C. Martin, *[Clean Architecture](../GLOSSARY.md#clean-architecture): A Craftsman's Guide to Software Structure and Design* (2017)
+- Alistair Cockburn, "[Hexagonal Architecture](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters)": https://alistair.cockburn.us/hexagonal-architecture/
+- Jeffrey Palermo, [Onion Architecture](../GLOSSARY.md#onion-architecture) series: https://jeffreypalermo.com/2008/07/

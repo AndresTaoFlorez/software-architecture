@@ -1,8 +1,8 @@
 # Contributing to the Software Architecture Reference
 
-This repository is documentation-first. A contribution is correct only when it is **architecturally accurate, source-backed, teachable from first principles, internally consistent, and maintainable**.
+This [repository](./GLOSSARY.md#repository) is documentation-first. A contribution is correct only when it is **architecturally accurate, source-backed, teachable from first principles, internally consistent, and maintainable**.
 
-This file is the mandatory standard for humans and AI agents contributing to the repository.
+This file is the mandatory standard for humans and AI agents contributing to the [repository](./GLOSSARY.md#repository).
 
 ## 1. Audience
 
@@ -14,7 +14,7 @@ Never require the reader to infer:
 - what a folder means;
 - where a function/type/class belongs;
 - why one dependency direction is allowed and another is not;
-- whether a rule comes from an architecture, a framework, or this repository;
+- whether a rule comes from an architecture, a framework, or this [repository](./GLOSSARY.md#repository);
 - how files should be named.
 
 When a new concept appears, link it to the [Glossary](./GLOSSARY.md).
@@ -65,7 +65,7 @@ Every architecture landing page must teach in this order:
 8. **Testing**
    - what to unit-test;
    - what to integration-test;
-   - architecture tests.
+   - [architecture tests](./GLOSSARY.md#architecture-test).
 
 9. **Advanced topics**
    - only after fundamentals;
@@ -95,13 +95,13 @@ Every prescriptive statement should be classifiable as one of:
 
 | Type | Meaning |
 | --- | --- |
-| Architectural invariant | Violating it changes the architecture or breaks an explicit boundary. |
+| Architectural [invariant](./GLOSSARY.md#invariant) | Violating it changes the architecture or breaks an explicit boundary. |
 | Recommended default | Strong default with legitimate alternatives. |
 | Framework requirement | Required by React, Redux, Panda, TypeScript, etc. |
-| Repository convention | Chosen here for consistency; not universal. |
+| [Repository](./GLOSSARY.md#repository) convention | Chosen here for consistency; not universal. |
 | Example only | Illustrative; not normative. |
 
-Do not write a repository preference as if Robert C. Martin, Palermo, React, Redux, or Panda mandated it.
+Do not write a [repository](./GLOSSARY.md#repository) preference as if Robert C. Martin, Palermo, React, Redux, or Panda mandated it.
 
 ## 5. Diagrams
 
@@ -144,9 +144,9 @@ Good:
 
 | Path | Owns | Why |
 | --- | --- | --- |
-| `src/domain/` | business concepts/invariants | must survive UI/database replacement |
-| `src/application/` | use-case orchestration and required ports | protects application policy from details |
-| `src/infrastructure/` | HTTP/database/storage adapters | isolates volatile technology |
+| `src/domain/` | business concepts/[invariants](./GLOSSARY.md#invariant) | must survive UI/database replacement |
+| `src/application/` | use-case orchestration and required [ports](./GLOSSARY.md#port) | protects application policy from details |
+| `src/infrastructure/` | HTTP/database/storage [adapters](./GLOSSARY.md#adapter) | isolates volatile technology |
 
 For each example file, explain:
 
@@ -167,7 +167,7 @@ Examples:
 
 - React component names start with a capital letter: framework requirement.
 - React custom hooks start with `use`: framework requirement.
-- `closures.selectors.ts`: repository convention.
+- `closures.selectors.ts`: [repository](./GLOSSARY.md#repository) convention.
 - descriptive TypeScript identifiers and PascalCase/camelCase choices: style convention backed by TypeScript ecosystem guidance.
 
 ## 8. Glossary
@@ -209,7 +209,7 @@ Prefer:
 
 Do not cite a blog merely because it agrees with the intended conclusion.
 
-Every historical claim, framework rule, or non-obvious prescriptive claim must be traceable to a source or explicitly labelled a repository convention.
+Every historical claim, framework rule, or non-obvious prescriptive claim must be traceable to a source or explicitly labelled a [repository](./GLOSSARY.md#repository) convention.
 
 ## 10. Examples
 
@@ -219,13 +219,13 @@ Prefer one stable example domain per guide and evolve it progressively.
 
 Do not introduce:
 
-- DI container,
+- [DI container](./GLOSSARY.md#di-container),
 - CQRS,
-- microservices,
+- [microservices](./GLOSSARY.md#microservice),
 - event sourcing,
-- global state,
+- [global state](./GLOSSARY.md#global-state),
 - factories,
-- repositories,
+- [repositories](./GLOSSARY.md#repository),
 
 unless the problem in the example actually requires them.
 
@@ -245,7 +245,7 @@ Every substantial documentation PR must be reviewed three times.
 
 - Are dependency directions correct?
 - Are framework conventions separated from architectural rules?
-- Are ports/repositories/use cases introduced only where justified?
+- Are [ports](./GLOSSARY.md#port)/[repositories](./GLOSSARY.md#repository)/[use cases](./GLOSSARY.md#use-case) introduced only where justified?
 - Are outer technology types prevented from leaking inward?
 - Are trade-offs and counterexamples acknowledged?
 
@@ -257,7 +257,7 @@ Every substantial documentation PR must be reviewed three times.
 - Relative links are valid.
 - Headings/anchors used by other docs remain stable.
 - Naming matches the conventions guide.
-- Examples do not contradict architecture tests.
+- Examples do not contradict [architecture tests](./GLOSSARY.md#architecture-test).
 
 A contribution is not ready until all three passes are clean.
 
@@ -268,4 +268,4 @@ When adding a new architecture or substantially rewriting one, start from **[Arc
 
 The template is intentionally verbose. Remove sections only when they truly do not apply; do not move foundational placement/dependency guidance behind advanced material.
 
-For presentation patterns such as MVC/MVVM, adapt "layers" to "roles", but preserve the same teaching order: history → problem → fit → mental model → responsibilities → physical placement → progressive example → testing → advanced topics.
+For presentation patterns such as [MVC](./GLOSSARY.md#model-view-controller-mvc)/[MVVM](./GLOSSARY.md#model-view-viewmodel-mvvm), adapt "layers" to "roles", but preserve the same teaching order: history → problem → fit → mental model → responsibilities → physical placement → progressive example → testing → advanced topics.
