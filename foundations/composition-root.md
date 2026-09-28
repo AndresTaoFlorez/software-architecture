@@ -8,7 +8,7 @@ Mark Seemann defines it as a preferably unique location, as close as possible to
 
 A browser application may look like:
 
-```ts
+```tsx
 const closureGateway = new HttpClosureGateway(httpClient)
 const executeClosure = makeExecuteClosure({ closureGateway })
 

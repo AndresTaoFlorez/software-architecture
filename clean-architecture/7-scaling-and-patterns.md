@@ -1,5 +1,7 @@
 > **[Clean Architecture](README.md)** › Evolution & Scaling.
 
+<a id="7-scaling-startup-to-enterprise"></a>
+
 # 7. Evolution and Scaling
 
 [Clean Architecture](../GLOSSARY.md#clean-architecture) does not define startup, scale-up or enterprise phases, and it does not prescribe team-size thresholds for architectural mechanisms.
@@ -9,6 +11,12 @@ The durable rule remains inward dependency direction. How modules are grouped, c
 The canonical guidance is now centralized in:
 
 **[Architecture Evolution and Scaling](../foundations/evolution-and-scaling.md)**
+
+<a id="71-the-four-growth-phases"></a>
+
+<a id="73-the-scaling-decision-tree"></a>
+
+<a id="74-red-flags"></a>
 
 ## Clean-specific notes
 
@@ -22,6 +30,8 @@ flowchart LR
 ```
 
 Moving it across a process boundary is a deployment decision, not proof of better [Clean Architecture](../GLOSSARY.md#clean-architecture).
+
+<a id="72-what-does-not-change"></a>
 
 ### Feature ownership does not require duplicating four circles per feature
 
@@ -47,6 +57,7 @@ Prefer the smallest structure that preserves meaningful boundaries.
 ### DI containers are optional
 
 A larger organization does not automatically imply a [DI container](../GLOSSARY.md#di-container). Adopt one for object-graph/lifetime/framework reasons, not a headcount milestone.
+
 
 ### Microservices and microfrontends are not "final phases"
 

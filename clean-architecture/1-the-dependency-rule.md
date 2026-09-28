@@ -1,10 +1,13 @@
 > **[Clean Architecture](README.md)** › The [Dependency Rule](../GLOSSARY.md#dependency-rule).
 
+
 # 1. The Dependency Rule
 
 [Clean Architecture](../GLOSSARY.md#clean-architecture) is best understood by separating its **canonical rule** from project-specific conventions built on top of it.
 
 ---
+
+<a id="11-the-four-circles"></a>
 
 ## 1.1 The canonical circles
 
@@ -14,11 +17,11 @@ Robert C. Martin's diagram uses:
 flowchart LR
     N0["Entities"]
     N1["Use Cases"]
-    N0 --> N1
+    N1 --> N0
     N2["Interface Adapters"]
-    N1 --> N2
+    N2 --> N1
     N3["Frameworks & Drivers"]
-    N2 --> N3
+    N3 --> N2
 ```
 
 Inner circles contain higher-level policy. Outer circles contain mechanisms and details.
@@ -27,15 +30,17 @@ Martin explicitly notes that the diagram is schematic: an application may have m
 
 ---
 
+<a id="12-the-rule-itself"></a>
+
 ## 1.2 The rule
 
 > Source-code dependencies may only point inward, toward higher-level policies.
 
 Consequences:
 
-- [Entities](../GLOSSARY.md#domain-entity) do not name [Use Cases](../GLOSSARY.md#use-case), UI frameworks, databases or transports.
+- [Entities](../GLOSSARY.md#clean-entities-circle) do not name [Use Cases](../GLOSSARY.md#use-case), UI frameworks, databases or transports.
 - [Use Cases](../GLOSSARY.md#use-case) do not name concrete outer [adapters](../GLOSSARY.md#adapter)/frameworks.
-- [Interface Adapters](../GLOSSARY.md#interface-adapter) may depend on [Use Cases](../GLOSSARY.md#use-case)/[Entities](../GLOSSARY.md#domain-entity).
+- [Interface Adapters](../GLOSSARY.md#interface-adapter) may depend on [Use Cases](../GLOSSARY.md#use-case)/[Entities](../GLOSSARY.md#clean-entities-circle).
 - [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers) may depend inward.
 
 An inner circle should not mention a class, function, schema or data representation owned by an outer circle.
@@ -44,9 +49,13 @@ This includes type-level dependencies.
 
 ---
 
+<a id="13-crossing-the-boundary-dependency-inversion"></a>
+
 ## 1.3 Dependency direction is not runtime flow
 
 A [use case](../GLOSSARY.md#use-case) can invoke a database at runtime without importing the database implementation.
+
+The following fragments illustrate signatures and wiring; omitted types and method bodies are not a runnable feature. See [the complete cancellation example](4-building-a-feature.md).
 
 Inner contract:
 
@@ -113,13 +122,15 @@ This does not mean every crossing needs a class. A pure mapping function is ofte
 
 ---
 
+<a id="15-why-this-matters-on-the-frontend"></a>
+
 ## 1.5 What the Dependency Rule does **not** say
 
 It does not say:
 
 - every project needs exactly four folders;
 - every external call needs a [Repository](../GLOSSARY.md#repository) interface;
-- frontend and backend must share [Entities](../GLOSSARY.md#domain-entity);
+- frontend and backend must share [Entities](../GLOSSARY.md#clean-entities-circle);
 - every [View](../GLOSSARY.md#view) must be framework-free;
 - a [DI container](../GLOSSARY.md#di-container) is required;
 - Redux is an [Application layer](../GLOSSARY.md#application-layer);
@@ -127,7 +138,7 @@ It does not say:
 
 That last point matters.
 
-If a [View](../GLOSSARY.md#view) and an HTTP client are both categorized as [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers), a direct [View](../GLOSSARY.md#view) -> HTTP-client import does not, by itself, point from an inner circle outward. It may still violate a **stricter application rule** such as "all business operations go through [Application](../GLOSSARY.md#application-layer) [use cases](../GLOSSARY.md#use-case)".
+Martin places views alongside controllers and [presenters](../GLOSSARY.md#presenter) in [Interface Adapters](../GLOSSARY.md#interface-adapter). Such an [adapter](../GLOSSARY.md#adapter) must not import an outward-owned HTTP driver. A physical React component or HTTP repository can combine [adapter](../GLOSSARY.md#adapter) behavior with framework glue; placing both in an outer physical folder does not make an outward canonical dependency valid. Either separate the glue behind an [adapter](../GLOSSARY.md#adapter)-owned contract or explicitly describe the merged physical module. The stricter policy here also forbids [Presentation](../GLOSSARY.md#presentation-layer) from importing [Infrastructure](../GLOSSARY.md#infrastructure), even when both contain outer mechanisms.
 
 Document those stricter rules as project architecture, not as quotations from [Clean Architecture](../GLOSSARY.md#clean-architecture).
 
@@ -165,6 +176,8 @@ A [port](../GLOSSARY.md#port) is useful when it protects policy from a detail. D
 
 ---
 
+<a id="14-the-rule-as-a-check-on-imports"></a>
+
 ## 1.8 Make the rule executable
 
 If a project says [Application](../GLOSSARY.md#application-layer) cannot import [Infrastructure](../GLOSSARY.md#infrastructure), CI should detect the import.
@@ -176,7 +189,7 @@ If a project says [Application](../GLOSSARY.md#application-layer) cannot import 
 - dynamic imports;
 - relative paths;
 - path aliases;
-- type-only imports.
+- [type-only imports](../GLOSSARY.md#type-only-import).
 
 See **[Executable Architecture](../foundations/architecture-testing.md)**.
 

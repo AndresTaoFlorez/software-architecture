@@ -1,16 +1,20 @@
 > **[Clean Architecture](README.md)** › The Four Circles.
 
+<a id="2-the-four-layers"></a>
+
 # 2. The Four Circles
 
 The canonical [Clean Architecture](../GLOSSARY.md#clean-architecture) diagram contains four concentric circles. They are conceptual boundaries, not mandatory directory names.
 
 ---
 
+<a id="21-entities-innermost"></a>
+
 ## 2.1 Entities
 
 ### Responsibility
 
-Martin describes [Entities](../GLOSSARY.md#domain-entity) as encapsulating enterprise-wide critical business rules.
+Martin's **[Entities circle](../GLOSSARY.md#clean-entities-circle)** encapsulates general business rules. It is broader than a [DDD](../GLOSSARY.md#domain-driven-design-ddd) entity with identity: objects, [value objects](../GLOSSARY.md#value-object) and functions can all implement this policy.
 
 In modern domain-oriented systems, interpret that carefully: the relevant policy may be scoped to a product or [bounded context](../GLOSSARY.md#bounded-context) rather than literally one enterprise-wide class shared by every application.
 
@@ -21,6 +25,8 @@ Typical contents:
 - business [invariants](../GLOSSARY.md#invariant);
 - domain policies;
 - [domain errors](../GLOSSARY.md#domain-error)/events where appropriate.
+
+The following code is a responsibility excerpt; surrounding types/imports are omitted. The [complete feature](4-building-a-feature.md) supplies its own contracts and implementations.
 
 Example:
 
@@ -38,7 +44,7 @@ export class Money {
 }
 ```
 
-[Entities](../GLOSSARY.md#domain-entity) should not know delivery, persistence or framework details.
+[Entities](../GLOSSARY.md#clean-entities-circle) should not know delivery, persistence or framework details.
 
 They do **not** have to be classes. Functional/immutable domain models can satisfy the same boundary.
 
@@ -57,6 +63,8 @@ Typical contents:
 - required [ports](../GLOSSARY.md#port)/boundaries;
 - application-level validation and orchestration;
 - application results/errors.
+
+The following code is a responsibility excerpt; surrounding types/imports are omitted. The [complete feature](4-building-a-feature.md) supplies its own contracts and implementations.
 
 Example:
 
@@ -121,8 +129,14 @@ export class HttpOrderRepository implements OrderRepository {
     const dto = await this.http.get('/orders/' + id.value)
     return dto ? mapOrderDto(dto) : null
   }
+
+  async save(order: Order): Promise<void> {
+    await this.http.put('/orders/' + order.id.value, toOrderDto(order))
+  }
 }
 ```
+
+Here `HttpClient` is an [adapter](../GLOSSARY.md#adapter)-owned transport interface, supplied by outer framework glue; it is not an import from a concrete HTTP driver. `mapOrderDto` and `toOrderDto` are boundary mapping functions. A physical [Infrastructure](../GLOSSARY.md#infrastructure) module may combine both roles, but the combined folder is not a new canonical circle.
 
 ### Repository is not a synonym for adapter
 
@@ -133,6 +147,8 @@ Examples include `PaymentGateway`, `FileStorage`, `Clock`, `IdGenerator`, `Notif
 The name should expose purpose.
 
 ---
+
+<a id="24-frameworks--drivers-outermost"></a>
 
 ## 2.4 Frameworks & Drivers
 
@@ -176,7 +192,7 @@ This repository often uses:
 
 | Clean concept | Practical area |
 | --- | --- |
-| [Entities](../GLOSSARY.md#domain-entity) | [Domain](../GLOSSARY.md#domain) |
+| [Entities](../GLOSSARY.md#clean-entities-circle) | [Domain](../GLOSSARY.md#domain) |
 | [Use Cases](../GLOSSARY.md#use-case) | [Application](../GLOSSARY.md#application-layer) |
 | [Interface Adapters](../GLOSSARY.md#interface-adapter) | parts of [Presentation](../GLOSSARY.md#presentation-layer) + [Infrastructure](../GLOSSARY.md#infrastructure) |
 | [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers) | concrete UI/HTTP/DB/storage/framework code |
@@ -185,7 +201,9 @@ The mapping is not one-to-one.
 
 For example, "[Presentation](../GLOSSARY.md#presentation-layer)" in a project may contain both [Interface Adapter](../GLOSSARY.md#interface-adapter) behavior ([ViewModels](../GLOSSARY.md#viewmodel)/[presenters](../GLOSSARY.md#presenter)) and Framework/Driver behavior (React components).
 
-Therefore, do not insist that every project folder corresponds to exactly one canonical circle.
+[Infrastructure](../GLOSSARY.md#infrastructure) similarly often combines a repository [mapper](../GLOSSARY.md#mapper) ([Interface Adapters](../GLOSSARY.md#interface-adapter)) and an HTTP/ORM implementation ([Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers)). If separated, the driver implements a contract owned by the [mapper](../GLOSSARY.md#mapper) or inner policy; the [mapper](../GLOSSARY.md#mapper) does not import the driver.
+
+Therefore, do not insist that every project folder corresponds to exactly one canonical circle. Composition is outer executable glue and follows the same inward rule; it is no exemption.
 
 ---
 
