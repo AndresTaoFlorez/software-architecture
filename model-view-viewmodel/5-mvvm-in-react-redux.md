@@ -1,10 +1,10 @@
-> **[Model-View-ViewModel](README.md)** › MVVM in React + Redux Toolkit. Full reference list: [References](references.md).
+> **[Model-View-ViewModel](README.md)** › [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) in React + Redux Toolkit. Full reference list: [References](references.md).
 
 # 5. MVVM in React + Redux Toolkit
 
-React and Redux Toolkit do not prescribe MVVM. This chapter demonstrates **one optional mapping** when a project intentionally uses a ViewModel/Presentation facade boundary.
+React and Redux Toolkit do not prescribe [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm). This chapter demonstrates **one optional mapping** when a project intentionally uses a [ViewModel](../GLOSSARY.md#viewmodel)/[Presentation](../GLOSSARY.md#presentation-layer) facade boundary.
 
-For the repository's current Redux guidance, also read **[State Management and Side Effects](../frontend/state-management.md)**.
+For the [repository](../GLOSSARY.md#repository)'s current Redux guidance, also read **[State Management and Side Effects](../frontend/state-management.md)**.
 
 ---
 
@@ -12,13 +12,13 @@ For the repository's current Redux guidance, also read **[State Management and S
 
 A possible mapping:
 
-| MVVM role | React/Redux owner |
+| [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) role | React/Redux owner |
 | --- | --- |
-| View | React component rendering + local rendering concerns |
-| ViewModel facade | feature hook such as `useClosures()` |
-| shared view state | Redux slice + selectors |
+| [View](../GLOSSARY.md#view) | React component rendering + local rendering concerns |
+| [ViewModel](../GLOSSARY.md#viewmodel) facade | feature hook such as `useClosures()` |
+| shared view state | Redux slice + [selectors](../GLOSSARY.md#selector) |
 | binding | React Redux subscriptions/hooks, hidden or exposed according to project policy |
-| Model/Application | inner application/domain modules where the chosen architecture defines them |
+| [Model](../GLOSSARY.md#model)/[Application](../GLOSSARY.md#application-layer) | inner application/domain modules where the chosen architecture defines them |
 
 This is not the only valid Redux architecture.
 
@@ -30,13 +30,13 @@ Redux's official guidance commonly allows components to use typed Redux hooks di
 
 ## 5.2 RTK Query and the infrastructure seam
 
-RTK Query is Redux Toolkit's server-state fetching/caching solution.
+[RTK Query](../GLOSSARY.md#rtk-query) is Redux Toolkit's [server-state](../GLOSSARY.md#server-state) fetching/caching solution.
 
 Its architectural placement depends on what the operation means.
 
 ### Server-state dominant query
 
-If a View mainly needs cached remote data, invalidation and re-fetching:
+If a [View](../GLOSSARY.md#view) mainly needs cached remote data, invalidation and re-fetching:
 
 ```mermaid
 flowchart LR
@@ -55,7 +55,7 @@ flowchart LR
     I["Infrastructure adapter"] --> P
 ```
 
-Do not label RTK Query universally "Infrastructure" merely because it performs HTTP. Its generated hooks and cache participate directly in Redux/Presentation, while endpoint definitions contain transport knowledge. In a strict layered system you may wrap or isolate that transport knowledge; in a simpler application you may intentionally keep the query mechanism in Presentation.
+Do not label [RTK Query](../GLOSSARY.md#rtk-query) universally "[Infrastructure](../GLOSSARY.md#infrastructure)" merely because it performs HTTP. Its generated hooks and cache participate directly in Redux/[Presentation](../GLOSSARY.md#presentation-layer), while endpoint definitions contain transport knowledge. In a strict layered system you may wrap or isolate that transport knowledge; in a simpler application you may intentionally keep the query mechanism in [Presentation](../GLOSSARY.md#presentation-layer).
 
 Document the chosen boundary.
 
@@ -63,7 +63,7 @@ Document the chosen boundary.
 
 ## 5.3 The use-case layer is added by Clean/Onion, not Redux or MVVM
 
-Redux Toolkit does not require an Application layer. MVVM does not require one either.
+Redux Toolkit does not require an [Application layer](../GLOSSARY.md#application-layer). [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) does not require one either.
 
 A Clean/Onion project may deliberately add:
 
@@ -75,7 +75,7 @@ flowchart LR
 
 because application policy deserves an independent boundary.
 
-For a simple UI-only state transition, Redux can handle it directly without inventing a use case.
+For a simple UI-only state transition, Redux can handle it directly without inventing a [use case](../GLOSSARY.md#use-case).
 
 The rule is proportionality.
 
@@ -83,7 +83,7 @@ The rule is proportionality.
 
 ## 5.4 Selectors reshape Presentation state
 
-Selectors are appropriate for derived state:
+[Selectors](../GLOSSARY.md#selector) are appropriate for derived state:
 
 ```ts
 export const selectVisibleOrders = createSelector(
@@ -92,9 +92,9 @@ export const selectVisibleOrders = createSelector(
 )
 ```
 
-Keep business invariants out of selectors.
+Keep business [invariants](../GLOSSARY.md#invariant) out of [selectors](../GLOSSARY.md#selector).
 
-Good selector logic:
+Good [selector](../GLOSSARY.md#selector) logic:
 
 - filtering for display;
 - sorting for display;
@@ -107,7 +107,7 @@ Move authoritative business rules inward when they must be consistent across int
 
 ## 5.5 Public facade example
 
-A strict ViewModel-style boundary:
+A strict [ViewModel](../GLOSSARY.md#viewmodel)-style boundary:
 
 ```ts
 export function useOrders() {
@@ -130,7 +130,7 @@ type Result<T, E> =
   | { ok: false; error: E }
 ```
 
-The View should not need `cancelOrderThunk.fulfilled.match(...)` if the facade's purpose is to hide Redux.
+The [View](../GLOSSARY.md#view) should not need `cancelOrderThunk.fulfilled.match(...)` if the facade's purpose is to hide Redux.
 
 ---
 
@@ -143,13 +143,13 @@ Local component state remains appropriate for:
 - temporary text input;
 - state used by one component subtree.
 
-Redux recommends keeping global state minimal and deriving values where possible.
+Redux recommends keeping [global state](../GLOSSARY.md#global-state) minimal and deriving values where possible.
 
-A ViewModel facade may compose local React state and Redux-backed feature state without pretending they are the same ownership scope.
+A [ViewModel](../GLOSSARY.md#viewmodel) facade may compose local React state and Redux-backed feature state without pretending they are the same ownership scope.
 
 ## Sources
 
 - Redux Style Guide: https://redux.js.org/style-guide/
-- Redux Toolkit, RTK Query: https://redux-toolkit.js.org/rtk-query/overview
+- Redux Toolkit, [RTK Query](../GLOSSARY.md#rtk-query): https://redux-toolkit.js.org/rtk-query/overview
 - React Redux hooks: https://react-redux.js.org/api/hooks
-- Martin Fowler, Presentation Model: https://martinfowler.com/eaaDev/PresentationModel.html
+- Martin Fowler, [Presentation Model](../GLOSSARY.md#presentation-model): https://martinfowler.com/eaaDev/PresentationModel.html
