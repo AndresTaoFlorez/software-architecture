@@ -226,17 +226,15 @@ sequenceDiagram
     participant VM as useOrders
     participant UC as cancelOrder
     participant Order as Order
-    participant Port as OrderRepository
-    participant Http as HttpOrderRepository
+    participant Adapter as HttpOrderRepository
 
     User->>View: click Cancel
     View->>VM: cancel(orderId)
     VM->>UC: execute(orderId)
-    UC->>Port: findById(orderId)
-    Port->>Http: delegated implementation
-    Http-->>UC: Order
+    UC->>Adapter: findById(orderId) through OrderRepository port
+    Adapter-->>UC: Order
     UC->>Order: cancel()
-    UC->>Port: save(order)
+    UC->>Adapter: save(order) through OrderRepository port
 ```
 
 The same capability can later receive another [adapter](../GLOSSARY.md#adapter) without changing the core policy.

@@ -2,7 +2,7 @@
 
 ## References
 
-The sources most central to [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) are marked ★. All URLs verified reachable as of 2026-07-05.
+The sources most central to [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) are marked ★.
 
 ### Primary sources
 
@@ -48,7 +48,7 @@ The sources most central to [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) are
   https://developer.android.com/topic/architecture
 - **Airbnb.** *Mavericks* (formerly MvRx). ("The Android framework from Airbnb that we use for
   nearly all product development at Airbnb.") https://github.com/airbnb/mavericks
-- **Vue.js.** *The Vue Instance*, Vue 2 Guide. ("Vue's design was partly inspired by [[MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm)]. As a
+- **Vue.js.** *The Vue Instance*, Vue 2 Guide. ("Vue's design was partly inspired by [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm). As a
   convention, we often use the variable `vm` (short for [ViewModel](../GLOSSARY.md#viewmodel)) to refer to our Vue instance.")
   https://v2.vuejs.org/v2/guide/instance.html
 - **React documentation.** https://react.dev/ (One-way data flow and hooks — the narrowed-write-path
