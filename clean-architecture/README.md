@@ -87,13 +87,13 @@ The arrow means **source dependency**, not runtime call direction.
 
 The canonical circles are conceptual. A real codebase can split one circle across multiple modules or place several outer mechanisms in one physical area.
 
-Do not confuse the canonical circles with this repository's physical `infrastructure/` folder. A concrete HTTP/database adapter may contain both translation behavior and framework/driver glue in one physical module. That pragmatic module is still outer code; it does **not** justify making a canonical Interface Adapter depend outward on Frameworks & Drivers.
+Do not confuse the canonical circles with this repository's physical `infrastructure/` folder. A concrete HTTP/database [adapter](../GLOSSARY.md#adapter) may contain both translation behavior and framework/driver glue in one physical module. That pragmatic module is still outer code; it does **not** justify making a canonical [Interface Adapter](../GLOSSARY.md#interface-adapter) depend outward on [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers).
 
 | Clean concept | Owns | Put here | Do not put here | May depend on |
 | --- | --- | --- | --- | --- |
 | [Entities](../GLOSSARY.md#domain-entity) | enterprise/domain rules that survive delivery changes | entities, [value objects](../GLOSSARY.md#value-object), [invariants](../GLOSSARY.md#invariant), domain policies | React, Redux, HTTP, ORM, API [DTOs](../GLOSSARY.md#data-transfer-object-dto), use-case orchestration | other inner domain concepts |
 | [Use Cases](../GLOSSARY.md#use-case) | application-specific operations | commands/results, [application services](../GLOSSARY.md#application-service), required [ports](../GLOSSARY.md#port) | concrete DB/HTTP/UI implementations | entities/domain policy |
-| [Interface Adapters](../GLOSSARY.md#interface-adapter) | translation across boundaries | controllers, presenters, [mappers](../GLOSSARY.md#mapper), boundary-facing adapters | authoritative business rules or framework/driver dependencies that would reverse the canonical circle direction | [use cases](../GLOSSARY.md#use-case)/entities and adapter-owned translation code |
+| [Interface Adapters](../GLOSSARY.md#interface-adapter) | translation across boundaries | controllers, [presenters](../GLOSSARY.md#presenter), [mappers](../GLOSSARY.md#mapper), boundary-facing [adapters](../GLOSSARY.md#adapter) | authoritative business rules or framework/driver dependencies that would reverse the canonical circle direction | [use cases](../GLOSSARY.md#use-case)/entities and [adapter](../GLOSSARY.md#adapter)-owned translation code |
 | [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers) | replaceable technology mechanisms | React, routers, HTTP servers, DB drivers, SDKs, CSS systems | inner policy that only exists because the framework made it convenient | inward abstractions/[adapters](../GLOSSARY.md#adapter) as needed |
 
 ### Why isolate them?
@@ -225,7 +225,7 @@ Use **[Naming and File Placement Conventions](../conventions/naming-and-file-pla
 | [DTO](../GLOSSARY.md#data-transfer-object-dto) | `orderApi.dto.ts` |
 | [mapper](../GLOSSARY.md#mapper) | `orderApi.mapper.ts` |
 | React component | `CancelOrderButton.tsx` |
-| feature hook/facade | `useOrders.ts` |
+| feature hook/[facade](../GLOSSARY.md#facade-pattern) | `useOrders.ts` |
 
 The architecture does not mandate these suffixes. They are repository conventions chosen to make role and ownership visible.
 
@@ -243,7 +243,7 @@ Place each artifact deliberately:
 | persistence capability | `application/orders/ports/OrderRepository.ts` | [Application](../GLOSSARY.md#application-layer) | [use case](../GLOSSARY.md#use-case) requires load/save | concrete HTTP does not belong inward |
 | operation | `application/orders/use-cases/cancelOrder.ts` | [Application](../GLOSSARY.md#application-layer) | coordinates the workflow | [Domain](../GLOSSARY.md#domain) should not perform I/O |
 | HTTP implementation | `infrastructure/orders/HttpOrderRepository.ts` | [Infrastructure](../GLOSSARY.md#infrastructure) | translates transport | [Presentation](../GLOSSARY.md#presentation-layer)/[Application](../GLOSSARY.md#application-layer) must not own HTTP details |
-| UI facade | `presentation/features/orders/model/useOrders.ts` | [Presentation](../GLOSSARY.md#presentation-layer) | exposes view-oriented operation/state | [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer) should not know React |
+| UI [facade](../GLOSSARY.md#facade-pattern) | `presentation/features/orders/model/useOrders.ts` | [Presentation](../GLOSSARY.md#presentation-layer) | exposes view-oriented operation/state | [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer) should not know React |
 | button | `presentation/features/orders/ui/CancelOrderButton.tsx` | [Presentation](../GLOSSARY.md#presentation-layer) | rendering + user gesture | business rule does not belong in JSX |
 | wiring | `composition/bootstrap.ts` | Composition | connects concrete objects | inner modules must not resolve the container |
 

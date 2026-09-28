@@ -102,7 +102,7 @@ export { placeOrder } from './use-cases/placeOrder'
 export type { PlaceOrderCommand, PlaceOrderResult } from './contracts'
 ```
 
-Avoid giant barrels that re-export unrelated layers or `export *` every internal symbol.
+Avoid giant [barrels](../GLOSSARY.md#barrel-file) that re-export unrelated layers or `export *` every internal symbol.
 
 See **[Module Boundaries and Public APIs](../foundations/module-boundaries-and-public-apis.md)**.
 

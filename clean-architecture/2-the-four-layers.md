@@ -106,7 +106,7 @@ Translate between representations convenient to inner policy and representations
 Examples:
 
 - controllers;
-- presenters;
+- [presenters](../GLOSSARY.md#presenter);
 - [gateways](../GLOSSARY.md#gateway)/[repository](../GLOSSARY.md#repository) [adapters](../GLOSSARY.md#adapter);
 - [mappers](../GLOSSARY.md#mapper);
 - framework-facing state [adapters](../GLOSSARY.md#adapter).
@@ -183,7 +183,7 @@ This repository often uses:
 
 The mapping is not one-to-one.
 
-For example, "[Presentation](../GLOSSARY.md#presentation-layer)" in a project may contain both [Interface Adapter](../GLOSSARY.md#interface-adapter) behavior ([ViewModels](../GLOSSARY.md#viewmodel)/presenters) and Framework/Driver behavior (React components).
+For example, "[Presentation](../GLOSSARY.md#presentation-layer)" in a project may contain both [Interface Adapter](../GLOSSARY.md#interface-adapter) behavior ([ViewModels](../GLOSSARY.md#viewmodel)/[presenters](../GLOSSARY.md#presenter)) and Framework/Driver behavior (React components).
 
 Therefore, do not insist that every project folder corresponds to exactly one canonical circle.
 

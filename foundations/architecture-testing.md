@@ -104,7 +104,7 @@ The feature itself may freely import its own internals.
 
 ## 5. Framework-boundary tests
 
-When the UI architecture intentionally hides Redux behind a feature facade, make that rule executable:
+When the UI architecture intentionally hides Redux behind a feature [facade](../GLOSSARY.md#facade-pattern), make that rule executable:
 
 ```mermaid
 flowchart TD
