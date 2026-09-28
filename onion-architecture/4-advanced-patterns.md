@@ -2,13 +2,13 @@
 
 # 8. Advanced Patterns
 
-These patterns are **not part of the definition of Onion Architecture**. They are examples of production concerns that should be assigned to an owner without reversing dependency direction.
+These patterns are **not part of the definition of [Onion Architecture](../GLOSSARY.md#onion-architecture)**. They are examples of production concerns that should be assigned to an owner without reversing dependency direction.
 
 ---
 
 ## 8.1 Offline data and synchronization
 
-Offline caching, conflict resolution and synchronization are not automatically Domain concerns.
+Offline caching, conflict resolution and synchronization are not automatically [Domain](../GLOSSARY.md#domain) concerns.
 
 Separate:
 
@@ -19,9 +19,9 @@ flowchart LR
     U["UI optimistic feedback"] --> P["Presentation"]
 ```
 
-For example, "last write wins" is only a correct domain rule if the product actually accepts that conflict policy. Do not call a timestamp overwrite strategy a CRDT merely because it resolves conflicts.
+For example, "last write wins" is only a correct domain rule if the product actually accepts that conflict policy. Do not call a timestamp overwrite strategy a [CRDT](../GLOSSARY.md#crdt) merely because it resolves conflicts.
 
-A true CRDT has mathematical convergence properties; a simple LWW policy may be appropriate, but name it accurately.
+A true [CRDT](../GLOSSARY.md#crdt) has mathematical convergence properties; a simple [LWW](../GLOSSARY.md#last-write-wins-lww) policy may be appropriate, but name it accurately.
 
 ---
 
@@ -38,13 +38,13 @@ flowchart LR
 
 Rollback/reconciliation semantics belong where their meaning lives.
 
-A generic server-state library can own purely technical cache reconciliation when no application policy is being bypassed.
+A generic [server-state](../GLOSSARY.md#server-state) library can own purely technical cache reconciliation when no application policy is being bypassed.
 
 ---
 
 ## 8.3 Token refresh and request deduplication
 
-Transparent HTTP token refresh, request coalescing and transport retries are normally Infrastructure concerns.
+Transparent HTTP token refresh, request coalescing and transport retries are normally [Infrastructure](../GLOSSARY.md#infrastructure) concerns.
 
 ```mermaid
 flowchart LR
@@ -61,7 +61,7 @@ Inner policy should not receive raw `401`, Axios errors or retry counters unless
 
 ## 8.4 Feature ownership in Presentation
 
-A growing Presentation layer benefits from feature ownership, but that is **frontend architecture inside the outer ring**, not an Onion ring.
+A growing [Presentation layer](../GLOSSARY.md#presentation-layer) benefits from feature ownership, but that is **frontend architecture inside the outer ring**, not an Onion ring.
 
 The canonical guide is:
 
@@ -85,9 +85,9 @@ Do not duplicate the full frontend folder specification inside the Onion guide.
 
 ## 8.5 State libraries
 
-Redux, Pinia, Zustand and equivalent state libraries are Presentation mechanisms.
+Redux, Pinia, Zustand and equivalent state libraries are [Presentation](../GLOSSARY.md#presentation-layer) mechanisms.
 
-They can call Application use cases through injected dependencies/adapters without becoming a new Onion layer.
+They can call [Application](../GLOSSARY.md#application-layer) [use cases](../GLOSSARY.md#use-case) through injected dependencies/[adapters](../GLOSSARY.md#adapter) without becoming a new Onion layer.
 
 See **[State Management and Side Effects](../frontend/state-management.md)**.
 
@@ -95,9 +95,9 @@ See **[State Management and Side Effects](../frontend/state-management.md)**.
 
 ## 8.6 Design systems
 
-CSS, Panda CSS, Tailwind, CSS Modules and component recipes are Presentation mechanisms.
+CSS, Panda CSS, Tailwind, CSS Modules and component [recipes](../GLOSSARY.md#recipe) are [Presentation](../GLOSSARY.md#presentation-layer) mechanisms.
 
-Token/recipe architecture is documented centrally in:
+Token/[recipe](../GLOSSARY.md#recipe) architecture is documented centrally in:
 
 **[Styling and Design-System Architecture](../frontend/styling-and-design-system.md)**.
 
@@ -116,13 +116,13 @@ flowchart LR
     P["Presentation"] --> PU["How current UI reacts / displays"]
 ```
 
-If reconnect policy itself is a product requirement, elevate that policy appropriately instead of assuming every retry rule is merely Infrastructure.
+If reconnect policy itself is a product requirement, elevate that policy appropriately instead of assuming every retry rule is merely [Infrastructure](../GLOSSARY.md#infrastructure).
 
 ---
 
 ## 8.8 Do not add patterns by fashion
 
-Before introducing CQRS, event sourcing, CRDTs, a global state machine or a complex sync engine, identify the actual force:
+Before introducing CQRS, event sourcing, [CRDTs](../GLOSSARY.md#crdt), a [global state](../GLOSSARY.md#global-state) machine or a complex sync engine, identify the actual force:
 
 - contention?
 - offline editing?
@@ -135,6 +135,6 @@ A pattern without its motivating problem is architectural debt.
 
 ## Sources
 
-- Jeffrey Palermo, Onion Architecture: https://jeffreypalermo.com/2008/07/
-- Redux, Side Effects Approaches: https://redux.js.org/usage/side-effects-approaches
+- Jeffrey Palermo, [Onion Architecture](../GLOSSARY.md#onion-architecture): https://jeffreypalermo.com/2008/07/
+- Redux, [Side Effects](../GLOSSARY.md#side-effect) Approaches: https://redux.js.org/usage/side-effects-approaches
 - Shapiro et al., "Conflict-Free Replicated Data Types" (2011): https://inria.hal.science/inria-00609399/document
