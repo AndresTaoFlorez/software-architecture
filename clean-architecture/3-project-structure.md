@@ -1,5 +1,6 @@
 > **[Clean Architecture](README.md)** › Project Structure & Conventions.
 
+
 # 3. Project Structure & Conventions
 
 [Clean Architecture](../GLOSSARY.md#clean-architecture) constrains dependencies; it does not prescribe one filesystem tree.
@@ -27,11 +28,7 @@ flowchart TD
     N0 --> N5
 ```
 
-Equivalent projects may use Martin's vocabulary:
-
-Possible Martin-style names include `entities/`, `usecases/`, `adapters/`, and `frameworks/`.
-
-or a package/module-based layout.
+Equivalent projects may use `entities/`, `usecases/`, `adapters/`, and `frameworks/`, or organize packages by capability.
 
 **Do not claim these layouts produce identical code.** They can implement the same inward-dependency principle while using different boundaries, ownership and module decomposition.
 
@@ -84,13 +81,10 @@ flowchart TD
     N8 --> N10
 ```
 
-Do not create global dumping grounds such as:
-
-Avoid generic dumping grounds such as `services/`, `helpers/`, `managers/`, or `common/` when the files have a clear capability owner.
-
-when the files have clear capability ownership.
+Avoid generic dumping grounds such as `services/`, `helpers/`, `managers/`, or `common/` when files have a clear capability owner.
 
 ---
+
 
 ## 3.3 Public module APIs
 
@@ -108,7 +102,9 @@ See **[Module Boundaries and Public APIs](../foundations/module-boundaries-and-p
 
 ---
 
-## 3.4 Structuring the outermost circle: the Presentation UI
+<a id="34-structuring-the-outermost-circle-the-presentation-ui"></a>
+
+## 3.4 Structuring the physical Presentation area
 
 [Clean Architecture](../GLOSSARY.md#clean-architecture) tells us that UI technology is an outer detail. It does **not** define how a large [Presentation](../GLOSSARY.md#presentation-layer) codebase should organize pages, components, hooks, state, [selectors](../GLOSSARY.md#selector) or [design-system](../GLOSSARY.md#design-system) code.
 
@@ -138,6 +134,8 @@ flowchart TD
 This is a [Presentation](../GLOSSARY.md#presentation-layer) organization strategy, not a fifth [Clean Architecture](../GLOSSARY.md#clean-architecture) circle.
 
 ---
+
+<a id="35-styles--animation-keep-them-out-of-the-markup"></a>
 
 ## 3.5 Styles and animation
 
@@ -171,7 +169,7 @@ flowchart LR
     FORM["CheckoutFormState"] --> P["presentation/"]
 ```
 
-Type-only imports still represent source-level coupling.
+[Type-only imports](../GLOSSARY.md#type-only-import) still represent source-level coupling.
 
 A top-level `src/types` directory is rarely a good default because it erases ownership.
 
@@ -194,6 +192,8 @@ See **[Composition Root](../foundations/composition-root.md)**.
 
 ---
 
+<a id="33-imports-as-a-lint-target"></a>
+
 ## 3.8 Enforce the graph
 
 A [dependency rule](../GLOSSARY.md#dependency-rule) that can be automated should be automated.
@@ -212,11 +212,13 @@ The check must resolve:
 - relative imports;
 - re-exports;
 - dynamic imports;
-- type-only imports.
+- [type-only imports](../GLOSSARY.md#type-only-import).
 
 See **[Executable Architecture](../foundations/architecture-testing.md)**.
 
 ---
+
+<a id="32-conventions"></a>
 
 ## 3.9 What is architecture vs. convention?
 
@@ -242,7 +244,7 @@ See **[Executable Architecture](../foundations/architecture-testing.md)**.
 | --- | --- |
 | Redux Toolkit | `createSlice` |
 | Panda CSS | `sva` |
-| React | custom Hooks |
+| React | [custom Hooks](../GLOSSARY.md#custom-hook) |
 
 Treating all three as equally fundamental creates cargo-cult architecture.
 

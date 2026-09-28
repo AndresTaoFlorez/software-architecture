@@ -1,8 +1,12 @@
 > **[Clean Architecture](README.md)** › Composition & [Dependency Injection](../GLOSSARY.md#dependency-injection-di).
 
+<a id="6-composition--dependency-injection"></a>
+
 # 6. Composition and Dependency Injection
 
 The canonical cross-architecture treatment now lives in **[Composition Root and Dependency Injection](../foundations/composition-root.md)**. This chapter keeps the [Clean Architecture](../GLOSSARY.md#clean-architecture) framing.
+
+<a id="61-the-inversion-concretely"></a>
 
 ## 6.1 Why composition exists
 
@@ -14,6 +18,8 @@ export interface UserRepository {
 }
 ```
 
+These are boundary excerpts: `UserId`, `User`, the [mapper](../GLOSSARY.md#mapper) and transport interface are assumed. `HttpClient` is an [adapter](../GLOSSARY.md#adapter)-owned contract, supplied by concrete outer HTTP glue. The [complete feature](4-building-a-feature.md) defines all of its types and implementations.
+
 A concrete outer [adapter](../GLOSSARY.md#adapter) implements it:
 
 ```ts
@@ -21,12 +27,17 @@ export class HttpUserRepository implements UserRepository {
   constructor(private readonly http: HttpClient) {}
 
   async findById(id: UserId): Promise<User | null> {
-    // map external data to the inner model
+    const dto = await this.http.get('/users/' + encodeURIComponent(id.value))
+    return dto ? mapUserDto(dto) : null
   }
 }
 ```
 
 Something must construct both and connect them. That location is the [Composition Root](../GLOSSARY.md#composition-root).
+
+<a id="62-the-composition-root"></a>
+
+<a id="64-why-this-is-clean-architectures-signature"></a>
 
 ## 6.2 Composition is not an exception to the Dependency Rule
 
@@ -41,6 +52,7 @@ const app = createApp({ getUser })
 
 The [use case](../GLOSSARY.md#use-case) still does not import `HttpUserRepository`.
 
+
 ## 6.3 Prefer injection over service location
 
 Avoid:
@@ -54,6 +66,9 @@ export class GetUser {
 ```
 
 Prefer explicit constructor/factory dependencies.
+
+
+<a id="63-when-the-wiring-grows-a-di-container"></a>
 
 ## 6.4 Manual DI first
 

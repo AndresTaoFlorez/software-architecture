@@ -1,3 +1,5 @@
+<a id="clean-architecture--frontend--backend"></a>
+
 # Clean Architecture
 
 > A progressive guide to Robert C. Martin's policy-centered architecture.
@@ -61,6 +63,9 @@ It can be excessive when:
 
 [Clean Architecture](../GLOSSARY.md#clean-architecture) is not a score for engineering maturity. Use boundaries where they protect something real.
 
+<a id="the-four-layers-defined"></a>
+<a id="the-idea-in-one-picture"></a>
+
 ## 5. The fundamental model
 
 Martin's canonical diagram uses four conceptual circles:
@@ -91,7 +96,7 @@ Do not confuse the canonical circles with this repository's physical `infrastruc
 
 | Clean concept | Owns | Put here | Do not put here | May depend on |
 | --- | --- | --- | --- | --- |
-| [Entities](../GLOSSARY.md#domain-entity) | enterprise/domain rules that survive delivery changes | entities, [value objects](../GLOSSARY.md#value-object), [invariants](../GLOSSARY.md#invariant), domain policies | React, Redux, HTTP, ORM, API [DTOs](../GLOSSARY.md#data-transfer-object-dto), use-case orchestration | other inner domain concepts |
+| [Entities](../GLOSSARY.md#clean-entities-circle) | enterprise/domain rules that survive delivery changes | entities, [value objects](../GLOSSARY.md#value-object), [invariants](../GLOSSARY.md#invariant), domain policies | React, Redux, HTTP, ORM, API [DTOs](../GLOSSARY.md#data-transfer-object-dto), use-case orchestration | other inner domain concepts |
 | [Use Cases](../GLOSSARY.md#use-case) | application-specific operations | commands/results, [application services](../GLOSSARY.md#application-service), required [ports](../GLOSSARY.md#port) | concrete DB/HTTP/UI implementations | entities/domain policy |
 | [Interface Adapters](../GLOSSARY.md#interface-adapter) | translation across boundaries | controllers, [presenters](../GLOSSARY.md#presenter), [mappers](../GLOSSARY.md#mapper), boundary-facing [adapters](../GLOSSARY.md#adapter) | authoritative business rules or framework/driver dependencies that would reverse the canonical circle direction | [use cases](../GLOSSARY.md#use-case)/entities and [adapter](../GLOSSARY.md#adapter)-owned translation code |
 | [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers) | replaceable technology mechanisms | React, routers, HTTP servers, DB drivers, SDKs, CSS systems | inner policy that only exists because the framework made it convenient | inward abstractions/[adapters](../GLOSSARY.md#adapter) as needed |
@@ -194,7 +199,7 @@ A [use case](../GLOSSARY.md#use-case) may call outward at runtime through an inj
 Example:
 
 ```ts
-// application/orders/ports/OrderRepository.ts
+// Signature excerpt; complete contracts follow in section 11.
 export interface OrderRepository {
   findById(id: OrderId): Promise<Order | null>
   save(order: Order): Promise<void>
@@ -240,11 +245,10 @@ Place each artifact deliberately:
 | Artifact | File | Owner | Why here | Why not elsewhere |
 | --- | --- | --- | --- | --- |
 | cancellation [invariant](../GLOSSARY.md#invariant) | `domain/orders/Order.ts` | [Domain](../GLOSSARY.md#domain) | business truth | UI/API/database changes must not alter it |
-| persistence capability | `application/orders/ports/OrderRepository.ts` | [Application](../GLOSSARY.md#application-layer) | [use case](../GLOSSARY.md#use-case) requires load/save | concrete HTTP does not belong inward |
-| operation | `application/orders/use-cases/cancelOrder.ts` | [Application](../GLOSSARY.md#application-layer) | coordinates the workflow | [Domain](../GLOSSARY.md#domain) should not perform I/O |
+| persistence capability | `application/orders/cancelOrder.ts` | [Application](../GLOSSARY.md#application-layer) | [use case](../GLOSSARY.md#use-case) requires load/save | concrete HTTP does not belong inward |
+| operation | `application/orders/cancelOrder.ts` | [Application](../GLOSSARY.md#application-layer) | coordinates the workflow | [Domain](../GLOSSARY.md#domain) should not perform I/O |
 | HTTP implementation | `infrastructure/orders/HttpOrderRepository.ts` | [Infrastructure](../GLOSSARY.md#infrastructure) | translates transport | [Presentation](../GLOSSARY.md#presentation-layer)/[Application](../GLOSSARY.md#application-layer) must not own HTTP details |
-| UI [facade](../GLOSSARY.md#facade-pattern) | `presentation/features/orders/model/useOrders.ts` | [Presentation](../GLOSSARY.md#presentation-layer) | exposes view-oriented operation/state | [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer) should not know React |
-| button | `presentation/features/orders/ui/CancelOrderButton.tsx` | [Presentation](../GLOSSARY.md#presentation-layer) | rendering + user gesture | business rule does not belong in JSX |
+| button | `presentation/orders/CancelOrderButton.ts` | [Presentation](../GLOSSARY.md#presentation-layer) | rendering + user gesture | business rule does not belong in JSX |
 | wiring | `composition/bootstrap.ts` | Composition | connects concrete objects | inner modules must not resolve the container |
 
 Runtime behavior:
@@ -253,23 +257,184 @@ Runtime behavior:
 sequenceDiagram
     actor User
     participant View as CancelOrderButton
-    participant VM as useOrders
     participant UC as cancelOrder
-    participant Order as Order
+    participant Order
     participant Adapter as HttpOrderRepository
-
     User->>View: click Cancel
-    View->>VM: cancel(orderId)
-    VM->>UC: execute(orderId)
-    UC->>Adapter: findById(orderId) through OrderRepository contract
-    Adapter-->>UC: Order
+    View->>UC: cancelOrder(id)
+    UC->>Adapter: findById(id)
+    Adapter-->>UC: Order and version
     UC->>Order: cancel()
-    UC->>Adapter: save(order) through OrderRepository contract
+    UC->>Adapter: save(order, version)
+    Adapter-->>UC: completion
+    UC-->>View: result and feedback
 ```
 
 Source dependencies remain inward even though runtime control reaches the outer [adapter](../GLOSSARY.md#adapter).
 
 For the full build, continue to **[Building a Feature End-to-End](./4-building-a-feature.md)**.
+
+### Complete client implementation
+
+The business rule belongs in `domain/orders/Order.ts`; the operation, result, persistence failure and [port](../GLOSSARY.md#port) belong in `application/orders/cancelOrder.ts`. [DTO](../GLOSSARY.md#data-transfer-object-dto) validation/mapping and the concrete repository belong in `infrastructure/orders/HttpOrderRepository.ts`. [Presentation](../GLOSSARY.md#presentation-layer) owns gestures and feedback; `composition/bootstrap.ts` selects implementations. These are documentation conventions. A small file may contain cohesive contracts and functions; split them when ownership or change pressure requires it.
+
+```ts
+// domain/orders/Order.ts
+export type OrderStatus = 'pending' | 'shipped' | 'cancelled'
+export class ShippedOrderCannotBeCancelled extends Error {}
+export class Order {
+  readonly id: string
+  #status: OrderStatus
+  constructor(id: string, status: OrderStatus) { this.id = id; this.#status = status }
+  get status(): OrderStatus { return this.#status }
+  cancel(): void {
+    if (this.#status === 'shipped') throw new ShippedOrderCannotBeCancelled()
+    this.#status = 'cancelled'
+  }
+}
+```
+
+```ts
+// application/orders/cancelOrder.ts
+import { Order, ShippedOrderCannotBeCancelled } from '../../domain/orders/Order'
+
+export interface OrderRepository {
+  findById(id: string): Promise<{ order: Order; version: string } | null>
+  save(order: Order, expectedVersion: string): Promise<void>
+}
+export type CancelResult =
+  | { ok: true; status: 'cancelled' }
+  | { ok: false; reason: 'not-found' | 'shipped' | 'conflict' | 'unavailable' }
+export type CancelOrder = (id: string) => Promise<CancelResult>
+export class PersistenceFailure extends Error {
+  readonly reason: 'conflict' | 'unavailable'
+  constructor(reason: 'conflict' | 'unavailable') { super(reason); this.reason = reason }
+}
+export function makeCancelOrder(orders: OrderRepository): CancelOrder {
+  return async id => {
+    try {
+      const loaded = await orders.findById(id)
+      if (!loaded) return { ok: false, reason: 'not-found' }
+      loaded.order.cancel()
+      await orders.save(loaded.order, loaded.version)
+      return { ok: true, status: 'cancelled' }
+    } catch (error) {
+      if (error instanceof ShippedOrderCannotBeCancelled) return { ok: false, reason: 'shipped' }
+      if (error instanceof PersistenceFailure) return { ok: false, reason: error.reason }
+      throw error // programming defects are not normal business outcomes
+    }
+  }
+}
+```
+
+```ts
+// infrastructure/orders/HttpOrderRepository.ts
+import { Order, type OrderStatus } from '../../domain/orders/Order'
+import { PersistenceFailure, type OrderRepository } from '../../application/orders/cancelOrder'
+
+// Adapter-owned transport contract. A concrete fetch driver implements it.
+export interface OrderTransport {
+  get(path: string): Promise<{ data: unknown; version: string } | null>
+  put(path: string, data: unknown, version: string): Promise<void>
+}
+type ApiOrderDto = { id: string; status: OrderStatus }
+function parseOrderDto(data: unknown): ApiOrderDto {
+  if (typeof data !== 'object' || data === null) throw new PersistenceFailure('unavailable')
+  const dto = data as Record<string, unknown>
+  if (typeof dto.id !== 'string' || !['pending', 'shipped', 'cancelled'].includes(String(dto.status))) {
+    throw new PersistenceFailure('unavailable')
+  }
+  return { id: dto.id, status: dto.status as OrderStatus }
+}
+function toOrderDto(order: Order): ApiOrderDto { return { id: order.id, status: order.status } }
+
+export class HttpOrderRepository implements OrderRepository {
+  readonly #transport: OrderTransport
+  constructor(transport: OrderTransport) { this.#transport = transport }
+  async findById(id: string) {
+    const response = await this.#transport.get('/orders/' + encodeURIComponent(id))
+    if (!response) return null
+    const dto = parseOrderDto(response.data)
+    if (dto.id !== id) throw new PersistenceFailure('unavailable')
+    return { order: new Order(dto.id, dto.status), version: response.version }
+  }
+  async save(order: Order, expectedVersion: string): Promise<void> {
+    await this.#transport.put('/orders/' + encodeURIComponent(order.id), toOrderDto(order), expectedVersion)
+  }
+}
+```
+
+```ts
+// presentation/orders/CancelOrderButton.ts
+import type { CancelOrder } from '../../application/orders/cancelOrder'
+
+export function mountCancelOrderButton(root: HTMLElement, id: string, cancelOrder: CancelOrder) {
+  const button = document.createElement('button')
+  button.textContent = 'Cancel order'
+  const feedback = document.createElement('p')
+  feedback.setAttribute('role', 'status')
+  root.append(button, feedback)
+  let disposed = false
+  async function onCancel() {
+    if (button.disabled) return
+    button.disabled = true
+    feedback.textContent = 'Cancelling…'
+    try {
+      const result = await cancelOrder(id)
+      if (!disposed) feedback.textContent = result.ok ? 'Cancelled' : `Cannot cancel: ${result.reason}`
+    } catch {
+      if (!disposed) feedback.textContent = 'Unexpected failure'
+    } finally {
+      if (!disposed) button.disabled = false
+    }
+  }
+  button.addEventListener('click', onCancel)
+  return () => {
+    disposed = true
+    button.removeEventListener('click', onCancel)
+    button.remove(); feedback.remove()
+  }
+}
+```
+
+```ts
+// composition/bootstrap.ts
+import { makeCancelOrder, PersistenceFailure } from '../application/orders/cancelOrder'
+import { HttpOrderRepository, type OrderTransport } from '../infrastructure/orders/HttpOrderRepository'
+import { mountCancelOrderButton } from '../presentation/orders/CancelOrderButton'
+
+async function request(path: string, init?: RequestInit): Promise<Response> {
+  try { return await fetch(path, init) }
+  catch { throw new PersistenceFailure('unavailable') }
+}
+const transport: OrderTransport = {
+  async get(path) {
+    const response = await request(path)
+    if (response.status === 404) return null
+    const version = response.headers.get('ETag')
+    if (!response.ok || !version) throw new PersistenceFailure('unavailable')
+    try { return { data: await response.json(), version } }
+    catch { throw new PersistenceFailure('unavailable') }
+  },
+  async put(path, data, version) {
+    const response = await request(path, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'If-Match': version },
+      body: JSON.stringify(data),
+    })
+    if (response.status === 409 || response.status === 412) throw new PersistenceFailure('conflict')
+    if (!response.ok) throw new PersistenceFailure('unavailable')
+  },
+}
+export function startOrders(root: HTMLElement, orderId: string) {
+  const cancelOrder = makeCancelOrder(new HttpOrderRepository(transport))
+  return mountCancelOrderButton(root, orderId, cancelOrder)
+}
+```
+
+The executable entry calls `startOrders(root, 'order-1')` with an existing DOM element and retains the returned cleanup function.
+
+The API must return a strong ETag on GET and atomically enforce `If-Match` on PUT. It must authorize cancellation and reject shipped orders using authoritative current state; client validation alone cannot guarantee this under concurrent writes. This is a complete client feature, not a backend implementation. See [the expanded walkthrough](../clean-architecture/4-building-a-feature.md) for boundary explanations and limits.
 
 ## 12. Testing the boundaries
 
@@ -299,6 +464,8 @@ Common failures:
 - **[DTO](../GLOSSARY.md#data-transfer-object-dto) leakage** — transport/ORM/browser types become inner models;
 - **framework leakage** — React/Redux/ORM APIs appear in [Application](../GLOSSARY.md#application-layer)/[Domain](../GLOSSARY.md#domain);
 - **anemic ceremony** — layers are added to a trivial CRUD screen without policy worth protecting.
+
+<a id="learning-path"></a>
 
 ## 14. Progressive learning path
 

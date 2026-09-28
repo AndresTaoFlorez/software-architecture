@@ -2,208 +2,250 @@
 
 # 4. Building a Feature End-to-End
 
-This chapter builds a policy-bearing feature from the inside out without turning the [Composition Root](../GLOSSARY.md#composition-root) into a global [service locator](../GLOSSARY.md#service-locator).
+Requirement: cancel a pending order, reject a shipped order, persist the change, and show pending/error feedback. This small browser feature uses manual injection and no state library. Each block is a complete file; paths assume these folders under `src/` and a TypeScript bundler resolving extensionless imports.
 
-Example capability: cancelling an order.
-
----
+<a id="41-step-1--the-entity-what-the-feature-is"></a>
 
 ## 4.1 Step 1 — model the business rule
 
-Only create [Domain](../GLOSSARY.md#domain) behavior if the problem actually has a rule worth protecting.
-
 ```ts
 // domain/orders/Order.ts
+export type OrderStatus = 'pending' | 'shipped' | 'cancelled'
+export class ShippedOrderCannotBeCancelled extends Error {}
 export class Order {
-  constructor(
-    readonly id: OrderId,
-    private status: OrderStatus,
-  ) {}
-
-  cancel() {
-    if (this.status === 'shipped') {
-      throw new ShippedOrderCannotBeCancelled(this.id)
-    }
-
-    this.status = 'cancelled'
+  readonly id: string
+  #status: OrderStatus
+  constructor(id: string, status: OrderStatus) { this.id = id; this.#status = status }
+  get status(): OrderStatus { return this.#status }
+  cancel(): void {
+    if (this.#status === 'shipped') throw new ShippedOrderCannotBeCancelled()
+    this.#status = 'cancelled'
   }
 }
 ```
 
-No HTTP, Redux, database or UI concepts appear here.
+This file owns the business [invariant](../GLOSSARY.md#invariant). It knows no HTTP, UI or persistence format. Cancelling an already cancelled order leaves it cancelled; this alone does not guarantee [idempotency](../GLOSSARY.md#idempotency) of external [side effects](../GLOSSARY.md#side-effect).
 
----
+<a id="42-step-2--the-port-and-the-use-case-what-the-feature-does"></a>
 
 ## 4.2 Step 2 — define the Application capability
 
-The [use case](../GLOSSARY.md#use-case) owns the external capability it needs:
-
 ```ts
-// application/orders/ports/OrderRepository.ts
+// application/orders/cancelOrder.ts
+import { Order, ShippedOrderCannotBeCancelled } from '../../domain/orders/Order'
+
 export interface OrderRepository {
-  findById(id: OrderId): Promise<Order | null>
-  save(order: Order): Promise<void>
+  findById(id: string): Promise<{ order: Order; version: string } | null>
+  save(order: Order, expectedVersion: string): Promise<void>
 }
-```
-
-Then orchestrate the operation:
-
-```ts
-// application/orders/use-cases/cancelOrder.ts
-export function makeCancelOrder(deps: {
-  orders: OrderRepository
-}) {
-  return async function cancelOrder(id: OrderId): Promise<void> {
-    const order = await deps.orders.findById(id)
-
-    if (!order) throw new OrderNotFound(id)
-
-    order.cancel()
-    await deps.orders.save(order)
+export type CancelResult =
+  | { ok: true; status: 'cancelled' }
+  | { ok: false; reason: 'not-found' | 'shipped' | 'conflict' | 'unavailable' }
+export type CancelOrder = (id: string) => Promise<CancelResult>
+export class PersistenceFailure extends Error {
+  readonly reason: 'conflict' | 'unavailable'
+  constructor(reason: 'conflict' | 'unavailable') { super(reason); this.reason = reason }
+}
+export function makeCancelOrder(orders: OrderRepository): CancelOrder {
+  return async id => {
+    try {
+      const loaded = await orders.findById(id)
+      if (!loaded) return { ok: false, reason: 'not-found' }
+      loaded.order.cancel()
+      await orders.save(loaded.order, loaded.version)
+      return { ok: true, status: 'cancelled' }
+    } catch (error) {
+      if (error instanceof ShippedOrderCannotBeCancelled) return { ok: false, reason: 'shipped' }
+      if (error instanceof PersistenceFailure) return { ok: false, reason: error.reason }
+      throw error // programming defects are not normal business outcomes
+    }
   }
 }
 ```
 
-The [use case](../GLOSSARY.md#use-case) can be tested with an in-memory/[fake](../GLOSSARY.md#fake) [port](../GLOSSARY.md#port) immediately.
+The repository [port](../GLOSSARY.md#port) protects loading/persisting business objects. Its version precondition expresses concurrency without naming HTTP. The UI receives an application-owned string command and result, not a domain object or raw response.
 
----
+<a id="43-step-3--the-adapter-how-the-feature-reaches-the-world"></a>
 
 ## 4.3 Step 3 — implement the outer adapter
 
 ```ts
 // infrastructure/orders/HttpOrderRepository.ts
-export class HttpOrderRepository implements OrderRepository {
-  constructor(private readonly http: HttpClient) {}
+import { Order, type OrderStatus } from '../../domain/orders/Order'
+import { PersistenceFailure, type OrderRepository } from '../../application/orders/cancelOrder'
 
-  async findById(id: OrderId): Promise<Order | null> {
-    const response = await this.http.get('/orders/' + id.value)
-
-    return response.data
-      ? mapOrderDto(response.data)
-      : null
+// Adapter-owned transport contract. A concrete fetch driver implements it.
+export interface OrderTransport {
+  get(path: string): Promise<{ data: unknown; version: string } | null>
+  put(path: string, data: unknown, version: string): Promise<void>
+}
+type ApiOrderDto = { id: string; status: OrderStatus }
+function parseOrderDto(data: unknown): ApiOrderDto {
+  if (typeof data !== 'object' || data === null) throw new PersistenceFailure('unavailable')
+  const dto = data as Record<string, unknown>
+  if (typeof dto.id !== 'string' || !['pending', 'shipped', 'cancelled'].includes(String(dto.status))) {
+    throw new PersistenceFailure('unavailable')
   }
+  return { id: dto.id, status: dto.status as OrderStatus }
+}
+function toOrderDto(order: Order): ApiOrderDto { return { id: order.id, status: order.status } }
 
-  async save(order: Order): Promise<void> {
-    await this.http.put(
-      '/orders/' + order.id.value,
-      toOrderDto(order),
-    )
+export class HttpOrderRepository implements OrderRepository {
+  readonly #transport: OrderTransport
+  constructor(transport: OrderTransport) { this.#transport = transport }
+  async findById(id: string) {
+    const response = await this.#transport.get('/orders/' + encodeURIComponent(id))
+    if (!response) return null
+    const dto = parseOrderDto(response.data)
+    if (dto.id !== id) throw new PersistenceFailure('unavailable')
+    return { order: new Order(dto.id, dto.status), version: response.version }
+  }
+  async save(order: Order, expectedVersion: string): Promise<void> {
+    await this.#transport.put('/orders/' + encodeURIComponent(order.id), toOrderDto(order), expectedVersion)
   }
 }
 ```
 
-External [DTOs](../GLOSSARY.md#data-transfer-object-dto) are translated at the boundary.
+The [DTO](../GLOSSARY.md#data-transfer-object-dto), validation and [mapper](../GLOSSARY.md#mapper) stay with the [adapter](../GLOSSARY.md#adapter). The inner [port](../GLOSSARY.md#port) does not import them. This physical [Infrastructure](../GLOSSARY.md#infrastructure) file implements the canonical [Interface Adapter](../GLOSSARY.md#interface-adapter) role.
 
----
+<a id="44-step-4--the-framework--the-ui-how-the-feature-is-delivered"></a>
 
 ## 4.4 Step 4 — adapt Application to Presentation
 
-[Presentation](../GLOSSARY.md#presentation-layer) should consume a semantic operation, not import [Infrastructure](../GLOSSARY.md#infrastructure).
-
-A simple React hook could receive the [use case](../GLOSSARY.md#use-case) through a feature dependency object/context, or a Redux [store](../GLOSSARY.md#store) could receive it through [thunk](../GLOSSARY.md#thunk) `extraArgument`.
-
-Example feature [facade](../GLOSSARY.md#facade-pattern) shape:
-
 ```ts
-export interface OrderActions {
-  cancelOrder(id: string): Promise<
-    | { ok: true }
-    | { ok: false; message: string }
-  >
+// presentation/orders/CancelOrderButton.ts
+import type { CancelOrder } from '../../application/orders/cancelOrder'
+
+export function mountCancelOrderButton(root: HTMLElement, id: string, cancelOrder: CancelOrder) {
+  const button = document.createElement('button')
+  button.textContent = 'Cancel order'
+  const feedback = document.createElement('p')
+  feedback.setAttribute('role', 'status')
+  root.append(button, feedback)
+  let disposed = false
+  async function onCancel() {
+    if (button.disabled) return
+    button.disabled = true
+    feedback.textContent = 'Cancelling…'
+    try {
+      const result = await cancelOrder(id)
+      if (!disposed) feedback.textContent = result.ok ? 'Cancelled' : `Cannot cancel: ${result.reason}`
+    } catch {
+      if (!disposed) feedback.textContent = 'Unexpected failure'
+    } finally {
+      if (!disposed) button.disabled = false
+    }
+  }
+  button.addEventListener('click', onCancel)
+  return () => {
+    disposed = true
+    button.removeEventListener('click', onCancel)
+    button.remove(); feedback.remove()
+  }
 }
 ```
 
-The UI deals with a [Presentation](../GLOSSARY.md#presentation-layer)-appropriate result rather than HTTP status codes.
+The button owns feedback and gestures; [Application](../GLOSSARY.md#application-layer) owns the cancellation decision. This physical module combines a presentation [adapter](../GLOSSARY.md#adapter) with DOM glue. For separate canonical modules, put rendering behind a presentation-owned contract implemented by the outer driver.
 
-For larger frontend organization, see **[Presentation Architecture](../frontend/presentation-architecture.md)**.
-
----
+A React feature can receive `CancelOrder` via props/context; Redux bindings can receive it through `extraArgument`. Consumers must not import a container to retrieve it.
 
 ## 4.5 Step 5 — compose at the edge
 
-Composition creates concrete dependencies and hands them **into** the delivery mechanism:
-
 ```ts
 // composition/bootstrap.ts
-const orderRepository = new HttpOrderRepository(http)
+import { makeCancelOrder, PersistenceFailure } from '../application/orders/cancelOrder'
+import { HttpOrderRepository, type OrderTransport } from '../infrastructure/orders/HttpOrderRepository'
+import { mountCancelOrderButton } from '../presentation/orders/CancelOrderButton'
 
-const cancelOrder = makeCancelOrder({
-  orders: orderRepository,
-})
-
-const store = createAppStore({
-  cancelOrder,
-})
-
-startUi({ store })
+async function request(path: string, init?: RequestInit): Promise<Response> {
+  try { return await fetch(path, init) }
+  catch { throw new PersistenceFailure('unavailable') }
+}
+const transport: OrderTransport = {
+  async get(path) {
+    const response = await request(path)
+    if (response.status === 404) return null
+    const version = response.headers.get('ETag')
+    if (!response.ok || !version) throw new PersistenceFailure('unavailable')
+    try { return { data: await response.json(), version } }
+    catch { throw new PersistenceFailure('unavailable') }
+  },
+  async put(path, data, version) {
+    const response = await request(path, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'If-Match': version },
+      body: JSON.stringify(data),
+    })
+    if (response.status === 409 || response.status === 412) throw new PersistenceFailure('conflict')
+    if (!response.ok) throw new PersistenceFailure('unavailable')
+  },
+}
+export function startOrders(root: HTMLElement, orderId: string) {
+  const cancelOrder = makeCancelOrder(new HttpOrderRepository(transport))
+  return mountCancelOrderButton(root, orderId, cancelOrder)
+}
 ```
 
-The dependency direction is:
+The entry point calls `startOrders(root, 'order-1')` with an existing element and receives cleanup. Concrete fetch glue at the outer executable boundary implements the [adapter](../GLOSSARY.md#adapter)-owned transport contract. Composition follows the inward rule.
 
-```mermaid
-flowchart TD
-    C["Composition Root"] --> I["Infrastructure adapter"]
-    C --> A["Application use case"]
-    C --> P["Presentation bootstrap"]
-```
+**API assumptions and limits.** GET returns an order and a strong ETag; PUT atomically honors `If-Match`. The backend must also authorize cancellation and enforce the shipped-order rule against its own current state. A browser check followed by an unconditional write cannot guarantee that [invariant](../GLOSSARY.md#invariant) when shipping and cancellation race. Authentication, retries, telemetry and the backend implementation are outside this small client example. A dedicated atomic cancellation endpoint may be preferable.
 
-[Presentation](../GLOSSARY.md#presentation-layer) does **not** import the [Composition Root](../GLOSSARY.md#composition-root):
-
-```ts
-// Avoid:
-import { cancelOrder } from '@/composition/container'
-```
-
-If consumers reach into the container, composition stops being a root and becomes a [service locator](../GLOSSARY.md#service-locator).
-
----
+<a id="45-the-whole-flow"></a>
 
 ## 4.6 The runtime flow
 
 ```mermaid
-flowchart LR
-    U["User intent"] --> V["View"] --> P["Presentation facade / state adapter"] --> UC["cancelOrder use case"] --> PORT["OrderRepository port"]
-    HTTP["HttpOrderRepository adapter"] --> PORT
-    HTTP --> API["HTTP API"]
+sequenceDiagram
+    actor User
+    participant View as CancelOrderButton
+    participant UC as cancelOrder
+    participant Repo as HttpOrderRepository
+    participant Driver as fetch transport
+    participant API as HTTP API
+    User->>View: click Cancel
+    View->>UC: cancelOrder(id)
+    UC->>Repo: findById(id)
+    Repo->>Driver: get(path)
+    Driver->>API: GET
+    API-->>Driver: DTO and ETag
+    Driver-->>Repo: response
+    Repo-->>UC: Order and version
+    UC->>UC: order.cancel()
+    UC->>Repo: save(order, version)
+    Repo->>Driver: put(DTO, version)
+    Driver->>API: conditional PUT
+    API-->>Driver: success or conflict
+    Driver-->>Repo: completion
+    Repo-->>UC: completion
+    UC-->>View: application result
 ```
 
-Source dependencies still point inward around policy:
+The [port](../GLOSSARY.md#port) is a source contract, not another runtime object:
 
 ```mermaid
 flowchart LR
-    H["HttpOrderRepository"] --> R["OrderRepository"]
-    U["cancelOrder"] --> R
+    UC["cancelOrder"] --> PORT["OrderRepository (Application)"]
+    HTTP["HttpOrderRepository"] --> PORT
+    ROOT["Composition"] --> UC
+    ROOT --> HTTP
+    ROOT --> UI["Presentation"]
+    UI --> APP["CancelOrder result/operation (Application)"]
 ```
-
-and composition connects the runtime graph.
-
----
 
 ## 4.7 When the feature is simpler
 
-Do not build all of these artifacts for every read-only request.
-
-If a screen only displays [server state](../GLOSSARY.md#server-state) and has no meaningful application policy, a query/[server-state](../GLOSSARY.md#server-state) [adapter](../GLOSSARY.md#adapter) may be sufficient.
-
-Architecture should protect complexity that exists, not create complexity to justify itself.
-
----
+A read-only screen without meaningful application policy may need only a query [adapter](../GLOSSARY.md#adapter). Create a [port](../GLOSSARY.md#port) because it protects policy or an integration boundary, rather than to populate folders.
 
 ## 4.8 Feature checklist
 
-Before merging a policy-bearing feature:
-
-- [ ] Business [invariants](../GLOSSARY.md#invariant) have a clear owner.
-- [ ] [Application](../GLOSSARY.md#application-layer) policy does not import concrete [Infrastructure](../GLOSSARY.md#infrastructure).
-- [ ] External [DTOs](../GLOSSARY.md#data-transfer-object-dto)/platform types stop at an outer boundary.
-- [ ] [Ports](../GLOSSARY.md#port) describe cohesive capabilities.
-- [ ] [Presentation](../GLOSSARY.md#presentation-layer) receives semantic operations/results.
-- [ ] Composition injects dependencies into consumers.
-- [ ] Consumers do not resolve dependencies from a global container.
-- [ ] Important import rules are enforced in CI.
+- Test shipped rejection and successful persistence through the application [port](../GLOSSARY.md#port).
+- Test conflict results; never silently overwrite newer state.
+- Test [DTO](../GLOSSARY.md#data-transfer-object-dto) parsing and conditional request headers at the [adapter](../GLOSSARY.md#adapter) boundary.
+- Test pending/error feedback, event forwarding and cleanup in the UI.
+- Enforce imports: [Domain](../GLOSSARY.md#domain) knows no outer modules; [Application](../GLOSSARY.md#application-layer) knows no concrete [adapter](../GLOSSARY.md#adapter); [Presentation](../GLOSSARY.md#presentation-layer) receives [Application](../GLOSSARY.md#application-layer) operations; the executable root selects implementations.
 
 ## Sources
 
-- Robert C. Martin, "The [Clean Architecture](../GLOSSARY.md#clean-architecture)": https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
-- Mark Seemann, "[Composition Root](../GLOSSARY.md#composition-root)": https://blog.ploeh.dk/2011/07/28/CompositionRoot/
-- Alistair Cockburn, "[Hexagonal Architecture](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters)": https://alistair.cockburn.us/hexagonal-architecture/
+- [Martin — The Clean Architecture (2012)](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+- [Seemann — Composition Root](https://blog.ploeh.dk/2011/07/28/CompositionRoot/)
+- [HTTP Semantics — If-Match](https://www.rfc-editor.org/rfc/rfc9110.html#section-13.1.1)

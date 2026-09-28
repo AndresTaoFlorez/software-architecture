@@ -21,7 +21,7 @@ Do not test subjective preferences as architecture unless the team has intention
 
 ## 2. AST-based tests
 
-A lightweight TypeScript project can inspect imports directly:
+A TypeScript project can inspect imports directly. This is a policy sketch, not a runnable import resolver: implement the helper functions with the compiler API and test alias, external-package and file-resolution behavior.
 
 ```ts
 const allowed = {
@@ -29,13 +29,17 @@ const allowed = {
   application: ['application', 'domain'],
   infrastructure: ['infrastructure', 'application', 'domain'],
   presentation: ['presentation', 'application'],
+  composition: ['composition', 'presentation', 'infrastructure', 'application', 'domain'],
 }
 
 for (const file of sourceFiles(root)) {
   const owner = topLevelArea(file)
 
   for (const imported of collectImports(file)) {
-    const target = topLevelArea(imported)
+    // collectImports must resolve local specifiers, including re-exports
+    // and type-only/dynamic imports. Check external packages separately.
+    if (imported.kind === 'external-package') continue
+    const target = topLevelArea(imported.path)
 
     if (!allowed[owner]?.includes(target)) {
       violations.push({ file, imported })
@@ -51,17 +55,17 @@ Parse the language syntax tree rather than relying only on regular expressions. 
 - static imports;
 - exports/re-exports;
 - dynamic imports;
-- type-only imports;
+- [type-only imports](../GLOSSARY.md#type-only-import);
 - path aliases;
 - relative paths.
 
-Type-only imports still represent design-time coupling.
+[Type-only imports](../GLOSSARY.md#type-only-import) still represent design-time coupling.
 
 ## 3. Dependency graph tools
 
 For JavaScript/TypeScript, dependency-cruiser can enforce `forbidden`, `allowed` and `required` dependency rules. Cross-feature rules that need to compare source and target feature identities may require a more specific tool/configuration or a custom [AST](../GLOSSARY.md#abstract-syntax-tree-ast) check; do not assume a single regular expression compares capture groups across both sides.
 
-Example:
+Partial configuration covering two local rules; add the full project matrix and external-package rules:
 
 ```js
 export default {
@@ -69,14 +73,14 @@ export default {
     {
       name: 'domain-does-not-depend-outward',
       severity: 'error',
-      from: { path: '^src/domain' },
-      to: { path: '^src/(application|infrastructure|presentation)' },
+      from: { path: '^src/domain(?:/|$)' },
+      to: { path: '^src/(application|infrastructure|presentation|composition)(?:/|$)' },
     },
     {
       name: 'application-does-not-depend-on-outer-layers',
       severity: 'error',
-      from: { path: '^src/application' },
-      to: { path: '^src/(infrastructure|presentation)' },
+      from: { path: '^src/application(?:/|$)' },
+      to: { path: '^src/(infrastructure|presentation|composition)(?:/|$)' },
     },
   ],
 }

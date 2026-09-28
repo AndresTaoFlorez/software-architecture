@@ -63,6 +63,8 @@ Do **not** put here:
 - browser `File`;
 - CSS/Panda [recipes](../GLOSSARY.md#recipe).
 
+The short snippets below isolate responsibilities; supporting constructors, contracts, imports and transport bodies are omitted. They are not complete modules. For checked complete files and wiring, use [the cancellation walkthrough](../clean-architecture/4-building-a-feature.md). Its application boundary returns plain results to UI and uses a version precondition for persistence.
+
 ### Function example
 
 Requirement:
@@ -73,10 +75,13 @@ The rule belongs in [Domain](../GLOSSARY.md#domain) because the rule is true reg
 
 ```ts
 // src/domain/orders/Order.ts
+import { ShippedOrderCannotBeCancelled, type OrderStatus } from './order.types'
+// In this excerpt, supporting order.types contains the status union/error.
 export class Order {
+  constructor(readonly id: string, private status: OrderStatus) {}
   cancel() {
     if (this.status === 'shipped') {
-      throw new ShippedOrderCannotBeCancelled(this.id)
+      throw new ShippedOrderCannotBeCancelled()
     }
 
     this.status = 'cancelled'
@@ -191,7 +196,7 @@ Examples:
 | `QueryFilters.tsx` | `features/closures/ui/` | feature UI |
 | `useClosures.ts` | `features/closures/model/` | public [Presentation](../GLOSSARY.md#presentation-layer) [facade](../GLOSSARY.md#facade-pattern) |
 | `closures.slice.ts` | `features/closures/model/` | shared client feature state |
-| `closure-validation.ts` | `features/closures/lib/` | helper still owned by the feature |
+| `closure-validation.ts` | `features/closures/lib/` | UI input feedback only; authoritative business validity belongs inward |
 | `Button.tsx` | `shared/ui/` | cross-feature primitive |
 
 ## 7. Composition
@@ -242,7 +247,9 @@ Ask what owns the meaning.
 - coordinates a [use case](../GLOSSARY.md#use-case) → [Application](../GLOSSARY.md#application-layer);
 - generic `formatBytes` used across unrelated features → `presentation/shared/lib/` or another explicit shared library.
 
-## 10. A complete placement example
+<a id="10-a-complete-placement-example"></a>
+
+## 10. A placement map for a complete feature
 
 Requirement:
 
@@ -257,6 +264,8 @@ Requirement:
 | feature [facade](../GLOSSARY.md#facade-pattern) | `presentation/features/orders/model/useOrders.ts` | view-facing API |
 | button | `presentation/features/orders/ui/CancelOrderButton.tsx` | rendering + interaction |
 | wiring | `composition/bootstrap.ts` | selects concrete [adapter](../GLOSSARY.md#adapter) |
+
+The following arrows describe source references and construction, not a runtime [port](../GLOSSARY.md#port) object:
 
 ```mermaid
 flowchart LR

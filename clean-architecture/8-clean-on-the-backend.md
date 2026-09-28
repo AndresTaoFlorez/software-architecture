@@ -1,5 +1,6 @@
 > **[Clean Architecture](README.md)** › [Clean Architecture](../GLOSSARY.md#clean-architecture) on the Backend.
 
+
 # 8. Clean Architecture on the Backend
 
 The [Dependency Rule](../GLOSSARY.md#dependency-rule) applies on a backend exactly as it does elsewhere: source dependencies should point from technical mechanisms toward higher-level application policy.
@@ -9,6 +10,8 @@ What changes is the set of outer mechanisms: HTTP servers, queues, schedulers, d
 What **does not** follow is that frontend and backend must contain identical [Domain](../GLOSSARY.md#domain) or [Application](../GLOSSARY.md#application-layer) source files.
 
 ---
+
+<a id="81-the-four-circles-on-the-server"></a>
 
 ## 8.1 A backend mapping
 
@@ -47,6 +50,10 @@ Some teams call the outer HTTP/controller area `presentation`; others use `inter
 
 ---
 
+Code below is a set of boundary excerpts: supporting `UserId`, errors, mapping functions and ORM schema are assumed. Persistence must implement the service's concurrency/transaction policy; the update below does not by itself guarantee race-free business behavior. For complete client types and wiring, see [Building a Feature](4-building-a-feature.md).
+
+<a id="82-step-1--the-entity-unchanged"></a>
+
 ## 8.2 Domain
 
 The backend [Domain](../GLOSSARY.md#domain) owns business concepts and [invariants](../GLOSSARY.md#invariant) that are authoritative in that service/[bounded context](../GLOSSARY.md#bounded-context).
@@ -73,6 +80,8 @@ A frontend may model a `User` too. That does not automatically make the two mode
 Share code only when the semantics, ownership and release coupling are genuinely shared.
 
 ---
+
+<a id="83-step-2--the-port-and-the-use-case-unchanged-shape"></a>
 
 ## 8.3 Application
 
@@ -121,7 +130,8 @@ export class PrismaUserRepository implements UserRepository {
   }
 
   async save(user: User): Promise<void> {
-    // map the domain/application representation to persistence
+    const record = toUserRecord(user)
+    await this.db.user.update({ where: { id: record.id }, data: record })
   }
 }
 ```
@@ -139,9 +149,11 @@ The same principle applies to:
 
 ---
 
+<a id="84-step-3--the-interface-adapters-controller--orm-repository"></a>
+
 ## 8.5 Interface adapters / delivery
 
-An HTTP controller translates a transport request into an application command and translates the result to a transport response.
+An HTTP controller translates a transport request into an application command and translates the result to a transport response. Here `HttpRequest`/`HttpResponse` are [adapter](../GLOSSARY.md#adapter)-owned shapes supplied/consumed by outer router glue. Importing framework-owned request types into a separate canonical [Interface Adapter](../GLOSSARY.md#interface-adapter) would point outward. A physical delivery module may combine both roles, but document that combination.
 
 ```ts
 export function makeDeactivateUserController(deps: {
@@ -177,6 +189,7 @@ flowchart TD
 This keeps composition one-directional.
 
 ---
+
 
 ## 8.6 Transactions
 
@@ -221,6 +234,8 @@ This explicit mapping protects both sides from accidental coupling.
 
 ---
 
+<a id="85-step-4--frameworks--drivers--the-composition-root"></a>
+
 ## 8.9 Composition
 
 ```ts
@@ -229,7 +244,7 @@ const users = new PrismaUserRepository(db)
 const deactivateUser = makeDeactivateUser({ users })
 const controller = makeDeactivateUserController({ deactivateUser })
 
-router.delete('/users/:id', adapt(controller))
+router.post('/users/:id/deactivate', adapt(controller))
 ```
 
 Composition names concrete implementations. Inner code does not.
@@ -237,6 +252,8 @@ Composition names concrete implementations. Inner code does not.
 See **[Composition Root](../foundations/composition-root.md)**.
 
 ---
+
+<a id="86-the-whole-flow-in-mirror-image"></a>
 
 ## 8.10 Frontend comparison
 
