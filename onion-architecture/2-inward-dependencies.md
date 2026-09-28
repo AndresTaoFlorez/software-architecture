@@ -118,7 +118,7 @@ export type { ApiClosureDto } from '@/infrastructure'
 
 [Presentation](../GLOSSARY.md#presentation-layer) importing it through `application/contract` still depends conceptually on an [Infrastructure](../GLOSSARY.md#infrastructure)-owned shape.
 
-[Public APIs](../GLOSSARY.md#public-api) should expose concepts owned by the module, not launder unrelated types through a barrel.
+[Public APIs](../GLOSSARY.md#public-api) should expose concepts owned by the module, not launder unrelated types through a [barrel](../GLOSSARY.md#barrel-file).
 
 ---
 

@@ -15,7 +15,7 @@ A useful mapping in a layered frontend is:
 | [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) role | Possible frontend owner |
 | --- | --- |
 | [View](../GLOSSARY.md#view) | component render/template + strictly local rendering behavior |
-| [ViewModel](../GLOSSARY.md#viewmodel) | feature facade/custom hook/composable/state holder exposing view-oriented state + operations |
+| [ViewModel](../GLOSSARY.md#viewmodel) | feature [facade](../GLOSSARY.md#facade-pattern)/custom hook/composable/state holder exposing view-oriented state + operations |
 | [Model](../GLOSSARY.md#model) | application/domain capabilities consumed behind the [ViewModel](../GLOSSARY.md#viewmodel); not necessarily one object |
 
 The mapping is role-based, not class-based.
@@ -35,7 +35,7 @@ flowchart TD
     N0 --> N4
 ```
 
-The public facade is what the [View](../GLOSSARY.md#view) depends on.
+The public [facade](../GLOSSARY.md#facade-pattern) is what the [View](../GLOSSARY.md#view) depends on.
 
 Example:
 
@@ -93,7 +93,7 @@ flowchart LR
     E["Retry 502 with exponential backoff"] --> I["Infrastructure / transport policy unless product semantics say otherwise"]
 ```
 
-A large public facade can remain useful while internal responsibilities are split into focused hooks/modules.
+A large public [facade](../GLOSSARY.md#facade-pattern) can remain useful while internal responsibilities are split into focused hooks/modules.
 
 ---
 
