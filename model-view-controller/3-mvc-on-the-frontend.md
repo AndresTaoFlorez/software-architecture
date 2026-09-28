@@ -1,8 +1,8 @@
-> **[Model-View-Controller](README.md)** › MVC on the Frontend. Full reference list: [References](references.md).
+> **[Model-View-Controller](README.md)** › [MVC](../GLOSSARY.md#model-view-controller-mvc) on the Frontend. Full reference list: [References](references.md).
 
 ## 3. MVC on the Frontend
 
-Modern component frameworks are routinely described with MVC/MVVM vocabulary, but the frameworks
+Modern component frameworks are routinely described with [MVC](../GLOSSARY.md#model-view-controller-mvc)/[MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) vocabulary, but the frameworks
 themselves do not choose one historical presentation pattern for the application. This page extracts the
 part that remains useful: explicit separation between rendering, interpretation of user intent, and the
 application/model capabilities those interactions use.
@@ -12,10 +12,10 @@ application/model capabilities those interactions use.
 ### 3.1 Component frameworks do not automatically implement MVC or MVVM
 
 Vue, React and Svelte provide reactive rendering mechanisms, so developers rarely reproduce the exact
-observer/controller wiring of Smalltalk-era MVC. That does **not** make those frameworks MVVM by default.
-Reactivity is a mechanism; MVC/MVVM are responsibility patterns.
+observer/controller wiring of Smalltalk-era [MVC](../GLOSSARY.md#model-view-controller-mvc). That does **not** make those frameworks [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) by default.
+Reactivity is a mechanism; [MVC](../GLOSSARY.md#model-view-controller-mvc)/[MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) are responsibility patterns.
 
-A project may intentionally implement MVC-like controllers, MVVM-like ViewModels, Presentation Model, or
+A project may intentionally implement [MVC](../GLOSSARY.md#model-view-controller-mvc)-like controllers, [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm)-like [ViewModels](../GLOSSARY.md#viewmodel), [Presentation Model](../GLOSSARY.md#presentation-model), or
 a simpler component/state design on top of the same framework.
 
 ```mermaid
@@ -32,10 +32,10 @@ Use role names only when the responsibilities really match:
 
 | Role | Possible frontend implementation |
 |---|---|
-| **View** | component/template whose main job is rendering and forwarding intent |
-| **Controller-like presentation action** | event/action facade that interprets a gesture |
-| **ViewModel / Presentation Model** | hook/composable/store facade that exposes view-oriented state and commands |
-| **Model side** | application/domain capabilities or another non-rendering model — not necessarily one object |
+| **[View](../GLOSSARY.md#view)** | component/template whose main job is rendering and forwarding intent |
+| **[Controller](../GLOSSARY.md#controller)-like presentation action** | event/action facade that interprets a gesture |
+| **[ViewModel](../GLOSSARY.md#viewmodel) / [Presentation Model](../GLOSSARY.md#presentation-model)** | hook/composable/[store](../GLOSSARY.md#store) facade that exposes view-oriented state and commands |
+| **[Model](../GLOSSARY.md#model) side** | application/domain capabilities or another non-rendering model — not necessarily one object |
 
 The same application does not need to use all four labels. Prefer the smallest vocabulary that makes
 ownership clearer.
@@ -44,7 +44,7 @@ ownership clearer.
 
 ### 3.2 The failure mode: the fat component
 
-MVC's discipline matters most where frameworks make it easy to ignore. The dominant anti-pattern on the
+[MVC](../GLOSSARY.md#model-view-controller-mvc)'s discipline matters most where frameworks make it easy to ignore. The dominant anti-pattern on the
 frontend is the **fat component** — a single file that renders markup, holds business rules, *and* calls
 the network. It has collapsed all three parts into one, losing every benefit of separation:
 
@@ -53,16 +53,16 @@ the network. It has collapsed all three parts into one, losing every benefit of 
 - a design change risks breaking business behavior, because they share a file.
 
 The fix is separated responsibilities: move authoritative business/application rules inward, keep
-view-specific state in Presentation, isolate technical I/O behind its proper boundary, and let the
+view-specific state in [Presentation](../GLOSSARY.md#presentation-layer), isolate technical I/O behind its proper boundary, and let the
 component focus on rendering and forwarding intent. A component
-that only reads state and emits events is a **Passive View**, the most testable arrangement there is
+that only reads state and emits events is a **Passive [View](../GLOSSARY.md#view)**, the most testable arrangement there is
 [Fowler].
 
 ---
 
 ### 3.3 How MVC sits inside Onion and Clean
 
-MVC organizes the presentation tier; Onion and Clean organize the whole app. They compose cleanly:
+[MVC](../GLOSSARY.md#model-view-controller-mvc) organizes the presentation tier; Onion and Clean organize the whole app. They compose cleanly:
 
 ```mermaid
 flowchart TD
@@ -78,11 +78,11 @@ flowchart TD
     N0 --> N3
 ```
 
-When MVC-style presentation lives inside Clean/Onion, a controller-like action normally delegates
-policy-bearing work to an **Application use case** rather than embedding the rule itself. The UI may still
-have local Presentation state; the Domain/Application boundaries remain independently defined.
+When [MVC](../GLOSSARY.md#model-view-controller-mvc)-style presentation lives inside Clean/Onion, a controller-like action normally delegates
+policy-bearing work to an **[Application](../GLOSSARY.md#application-layer) [use case](../GLOSSARY.md#use-case)** rather than embedding the rule itself. The UI may still
+have local [Presentation](../GLOSSARY.md#presentation-layer) state; the [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer) boundaries remain independently defined.
 
-Put plainly: use MVC terminology only where it improves the presentation design, and use Clean/Onion
+Put plainly: use [MVC](../GLOSSARY.md#model-view-controller-mvc) terminology only where it improves the presentation design, and use Clean/Onion
 boundaries to decide where application/domain policy and infrastructure belong.
 
 ---
