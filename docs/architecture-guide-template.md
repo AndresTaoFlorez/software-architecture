@@ -12,7 +12,7 @@ Explain who introduced or popularized the architecture, approximately when, whic
 
 ## 2. What problem does it solve?
 
-State the failure mode before presenting the solution.
+State the failure mode in an observable scenario before presenting the solution: who is attempting what, what goes wrong in a direct design, and why it matters. Avoid defining the problem with an architectural term the reader has not learned yet.
 
 ```mermaid
 flowchart LR
