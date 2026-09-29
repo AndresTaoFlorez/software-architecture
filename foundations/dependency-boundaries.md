@@ -154,6 +154,14 @@ flowchart LR
 
 Not every boundary needs a bespoke mapping class. Plain functions are often enough.
 
+**Two different questions must not be conflated:**
+
+- **External-data validation (outer adapter):** is this untrusted response actually an object with fields such as `ticket_id` and `status` of the expected shape? Map external names and convert integration failures here.
+- **Business validity (Domain):** which status values or ticket transitions are permitted? Declare each rule in one domain-owned place. Export a runtime guard or factory if unknown values must be checked; a TypeScript union disappears at runtime. The adapter **calls** the domain guard rather than repeating its list of values.
+- **Application orchestration:** use the validated model to perform the requested operation; do not silently redefine a business rule in a use case or UI component.
+
+For a concrete example, see [the ticket gateway and its domain status checker](../frontend/ports-and-adapters.md#3-physical-ownership). An API can have a different external vocabulary: the adapter maps that protocol to the domain's vocabulary, rather than extending the domain merely to accept a transport string. The backend remains authoritative for its own persisted state and enforcement; separate deployments should check compatibility through API contract/integration tests.
+
 ## 8. Domain is not "all shared types"
 
 A type belongs to the layer that owns its meaning.
