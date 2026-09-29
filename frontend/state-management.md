@@ -247,24 +247,30 @@ That does not mean every server call should bypass [Application](../GLOSSARY.md#
 
 ### Server-state dominant operation
 
-If a screen only needs cached remote data, with invalidation/refetch but little application policy:
+If a screen only needs cached remote data, with invalidation/refetch but little application policy, its runtime data path can be direct:
 
 ```mermaid
 flowchart LR
-    V["View / feature"] --> Q["Query adapter"] --> API["API"]
+    V["View / feature"] -->|"requests remote data"| Q["Query/cache mechanism"]
+    Q -->|"fetches and refreshes"| API["External API"]
 ```
 
 [RTK Query](../GLOSSARY.md#rtk-query), TanStack Query or another [server-state](../GLOSSARY.md#server-state) library may be enough.
 
 ### Policy-bearing operation
 
-If an operation validates business/application rules, coordinates multiple capabilities, has authorization policy or must stay independent of transport:
+If an operation owns business/application policy or coordinates multiple capabilities that must remain independent of a particular transport, give it a deliberately protected boundary. The following arrows show **source-code contracts and assembly**, not the sequence of runtime calls:
 
 ```mermaid
 flowchart LR
-    V["View"] --> P["Presentation adapter"] --> A["Application use case"] --> PORT["Port"]
-    I["Infrastructure adapter"] --> PORT
+    V["Presentation binding"] -->|"depends on operation"| A["Application use case"]
+    A -->|"requires"| PORT["Application-owned port: contract"]
+    I["Infrastructure adapter"] -->|"implements"| PORT
+    ROOT["Composition Root"] -.->|"constructs"| I
+    ROOT -.->|"supplies operation"| V
 ```
+
+At runtime, the View invokes the operation, which calls its **injected adapter object**; that adapter communicates with the external system. The port is not another object that forwards a request. See the [ticket creation walkthrough](./ports-and-adapters.md#2-visual-model) for the separate runtime diagram.
 
 Use the architecture because it protects something meaningful, not to wrap every GET request in ceremony.
 
