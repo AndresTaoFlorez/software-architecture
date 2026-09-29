@@ -7,6 +7,8 @@
 
 # 1. The Rings
 
+Suppose an analyst changes a ticket's status. The rule deciding whether that change is allowed should stay valid whether the analyst uses React or a mobile app and whether the ticket is saved through HTTP or a database. We put that business rule nearest the center, the operation coordinating the change around it, and the technical UI/storage details outside.
+
 This guide uses four practical areas to explain [Onion Architecture](../GLOSSARY.md#onion-architecture):
 
 ```mermaid
