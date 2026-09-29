@@ -39,6 +39,13 @@ test('frontend ticket walkthrough typechecks and preserves the domain/DTO bounda
     const files = []
     const samples = new Map()
     fs.writeFileSync(path.join(root, 'package.json'), '{"type":"module"}')
+    // The snippet is compiled in an isolated temporary package while Zod
+    // resolves from this repository\'s locked documentation dependency.
+    const installedModules = path.resolve('node_modules')
+    assert.ok(fs.existsSync(path.join(installedModules, 'zod/package.json')),
+      'install locked dependencies before running the executable examples')
+    fs.symlinkSync(installedModules, path.join(root, 'node_modules'),
+      process.platform === 'win32' ? 'junction' : 'dir')
 
     for (const [name, language] of modules) {
       const code = extractExample(content, name, language)
@@ -180,6 +187,7 @@ test('frontend ticket walkthrough typechecks and preserves the domain/DTO bounda
     const invalidPayloads = [
       null, [], {},
       { ticket_id: 7, subject: 'Valid', status: 'open' },
+      { ticket_id: '', subject: 'Valid', status: 'open' },
       { ticket_id: 'T-002', subject: '   ', status: 'open' },
       { ticket_id: 'T-002', subject: 'Valid', status: 'queued' },
       { ticket_id: 'T-002', subject: 'Valid', status: 7 },
@@ -193,16 +201,40 @@ test('frontend ticket walkthrough typechecks and preserves the domain/DTO bounda
       await assert.rejects(gateway.create({ subject: 'Valid', description: '' }),
         /Invalid ticket response/)
     }
+    const malformedJson = new HttpTicketGateway(async () => ({
+      ok: true,
+      json: async () => { throw new SyntaxError('Bad JSON') },
+    }))
+    await assert.rejects(malformedJson.create({ subject: 'Valid', description: '' }),
+      /Invalid ticket response/)
+
+    const additiveResponse = new HttpTicketGateway(async () => ({
+      ok: true,
+      json: async () => ({
+        ticket_id: 'T-003',
+        subject: 'Valid',
+        status: 'resolved',
+        new_optional_server_field: 42,
+      }),
+    }))
+    assert.deepEqual(await additiveResponse.create({ subject: 'Valid', description: '' }),
+      { id: 'T-003', subject: 'Valid', status: 'resolved' },
+      'unknown extra transport fields are not leaked into Domain')
+
     const unavailable = new HttpTicketGateway(async () => ({ ok: false }))
     await assert.rejects(unavailable.create({ subject: 'Valid', description: '' }),
       /Ticket creation unavailable/)
 
-    // Only the domain declares values and their predicate; the adapter
-    // imports the predicate instead of keeping a second list of statuses.
+    // Domain is the only owner of status *values*. The adapter declares
+    // the wire schema and derives both its enum and DTO type from sources;
+    // it may not hand-cast unknown payloads into an API shape.
+    const gatewaySource = samples.get('src/infrastructure/tickets/HttpTicketGateway.ts')
     assert.match(samples.get('src/domain/tickets/Ticket.ts'), /export const TICKET_STATUSES =/)
-    assert.match(samples.get('src/infrastructure/tickets/HttpTicketGateway.ts'), /isTicketStatus\(dto\.status\)/)
-    assert.doesNotMatch(samples.get('src/infrastructure/tickets/HttpTicketGateway.ts'),
-      /status\s*!==\s*['"]open['"]|\[['"]open['"],\s*['"]in_progress['"]/)
+    assert.match(gatewaySource, /status:\s*z\.enum\(TICKET_STATUSES\)/)
+    assert.match(gatewaySource, /type TicketDto = z\.infer<typeof TicketResponseSchema>/)
+    assert.match(gatewaySource, /TicketResponseSchema\.safeParse\(value\)/)
+    assert.doesNotMatch(gatewaySource,
+      /as Partial<Record|status\s*!==\s*['"]open['"]|\[['"]open['"],\s*['"]in_progress['"]/)
   } finally {
     assert.equal(path.dirname(root), os.tmpdir())
     assert.ok(path.basename(root).startsWith('ticket-guide-'))
