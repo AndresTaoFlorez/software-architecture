@@ -3,7 +3,11 @@
 
 # 1. The Dependency Rule
 
-[Clean Architecture](../GLOSSARY.md#clean-architecture) is best understood by separating its **canonical rule** from project-specific conventions built on top of it.
+Suppose an order cannot be cancelled after shipping. That rule should not import a React component, a database client, or the API's raw response shape. Otherwise a change to those tools can require editing the cancellation rule. The code that receives a click or saves an order may know about that rule; the rule does not need to know about those callers.
+
+This is a question about **source-code dependencies**: which modules refer to or import which other modules. It is not the order in which functions call each other when a user clicks a button.
+
+[Clean Architecture](../GLOSSARY.md#clean-architecture) expresses this separation with its **canonical [Dependency Rule](../GLOSSARY.md#dependency-rule)**. We distinguish that rule from the folder names and additional conventions chosen for this repository.
 
 ---
 
