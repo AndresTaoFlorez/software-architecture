@@ -214,11 +214,13 @@ node scripts/glossary-links.mjs --check
 
 If a concept is used repeatedly and lacks a glossary entry, add it with:
 
-- definition;
-- purpose;
-- example;
+- a first sentence understandable without other glossary entries;
+- a precise definition and purpose (with nuance after the plain-language explanation);
+- a specific example showing what the concept does and what it does not do;
 - sources;
 - aliases in `glossary/terms.json`.
+
+The glossary is a reference, not a substitute for explaining an unfamiliar concept where the reader first encounters it. Keep glossary definitions consistent with the longer worked examples.
 
 ## 9. Sources
 
