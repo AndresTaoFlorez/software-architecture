@@ -270,7 +270,7 @@ flowchart LR
     ROOT -.->|"supplies operation"| V
 ```
 
-At runtime, the View invokes the operation, which calls its **injected adapter object**; that adapter communicates with the external system. The port is not another object that forwards a request. See the [ticket creation walkthrough](./ports-and-adapters.md#2-visual-model) for the separate runtime diagram.
+At runtime, the [View](../GLOSSARY.md#view) invokes the operation, which calls its **injected [adapter](../GLOSSARY.md#adapter) object**; that [adapter](../GLOSSARY.md#adapter) communicates with the external system. The [port](../GLOSSARY.md#port) is not another object that forwards a request. See the [ticket creation walkthrough](./ports-and-adapters.md#2-visual-model) for the separate runtime diagram.
 
 Use the architecture because it protects something meaningful, not to wrap every GET request in ceremony.
 
