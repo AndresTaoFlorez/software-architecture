@@ -255,7 +255,7 @@ The table above gives a possible React adaptation. The implementation below uses
 
 ### Complete implementation with an explicit ViewModel
 
-**Shared example ownership.** The Domain, Application and Infrastructure blocks below are synchronized from [the canonical order-cancellation walkthrough](../clean-architecture/4-building-a-feature.md). Edit that one source and run `npm run sync:examples`; `npm run check:examples` rejects drift. This chapter owns its ViewModel/DOM interaction and composition variant.
+**Shared example ownership.** The [Domain](../GLOSSARY.md#domain), [Application](../GLOSSARY.md#application-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) blocks below are synchronized from [the canonical order-cancellation walkthrough](../clean-architecture/4-building-a-feature.md). Edit that one source and run `npm run sync:examples`; `npm run check:examples` rejects drift. This chapter owns its [ViewModel](../GLOSSARY.md#viewmodel)/DOM interaction and composition variant.
 
 This framework-neutral example uses a class plus an explicit DOM binding, so no React Hook is implied. React equivalents can expose the same contract through an intentionally designed hook.
 
