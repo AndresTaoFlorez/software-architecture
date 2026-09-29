@@ -58,7 +58,22 @@ test('frontend ticket walkthrough typechecks and preserves the domain/DTO bounda
       '  export function useState<S>(initial: S | (() => S)): ' +
       '[S, (next: S | ((previous: S) => S)) => void]\n' +
       '}\n')
-    const program = ts.createProgram([...files, reactTypes], {
+    // The guide also shows a status-to-label mapping that intentionally
+    // stays in Presentation while deriving its keys from the Application result.
+    const excerptMarker = '// Presentation excerpt, using the Application-owned CreateTicket type.'
+    const excerptAt = content.indexOf(excerptMarker)
+    assert.ok(excerptAt >= 0, 'missing exhaustive presentation status mapping')
+    const opener = '```ts\n'
+    const excerptOpen = content.lastIndexOf(opener, excerptAt)
+    const excerptEnd = content.indexOf('\n```', excerptAt)
+    assert.ok(excerptOpen >= 0 && excerptEnd > excerptAt, 'malformed status mapping snippet')
+    const statusFile = path.join(root, 'src/presentation/tickets/status-labels.ts')
+    fs.mkdirSync(path.dirname(statusFile), { recursive: true })
+    fs.writeFileSync(statusFile,
+      "import type { CreateTicket } from '../../application/tickets/use-cases/createTicket'\n" +
+      content.slice(excerptOpen + opener.length, excerptEnd) + '\n')
+
+    const compilerOptions = {
       target: ts.ScriptTarget.ES2022,
       module: ts.ModuleKind.ESNext,
       moduleResolution: ts.ModuleResolutionKind.Bundler,
@@ -66,13 +81,31 @@ test('frontend ticket walkthrough typechecks and preserves the domain/DTO bounda
       noEmit: true,
       types: [],
       skipLibCheck: true,
-    })
+    }
+    const inputs = [...files, reactTypes, statusFile]
+    const program = ts.createProgram(inputs, compilerOptions)
     const diagnostics = ts.getPreEmitDiagnostics(program)
     assert.equal(diagnostics.length, 0, ts.formatDiagnostics(diagnostics, {
       getCanonicalFileName: name => name,
       getCurrentDirectory: () => root,
       getNewLine: () => '\n',
     }))
+
+    // A plausible business change must force the UI to choose a label,
+    // while the HTTP adapter retains the same domain-owned guard.
+    const domainFile = path.join(root, 'src/domain/tickets/Ticket.ts')
+    const originalDomain = fs.readFileSync(domainFile, 'utf8')
+    const evolvedDomain = originalDomain.replace(
+      "'resolved'] as const", "'resolved', 'reopened'] as const")
+    assert.notEqual(evolvedDomain, originalDomain, 'fixture must add a genuine domain state')
+    fs.writeFileSync(domainFile, evolvedDomain)
+    try {
+      const evolvedDiagnostics = ts.getPreEmitDiagnostics(ts.createProgram(inputs, compilerOptions))
+      assert.ok(evolvedDiagnostics.some(d => d.file?.fileName === statusFile),
+        'new domain status must require an intentional UI label')
+    } finally {
+      fs.writeFileSync(domainFile, originalDomain)
+    }
 
     // Emit the documented TypeScript to JS for behavior checks. Relative
     // imports in the documentation are bundler-style, so append .js to the
