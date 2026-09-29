@@ -128,9 +128,9 @@ A tree representation of source code in which nodes represent language construct
 
 ## Adapter
 
-A component that translates between an external technology or actor and an interface understood by the application. In Ports and Adapters, adapters let the same application interact with different UIs, databases, transports or test harnesses.
+Code that connects the application to a specific external input or technology without making the application's own operations depend on its details. In the ticket example, `HttpTicketGateway` takes a request to create a ticket, sends it through HTTP, and changes the server's `ticket_id` field into the application's `id`. This is an outbound adapter. An inbound adapter, such as a UI handler, instead calls an operation offered by the application.
 
-**Purpose.** Translate a mechanism or actor into the contract its consumer understands.
+**Purpose.** Translate between an external mechanism or actor and the interaction the application expects or offers. A given adapter is not necessarily an implementation of a TypeScript interface.
 
 **Example.** `HttpOrderRepository` adapts an HTTP API to the `OrderRepository` port.
 
@@ -872,9 +872,9 @@ Updating client-visible state before a remote mutation has been confirmed, then 
 
 ## Port
 
-A purpose-oriented interface through which the application communicates with an external actor or capability. A port models a conversation/capability, not a file or endpoint count.
+A description of an interaction that the application needs from other code, or offers to code that calls it. For example, `TicketGateway.create(input)` says: "Give me a way to create a ticket and return it." It does not say whether that work uses HTTP or an in-memory implementation. More precisely, a port is an application-facing contract for one coherent interaction, not one interface per endpoint or file.
 
-**Purpose.** Specify a cohesive conversation needed or offered by application policy.
+**Purpose.** State what the application requires or exposes without forcing its rules to depend on a particular external mechanism.
 
 **Example.** `Clock.now()` is a port when application policy must be independent of system time.
 
