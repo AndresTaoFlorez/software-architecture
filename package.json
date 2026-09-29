@@ -13,6 +13,7 @@
   "devDependencies": {
     "github-slugger": "2.0.0",
     "mdast-util-from-markdown": "2.0.3",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "zod": "4.6.5"
   }
 }
