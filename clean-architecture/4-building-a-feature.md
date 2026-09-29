@@ -112,7 +112,7 @@ export class HttpOrderRepository implements OrderRepository {
 }
 ```
 
-The external response is treated as `unknown` until its fields are checked. The adapter owns the transport shape (`id` and response parsing), but reuses `isOrderStatus` from Domain for valid business values. `OrderStatus` and its runtime checker are derived from the same `ORDER_STATUSES` definition; the adapter must not maintain another status list.
+The external response is treated as `unknown` until its fields are checked. The [adapter](../GLOSSARY.md#adapter) owns the transport shape (`id` and response parsing), but reuses `isOrderStatus` from [Domain](../GLOSSARY.md#domain) for valid business values. `OrderStatus` and its runtime checker are derived from the same `ORDER_STATUSES` definition; this HTTP implementation must not maintain another status list.
 
 The [DTO](../GLOSSARY.md#data-transfer-object-dto), validation and [mapper](../GLOSSARY.md#mapper) stay with the [adapter](../GLOSSARY.md#adapter). The inner [port](../GLOSSARY.md#port) does not import them. This physical [Infrastructure](../GLOSSARY.md#infrastructure) file implements the canonical [Interface Adapter](../GLOSSARY.md#interface-adapter) role.
 
