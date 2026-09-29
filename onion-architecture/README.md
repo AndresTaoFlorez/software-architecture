@@ -18,6 +18,10 @@ Primary source: https://jeffreypalermo.com/2008/07/
 
 ## 2. What problem does it solve?
 
+Suppose our ticket platform decides that a resolved ticket cannot be assigned to an analyst again. That decision is about tickets, not about the table in which they are stored. If the rule is written against an ORM row (the database library's representation of the record), replacing the database tool can force changes to ticket behavior.
+
+Onion Architecture puts such business rules at the center, in code that does not need to know which database, HTTP client, or UI happens to be in use. Other parts call that code and handle the technical details around it.
+
 A common failure is infrastructure-driven design:
 
 ```mermaid
@@ -65,6 +69,8 @@ It can be unnecessarily expensive for:
 Palermo explicitly framed Onion for complex, long-lived business applications rather than every small site.
 
 ## 5. Mental model
+
+Read the diagram from the center outward: the ticket rule lives at the center; an operation such as “assign ticket” uses that rule; the UI and database-facing code connect the outside world to that operation. The arrows below describe which source-code areas may depend on which others, **not** the order of HTTP calls at runtime.
 
 ```mermaid
 flowchart BT
