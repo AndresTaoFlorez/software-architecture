@@ -3,9 +3,11 @@
 
 # 8. Clean Architecture on the Backend
 
-The [Dependency Rule](../GLOSSARY.md#dependency-rule) applies on a backend exactly as it does elsewhere: source dependencies should point from technical mechanisms toward higher-level application policy.
+Imagine a server receiving `POST /tickets`. Its HTTP handler reads the request; an application operation checks the ticket input; database-facing code persists it. The operation should not have to import Express, Prisma or the raw HTTP request type merely to decide whether the ticket is valid.
 
-What changes is the set of outer mechanisms: HTTP servers, queues, schedulers, databases, ORMs, filesystem access and external SDKs.
+This is the backend form of the [Dependency Rule](../GLOSSARY.md#dependency-rule): source-code references point from particular technical mechanisms toward application policy, not from the policy back to the mechanisms.
+
+The concrete outer mechanisms here include HTTP servers, queues, schedulers, databases, ORMs, filesystem access and external SDKs.
 
 What **does not** follow is that frontend and backend must contain identical [Domain](../GLOSSARY.md#domain) or [Application](../GLOSSARY.md#application-layer) source files.
 
