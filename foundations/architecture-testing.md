@@ -1,8 +1,8 @@
 # Executable Architecture
 
-Architecture rules that can be checked mechanically should not exist only in prose.
+Suppose the ticket policy must not import database code. Writing that rule in a guide helps a developer understand it, but does not stop a later change from adding `import { db } from '../infrastructure/db'` to the wrong module. A check that scans imports can reject that change before it is merged.
 
-Documentation explains *why*. CI prevents regressions.
+Architecture rules that can be checked mechanically should not exist only in prose. Documentation explains *why*; automated checks in CI can catch violations when code changes. They do not replace tests of actual ticket behavior.
 
 ## 1. What to enforce
 
