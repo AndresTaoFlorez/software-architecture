@@ -1,6 +1,8 @@
 # Architecture Guide Template
 
 > Copy this structure when introducing a new architecture or presentation pattern. Replace placeholders; do not move foundational placement/dependency guidance behind advanced material.
+>
+> **Teaching rule:** Follow the [first-principles explanation protocol](../CONTRIBUTING.md#3-progressive-disclosure). The headings organize a full guide, but inside every explanation start with a concrete situation, identify the difficulty, trace the smallest mechanism, and only then give it a technical name. Define unfamiliar words locally; a glossary link alone does not explain them. Keep the formal definition, responsibilities and limitations after the example.
 
 ← [Repository home](../README.md) · [Glossary](../GLOSSARY.md) · [Code placement](../foundations/code-placement.md) · [Naming](../conventions/naming-and-file-placement.md)
 
