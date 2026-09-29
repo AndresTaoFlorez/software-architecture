@@ -274,6 +274,9 @@ Every substantial documentation PR must be reviewed three times.
 - Are framework conventions separated from architectural rules?
 - Are [ports](./GLOSSARY.md#port)/[repositories](./GLOSSARY.md#repository)/[use cases](./GLOSSARY.md#use-case) introduced only where justified?
 - Are outer technology types prevented from leaking inward?
+- Is each business rule/value set owned in exactly one policy location (for example, domain-owned status values), rather than restated in an HTTP parser, presentation handler or second use case? Do outer adapters validate untrusted shapes while **reusing** the owner's runtime guards/factories for domain meaning?
+- Do examples distinguish compile-time types from runtime checks? Avoid coercing unknown API values with `String(...)` or bypassing validation with a type assertion.
+- Do contract tests or documented integration assumptions address frontend/backend vocabulary drift, without claiming frontend validation is authoritative on the server?
 - Are trade-offs and counterexamples acknowledged?
 
 ### Pass 3 — mechanical consistency
