@@ -20,6 +20,7 @@ Mandatory rules:
 - Use Mermaid for every diagram; never add ASCII/Unicode text diagrams.
 - If preserving a static Mermaid preview image, include its editable Mermaid source and clarify whether edges represent source dependencies, runtime calls or assembly relationships.
 - Do not present folder layout as architecture without explaining responsibility and dependency direction.
+- Review example code for a single owner of each domain rule/value set. Technical adapters validate untrusted transport shapes and map protocols, but reuse domain-owned runtime guards/factories for domain validity; application/presentation must not quietly duplicate the rule. Type-only unions do not validate JSON.
 - Distinguish architectural [invariants](./GLOSSARY.md#invariant), recommended defaults, framework requirements, and documentation conventions.
 - Add sources for history, framework behavior, and non-obvious architectural claims.
 - Add/update glossary entries and run the glossary linker whenever concepts change.
