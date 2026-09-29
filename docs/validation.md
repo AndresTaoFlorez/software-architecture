@@ -16,7 +16,7 @@ After editing prose, run `node scripts/glossary-links.mjs --write`, inspect the 
 | `test:scripts` | regression fixtures for protected Markdown, source preservation, linking [idempotency](../GLOSSARY.md#idempotency), registry failures, links, anchors, fences and progression |
 | Complete feature examples | TypeScript compilation, domain-owned order-status validation and cancellation behavior for the four landings and the Clean feature chapter |
 | Frontend ticket example | TypeScript compilation and runtime checks for one domain status vocabulary, subject normalization, valid/invalid HTTP [DTOs](../GLOSSARY.md#data-transfer-object-dto) and injected [gateway](../GLOSSARY.md#gateway) behavior |
-| `check:examples` | exact parity of repeated Domain/Application/Infrastructure blocks against the canonical order-cancellation guide; regenerate copies with `npm run sync:examples` |
+| `check:examples` | exact parity of repeated [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer)/[Infrastructure](../GLOSSARY.md#infrastructure) blocks against the canonical order-cancellation guide; regenerate copies with `npm run sync:examples` |
 | `check:glossary` | registry/entry/index consistency, required purpose/example/source fields, incompatible aliases and missing eligible prose links |
 | `check:docs` | local link/image/reference targets, explicit and GitHub-style heading anchors, malformed known link forms, closed fences, prohibited text diagrams and ordered guide sections |
 
