@@ -78,18 +78,30 @@ Every architecture landing page must teach in this order:
 
 ## 3. Progressive disclosure
 
-Teach from concrete to abstract:
+**Repository-wide editorial standard: first-principles teaching and technical clarity.**
 
-- first show **where code goes**;
-- then explain the rule that justifies it;
-- then generalize;
-- only then introduce alternatives and edge cases.
+A reader may be comfortable with TypeScript but unfamiliar with architectural terminology. Teach the mechanism using familiar language before asking them to remember a name for it. The chapter order in section 2 describes the layout of a full guide; **within each explanation**, move from concrete to abstract. A brief historical introduction is fine, but history or a glossary link must not be a prerequisite for understanding the first example.
 
-A beginner should be able to place a simple function correctly after the first core chapters.
+### Mandatory concept-explanation protocol
 
-Do not hide essential folder/layout guidance in an "advanced" chapter.
+Apply these steps proportionately to every central concept, new guide, important definition, diagram explanation, and substantial rewrite. A short clarification does not need six new headings, but it must preserve the reasoning:
 
-A landing page must be operationally useful on its own. Deeper chapters may expand a concept, but a beginner should not need to read an advanced chapter to learn basic responsibilities, allowed/forbidden dependencies, folder placement, naming, or the first end-to-end feature.
+1. **Start with an observable situation.** Name the person or component, what they are trying to do, and the information involved.
+2. **Show the actual problem.** Explain what fails, becomes difficult to change, or is duplicated in a direct implementation. Never begin with "we need abstraction X" as the problem statement.
+3. **Walk through the smallest working mechanism.** Prefer one realistic example that grows across the guide. Explain what is passed, returned, called, or changed before showing a folder structure or diagram full of new labels.
+4. **Only then name and define the concept.** Give its precise technical name and explain any indispensable word at first use (for example, a *contract* specifies the operation, its input, and its result). Link registered terms to the [Glossary](./GLOSSARY.md), but never use a link in place of a local explanation.
+5. **Explain responsibilities and relationships.** Who owns it? Who calls whom? What does the component do **and not do**? If important, separate source-code dependencies, object construction, and runtime calls instead of treating their arrows as interchangeable.
+6. **Generalize and qualify.** State the rigorous, reusable definition after the example. Explain a meaningful alternative, cost, or counterexample when it helps the reader know when not to apply the idea.
+
+**Avoid circular definitions and jargon chains.** A sentence such as "A [port](./GLOSSARY.md#port) defines a capability in the application's language" does not teach a new reader what happens.
+
+Instead, start with the behavior: "To create a ticket, our ticket-creation operation needs an object with a `create(input)` method that returns a ticket. `TicketGateway` records this requirement; it does not make an HTTP request. In this example that requirement is an outbound [port](./GLOSSARY.md#port). `HttpTicketGateway` meets it by making the HTTP request and translating the reply; it is the [adapter](./GLOSSARY.md#adapter)."
+
+Do not ban technical terms or replace accurate explanations with misleading analogies. Introduce the proper vocabulary **after** showing the concrete behavior, and retain important limitations and distinctions. Prefer common words over academic phrasing when both communicate the same fact.
+
+For code-placement tutorials specifically, show **where a simple piece of code goes**, explain the responsibility that justifies its location, then extend the rule to other cases. A beginner should be able to make that placement decision after the first core chapters.
+
+Do not hide essential folder/layout guidance in an "advanced" chapter. A landing page must be useful on its own: a reader should not have to open an advanced page to learn basic responsibilities, allowed/forbidden dependencies, naming, or the first end-to-end feature.
 
 ## 4. Distinguish rule types
 
