@@ -237,9 +237,31 @@ Every historical claim, framework rule, or non-obvious prescriptive claim must b
 
 ## 10. Examples
 
-Examples must be small enough to understand and realistic enough to teach ownership.
+Examples must be **as simple as the problem permits, not simpler than correctness permits**. A diagram or snippet must teach a decision that remains defensible when the same product has many features, external systems, files and contributors. Keep one stable business scenario per guide and evolve it progressively instead of stacking toy operations that have no lifecycle.
 
-Prefer one stable example domain per guide and evolve it progressively.
+### Realistic-example and change-pressure gate
+
+Before publishing a substantial example, describe its real operating context: who invokes it, what business outcome they expect, where the authoritative data/rule lives, which inputs arrive from outside a trust boundary, and which parts of the workflow can fail. Explain any assumptions that matter to correctness (for example, concurrent edits, authorization, retries and versioned API contracts). An intentionally small example may leave authentication or telemetry outside scope, but **must name** such limits; never omit a correctness-critical constraint and present the snippet as production-ready.
+
+Review the design with at least **three plausible changes** before calling it maintainable:
+
+1. **Business rule changes:** a ticket gains a new status or its assignment policy changes. Which single owner changes? Would we have to hunt down repeated values/checks in components, mappers or multiple use cases?
+2. **Technical integration changes:** the API renames a field, we replace HTTP, or a second client uses the operation. Do the relevant adapter and composition change without editing unrelated business policy?
+3. **Product/team growth:** Tickets, Billing and Notifications evolve independently, with many files and features. Does each capability expose a narrow public API and own its model, or does it rely on deep imports and a global shared bucket?
+
+Then explain the impact: **which code should change, which code should stay untouched, and which tests detect accidental coupling**. Do not claim an abstraction is "scalable" merely because it introduces interfaces, generic services or more folders.
+
+### Single ownership and independent systems
+
+Within each bounded model, state each business rule and finite vocabulary in one authoritative place. If TypeScript types and runtime checks describe the same set, derive both from the same definition; do not duplicate enum-like literals in API parsers, screens and workflows. Outer adapters validate unknown external shapes and translate formats while using the model's rules for business validity. Preserve distinct responsibilities: a field's transport representation can be checked in an adapter; the allowed domain values and transitions belong to the model that owns them.
+
+A frontend and an independently deployed backend may have **separate model ownership and release cycles**. "One source of truth" is not a mandate to distribute a frontend's domain package to every service. The backend is authoritative for persisted business behavior; shared schemas/generated clients and contract tests can coordinate the wire protocol where appropriate. Reconcile separately owned models explicitly instead of assuming identical types imply identical meaning.
+
+### Maintainability is a measured design trade-off
+
+Prefer cohesive feature/capability ownership, small public contracts, local state, explicit translation at boundaries and straightforward composition. Do not invent a global utility, generic base repository or framework merely because multiple features might exist in the future. Extract reuse only when the behavior and its owner are demonstrably shared; distinguish meaningful policy duplication from two independent contexts coincidentally using the same string.
+
+When an example is reproduced in multiple guides, define **one editorial source** and mechanically synchronize the other copies, or use links/excerpts instead. For the shared order-cancellation feature, edit [the canonical complete example](./clean-architecture/4-building-a-feature.md) and run `npm run sync:examples`; the four architecture landing pages keep generated copies of the shared Domain/Application/Infrastructure parts and own only their pattern-specific presentation/composition. CI rejects drift with `npm run check:examples`.
 
 Do not introduce:
 
@@ -277,6 +299,11 @@ Every substantial documentation PR must be reviewed three times.
 - Is each business rule/value set owned in exactly one policy location (for example, domain-owned status values), rather than restated in an HTTP parser, presentation handler or second [use case](./GLOSSARY.md#use-case)? Do outer [adapters](./GLOSSARY.md#adapter) validate untrusted shapes while **reusing** the owner's runtime guards/factories for domain meaning?
 - Do examples distinguish compile-time types from runtime checks? Avoid coercing unknown API values with `String(...)` or bypassing validation with a type assertion.
 - Do [contract tests](./GLOSSARY.md#contract-test) or documented integration assumptions address frontend/backend vocabulary drift, without claiming frontend validation is authoritative on the server?
+- Has the author tested at least three realistic change scenarios (rule, integration, growth), and explained the expected blast radius and test coverage?
+- Do examples identify the authoritative business/data owner, trust boundaries, meaningful failure states, and concurrency/authorization assumptions without pretending to be complete production implementations?
+- Is related code owned by a cohesive feature/module instead of a global `shared` or generic-services catchall? Are public APIs narrower than module internals?
+- When code is shown in multiple chapters, is there a canonical source or an automated parity check, rather than requiring repeated manual fixes?
+- Are complexity and runtime-performance recommendations supported by actual requirements/measurements rather than arbitrary feature-count or team-size thresholds?
 - Are trade-offs and counterexamples acknowledged?
 
 ### Pass 3 — mechanical consistency
@@ -288,6 +315,7 @@ Every substantial documentation PR must be reviewed three times.
 - Headings/anchors used by other docs remain stable.
 - Naming matches the conventions guide.
 - Examples do not contradict [architecture tests](./GLOSSARY.md#architecture-test).
+- Shared executable examples are synchronized with `npm run check:examples`, and documentation snippets are typechecked/tested where complete.
 
 A contribution is not ready until all three passes are clean. For a substantial conceptual change, the PR description should identify the concrete example used to teach it, describe any newly introduced terms, and mention at least one ambiguity clarified or misconception prevented. Show a short before/after excerpt when rewriting opaque prose. Purely mechanical changes do not need a pedagogical before/after.
 
