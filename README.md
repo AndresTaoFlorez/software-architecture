@@ -128,7 +128,7 @@ Every contribution must follow **[CONTRIBUTING.md](./CONTRIBUTING.md)**.
 
 The rules include:
 
-- beginner-first progressive teaching;
+- beginner-first, first-principles explanations: observable situation → actual problem → smallest mechanism → precise term and boundaries;
 - history and source context;
 - explicit best/worst-fit scenarios;
 - Mermaid-only diagrams;
