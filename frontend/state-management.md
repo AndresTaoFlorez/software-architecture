@@ -1,8 +1,8 @@
 # State Management and Side Effects
 
-[State management](../GLOSSARY.md#state-management) is not a layer of Clean or [Onion Architecture](../GLOSSARY.md#onion-architecture). It is a [Presentation](../GLOSSARY.md#presentation-layer) mechanism.
+A ticket screen remembers several different things: whether its dialog is open, which ticket the analyst selected, and the latest list received from the server. These values do not all belong in the same place. A dialog's open/closed flag can live inside its component; selection shared by several components may belong to the ticket feature; remotely owned ticket data may need a fetch/cache mechanism.
 
-The first design question is not "which [store](../GLOSSARY.md#store)?". It is **who owns this state and why does it need to live?**
+Choosing who keeps each value, who may update it, and when it must be refreshed is [state management](../GLOSSARY.md#state-management). It is not a layer of Clean or [Onion Architecture](../GLOSSARY.md#onion-architecture); in this guide the client-side mechanism is part of [Presentation](../GLOSSARY.md#presentation-layer). The first question is not “which [store](../GLOSSARY.md#store)?” but **who needs this value, who owns the authoritative copy, and how long must it live?**
 
 ---
 
