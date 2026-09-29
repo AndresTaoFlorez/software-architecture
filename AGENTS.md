@@ -10,7 +10,12 @@ Before editing this repository, read:
 
 Mandatory rules:
 
-- Follow the documentation order defined in `CONTRIBUTING.md`.
+- Follow the documentation order and mandatory [first-principles explanation protocol](./CONTRIBUTING.md#3-progressive-disclosure) in `CONTRIBUTING.md`. Apply the protocol to new or revised guides, definitions, glossary entries, diagram explanations, and substantive examples.
+- Assume the reader can program but has no prior architecture vocabulary. Begin with a familiar situation and a concrete problem; show what the code does before giving its formal name.
+- Do not define one unfamiliar idea by chaining other unexplained technical terms. Explain essential new words in place; a glossary link supports but never substitutes for an understandable sentence.
+- For each central concept, show a minimal realistic example, who does what, why the separation matters, and what it does **not** do. Distinguish source dependencies, runtime calls, and wiring when discussing relationships.
+- Keep the precise terminology and necessary nuance **after** the simple explanation: accessible does not mean technically approximate.
+- Reject pedagogically opaque text even if its architecture is correct. During review, check whether a reader could restate the idea and trace the example without consulting several other pages.
 - Do not defer basic placement, dependency, naming, or first-feature guidance to an advanced chapter; every architecture landing page must be usable by a beginner on its own.
 - Use Mermaid for every diagram; never add ASCII/Unicode text diagrams.
 - If preserving a static Mermaid preview image, include its editable Mermaid source and clarify whether edges represent source dependencies, runtime calls or assembly relationships.
