@@ -18,6 +18,10 @@ Primary source: https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-archi
 
 ## 2. What problem does it solve?
 
+Imagine that cancelling an order is forbidden once it has shipped. A first implementation places the rule inside a React button and reads the status directly from the API response. Later, a second screen needs the same rule or the API renames its status field. The business decision now has to be found and corrected in UI/networking code.
+
+Clean Architecture separates that decision from the tools used to display or store the order: the cancellation rule is written in code that does not need to import React, `fetch`, or a database client. The outer code translates incoming data and asks the inner operation to perform the cancellation.
+
 Without explicit boundaries, code often grows around the framework or database:
 
 ```mermaid
@@ -67,6 +71,8 @@ It can be excessive when:
 <a id="the-idea-in-one-picture"></a>
 
 ## 5. The fundamental model
+
+Think of the circles below as answers to four separate questions about the same cancellation: **what business rule must always hold; what operation the application performs; how external requests/data are translated; and which specific framework or database does the technical work**. They describe responsibilities, not four objects that every request must visit in order.
 
 Martin's canonical diagram uses four conceptual circles:
 
