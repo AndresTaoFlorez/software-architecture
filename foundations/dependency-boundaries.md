@@ -65,6 +65,8 @@ A [port](../GLOSSARY.md#port) describes a purposeful conversation with something
 
 Prefer [ports](../GLOSSARY.md#port) with coherent capability boundaries:
 
+For the same distinction applied to a browser UI, follow **[Ports & Adapters in a frontend ticket-support application](../frontend/ports-and-adapters.md)** ([port](../GLOSSARY.md#port), HTTP [adapter](../GLOSSARY.md#adapter), [use case](../GLOSSARY.md#use-case), React hook and [Composition Root](../GLOSSARY.md#composition-root)).
+
 ```ts
 export interface ClosureGateway {
   execute(command: ExecuteClosureCommand): Promise<ClosureJob>

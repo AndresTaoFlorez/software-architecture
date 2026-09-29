@@ -31,6 +31,7 @@ Read in this order:
 
 5. For modern frontend organization:
    - [Frontend Architecture](./frontend/README.md)
+   - [Ports & Adapters: frontend ticket-support example](./frontend/ports-and-adapters.md)
 
 <a id="quick-comparison"></a>
 
@@ -116,7 +117,7 @@ The frontend section explains the second architectural scale that Clean/Onion do
 - Panda CSS [recipes](./GLOSSARY.md#recipe);
 - [architecture tests](./GLOSSARY.md#architecture-test).
 
-Start: **[Frontend Architecture](./frontend/README.md)**.
+Start: **[Frontend Architecture](./frontend/README.md)**. For a short end-to-end walkthrough, see **[Ports & Adapters in a ticket-support frontend](./frontend/ports-and-adapters.md)**.
 
 
 ## How to contribute

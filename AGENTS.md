@@ -13,6 +13,7 @@ Mandatory rules:
 - Follow the documentation order defined in `CONTRIBUTING.md`.
 - Do not defer basic placement, dependency, naming, or first-feature guidance to an advanced chapter; every architecture landing page must be usable by a beginner on its own.
 - Use Mermaid for every diagram; never add ASCII/Unicode text diagrams.
+- If preserving a static Mermaid preview image, include its editable Mermaid source and clarify whether edges represent source dependencies, runtime calls or assembly relationships.
 - Do not present folder layout as architecture without explaining responsibility and dependency direction.
 - Distinguish architectural [invariants](./GLOSSARY.md#invariant), recommended defaults, framework requirements, and documentation conventions.
 - Add sources for history, framework behavior, and non-obvious architectural claims.
