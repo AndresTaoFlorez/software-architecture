@@ -20,7 +20,7 @@ Sources:
 
 ## 2. What problem does MVVM solve?
 
-Imagine an Orders screen with a **Cancel** button. It must show the current status, disable the button while saving, and display a useful error if the operation fails. Putting all this state management inside the component that draws buttons and text makes the screen hard to test without rendering it.
+Imagine an Orders screen with a **Cancel** button. It must show the current status, disable the button while saving, and display a useful error if the operation fails. Putting all this [state management](../GLOSSARY.md#state-management) inside the component that draws buttons and text makes the screen hard to test without rendering it.
 
 A **[View](../GLOSSARY.md#view)** is the rendering part: it shows values and forwards user actions. A **[ViewModel](../GLOSSARY.md#viewmodel)** holds the information prepared for that screen—such as `isSaving`, `errorMessage`, and a `cancel()` operation—without referencing the actual button or HTML element. The **[Model](../GLOSSARY.md#model)** is the underlying data and application behavior the ViewModel uses. Connecting these parts is the purpose of [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm).
 
