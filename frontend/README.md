@@ -106,10 +106,11 @@ It is deliberately stricter than what React Redux itself requires. A smaller app
 
 ## Read next
 
-1. **[Presentation architecture](./presentation-architecture.md)** — pages, features, shared UI, public hooks/[ViewModels](../GLOSSARY.md#viewmodel) and feature APIs.
-2. **[State management](./state-management.md)** — [local state](../GLOSSARY.md#local-state), Redux, [selectors](../GLOSSARY.md#selector), [thunks](../GLOSSARY.md#thunk), listeners, [server state](../GLOSSARY.md#server-state) and persistence.
-3. **[Styling and design systems](./styling-and-design-system.md)** — token hierarchy, Panda CSS, `sva`, config [recipes](../GLOSSARY.md#recipe) and component ownership.
-4. **[Reference case study](./reference-case-study.md)** — lessons extracted from the XXI web UI: what to promote and what to correct.
-5. **[References](./references.md)** — primary and framework sources.
+1. **[Ports & Adapters in a Frontend: Support Tickets](./ports-and-adapters.md)** — pictured, concrete example of an [Application](../GLOSSARY.md#application-layer)-owned [port](../GLOSSARY.md#port), an HTTP [adapter](../GLOSSARY.md#adapter), a [use case](../GLOSSARY.md#use-case), a public React hook and composition; includes editable Mermaid source.
+2. **[Presentation architecture](./presentation-architecture.md)** — pages, features, shared UI, public hooks/[ViewModels](../GLOSSARY.md#viewmodel) and feature APIs.
+3. **[State management](./state-management.md)** — [local state](../GLOSSARY.md#local-state), Redux, [selectors](../GLOSSARY.md#selector), [thunks](../GLOSSARY.md#thunk), listeners, [server state](../GLOSSARY.md#server-state) and persistence.
+4. **[Styling and design systems](./styling-and-design-system.md)** — token hierarchy, Panda CSS, `sva`, config [recipes](../GLOSSARY.md#recipe) and component ownership.
+5. **[Reference case study](./reference-case-study.md)** — lessons extracted from the XXI web UI: what to promote and what to correct.
+6. **[References](./references.md)** — primary and framework sources.
 
 For cross-layer rules, read **[Architecture Foundations](../foundations/README.md)** first.

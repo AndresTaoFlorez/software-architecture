@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1316 790" width="1316" height="790" role="img" aria-labelledby="title description">
+  <title id="title">Ticket frontend: a port and its HTTP adapter</title>
+  <desc id="description">Composition Root injects HttpTicketGateway into createTicket. Presentation useTickets calls createTicket. The application use case depends on the TicketGateway port, which HttpTicketGateway implements. The HTTP adapter talks to the backend API.</desc>
+  <rect x="0" y="0" width="1316" height="790" fill="#000"/>
+  <defs>
+    <marker id="arrowSolid" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="#b8b8b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arrowDash" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="#b8b8b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+    <path d="M204 136 V373 Q204 390 220 390 H427 Q442 390 442 405 V416" stroke="#b8b8b8" stroke-dasharray="4 4" marker-end="url(#arrowDash)"/>
+    <path d="M546 348 V413" stroke="#b8b8b8" marker-end="url(#arrowSolid)"/>
+    <path d="M494 561 V584 Q494 601 510 601 H701 Q716 601 716 617 V629" stroke="#b8b8b8" marker-end="url(#arrowSolid)"/>
+    <path d="M1006 348 V374 Q1006 390 990 390 H842 Q826 390 826 406 V626" stroke="#b8b8b8" stroke-dasharray="4 4" marker-end="url(#arrowDash)"/>
+    <path d="M1149 348 V414" stroke="#b8b8b8" marker-end="url(#arrowSolid)"/>
+  </g>
+  <g stroke="#335270" stroke-width="1.5">
+    <rect x="16" y="16" width="376" height="120" rx="31" fill="#00284d"/>
+    <rect x="394" y="216" width="304" height="132" rx="31" fill="#00284d"/>
+    <rect x="336" y="429" width="316" height="133" rx="31" fill="#00284d"/>
+    <rect x="604" y="642" width="333" height="132" rx="31" fill="#00284d"/>
+    <rect x="863" y="216" width="429" height="132" rx="31" fill="#00284d"/>
+    <rect x="998" y="429" width="303" height="121" rx="31" fill="#00284d"/>
+    <rect x="93" y="257" width="222" height="51" rx="26" fill="#07111a"/>
+    <rect x="732" y="469" width="186" height="52" rx="26" fill="#07111a"/>
+  </g>
+  <g fill="#b0d3f3" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="600" text-anchor="middle">
+    <text x="204" y="84">Composition Root</text>
+    <text x="546" y="276">Presentation<tspan x="546" dy="32">useTickets()</tspan></text>
+    <text x="494" y="488">Application<tspan x="494" dy="32">createTicket()</tspan></text>
+    <text x="770" y="700">Port<tspan x="770" dy="32">TicketGateway</tspan></text>
+    <text x="1078" y="276">Infrastructure Adapter<tspan x="1078" dy="32">HttpTicketGateway</tspan></text>
+    <text x="1150" y="498">Backend API</text>
+    <text x="204" y="292" font-size="25">injects adapter</text>
+    <text x="825" y="506" font-size="25">implements</text>
+  </g>
+</svg>

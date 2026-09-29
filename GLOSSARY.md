@@ -134,6 +134,8 @@ A component that translates between an external technology or actor and an inter
 
 **Example.** `HttpOrderRepository` adapts an HTTP API to the `OrderRepository` port.
 
+**Frontend example.** `HttpTicketGateway` translates `POST /api/tickets` and an API `ticket_id` into the `TicketGateway` contract and an application ticket. See [the ticket-support walkthrough](./frontend/ports-and-adapters.md).
+
 **Sources.** [Cockburn — Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/) · [Martin — The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 
 ---
@@ -875,6 +877,8 @@ A purpose-oriented interface through which the application communicates with an 
 **Purpose.** Specify a cohesive conversation needed or offered by application policy.
 
 **Example.** `Clock.now()` is a port when application policy must be independent of system time.
+
+**Frontend example.** `application/tickets/ports/TicketGateway.ts` defines the operation needed by the ticket-creation use case, without depending on HTTP or React. See [the ticket-support walkthrough](./frontend/ports-and-adapters.md).
 
 **Sources.** [Cockburn — Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/)
 

@@ -111,6 +111,8 @@ Do not write a documentation-project preference as if Robert C. Martin, Palermo,
 
 Use Mermaid for architecture, dependency, flow, lifecycle, ownership, folder hierarchy, and decision diagrams.
 
+An exported, accessible static illustration (SVG/PNG) may accompany the **editable Mermaid source** when a consistent visual preview is important. Keep both in the repository, provide descriptive alt text, and label conceptual arrows separately from runtime call flows. An image alone must not replace Mermaid.
+
 ```mermaid
 flowchart LR
     Presentation --> Application

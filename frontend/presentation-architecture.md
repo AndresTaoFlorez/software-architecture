@@ -179,6 +179,8 @@ Benefits:
 
 For feature-heavy screens, a public [custom hook](../GLOSSARY.md#custom-hook) can act as a [Presentation Model](../GLOSSARY.md#presentation-model) / [ViewModel](../GLOSSARY.md#viewmodel) [facade](../GLOSSARY.md#facade-pattern).
 
+For an explicit example of the hook receiving an injected [Application](../GLOSSARY.md#application-layer) operation (rather than importing the concrete HTTP [adapter](../GLOSSARY.md#adapter)), see [the ticket-support port/adapter walkthrough](./ports-and-adapters.md).
+
 ```mermaid
 flowchart TD
     V["View"] --> VM["useClosures()"]
