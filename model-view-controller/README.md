@@ -243,7 +243,7 @@ The table above gives a possible React adaptation. The implementation below uses
 
 ### Complete client implementation
 
-**Shared example ownership.** The Domain, Application and Infrastructure blocks in this complete example are synchronized from [the canonical order-cancellation walkthrough](../clean-architecture/4-building-a-feature.md). Edit the canonical version and run `npm run sync:examples`; `npm run check:examples` rejects drift. This page owns its presentation-pattern-specific interaction and composition example.
+**Shared example ownership.** The [Domain](../GLOSSARY.md#domain), [Application](../GLOSSARY.md#application-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) blocks in this complete example are synchronized from [the canonical order-cancellation walkthrough](../clean-architecture/4-building-a-feature.md). Edit the canonical version and run `npm run sync:examples`; `npm run check:examples` rejects drift. This page owns its presentation-pattern-specific interaction and composition example.
 
 This example chooses an observing [View](../GLOSSARY.md#view): it reads represented state, the [Controller](../GLOSSARY.md#controller) interprets input, and the [Model](../GLOSSARY.md#model) delegates cancellation to [Application](../GLOSSARY.md#application-layer). The small wrapper contains represented operation state; it is not the whole [Domain](../GLOSSARY.md#domain) layer.
 
