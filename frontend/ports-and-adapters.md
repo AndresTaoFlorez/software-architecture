@@ -66,26 +66,45 @@ flowchart LR
 
 | File | Owns | Why it belongs there |
 | --- | --- | --- |
-| `domain/tickets/Ticket.ts` | Ticket's business-oriented shape | Independent of server field names and React |
+| `domain/tickets/Ticket.ts` | Ticket shape, valid status vocabulary/check and subject rule | Business meaning has one owner, independent of server field names and React |
 | `application/tickets/ports/TicketGateway.ts` | **Outbound [port](../GLOSSARY.md#port)** and command | The [use case](../GLOSSARY.md#use-case) defines what capability it needs |
 | `application/tickets/use-cases/createTicket.ts` | Use-case orchestration | No HTTP or React imports |
-| `infrastructure/tickets/HttpTicketGateway.ts` | **Outbound [adapter](../GLOSSARY.md#adapter)**, [DTO](../GLOSSARY.md#data-transfer-object-dto) validation and mapping | Only the external boundary understands `fetch` and the API response |
+| `infrastructure/tickets/HttpTicketGateway.ts` | **Outbound [adapter](../GLOSSARY.md#adapter)**, structural [DTO](../GLOSSARY.md#data-transfer-object-dto) validation and mapping | Only this boundary knows `fetch`/`ticket_id`; it reuses Domain for valid ticket values |
 | `presentation/features/tickets/model/useTickets.ts` | React-facing state/operations | Loading/error feedback belongs to the UI |
 | `composition/bootstrap.tsx` | Dependency construction and injection | Chooses the concrete [adapter](../GLOSSARY.md#adapter) without becoming a [Service Locator](../GLOSSARY.md#service-locator) |
 
 These names are **repository conventions**, not universal requirements of Cockburn's architecture. `Gateway` expresses interaction with an external service. Use `Repository` when the abstraction genuinely models retrieval/persistence of domain objects as a collection, not simply because an HTTP endpoint exists.
 
-### Domain contract
+### Domain: ticket vocabulary and rules
 
 `src/domain/tickets/Ticket.ts`:
 
 ```ts
+export const TICKET_STATUSES = ['open', 'in_progress', 'resolved'] as const
+export type TicketStatus = (typeof TICKET_STATUSES)[number]
+
+// TypeScript types disappear at runtime; this also checks API data.
+export function isTicketStatus(value: unknown): value is TicketStatus {
+  return TICKET_STATUSES.some(status => status === value)
+}
+
+export function isTicketSubject(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0
+}
+
+export function normalizeTicketSubject(value: string): string {
+  if (!isTicketSubject(value)) throw new Error('Subject is required')
+  return value.trim()
+}
+
 export interface Ticket {
   readonly id: string
   readonly subject: string
-  readonly status: 'open' | 'in_progress' | 'resolved'
+  readonly status: TicketStatus
 }
 ```
+
+The list of valid ticket statuses is declared **once** and drives both the TypeScript union and its runtime checker. The required, non-blank ticket subject is also checked here because it is a rule about a valid ticket, not a feature of React or HTTP. These domain functions contain no transport field names or UI code.
 
 ### Port: what the Application needs
 
@@ -111,56 +130,66 @@ Notice what is *absent*: HTTP verbs, endpoint paths, `Response`, Axios, React an
 `src/application/tickets/use-cases/createTicket.ts`:
 
 ```ts
+import { normalizeTicketSubject } from '../../../domain/tickets/Ticket'
 import type {
   CreateTicketInput,
   TicketGateway,
 } from '../ports/TicketGateway'
 
 export function makeCreateTicket(gateway: TicketGateway) {
-  return (input: CreateTicketInput) => {
-    const subject = input.subject.trim()
-    if (!subject) throw new Error('Subject is required')
-
-    return gateway.create({ ...input, subject })
-  }
+  return (input: CreateTicketInput) => gateway.create({
+    ...input,
+    subject: normalizeTicketSubject(input.subject),
+  })
 }
 
 export type CreateTicket = ReturnType<typeof makeCreateTicket>
 ```
 
-The example uses a small function factory for explicit **[dependency injection](../GLOSSARY.md#dependency-injection-di)**. No [DI container](../GLOSSARY.md#di-container) is required. The backend must independently validate authorization and ticket constraints; frontend checks are not a security boundary.
+The use case coordinates the operation and delegates the subject rule to Domain instead of defining its own separate validation. It uses a small function factory for explicit **[dependency injection](../GLOSSARY.md#dependency-injection-di)**; no [DI container](../GLOSSARY.md#di-container) is required. The backend must independently enforce authorization and ticket constraints; frontend checks are not a security boundary.
 
 ### Adapter: how the Application reaches the backend
 
 `src/infrastructure/tickets/HttpTicketGateway.ts`:
 
 ```ts
-import type { Ticket } from '../../domain/tickets/Ticket'
+import {
+  isTicketStatus,
+  isTicketSubject,
+  normalizeTicketSubject,
+  type Ticket,
+} from '../../domain/tickets/Ticket'
 import type {
   CreateTicketInput,
   TicketGateway,
 } from '../../application/tickets/ports/TicketGateway'
 
+// The server's wire shape is external data, not a trusted Ticket.
 type TicketDto = {
   ticket_id: string
   subject: string
-  status: Ticket['status']
+  status: string
 }
 
 function parseTicketDto(value: unknown): Ticket {
-  if (typeof value !== 'object' || value === null) {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     throw new Error('Invalid ticket response')
   }
+
   const dto = value as Partial<Record<keyof TicketDto, unknown>>
-  const status = dto.status
   if (
     typeof dto.ticket_id !== 'string' ||
-    typeof dto.subject !== 'string' ||
-    (status !== 'open' && status !== 'in_progress' && status !== 'resolved')
+    !isTicketSubject(dto.subject) ||
+    !isTicketStatus(dto.status)
   ) {
     throw new Error('Invalid ticket response')
   }
-  return { id: dto.ticket_id, subject: dto.subject, status }
+
+  return {
+    id: dto.ticket_id,
+    subject: normalizeTicketSubject(dto.subject),
+    status: dto.status,
+  }
 }
 
 export class HttpTicketGateway implements TicketGateway {
@@ -179,7 +208,9 @@ export class HttpTicketGateway implements TicketGateway {
 }
 ```
 
-The transport response **[DTO](../GLOSSARY.md#data-transfer-object-dto)** is translated at this boundary. In a larger application, map transport failures to an application-owned error/result as well; never expose raw HTTP mechanics through the public feature API.
+The [adapter](../GLOSSARY.md#adapter) still owns **untrusted HTTP-response validation**: checking that JSON has the expected fields, rejecting malformed data, and translating the API's `ticket_id` to the frontend model's `id`. But it does **not** redefine the domain's valid status values or the non-blank subject rule: it calls `isTicketStatus`, `isTicketSubject` and `normalizeTicketSubject` from Domain. The transport [DTO](../GLOSSARY.md#data-transfer-object-dto) represents an external shape (`status: string`); the returned `Ticket` has a domain-validated `TicketStatus`. A TypeScript union alone cannot validate JSON at runtime.
+
+If another API represents statuses differently (for example, `IN_PROGRESS`), the adapter translates that external value **into** a domain-owned status; the adapter must not quietly add new domain states. The backend independently enforces its authoritative rules, and API contract tests should detect frontend/backend vocabulary drift. In a larger application, also translate transport failures into an application-owned error/result instead of exposing raw HTTP mechanics through the public feature API.
 
 ### Presentation and Composition: using the operation
 
