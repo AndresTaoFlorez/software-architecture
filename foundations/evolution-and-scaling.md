@@ -1,5 +1,7 @@
 # Architecture Evolution and Scaling
 
+Suppose our support system grows from one ticket screen into separate teams working on tickets, billing and notifications. We might eventually need stronger module ownership or independent deployment—but adding a new tool simply because the team reached a particular size does not solve a demonstrated problem.
+
 Architecture should evolve in response to observed forces, not headcount or lines-of-code thresholds.
 
 There is no defensible rule such as:
