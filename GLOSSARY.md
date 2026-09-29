@@ -270,7 +270,7 @@ A test that checks whether two pieces of software agree about what they send and
 
 ## Controller
 
-In classic MVC, the component that interprets user input and turns it into operations on the Model. In layered applications a controller often translates transport/UI input into an application use case.
+The code that interprets an incoming user action and decides which operation it requests. In classic MVC, clicking a ticket's **Resolve** button reaches a Controller, which asks the Model to perform the relevant operation. In a backend framework, a controller may instead translate an HTTP request into an application-use-case call; sharing the name does not make both variants identical.
 
 **Purpose.** Translate input into operations without owning rendering or authoritative business rules.
 
@@ -354,7 +354,7 @@ Giving code a required object or function from outside instead of making it crea
 
 ## DI Container
 
-A framework/tool that registers dependency mappings and constructs object graphs automatically. It is optional; manual composition is often simpler when the graph is small.
+A library that helps create objects and supply the other objects they need. Instead of manually writing `new HttpTicketGateway()` and passing it to every constructor, code can register the required implementations and ask the container to assemble them. It is a tool for dependency injection, not a requirement for it; manual composition is often simpler for a small application.
 
 **Purpose.** Automate object graph construction and lifetimes when that complexity warrants a tool.
 
@@ -396,7 +396,7 @@ Imagine ticket policy importing a React component or a database row type: change
 
 ## Design System
 
-A governed set of reusable visual foundations, components and usage rules that creates consistency across product UI. In code it often owns tokens, shared recipes and shared primitives.
+A shared set of UI decisions and components that keeps a product's screens consistent. For example, all ticket and billing pages may reuse the same Button, spacing values and error-message colors instead of inventing versions independently. The system includes the reusable styles/components and guidance on how they should be used and maintained.
 
 **Purpose.** Provide coherent reusable visual and interaction contracts.
 
@@ -480,7 +480,7 @@ A failure described in business terms. For example, `ResolvedTicketCannotBeAssig
 
 ## Domain Event
 
-A record that something meaningful to the domain has occurred, usually named in past tense and emitted by domain behavior for other policies to react to.
+A record of a business fact that has already happened. For example, `TicketResolved` states that a particular ticket was resolved; other business behavior may react to that fact. Domain events are typically named in the past tense and describe business meaning rather than a specific HTTP request or button click.
 
 **Purpose.** Communicate a meaningful business occurrence without prescribing its transport.
 
@@ -494,7 +494,7 @@ A record that something meaningful to the domain has occurred, usually named in 
 
 ## Domain Service
 
-A stateless domain operation containing business rules that do not naturally belong to one entity or value object.
+Business behavior that does not belong naturally inside any one business object. For example, a policy for distributing a limited number of support slots across several ticket queues may require information from multiple objects; a domain service can express that rule. It is generally stateless and should not become a place for unrelated orchestration or HTTP code.
 
 **Purpose.** Own domain behavior that does not naturally belong to one entity or value object.
 
@@ -704,7 +704,7 @@ Code that changes data from one representation to another. For example, the back
 
 ## Memoization
 
-Caching the result of a computation based on its inputs so repeated calls can reuse prior work. In UI code it is a performance technique, not an architectural requirement.
+Remembering a calculated result so the same inputs can reuse it instead of doing the work again. For example, filtering a large ticket list with unchanged list/filter inputs may reuse the previous output. Memoization is a performance technique; it does not decide where business rules belong and should be applied when there is a real benefit.
 
 **Purpose.** Avoid repeating a computation when its relevant inputs are unchanged.
 
@@ -816,7 +816,7 @@ A way to keep a screen's rendering separate from the state and operations prepar
 
 ## Modular Monolith
 
-A single deployable application internally divided into strongly bounded modules with explicit contracts. It keeps process boundaries cheap while allowing domain/module boundaries to mature.
+One application that is built and deployed as one unit but organized internally into deliberately separate modules. For example, Tickets and Billing run in the same deployed program yet expose clear interfaces and avoid reaching into each other's private files. Module boundaries do not require network calls between the parts.
 
 **Purpose.** Maintain module boundaries while retaining one deployment unit.
 
@@ -830,7 +830,7 @@ A single deployable application internally divided into strongly bounded modules
 
 ## Monorepo
 
-A repository strategy in which multiple projects/packages live in one version-control repository, usually with tooling to manage dependency boundaries and affected builds.
+A single version-control repository containing multiple projects or packages. For example, a frontend, backend and shared API-contract package may live in one Git repository while remaining separate deployable applications. A monorepo is a repository organization choice, not by itself a software architecture or a requirement to share every type.
 
 **Purpose.** Coordinate related projects in one repository without implying shared architectural ownership.
 
@@ -930,7 +930,7 @@ The small, intentionally supported set of operations or types that other code ma
 
 ## Recipe
 
-In Panda CSS, a reusable definition of base styles plus variants, compound variants and defaults, exposed through a type-safe runtime API.
+In Panda CSS, a reusable group of component styles with named choices. For example, a Button recipe can define common padding and a `variant` choice for primary or danger appearance rather than repeating styles in every Button instance. Recipes may include defaults and combinations of variants and expose typed styling APIs.
 
 **Purpose.** Reuse a component’s visual variants through one styling contract.
 
@@ -944,7 +944,7 @@ In Panda CSS, a reusable definition of base styles plus variants, compound varia
 
 ## Reducer
 
-A pure function that calculates next state from previous state and an action. Reducers should not perform I/O or other side effects.
+A function that receives the previous state and an action describing what happened, then calculates the next state. For example, given a selected-ticket id and `ticketDeselected`, it returns state with no selection. A reducer should be pure: it does not itself call an API, write storage or perform other side effects.
 
 **Purpose.** Compute the next state from the previous state and an action without side effects.
 
@@ -1210,7 +1210,7 @@ A business value identified by *what it contains*, not by a continuing identity.
 
 ## View
 
-In MVC/MVVM, the rendering surface that presents state and captures user interaction. A View can own small rendering concerns without becoming the owner of business policy.
+The part of a presentation pattern that shows information to a user and receives their interaction. For example, an order View renders the current status and a **Cancel** button; it may forward the click to another role. Its exact responsibilities differ across MVC/MVVM variants, and rendering does not make it the owner of the order's business rules.
 
 **Purpose.** Render values and capture gestures without taking over authoritative business policy.
 
@@ -1308,7 +1308,7 @@ A way to put object-creation decisions in a named function or mechanism rather t
 
 ## Model-View-Presenter (MVP)
 
-A family of separated-presentation patterns in which a Presenter mediates between a View and the model/application behavior. Fowler later retired his single MVP pattern description and split the useful variants into patterns including Supervising Controller and Passive View.
+A family of presentation patterns in which a Presenter sits between the represented information/behavior and the concrete screen. For example, it interprets a click and supplies the View with display-ready values rather than making the UI compute them all. Martin Fowler later retired a single broad MVP description in favor of more precise variants, including Supervising Controller and Passive View.
 
 **Purpose.** Separate presentation coordination from concrete rendering, with variant-specific View/Model relationships.
 
@@ -1434,7 +1434,7 @@ A connection between a value prepared for a screen and the control displaying it
 
 ## CSS Selector
 
-A CSS expression identifying elements to which a style rule applies. This is unrelated to a Redux state selector.
+A CSS rule's way of choosing which page elements to style. For example, `button[disabled]` matches disabled button elements so they can receive a particular appearance. This is unrelated to a Redux selector, which reads data from application state.
 
 **Purpose.** Target document elements for styling.
 
@@ -1476,7 +1476,7 @@ A property of an operation for which repeating the same request does not create 
 
 ## Custom Hook
 
-A React function named `use` followed by a capitalized word that composes reusable stateful logic using Hooks. It is not automatically a ViewModel or an application use case.
+A React function whose name starts with `use` followed by a capitalized word and which reuses logic built from React Hooks. For example, `useTickets()` can combine state and functions needed by a ticket UI. A custom hook is a React code-reuse mechanism; it does not automatically become a ViewModel or an application use case.
 
 **Purpose.** Reuse React behavior through a concrete, meaningful interface.
 
@@ -1490,7 +1490,7 @@ A React function named `use` followed by a capitalized word that composes reusab
 
 ## Type-only Import
 
-A TypeScript import used only by the type system and erased from emitted JavaScript. It still creates source-level coupling to the imported contract.
+A TypeScript import used to name a type without importing its runtime value. For example, `import type { Ticket } from './Ticket'` tells TypeScript the expected shape but is removed from emitted JavaScript. The source file still depends on that type's definition, so architectural import rules must account for it.
 
 **Purpose.** Use types without a runtime import while retaining explicit architectural ownership.
 
