@@ -286,7 +286,9 @@ Every substantial documentation PR must be reviewed three times.
 - Naming matches the conventions guide.
 - Examples do not contradict [architecture tests](./GLOSSARY.md#architecture-test).
 
-A contribution is not ready until all three passes are clean.
+A contribution is not ready until all three passes are clean. For a substantial conceptual change, the PR description should identify the concrete example used to teach it, describe any newly introduced terms, and mention at least one ambiguity clarified or misconception prevented. Show a short before/after excerpt when rewriting opaque prose. Purely mechanical changes do not need a pedagogical before/after.
+
+Automated documentation checks cover syntax and consistency; they cannot prove that the explanation is understandable. The first pass requires human/agent judgment, not just a passing script.
 
 
 ## 12. Canonical architecture-guide template
