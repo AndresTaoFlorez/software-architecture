@@ -326,8 +326,8 @@ export interface OrderTransport {
   get(path: string): Promise<{ data: unknown; version: string } | null>
   put(path: string, data: unknown, version: string): Promise<void>
 }
-type ApiOrderDto = { id: string; status: OrderStatus }
-function parseOrderDto(data: unknown): ApiOrderDto {
+type ApiOrderDto = { id: string; status: string } // external wire shape
+function parseOrderDto(data: unknown): { id: string; status: OrderStatus } {
   if (typeof data !== 'object' || data === null) throw new PersistenceFailure('unavailable')
   const dto = data as Record<string, unknown>
   if (typeof dto.id !== 'string' || !isOrderStatus(dto.status)) {
