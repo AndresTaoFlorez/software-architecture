@@ -4,6 +4,8 @@ Start here after [Code Placement](./code-placement.md).
 
 These chapters teach the reusable rules shared by Clean, Onion, [Ports & Adapters](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters), and serious modular applications.
 
+**Start with one ticket:** the rule “a resolved ticket cannot be assigned again” should not live inside a React button or an HTTP client. Those pieces can call an operation that enforces the rule, but changing the screen or request library should not alter it. The chapters below explain how to keep the rule, the callers, the external integrations, and the code that connects them in the right places.
+
 ## Learning order
 
 1. **[Code Placement](./code-placement.md)** — where a function/type/file belongs.
