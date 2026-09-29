@@ -1,12 +1,12 @@
 # Module Boundaries and Public APIs
 
-Layer boundaries protect policy from technology. Module boundaries protect one capability from another.
+Suppose the ticket screen, its input validation, and its UI state are spread across many unrelated folders. Every small ticket change sends us hunting across the project. Now suppose the ticket feature imports a private setting from the billing feature: changing billing could unexpectedly break tickets.
 
-A large codebase needs both.
+A *module boundary* groups code responsible for one capability and defines what other parts of the program may use. A *layer boundary* addresses a different question: whether business and application rules know about specific technologies. A growing codebase may need both.
 
 ## 1. Optimize for high cohesion and low coupling
 
-Code that changes for the same reason should be easy to find together. Code owned by different capabilities should interact through narrow contracts.
+**High cohesion** means related ticket code is close together because it serves the same purpose. **Low coupling** means the ticket module needs to know as little as possible about billing or other modules' internal files. Code that changes for the same reason should be easy to find together. Code owned by different capabilities should interact through narrow contracts.
 
 A common frontend failure mode is technically neat but behaviorally scattered:
 
