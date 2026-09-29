@@ -123,16 +123,18 @@ This is a conceptual target for future projects. It is not a migration command f
 
 ## 4. Canonical flow
 
-Source dependencies for a policy-bearing operation:
+Source-contract dependencies are solid arrows; executable assembly is dashed. These are **not** runtime calls:
 
 ```mermaid
 flowchart LR
-    PAGE["ClosuresPage"] --> VM["Presentation facade"] --> B["Presentation bindings"] --> UC["Application operation"]
-    UC --> PORT["Application-owned port"]
-    HTTP["Infrastructure adapter"] --> PORT
-    ROOT["Composition"] --> HTTP
-    ROOT --> UC
-    ROOT --> B
+    PAGE["ClosuresPage"] --> VM["Presentation facade"]
+    VM --> B["Presentation bindings"]
+    B --> UC["Application operation"]
+    UC -->|"requires"| PORT["Application-owned port"]
+    HTTP["Infrastructure adapter"] -->|"implements"| PORT
+    ROOT["Composition"] -. "constructs" .-> HTTP
+    ROOT -. "supplies" .-> UC
+    ROOT -. "supplies" .-> B
 ```
 
 At runtime the operation invokes the injected [adapter](../GLOSSARY.md#adapter) object. The [port](../GLOSSARY.md#port) is its source contract, not an extra runtime intermediary. A local checkbox may simply update local visual state.

@@ -2,10 +2,9 @@
 
 ## 3. MVC on the Frontend
 
-Modern component frameworks are routinely described with [MVC](../GLOSSARY.md#model-view-controller-mvc)/[MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) vocabulary, but the frameworks
-themselves do not choose one historical presentation pattern for the application. This page extracts the
-part that remains useful: explicit separation between rendering, interpretation of user intent, and the
-application/model capabilities those interactions use.
+A React button can both display **Cancel** and handle its own click. That does not tell us whether the project follows classic [MVC](../GLOSSARY.md#model-view-controller-mvc): to answer that, we must identify who interprets the click, who owns the information being changed, and who updates the display.
+
+Modern component frameworks are often described using [MVC](../GLOSSARY.md#model-view-controller-mvc)/[MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) vocabulary, but a framework does not choose one historical presentation pattern for the application. This page focuses on the useful distinction between rendering, interpreting user intent, and the application/model capabilities those interactions use.
 
 ---
 

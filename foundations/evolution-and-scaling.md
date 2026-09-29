@@ -1,5 +1,7 @@
 # Architecture Evolution and Scaling
 
+Suppose our support system grows from one ticket screen into separate teams working on tickets, billing and notifications. We might eventually need stronger module ownership or independent deployment—but adding a new tool simply because the team reached a particular size does not solve a demonstrated problem.
+
 Architecture should evolve in response to observed forces, not headcount or lines-of-code thresholds.
 
 There is no defensible rule such as:
@@ -127,9 +129,9 @@ This is guidance, not a law. Teams with mature distributed-systems capability an
 
 ## 5. Bounded contexts are semantic boundaries
 
-Do not create a [bounded context](../GLOSSARY.md#bounded-context) because a folder is large.
+Imagine Support using `Customer` for the person who contacted the help desk, while Billing uses `Customer` for the party responsible for an invoice. Forcing one universal object on both teams may make both models confusing. Each team can define its own meaning and rules within an explicit model boundary, called a [bounded context](../GLOSSARY.md#bounded-context).
 
-[DDD](../GLOSSARY.md#domain-driven-design-ddd) [bounded contexts](../GLOSSARY.md#bounded-context) are justified by model/language boundaries:
+Do not create such a boundary simply because a folder is large. In [DDD](../GLOSSARY.md#domain-driven-design-ddd), this separation is justified by differences in model and language:
 
 Signals include the same word having different meanings, different [invariants](../GLOSSARY.md#invariant), different lifecycles/ownership, different sources of truth, or materially different change cadence.
 
@@ -223,6 +225,23 @@ Track evidence such as:
 - runtime scaling hotspots.
 
 The point is not to optimize a vanity metric. The point is to know **which force is asking the architecture to evolve**.
+
+---
+
+## 11. Review an example under likely change pressure
+
+A support platform can have hundreds of files without needing distribution; it can also have only a few files and already suffer from an unsafe business rule. Scale is not a synonym for code size, folder count or the number of interfaces.
+
+Start with a concrete support workflow: an analyst escalates a ticket, which changes its status, assigns it to another queue and may send a notification. Ask three separate questions:
+
+| Pressure | Boundary to inspect | Evidence of maintainability |
+| --- | --- | --- |
+| Escalation gains a new status or assignment restriction | Tickets policy and its public operation | One authoritative status/transition rule changes; the UI and transport reuse or translate it instead of maintaining competing lists. |
+| Notifications moves to an external provider or the API changes fields | Notification and HTTP-facing [adapters](../GLOSSARY.md#adapter); explicit event/command contracts | Ticket policy does not import a provider SDK or a queue message [DTO](../GLOSSARY.md#data-transfer-object-dto). Integration failures have an owner and do not silently change business meaning. |
+| Another team adds SLA reporting and an additional UI | Tickets' supported [public API](../GLOSSARY.md#public-api); Reporting's independent read needs | Teams do not deep-import each other's private state, nor must unrelated capabilities share one global model package. |
+| Two analysts escalate/reassign the same ticket concurrently | Backend authoritative transaction and version/conflict behavior | A current-state check and atomic update prevent lost writes; a frontend button state is not treated as enforcement. |
+
+Avoid turning the example into a full distributed architecture before there is a reason to split deployment or data ownership. The decision test is **how many unrelated code owners must change for one normal business request, and where can an [invariant](../GLOSSARY.md#invariant) be violated?** Document observable requirements, negative cases and the dependency boundaries required to protect them. Benchmark runtime bottlenecks rather than assuming that modularity or a specific pattern automatically improves speed.
 
 ---
 

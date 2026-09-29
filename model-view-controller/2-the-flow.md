@@ -2,7 +2,9 @@
 
 ## 2. The Flow
 
-Classic [MVC](../GLOSSARY.md#model-view-controller-mvc) separates input interpretation from model behavior and rendering. Source references and runtime notifications describe different relationships.
+An order screen shows **Pending**. The user clicks **Cancel**. The [Controller](../GLOSSARY.md#controller) interprets the click as a cancellation request, the [Model](../GLOSSARY.md#model) reflects the result, and the [View](../GLOSSARY.md#view) can refresh when it learns the represented information changed. That is the kind of interaction described by classic [MVC](../GLOSSARY.md#model-view-controller-mvc).
+
+The diagram below shows **events and calls over time**, not which source files import which others. A change notification means “the represented information changed; refresh what you show,” not “the [Model](../GLOSSARY.md#model) must import a concrete UI component.”
 
 ### 2.1 The classic cycle
 

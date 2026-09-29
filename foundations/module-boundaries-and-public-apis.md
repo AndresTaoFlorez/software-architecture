@@ -1,12 +1,12 @@
 # Module Boundaries and Public APIs
 
-Layer boundaries protect policy from technology. Module boundaries protect one capability from another.
+Suppose the ticket screen, its input validation, and its UI state are spread across many unrelated folders. Every small ticket change sends us hunting across the project. Now suppose the ticket feature imports a private setting from the billing feature: changing billing could unexpectedly break tickets.
 
-A large codebase needs both.
+A *module boundary* groups code responsible for one capability and defines what other parts of the program may use. A *layer boundary* addresses a different question: whether business and application rules know about specific technologies. A growing codebase may need both.
 
 ## 1. Optimize for high cohesion and low coupling
 
-Code that changes for the same reason should be easy to find together. Code owned by different capabilities should interact through narrow contracts.
+**High cohesion** means related ticket code is close together because it serves the same purpose. **Low coupling** means the ticket module needs to know as little as possible about billing or other modules' internal files. Code that changes for the same reason should be easy to find together. Code owned by different capabilities should interact through narrow contracts.
 
 A common frontend failure mode is technically neat but behaviorally scattered:
 
@@ -113,6 +113,16 @@ Suspicious:
 - `shared/utils.ts`
 
 A shared library should be nameable by purpose. If its purpose is "things used in many places", it is not a coherent module.
+
+**Change-pressure example.** Tickets and Billing may both display a status badge. Sharing the visual `Badge` component can be justified by one [design-system](../GLOSSARY.md#design-system) owner; moving `TicketStatus` and `InvoiceStatus` into a global `shared/status.ts` is not. Their business values and transitions have different owners, even if both currently include `pending`.
+
+| Change in a growing support product | Module that should own it | Modules that should not change merely because of it |
+| --- | --- | --- |
+| A ticket gains `reopened` | Tickets domain vocabulary and affected ticket policy; UI translation where explicitly needed | Billing, generic visual Badge, unrelated stores |
+| The billing API renames `invoice_state` | Billing's transport [mapper](../GLOSSARY.md#mapper) / API contract | Tickets domain model, shared UI primitives |
+| Notifications reacts to `TicketResolved` | Tickets publishes an intentionally supported fact; Notifications interprets it through a documented contract | Notifications must not deep-import `features/tickets/model/internal*.ts` |
+
+One large codebase needs **local ownership**, not one all-purpose model package. Reuse a stable shared policy only when the semantics, lifecycle and owner are truly the same.
 
 ## 5. `common` vs. `shared`
 

@@ -17,7 +17,11 @@ The label later evolved across Smalltalk, desktop frameworks, server-side web fr
 
 ## 2. What problem does MVC solve?
 
-The original problem is **[separated presentation](../GLOSSARY.md#separated-presentation)**: avoid mixing the information/behavior being represented with how it is displayed and how input is interpreted.
+Consider an order screen with a **Cancel** button. The screen must show the current status, interpret the click as a cancellation request, and update the information after the operation. If all three jobs are buried in one UI handler, it becomes difficult to change the screen or test the behavior independently.
+
+In classic [MVC](../GLOSSARY.md#model-view-controller-mvc), the **[Model](../GLOSSARY.md#model)** represents the relevant information and behavior, the **[View](../GLOSSARY.md#view)** displays it, and the **[Controller](../GLOSSARY.md#controller)** interprets the user's action. In a classic interactive implementation, the displayed screen can observe changes to the represented information and redraw. This separation is called **[separated presentation](../GLOSSARY.md#separated-presentation)**. It is about UI responsibilities, not a mandatory three-folder structure for an entire backend.
+
+In the diagram, follow the user's action through the [Controller](../GLOSSARY.md#controller) and [Model](../GLOSSARY.md#model). The dotted connection indicates that the [View](../GLOSSARY.md#view) can be notified when the represented information changes; the diagram is a conceptual interaction, not a source-import policy.
 
 ```mermaid
 flowchart LR
@@ -239,13 +243,21 @@ The table above gives a possible React adaptation. The implementation below uses
 
 ### Complete client implementation
 
+**Shared example ownership.** The [Domain](../GLOSSARY.md#domain), [Application](../GLOSSARY.md#application-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) blocks in this complete example are synchronized from [the canonical order-cancellation walkthrough](../clean-architecture/4-building-a-feature.md). Edit the canonical version and run `npm run sync:examples`; `npm run check:examples` rejects drift. This page owns its presentation-pattern-specific interaction and composition example.
+
 This example chooses an observing [View](../GLOSSARY.md#view): it reads represented state, the [Controller](../GLOSSARY.md#controller) interprets input, and the [Model](../GLOSSARY.md#model) delegates cancellation to [Application](../GLOSSARY.md#application-layer). The small wrapper contains represented operation state; it is not the whole [Domain](../GLOSSARY.md#domain) layer.
 
 The business rule belongs in `domain/orders/Order.ts`; the operation, result, persistence failure and [port](../GLOSSARY.md#port) belong in `application/orders/cancelOrder.ts`. [DTO](../GLOSSARY.md#data-transfer-object-dto) validation/mapping and the concrete repository belong in `infrastructure/orders/HttpOrderRepository.ts`. [Presentation](../GLOSSARY.md#presentation-layer) owns gestures and feedback; `composition/bootstrap.ts` selects implementations. These are documentation conventions. A small file may contain cohesive contracts and functions; split them when ownership or change pressure requires it.
 
 ```ts
 // domain/orders/Order.ts
-export type OrderStatus = 'pending' | 'shipped' | 'cancelled'
+export const ORDER_STATUSES = ['pending', 'shipped', 'cancelled'] as const
+export type OrderStatus = (typeof ORDER_STATUSES)[number]
+
+export function isOrderStatus(value: unknown): value is OrderStatus {
+  return ORDER_STATUSES.some(status => status === value)
+}
+
 export class ShippedOrderCannotBeCancelled extends Error {}
 export class Order {
   readonly id: string
@@ -294,7 +306,7 @@ export function makeCancelOrder(orders: OrderRepository): CancelOrder {
 
 ```ts
 // infrastructure/orders/HttpOrderRepository.ts
-import { Order, type OrderStatus } from '../../domain/orders/Order'
+import { Order, isOrderStatus, type OrderStatus } from '../../domain/orders/Order'
 import { PersistenceFailure, type OrderRepository } from '../../application/orders/cancelOrder'
 
 // Adapter-owned transport contract. A concrete fetch driver implements it.
@@ -302,14 +314,14 @@ export interface OrderTransport {
   get(path: string): Promise<{ data: unknown; version: string } | null>
   put(path: string, data: unknown, version: string): Promise<void>
 }
-type ApiOrderDto = { id: string; status: OrderStatus }
-function parseOrderDto(data: unknown): ApiOrderDto {
+type ApiOrderDto = { id: string; status: string } // external wire shape
+function parseOrderDto(data: unknown): { id: string; status: OrderStatus } {
   if (typeof data !== 'object' || data === null) throw new PersistenceFailure('unavailable')
   const dto = data as Record<string, unknown>
-  if (typeof dto.id !== 'string' || !['pending', 'shipped', 'cancelled'].includes(String(dto.status))) {
+  if (typeof dto.id !== 'string' || !isOrderStatus(dto.status)) {
     throw new PersistenceFailure('unavailable')
   }
-  return { id: dto.id, status: dto.status as OrderStatus }
+  return { id: dto.id, status: dto.status }
 }
 function toOrderDto(order: Order): ApiOrderDto { return { id: order.id, status: order.status } }
 
@@ -328,6 +340,8 @@ export class HttpOrderRepository implements OrderRepository {
   }
 }
 ```
+
+The external response is treated as `unknown` until its fields are checked. The [adapter](../GLOSSARY.md#adapter) owns the transport shape (`id` and response parsing), but reuses `isOrderStatus` from [Domain](../GLOSSARY.md#domain) for valid business values. `OrderStatus` and its runtime checker are derived from the same `ORDER_STATUSES` definition; this HTTP implementation must not maintain another status list.
 
 ```ts
 // presentation/orders/CancellationModel.ts

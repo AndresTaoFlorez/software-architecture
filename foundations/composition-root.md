@@ -2,7 +2,9 @@
 
 ## 1. Composition is a boundary, not business policy
 
-The [Composition Root](../GLOSSARY.md#composition-root) is where abstract dependencies and concrete implementations are connected.
+Consider a ticket-creation operation that needs another object to save a ticket. The operation describes the method it needs but does not decide whether the object uses HTTP or memory. Something still has to create the HTTP implementation and give it to that operation when the application starts.
+
+The [Composition Root](../GLOSSARY.md#composition-root) is that assembly location: it constructs the real objects and passes each one to the code that needs it. It decides *which implementation to use*, not *whether the ticket is valid*.
 
 Mark Seemann defines it as a preferably unique location, as close as possible to the application's entry point, where modules are composed together.
 

@@ -2,7 +2,9 @@
 
 ## 2. The Binding
 
-[Data binding](../GLOSSARY.md#data-binding) synchronizes displayed values with a presentation contract. It can reduce hand-written synchronization, but still relies on notifications, subscriptions or dependency tracking underneath. Architecture continues to determine what the values mean.
+Suppose the [ViewModel](../GLOSSARY.md#viewmodel) sets `isSaving = true`. The [View](../GLOSSARY.md#view) should now disable the **Cancel** button. When saving finishes and the value changes back to `false`, the button should be enabled again. We could update the button manually after each change, but then every path must remember to keep the screen in sync.
+
+[Data binding](../GLOSSARY.md#data-binding) connects a displayed property to its source so changes are reflected without repeating that manual update in every handler. A framework can provide this using notifications, subscriptions or dependency tracking. Some bindings also pass edited input back to the source (*two-way binding*); this is optional, not a defining requirement of every [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) implementation. Binding synchronizes values; it does not decide whether cancelling an order is allowed.
 
 ### 2.1 The MVVM cycle
 

@@ -1,8 +1,10 @@
 # Styling and Design-System Architecture
 
-Styling is a [Presentation](../GLOSSARY.md#presentation-layer) concern, but a mature styling system still needs architecture: ownership, layers of abstraction, [public APIs](../GLOSSARY.md#public-api) and one source of truth.
+Imagine the same error color appearing in the ticket form, a notification and a dialog. If all three components hard-code a different red, changing the design requires editing them separately and may produce inconsistent results. Giving that color one shared name lets the components refer to the same decision. Conversely, a style used only by one ticket form does not automatically belong in the shared system.
 
-This guide uses Panda CSS for concrete examples. The model also applies to other token/[recipe](../GLOSSARY.md#recipe)/component systems.
+Styling belongs to [Presentation](../GLOSSARY.md#presentation-layer). As an interface grows, we need to decide which visual values are shared, which component owns a styling rule, and what others are allowed to reuse. These are the responsibilities described by [design tokens](../GLOSSARY.md#design-token), [recipes](../GLOSSARY.md#recipe), and component-level styling below.
+
+This guide uses Panda CSS for concrete examples; the ownership principles apply to other styling tools too.
 
 ---
 
