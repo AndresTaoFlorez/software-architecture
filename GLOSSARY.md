@@ -114,7 +114,7 @@ Each entry contains a concise definition, a purpose, a repository-oriented examp
 
 ## Abstract Syntax Tree (AST)
 
-A tree representation of source code in which nodes represent language constructs such as imports, declarations and expressions. Architecture tooling can inspect the AST to enforce dependency rules more reliably than text-only regular expressions.
+When a TypeScript tool reads source code, it can turn `import { save } from './tickets'` into structured pieces describing an import, its names, and its destination. This structure is an Abstract Syntax Tree (AST): a tree of language constructs. Architecture checks can inspect these nodes instead of guessing at imports with raw text searches.
 
 **Purpose.** Inspect source constructs without confusing code with comments or strings.
 
@@ -186,7 +186,7 @@ A deliberate rule about which parts of the code may know about each other. For e
 
 ## Architecture Test
 
-An automated test of structural rules rather than business behavior. It verifies properties such as allowed import directions, cycles or public-module access.
+An automated check that tests how code is organized rather than whether a ticket was created successfully. For example, it can fail when code in `domain/` imports a database client from `infrastructure/`. This makes an agreed structural rule executable.
 
 **Purpose.** Detect prohibited dependencies before a change is merged.
 
@@ -228,7 +228,7 @@ A way to keep the rules for a task separate from the tools used to display, stor
 
 ## Colocation
 
-Placing code close to the thing that owns or changes with it instead of grouping everything only by technical type. Colocation improves discoverability and reduces change scatter.
+Keeping files that belong to one change near each other. For example, a ticket form's component, styles and tests can live together instead of being scattered across unrelated global folders. This groups code by ownership rather than only by technical file type.
 
 **Purpose.** Keep files that change for the same reason close to their owner.
 
@@ -256,7 +256,7 @@ The place at startup where the program creates its working objects and connects 
 
 ## Contract Test
 
-A test that verifies that two sides of an integration agree on an externally visible contract. Contract tests are especially useful when several adapters or separately deployed systems must preserve the same semantics.
+A test that checks whether two pieces of software agree about what they send and receive. For example, a frontend expects ticket creation to return an identifier and a status; a contract test checks that the provider's API satisfies that agreed response shape/behavior. It does not replace full integration or business-rule tests.
 
 **Purpose.** Check that an implementation or integration respects an agreed boundary contract.
 
@@ -284,7 +284,7 @@ In classic MVC, the component that interprets user input and turns it into opera
 
 ## Conflict-Free Replicated Data Type (CRDT)
 
-A replicated data type designed so independently updated replicas can converge without central conflict resolution when its merge rules are followed.
+A data structure designed so copies can be edited independently and later merged to reach the same result under specified merge rules. For example, replicas of an add-only set can each receive different items and combine their additions regardless of message arrival order. Not every offline merge algorithm or timestamp overwrite is a CRDT.
 
 **Purpose.** Make replicated updates converge under the stated merge and delivery assumptions.
 
@@ -298,7 +298,7 @@ A replicated data type designed so independently updated replicas can converge w
 
 ## Cross-Cutting Concern
 
-A concern that affects multiple features or layers, such as logging, authorization or observability. 'Cross-cutting' does not mean 'ownerless'; policy and mechanism should still have explicit homes.
+A responsibility that appears in many otherwise separate operations. Logging a ticket creation and logging a billing update are two uses of logging, but this does not mean a single unowned global module should contain every logging rule. Shared mechanism and context-specific policy still need clear owners.
 
 **Purpose.** Identify a concern spanning several workflows while retaining explicit policy and mechanism owners.
 
@@ -508,7 +508,7 @@ A stateless domain operation containing business rules that do not naturally bel
 
 ## Fake
 
-A Test Double with a working but simplified implementation that is not suitable for production, such as an in-memory database.
+A stand-in used in a test that performs simplified real work. For example, an `InMemoryTicketGateway` stores created tickets in an array so tests can exercise creation without a backend; it is functional but not intended to replace the production persistence system. This is one kind of test double.
 
 **Purpose.** Exercise a boundary with a simplified working implementation.
 
@@ -522,7 +522,7 @@ A Test Double with a working but simplified implementation that is not suitable 
 
 ## Feature Folder
 
-A code-organization convention that groups files by product capability/feature rather than only by technical type.
+A way of organizing code by what users can do rather than by file type alone. For example, `features/tickets/` keeps the ticket UI, state and feature-specific helpers together instead of spreading each kind across unrelated top-level directories. Folder names alone do not enforce architectural dependencies.
 
 **Purpose.** Keep a capability’s code together so changes have an obvious owner.
 
@@ -536,7 +536,7 @@ A code-organization convention that groups files by product capability/feature r
 
 ## Feature Slice
 
-A cohesive module organized around one feature or business capability with an explicit ownership boundary and usually a public API. It need not imply the full Feature-Sliced Design methodology.
+A module that owns one recognizable feature and exposes a limited way for the rest of the UI to use it. For example, the Tickets slice keeps its components and state helpers private and exports selected operations from `features/tickets/index.ts`. This idea does not require adopting the full Feature-Sliced Design taxonomy.
 
 **Purpose.** Organize frontend responsibilities around a bounded user-facing capability.
 
@@ -550,7 +550,7 @@ A cohesive module organized around one feature or business capability with an ex
 
 ## Frameworks & Drivers
 
-Clean Architecture's outermost mechanisms: UI frameworks, databases, web servers, devices and other replaceable technology details.
+In Martin's Clean Architecture diagram, the outer area containing the particular tools used to run the application: React, an HTTP server, a database client or device I/O. For example, swapping an HTTP server should not require rewriting the rule for a ticket status change. These details depend toward inner policy rather than owning it.
 
 **Purpose.** Keep concrete technology replaceable without rewriting inner policy.
 
@@ -578,7 +578,7 @@ A purpose-named way for application code to interact with an external system wit
 
 ## Global State
 
-Client state shared broadly across otherwise separate UI areas. Global state should be introduced only when multiple consumers or workflows genuinely require shared ownership.
+Client-side data needed by multiple, otherwise separate parts of an interface. For example, if several unrelated pages must react to the currently selected support account, it may need shared ownership. A dialog's open flag, used by one component, normally does not become global just because Redux is available.
 
 **Purpose.** Share state across the consumers that truly require a common lifetime and owner.
 
@@ -648,7 +648,7 @@ A rule that must continue to hold for a business object to be valid. If a ticket
 
 ## Last-Write-Wins (LWW)
 
-A conflict-resolution policy in which the value associated with the latest ordered write wins. It can be used in replicated systems, but a timestamp overwrite strategy should not be called a full CRDT unless its convergence assumptions are satisfied.
+A conflict rule that keeps the value considered to come from the latest of several ordered edits. If two replicas change a ticket title, LWW chooses one according to its ordering rule; it does not combine both titles or guarantee that the most useful edit survives. Timestamp ordering also needs carefully defined clock/tie behavior, and a timestamp overwrite alone is not necessarily a full CRDT.
 
 **Purpose.** Resolve competing values using an explicit ordering and tie-breaking policy.
 
@@ -662,7 +662,7 @@ A conflict-resolution policy in which the value associated with the latest order
 
 ## Listener Middleware
 
-Redux Toolkit middleware for reactive workflows that respond to dispatched actions or state changes, with support for async effects and cancellation patterns.
+A Redux Toolkit mechanism that reacts when actions are dispatched or selected state changes. For example, after a ticket-save action it can start a follow-up async operation or coordinate persistence without placing that work in the reducer. Its listener APIs support cancellation and lifecycle handling; it is a state-library tool, not an application architectural layer.
 
 **Purpose.** Run reactive side effects in response to state actions without putting effects in reducers.
 
@@ -676,7 +676,7 @@ Redux Toolkit middleware for reactive workflows that respond to dispatched actio
 
 ## Local State
 
-UI state owned by a component or narrow subtree and not shared application-wide.
+A changing value that only one UI component or a small part of the screen needs to own. For example, `isTicketDialogOpen` can live in the dialog's parent component. It should not automatically be put in application-wide shared state.
 
 **Purpose.** Keep state with the smallest consumer and lifetime that needs it.
 
@@ -718,7 +718,7 @@ Caching the result of a computation based on its inputs so repeated calls can re
 
 ## Microfrontend
 
-An approach that decomposes a frontend into independently owned and often independently deployable slices, typically aligned with business capabilities.
+An approach in which different teams can own distinct parts of a larger user interface, such as Tickets and Billing, with explicit integration rules and sometimes independent builds or deployments. The goal is ownership/delivery independence; it adds cross-part coordination, shared UX and runtime integration costs.
 
 **Purpose.** Allow frontend units to evolve and integrate through explicit boundaries.
 
@@ -732,7 +732,7 @@ An approach that decomposes a frontend into independently owned and often indepe
 
 ## Microservice
 
-A small independently deployable service organized around a business capability and communicating with other services over explicit boundaries. Distribution introduces operational and consistency costs and is not automatically a maturity upgrade.
+A separately deployable application responsible for a focused capability and communicating with others through a defined interface. For example, a ticket service may expose an API to a billing service while owning its ticket data and rules. Separate deployment also brings network failures, versioned contracts and operational costs; a small folder is not a microservice.
 
 **Purpose.** Give a service independent deployment and ownership where those benefits justify distributed-system costs.
 
@@ -746,7 +746,7 @@ A small independently deployable service organized around a business capability 
 
 ## Middleware
 
-Software inserted into a processing pipeline to intercept, transform or react to operations without placing that concern in each caller.
+Code that runs as part of a processing path before, after or around the next step. For example, an HTTP middleware can check authentication before a request reaches the ticket handler. It lets a repeated concern be handled centrally instead of copied into every caller; its exact capabilities depend on the framework.
 
 **Purpose.** Apply a pipeline concern at a defined interception boundary.
 
@@ -760,7 +760,7 @@ Software inserted into a processing pipeline to intercept, transform or react to
 
 ## Mock
 
-A Test Double pre-programmed with expected interactions and verified against those expectations.
+A stand-in whose expected interactions are configured before a test and verified during or after it. For example, a test may require that `sendNotification()` is called exactly once with the correct ticket id. This differs from a stub that merely supplies a predetermined return value.
 
 **Purpose.** Verify an interaction contract through prearranged expectations.
 
@@ -858,7 +858,7 @@ A way to keep business rules at the center of an application so replacing the UI
 
 ## Optimistic Update
 
-Updating client-visible state before a remote mutation has been confirmed, then committing, reconciling or rolling back when the server responds.
+Showing a proposed result in the UI before the server has confirmed it. For example, after an analyst clicks **Resolve**, the ticket immediately appears resolved; if saving fails, the UI restores or reconciles the previous state. This improves perceived responsiveness but needs a failure/conflict strategy.
 
 **Purpose.** Provide immediate feedback before confirmation, with a defined rollback/reconciliation policy.
 
@@ -972,7 +972,7 @@ A way to let application/domain code work with stored business objects as though
 
 ## RTK Query
 
-Redux Toolkit's data-fetching and caching solution for server state, including request deduplication, caching and invalidation.
+Redux Toolkit's tool for fetching and caching data owned by a server. For example, multiple ticket components can reuse a cached ticket list, and a successful edit can mark that list for re-fetching. Its caching and invalidation solve remote-data synchronization problems; it does not automatically own every business workflow.
 
 **Purpose.** Manage data fetching, caching and invalidation within Redux Toolkit.
 
@@ -986,7 +986,7 @@ Redux Toolkit's data-fetching and caching solution for server state, including r
 
 ## Selector
 
-A function that reads and derives data from state, ideally without mutating it. Selectors keep derivation out of reducers and rendering code.
+A function that reads state and returns the value a consumer needs, possibly calculating it from existing fields. For example, `selectOpenTickets(state)` returns tickets whose status is open without storing a second copy of the list. A selector should normally not mutate that state.
 
 **Purpose.** Derive or read state without exposing its storage shape to every consumer.
 
@@ -1028,7 +1028,7 @@ Data the server is responsible for, even when the browser holds a copy. For exam
 
 ## Service Locator
 
-A pattern where consumers ask a global registry/container for dependencies. It hides required collaborators and is generally avoided in favor of explicit injection.
+A design in which code searches a shared registry or container whenever it needs an object—for example, `container.resolve('ticketGateway')` inside `createTicket()`. The required dependency is then hidden from the function's parameters. Explicitly passing the needed object is generally easier to understand and test.
 
 **Purpose.** Resolve collaborators through a locator; recognize that this hides dependencies from a consumer’s signature.
 
@@ -1042,7 +1042,7 @@ A pattern where consumers ask a global registry/container for dependencies. It h
 
 ## Side Effect
 
-An operation that interacts with or changes something outside a pure calculation, such as I/O, timers, storage, logging or dispatching external work.
+Work that affects or interacts with something beyond simply calculating a return value. Trimming a ticket subject from a string is a calculation; sending it to an API, writing browser storage or logging a message is a side effect. Such operations require deliberate ownership and testing.
 
 **Purpose.** Identify interactions observable outside a calculation so their ownership and timing stay explicit.
 
@@ -1056,7 +1056,7 @@ An operation that interacts with or changes something outside a pure calculation
 
 ## Slot Recipe
 
-A Panda CSS recipe for styling coordinated parts (slots) of a multipart component. `sva` creates an atomic slot recipe; `defineSlotRecipe` creates a config slot recipe.
+A Panda CSS styling definition for several named parts of one component, such as a dialog's header, body and footer. A single variant like `compact` can change those parts together. Panda's `sva` makes an atomic slot recipe, while `defineSlotRecipe` registers a config slot recipe.
 
 **Purpose.** Coordinate styles and variants across parts of one visual component.
 
@@ -1070,7 +1070,7 @@ A Panda CSS recipe for styling coordinated parts (slots) of a multipart componen
 
 ## Spy
 
-A Test Double that records how it was called so a test can inspect interactions after execution.
+A test stand-in or wrapper that records calls for later inspection. For example, a notification spy records the ticket IDs passed to `send()` so the test can assert that the correct ticket was used. It does not necessarily check a pre-programmed expectation like a mock.
 
 **Purpose.** Record interactions for assertions after exercising behavior.
 
@@ -1098,7 +1098,7 @@ Deciding where changing values live, who may update them, and how the UI stays c
 
 ## Store
 
-A state container that owns state and exposes mechanisms to read/update it. A store is a presentation mechanism, not automatically an Application or Domain layer.
+A place that holds changing application/UI state and provides ways to read and update it. For example, a Redux store might hold the selected ticket shared across screens. A store is a state-management mechanism; it is not automatically the application layer or the owner of business rules.
 
 **Purpose.** Provide a shared state container with a defined read/update/subscription API.
 
@@ -1112,7 +1112,7 @@ A state container that owns state and exposes mechanisms to read/update it. A st
 
 ## Stub
 
-A Test Double that returns canned responses needed by a test without modeling full production behavior.
+A test stand-in that supplies a fixed answer the tested code needs. For example, `ticketGateway.create()` always returns ticket `T-001` so a presentation test can continue without calling a server. A stub does not need a complete working persistence implementation.
 
 **Purpose.** Supply controlled responses to a test’s collaborator calls.
 
@@ -1126,7 +1126,7 @@ A Test Double that returns canned responses needed by a test without modeling fu
 
 ## Test Double
 
-A generic replacement for a production collaborator during testing. Fakes, stubs, spies, mocks and dummies are different kinds of test doubles.
+A replacement for a real collaborator while testing, like using a small in-memory ticket service instead of the production API. Different substitutes serve different purposes: fakes perform simplified work, stubs return prepared answers, spies record calls, and mocks verify expected interactions.
 
 **Purpose.** Replace a collaborator for a specific testing purpose.
 
@@ -1140,7 +1140,7 @@ A generic replacement for a production collaborator during testing. Fakes, stubs
 
 ## Test Pyramid
 
-A heuristic favoring many fast, focused tests and fewer expensive broad integration/end-to-end tests. It is a shape/risk heuristic, not a fixed percentage quota.
+A guideline to use many fast, focused tests for small rules, with fewer broad tests that start the full UI, API or database. For example, ticket-status validation can be tested many times in isolation, while a smaller set checks the complete create-ticket journey. It is a cost/feedback heuristic, not a fixed test-percentage quota.
 
 **Purpose.** Balance fast focused feedback with integration coverage according to cost and risk.
 
@@ -1154,7 +1154,7 @@ A heuristic favoring many fast, focused tests and fewer expensive broad integrat
 
 ## Thunk
 
-In Redux, a function dispatched through thunk middleware to run imperative logic with access to `dispatch` and `getState`; Redux Toolkit also supports injected extra dependencies.
+In Redux, a function supplied to dispatch so it can run additional logic with access to `dispatch` and `getState`. For example, a ticket-save thunk may call an injected application operation and then dispatch success/failure actions. It is a Redux mechanism for orchestration, not automatically the business use case itself.
 
 **Purpose.** Defer work through a function; in Redux, access dispatch/state and injected dependencies for orchestration.
 
@@ -1168,7 +1168,7 @@ In Redux, a function dispatched through thunk middleware to run imperative logic
 
 ## Unit of Work
 
-A pattern that tracks changes made during a business transaction and coordinates writing them as one logical unit.
+A pattern that coordinates several changes so they are written as one logical business transaction. For example, transferring an order reservation might update the order and inventory together; the unit of work tracks the changes and coordinates commit. It is distinct from an arbitrary collection of unrelated API requests.
 
 **Purpose.** Coordinate persistence changes and a consistent commit boundary.
 
@@ -1238,7 +1238,7 @@ The part of an MVVM-style screen that prepares values and operations for renderi
 
 ## Barrel File
 
-A module whose primary job is to re-export symbols from other modules so consumers can depend on one deliberate entry point. A barrel is useful when it defines a real public API; indiscriminate `export *` barrels can hide ownership and increase coupling.
+A file that exports selected names from neighboring modules so other code can import from one deliberate entry point. For example, `features/tickets/index.ts` exposes `useTickets` without exposing every internal helper. An unrestricted list of `export *` statements may hide which names the module actually supports.
 
 **Purpose.** Expose an intentional entry point without exporting every implementation symbol.
 
@@ -1252,7 +1252,7 @@ A module whose primary job is to re-export symbols from other modules so consume
 
 ## Command Query Responsibility Segregation (CQRS)
 
-A pattern that separates the model used to change state from the model used to read state. CQRS does not inherently require separate databases or services, and it adds enough complexity that it should be introduced only when the different read/write models solve a concrete problem.
+Using different models for changing data and reading it when those tasks genuinely need different shapes. For example, resolving a ticket may use a small command with a ticket id and reason, while a dashboard uses a read model with counts and summaries. CQRS does not require separate databases, services or event sourcing.
 
 **Purpose.** Separate command and query models when their different needs justify the extra coordination.
 
@@ -1266,7 +1266,7 @@ A pattern that separates the model used to change state from the model used to r
 
 ## Event Sourcing
 
-A persistence approach in which application state changes are captured and stored as a sequence of events from which current or historical state can be reconstructed.
+Storing the sequence of business events as the authoritative record from which current state is rebuilt. For example, `TicketCreated`, `TicketAssigned` and `TicketResolved` can be replayed to determine a ticket's status. Merely keeping an audit log alongside a separately authoritative current-state record is not necessarily event sourcing.
 
 **Purpose.** Retain an event history as the source used to reconstruct state.
 
@@ -1280,7 +1280,7 @@ A persistence approach in which application state changes are captured and store
 
 ## Facade Pattern
 
-A design pattern that exposes a simpler, purpose-oriented interface over a larger or more complicated subsystem. A facade reduces what consumers need to know, but should not become a god object that owns unrelated policy.
+A simpler entry point that hides several internal operations a caller does not need to know. For example, `useTickets()` can expose `tickets`, `busy` and `create()` while internally coordinating state selectors and async actions. The facade simplifies access; it should not become the owner of unrelated business rules.
 
 **Purpose.** Give consumers a cohesive interface over several internal collaborators.
 
@@ -1294,7 +1294,7 @@ A design pattern that exposes a simpler, purpose-oriented interface over a large
 
 ## Factory Pattern
 
-A family of creational patterns that centralize or defer object-construction decisions instead of forcing callers to know concrete construction details. The exact variant—such as Factory Method or Abstract Factory—should be named when it matters.
+A way to put object-creation decisions in a named function or mechanism rather than repeating construction details at every caller. For example, `makeTicketGateway(config)` may choose an HTTP or in-memory implementation based on the supplied configuration. Factory Method and Abstract Factory are specific variants; not every helper function is one of those GoF patterns.
 
 **Purpose.** Centralize construction when creation has a real responsibility or varying implementation.
 
@@ -1322,7 +1322,7 @@ A family of separated-presentation patterns in which a Presenter mediates betwee
 
 ## Observer Pattern
 
-A design pattern in which a subject maintains dependent observers and notifies them when relevant state changes, allowing dependents to react without the subject naming each concrete reaction.
+A way for interested code to subscribe to changes without the source hard-coding each reaction. For example, a ticket model announces that its state changed and any subscribed screens can refresh. The source maintains or uses a notification mechanism; observers need a way to subscribe and unsubscribe.
 
 **Purpose.** Notify subscribed collaborators of changes without naming their concrete implementations.
 
@@ -1336,7 +1336,7 @@ A design pattern in which a subject maintains dependent observers and notifies t
 
 ## Observer Synchronization
 
-A presentation synchronization style in which screens or views observe underlying model/state changes and refresh themselves when notified. Fowler describes it as a fundamental part of classic MVC-style synchronization.
+Keeping displayed information current by having screens react to notifications from the information they observe. For example, two views of a ticket refresh after its status changes rather than one view directly calling the other. Classic MVC used observation for this relationship; subscriptions and cleanup still need an owner.
 
 **Purpose.** Keep views synchronized with changing represented state through observation.
 
@@ -1350,7 +1350,7 @@ A presentation synchronization style in which screens or views observe underlyin
 
 ## Passive View
 
-A presentation pattern in which the View has no Model access and a controller/presenter drives updates through a view interface, keeping application-specific coordination outside concrete controls. The main motivation is to move behavior out of difficult-to-test UI widgets.
+A presentation approach in which a separate controller or presenter tells a simple View exactly what to display. For example, a presenter supplies the error text and button-enabled flag instead of having the UI widget derive those values from a domain object. This makes non-rendering behavior easier to test independently of UI controls.
 
 **Purpose.** Make presentation coordination testable through an externally driven view interface.
 
@@ -1364,7 +1364,7 @@ A presentation pattern in which the View has no Model access and a controller/pr
 
 ## Presenter
 
-A presentation component that translates application/model state into a form suitable for a View and handles presentation-oriented interaction. The exact responsibility depends on the presentation pattern; in MVP it mediates between View and model/application behavior.
+Code that prepares application/model information for display and handles presentation-specific interactions. For example, it converts a failed ticket save into `errorMessage` and `canRetry` values used by the screen. In MVP it mediates between the View and underlying behavior; it should not become the authoritative owner of ticket business rules.
 
 **Purpose.** Coordinate presentation updates through the chosen view/model contract.
 
@@ -1378,7 +1378,7 @@ A presentation component that translates application/model state into a form sui
 
 ## Separated Presentation
 
-The principle of keeping presentation concerns separate from domain/application logic so each can evolve and be tested for its own reasons.
+Keeping what a program means and does separate from how its screen displays it. For example, the rule forbidding cancellation after shipping should not be buried in an onClick handler; the UI can invoke that behavior and display the result. This separation makes the business behavior and rendering easier to change/test independently.
 
 **Purpose.** Keep represented behavior and concrete screen mechanics independently understandable.
 
@@ -1392,7 +1392,7 @@ The principle of keeping presentation concerns separate from domain/application 
 
 ## Clean Entities Circle
 
-Martin's innermost conceptual circle encapsulates general business rules. It can contain objects, value objects or functions; it is not identical to a DDD entity with persistent identity.
+The innermost circle in Martin's Clean Architecture diagram, representing general business rules that should remain meaningful without a particular UI or database. For example, “a shipped order cannot be cancelled” can live here as a function or object method. The circle is not identical to a DDD entity with persistent identity.
 
 **Purpose.** Keep general business policy independent of application workflows and technical mechanisms.
 
@@ -1406,7 +1406,7 @@ Martin's innermost conceptual circle encapsulates general business rules. It can
 
 ## Supervising Controller
 
-Fowler's presentation approach delegates simple display synchronization to binding while a controller handles input and more complex presentation behavior. It differs from Passive View, which removes the View's Model access.
+A presentation approach where straightforward values are synchronized through binding, while a separate controller handles more complex interaction logic. For example, a name field displays a bound value automatically, but the controller decides how to handle a multi-step save. Fowler distinguishes this from Passive View, which gives the View less direct model access.
 
 **Purpose.** Balance automatic simple binding with explicit complex presentation coordination.
 
@@ -1448,7 +1448,7 @@ A CSS expression identifying elements to which a style rule applies. This is unr
 
 ## Optimistic Concurrency
 
-A write strategy that detects whether the state read earlier changed before a write commits. A version precondition must be checked atomically by the authoritative persistence boundary.
+A way to avoid silently overwriting someone else's newer change. Suppose two analysts open ticket version `v3`: when one saves, the ticket becomes `v4`; the second save must check that its expected version is still current and reject/reconcile the stale update. The server or authoritative storage must check that condition atomically.
 
 **Purpose.** Prevent a stale writer from silently overwriting newer state.
 
@@ -1462,7 +1462,7 @@ A write strategy that detects whether the state read earlier changed before a wr
 
 ## Idempotency
 
-A property whereby repeating an operation has the same intended effect as performing it once. HTTP method semantics and business-side effect guarantees must be considered separately.
+A property of an operation for which repeating the same request does not create an additional intended effect. For example, repeatedly setting a ticket's status to `resolved` may leave it resolved once, but sending a new notification every retry can still cause repeated side effects. HTTP method labels alone do not guarantee business idempotency.
 
 **Purpose.** Make repeated delivery or retries safe for the intended effect.
 
