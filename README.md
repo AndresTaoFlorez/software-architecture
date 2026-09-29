@@ -6,6 +6,8 @@ A practical, source-backed reference for learning and applying software architec
 
 The repository is intentionally progressive: a programmer who has never studied architecture should be able to start here, understand **why boundaries exist**, learn **where code belongs**, and only then move into advanced patterns.
 
+Imagine that a ticket can no longer be closed after escalation. That rule should stay the same whether the user works in a web form, a mobile app, or an API. By contrast, the code that draws the form or sends an HTTP request may need to change independently. Architecture helps us decide which code is responsible for each job and which pieces are allowed to know about one another. The guides start from situations like this before introducing formal names and diagrams.
+
 Terminology is centralized in the **[Architecture Glossary](./GLOSSARY.md)**.
 
 <a id="choose-your-path"></a>
