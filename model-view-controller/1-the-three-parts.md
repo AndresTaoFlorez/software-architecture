@@ -5,7 +5,7 @@
 [MVC](../GLOSSARY.md#model-view-controller-mvc) was first described by Trygve Reenskaug at Xerox PARC in 1979 and codified for Smalltalk-80 by Krasner
 and Pope in 1988 [Reenskaug 1979; Krasner & Pope 1988].
 
-Start with a screen showing an order and a **Cancel** button. It needs to display the order's current status, understand that the click means “request cancellation,” and show the updated information. Classic [MVC](../GLOSSARY.md#model-view-controller-mvc) gives these jobs distinct roles: the Model represents the relevant information and behavior, the Controller interprets input, and the View displays it. A View may observe the Model to know when to redraw.
+Start with a screen showing an order and a **Cancel** button. It needs to display the order's current status, understand that the click means “request cancellation,” and show the updated information. Classic [MVC](../GLOSSARY.md#model-view-controller-mvc) gives these jobs distinct roles: the [Model](../GLOSSARY.md#model) represents the relevant information and behavior, the [Controller](../GLOSSARY.md#controller) interprets input, and the [View](../GLOSSARY.md#view) displays it. A View may observe the Model to know when to redraw.
 
 The durable goal is to keep the information/behavior being represented separate from concrete screen mechanics. These three roles do not by themselves determine the application's database layout or Clean/Onion layers.
 
