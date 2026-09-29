@@ -208,14 +208,15 @@ export class HttpOrderRepository implements OrderRepository {
 }
 ```
 
+The arrows here show **source-code contract relationships only**; `OrderRepository` is not an intermediary object that forwards calls at runtime.
+
 ```mermaid
 flowchart LR
-    UC["cancelOrder"] --> PORT["OrderRepository"]
-    HTTP["HttpOrderRepository"] --> PORT
-    HTTP --> API["HTTP API"]
+    UC["cancelOrder use case"] -->|"requires"| PORT["Application-owned OrderRepository contract"]
+    HTTP["HttpOrderRepository"] -->|"implements"| PORT
 ```
 
-[Application](../GLOSSARY.md#application-layer) owns the language "load/save orders". [Infrastructure](../GLOSSARY.md#infrastructure) owns "HTTP".
+[Application](../GLOSSARY.md#application-layer) owns the language "load/save orders". [Infrastructure](../GLOSSARY.md#infrastructure) owns HTTP and calls the external API at runtime after it has been injected into the operation. The port itself makes no HTTP request.
 
 This is [Dependency Inversion](../GLOSSARY.md#dependency-inversion-principle-dip): runtime control can reach outward while source dependencies remain inward.
 
