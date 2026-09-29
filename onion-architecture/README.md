@@ -20,7 +20,7 @@ Primary source: https://jeffreypalermo.com/2008/07/
 
 Suppose our ticket platform decides that a resolved ticket cannot be assigned to an analyst again. That decision is about tickets, not about the table in which they are stored. If the rule is written against an ORM row (the database library's representation of the record), replacing the database tool can force changes to ticket behavior.
 
-Onion Architecture puts such business rules at the center, in code that does not need to know which database, HTTP client, or UI happens to be in use. Other parts call that code and handle the technical details around it.
+[Onion Architecture](../GLOSSARY.md#onion-architecture) puts such business rules at the center, in code that does not need to know which database, HTTP client, or UI happens to be in use. Other parts call that code and handle the technical details around it.
 
 A common failure is infrastructure-driven design:
 
