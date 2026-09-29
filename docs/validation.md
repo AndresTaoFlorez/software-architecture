@@ -9,7 +9,7 @@ npm run check
 
 After editing prose, run `node scripts/glossary-links.mjs --write`, inspect the diff, then run the check again.
 
-## What CI checks
+## What the local validation commands check
 
 | Check | Coverage |
 | --- | --- |
@@ -24,11 +24,11 @@ The parser uses CommonMark syntax and preserves source offsets. The linker does 
 
 ## What still needs review
 
-Mermaid CI validation is **structural**: it checks a recognized declaration and a closed fence. It is not a Mermaid parser and cannot establish syntax or meaning. For substantive diagram changes, parse every affected block using the official Mermaid API, then review whether each arrow represents imports, runtime messages, ownership or containment. A [port](../GLOSSARY.md#port) is a source contract, not a required intermediate runtime object. Parser success alone does not establish conceptual correctness or readable rendering.
+The local Mermaid validation is **structural**: it checks a recognized declaration and a closed fence. It is not a Mermaid parser and cannot establish syntax or meaning. For substantive diagram changes, parse every affected block using the official Mermaid API, then review whether each arrow represents imports, runtime messages, ownership or containment. A [port](../GLOSSARY.md#port) is a source contract, not a required intermediate runtime object. Parser success alone does not establish conceptual correctness or readable rendering.
 
 Progression checks verify ordered headings; they cannot prove the content teaches the promised responsibilities. Apply the [first-principles review](../CONTRIBUTING.md#3-progressive-disclosure) manually: can a programmer with no architectural vocabulary identify the actual problem, describe the mechanism, and explain the named concept without following several glossary links? Check that definitions do not rely on undefined jargon or circular explanations. Review complete examples, sources, ownership and trade-offs manually. Apply the [realistic change-pressure gate](../CONTRIBUTING.md#10-examples): authoritative rule/data owner, external trust boundaries, significant failures and concurrency assumptions, and expected impact of a business-rule change, integration change and growth across modules/teams. A passing small-example test does not establish production readiness or runtime performance; measure those separately. Type-check complete examples and run behavior checks where available; label responsibility excerpts and their assumptions explicitly.
 
-External URLs are not fetched by normal CI, to keep it independent of network availability. Check primary/official sources during reviews. A reachable page does not prove that it supports a claim. Undefined explicit reference forms are reported; bare bracketed citations are preserved because they need not be Markdown links.
+External URLs are not fetched by the local `npm run check`, so the checks remain independent of network availability. Check primary/official sources during reviews. A reachable page does not prove that it supports a claim. Undefined explicit reference forms are reported; bare bracketed citations are preserved because they need not be Markdown links.
 
 Heading anchors use `github-slugger`, including duplicate collisions. HTML anchor IDs are retained. The scope is repository Markdown navigation; a different publishing renderer may use different rules. Preserve meaningful historical anchors when a heading changes, even if no current internal link points to it.
 
