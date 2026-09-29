@@ -23,8 +23,8 @@ This is the outbound side of **[Ports & Adapters](../GLOSSARY.md#hexagonal-archi
 **Figure 1. Read the panels separately, from top to bottom:**
 
 1. **Code relationships (design):** `createTicket` requires the application-owned `TicketGateway` interface; `HttpTicketGateway` implements it. These arrows show the relationship between code definitions, **not** which objects are called in sequence.
-2. **Startup (assembly):** the [Composition Root](../GLOSSARY.md#composition-root) creates a concrete `HttpTicketGateway`, passes it to `makeCreateTicket`, and makes the resulting operation available to the UI. The use case does not construct its dependency.
-3. **After the click (runtime):** `useTickets().submit()` calls `createTicket()`, which calls the **injected adapter object**; the adapter sends `POST /api/tickets` to the backend. The frontend boundary encloses Presentation, Application and its Infrastructure adapter. The backend is external **to this frontend**, even if both belong to the same product.
+2. **Startup (assembly):** the [Composition Root](../GLOSSARY.md#composition-root) creates a concrete `HttpTicketGateway`, passes it to `makeCreateTicket`, and makes the resulting operation available to the UI. The [use case](../GLOSSARY.md#use-case) does not construct its dependency.
+3. **After the click (runtime):** `useTickets().submit()` calls `createTicket()`, which calls the **injected [adapter](../GLOSSARY.md#adapter) object**; that implementation sends `POST /api/tickets` to the backend. The frontend boundary encloses [Presentation](../GLOSSARY.md#presentation-layer), [Application](../GLOSSARY.md#application-layer) and its [Infrastructure](../GLOSSARY.md#infrastructure) implementation. The backend is external **to this frontend**, even if both belong to the same product.
 
 The [port](../GLOSSARY.md#port) is a TypeScript contract, **not a separate runtime forwarding object**. That is why it appears in the first panel but not as an extra stop in the third. On the way back, the HTTP [adapter](../GLOSSARY.md#adapter) validates the server response and translates `ticket_id` into the application's `id`.
 
@@ -146,7 +146,7 @@ export function makeCreateTicket(gateway: TicketGateway) {
 export type CreateTicket = ReturnType<typeof makeCreateTicket>
 ```
 
-The use case coordinates the operation and delegates the subject rule to Domain instead of defining its own separate validation. It uses a small function factory for explicit **[dependency injection](../GLOSSARY.md#dependency-injection-di)**; no [DI container](../GLOSSARY.md#di-container) is required. The backend must independently enforce authorization and ticket constraints; frontend checks are not a security boundary.
+The [use case](../GLOSSARY.md#use-case) coordinates the operation and delegates the subject rule to [Domain](../GLOSSARY.md#domain) instead of defining its own separate validation. It uses a small function factory for explicit **[dependency injection](../GLOSSARY.md#dependency-injection-di)**; no [DI container](../GLOSSARY.md#di-container) is required. The backend must independently enforce authorization and ticket constraints; frontend checks are not a security boundary.
 
 ### Adapter: how the Application reaches the backend
 
@@ -208,9 +208,9 @@ export class HttpTicketGateway implements TicketGateway {
 }
 ```
 
-The [adapter](../GLOSSARY.md#adapter) still owns **untrusted HTTP-response validation**: checking that JSON has the expected fields, rejecting malformed data, and translating the API's `ticket_id` to the frontend model's `id`. But it does **not** redefine the domain's valid status values or the non-blank subject rule: it calls `isTicketStatus`, `isTicketSubject` and `normalizeTicketSubject` from Domain. The transport [DTO](../GLOSSARY.md#data-transfer-object-dto) represents an external shape (`status: string`); the returned `Ticket` has a domain-validated `TicketStatus`. A TypeScript union alone cannot validate JSON at runtime.
+The [adapter](../GLOSSARY.md#adapter) still owns **untrusted HTTP-response validation**: checking that JSON has the expected fields, rejecting malformed data, and translating the API's `ticket_id` to the frontend model's `id`. But it does **not** redefine the domain's valid status values or the non-blank subject rule: it calls `isTicketStatus`, `isTicketSubject` and `normalizeTicketSubject` from [Domain](../GLOSSARY.md#domain). The transport [DTO](../GLOSSARY.md#data-transfer-object-dto) represents an external shape (`status: string`); the returned `Ticket` has a domain-validated `TicketStatus`. A TypeScript union alone cannot validate JSON at runtime.
 
-If another API represents statuses differently (for example, `IN_PROGRESS`), the adapter translates that external value **into** a domain-owned status; the adapter must not quietly add new domain states. The backend independently enforces its authoritative rules, and API contract tests should detect frontend/backend vocabulary drift. In a larger application, also translate transport failures into an application-owned error/result instead of exposing raw HTTP mechanics through the public feature API.
+If another API represents statuses differently (for example, `IN_PROGRESS`), the [adapter](../GLOSSARY.md#adapter) translates that external value **into** a domain-owned status; that implementation must not quietly add new domain states. The backend independently enforces its authoritative rules, and API [contract tests](../GLOSSARY.md#contract-test) should detect frontend/backend vocabulary drift. In a larger application, also translate transport failures into an application-owned error/result instead of exposing raw HTTP mechanics through the public feature API.
 
 ### Presentation and Composition: using the operation
 
@@ -267,7 +267,7 @@ const fakeGateway: TicketGateway = {
 const createTicket = makeCreateTicket(fakeGateway)
 ```
 
-The [executable walkthrough test](../scripts/frontend-ticket-example.test.mjs) typechecks the documented Domain, port, use case, adapter and React-facing hook, then exercises the injected HTTP adapter with valid statuses, malformed payloads, unexpected statuses and blank subjects. That check also rejects the dangerous shortcut of coercing untrusted values into a valid string. It is a regression test for the *documented example*, not a substitute for the backend's own tests.
+The [executable walkthrough test](../scripts/frontend-ticket-example.test.mjs) typechecks the documented [Domain](../GLOSSARY.md#domain), [port](../GLOSSARY.md#port), [use case](../GLOSSARY.md#use-case), [adapter](../GLOSSARY.md#adapter) and React-facing hook, then exercises the injected HTTP implementation with valid statuses, malformed payloads, unexpected statuses and blank subjects. That check also rejects the dangerous shortcut of coercing untrusted values into a valid string. It is a regression test for the *documented example*, not a substitute for the backend's own tests.
 
 A GraphQL or offline [adapter](../GLOSSARY.md#adapter) could also implement the same [port](../GLOSSARY.md#port) if the product needs it. **Do not introduce extra [ports](../GLOSSARY.md#port) solely to reproduce a diagram**: a simple read-only remote-data screen may be better served by a [server-state](../GLOSSARY.md#server-state)/query solution.
 
