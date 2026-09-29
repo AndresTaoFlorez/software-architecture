@@ -110,7 +110,7 @@ Link to [Naming and File Placement Conventions](../conventions/naming-and-file-p
 
 ## 10. One feature end to end
 
-Start from one requirement and build progressively.
+Start from a familiar actor's requirement and build progressively: direct approach and its concrete limitation, smallest mechanism, named architectural roles, and the final wiring. Annotate why each relevant source-code piece exists rather than assuming that code alone is self-explanatory.
 
 | Artifact | File | Owner | Why here | Why not elsewhere |
 | --- | --- | --- | --- | --- |
