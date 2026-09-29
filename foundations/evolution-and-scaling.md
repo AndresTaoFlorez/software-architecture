@@ -131,7 +131,7 @@ This is guidance, not a law. Teams with mature distributed-systems capability an
 
 Imagine Support using `Customer` for the person who contacted the help desk, while Billing uses `Customer` for the party responsible for an invoice. Forcing one universal object on both teams may make both models confusing. Each team can define its own meaning and rules within an explicit model boundary, called a [bounded context](../GLOSSARY.md#bounded-context).
 
-Do not create such a boundary simply because a folder is large. In [DDD](../GLOSSARY.md#domain-driven-design-ddd), bounded contexts are justified by differences in model and language:
+Do not create such a boundary simply because a folder is large. In [DDD](../GLOSSARY.md#domain-driven-design-ddd), this separation is justified by differences in model and language:
 
 Signals include the same word having different meanings, different [invariants](../GLOSSARY.md#invariant), different lifecycles/ownership, different sources of truth, or materially different change cadence.
 
