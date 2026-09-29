@@ -255,6 +255,8 @@ The table above gives a possible React adaptation. The implementation below uses
 
 ### Complete implementation with an explicit ViewModel
 
+**Shared example ownership.** The Domain, Application and Infrastructure blocks below are synchronized from [the canonical order-cancellation walkthrough](../clean-architecture/4-building-a-feature.md). Edit that one source and run `npm run sync:examples`; `npm run check:examples` rejects drift. This chapter owns its ViewModel/DOM interaction and composition variant.
+
 This framework-neutral example uses a class plus an explicit DOM binding, so no React Hook is implied. React equivalents can expose the same contract through an intentionally designed hook.
 
 The business rule belongs in `domain/orders/Order.ts`; the operation, result, persistence failure and [port](../GLOSSARY.md#port) belong in `application/orders/cancelOrder.ts`. [DTO](../GLOSSARY.md#data-transfer-object-dto) validation/mapping and the concrete repository belong in `infrastructure/orders/HttpOrderRepository.ts`. [Presentation](../GLOSSARY.md#presentation-layer) owns gestures and feedback; `composition/bootstrap.ts` selects implementations. These are documentation conventions. A small file may contain cohesive contracts and functions; split them when ownership or change pressure requires it.
