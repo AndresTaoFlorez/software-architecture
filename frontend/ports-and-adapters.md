@@ -267,6 +267,8 @@ const fakeGateway: TicketGateway = {
 const createTicket = makeCreateTicket(fakeGateway)
 ```
 
+The [executable walkthrough test](../scripts/frontend-ticket-example.test.mjs) typechecks the documented Domain, port, use case, adapter and React-facing hook, then exercises the injected HTTP adapter with valid statuses, malformed payloads, unexpected statuses and blank subjects. That check also rejects the dangerous shortcut of coercing untrusted values into a valid string. It is a regression test for the *documented example*, not a substitute for the backend's own tests.
+
 A GraphQL or offline [adapter](../GLOSSARY.md#adapter) could also implement the same [port](../GLOSSARY.md#port) if the product needs it. **Do not introduce extra [ports](../GLOSSARY.md#port) solely to reproduce a diagram**: a simple read-only remote-data screen may be better served by a [server-state](../GLOSSARY.md#server-state)/query solution.
 
 ### Inbound vs. outbound, without extra ceremony
