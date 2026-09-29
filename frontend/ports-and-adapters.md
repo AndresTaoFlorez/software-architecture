@@ -285,13 +285,13 @@ The point of this example is not that each feature needs six new folders or one 
 | Real change | Intended owner and impact | Should remain unchanged |
 | --- | --- | --- |
 | Support introduces `reopened` | The ticket model owner updates `TICKET_STATUSES` and any valid transition rules; change the relevant ticket-specific display and behavior tests. Verify that the backend version and API contract support the state. | `HttpTicketGateway` does not acquire a second hard-coded status list; unrelated Billing and Notifications policies do not change. |
-| The API returns `ticketId` instead of `ticket_id` | Update the transport DTO/parser in the HTTP implementation and its contract tests, considering client/server deployment compatibility. | `Ticket`, `TicketGateway`, `makeCreateTicket` and the component do not need that wire field name. |
+| The API returns `ticketId` instead of `ticket_id` | Update the transport [DTO](../GLOSSARY.md#data-transfer-object-dto)/parser in the HTTP implementation and its [contract tests](../GLOSSARY.md#contract-test), considering client/server deployment compatibility. | `Ticket`, `TicketGateway`, `makeCreateTicket` and the component do not need that wire field name. |
 | Another entry point creates tickets | Compose the existing operation for that entry point (a different page, accessible interaction, or supported job). Introduce another [adapter](../GLOSSARY.md#adapter) only if a real integration requires it. | Do not fork the subject rule or create a generic `BaseTicketService` merely for a second caller. |
-| Several teams modify ticket state concurrently | The backend must authorize and validate against **current authoritative state** and define concurrency/idempotency behavior. Contract/integration and conflict tests must cover it. | Frontend validation is useful immediate feedback, not a guarantee about server state or a substitute for atomic backend enforcement. |
+| Several teams modify ticket state concurrently | The backend must authorize and validate against **current authoritative state** and define concurrency/[idempotency](../GLOSSARY.md#idempotency) behavior. Contract/integration and conflict tests must cover it. | Frontend validation is useful immediate feedback, not a guarantee about [server state](../GLOSSARY.md#server-state) or a substitute for atomic backend enforcement. |
 
 In a larger codebase, give the Tickets capability a narrow [public API](../GLOSSARY.md#public-api) so other screens do not deep-import its internal hook, HTTP parser or status constants. Do not treat frontend and backend as one shared in-process domain merely because they both mention a ticket: each independently deployed boundary can own its own model. Coordinate the external protocol through explicit versioning, schema generation when beneficial, and [contract tests](../GLOSSARY.md#contract-test).
 
-**Exhaustive UI translation is not a second business rule.** A ticket-facing screen can derive its display contract from the Application operation and let TypeScript require a label for every possible status:
+**Exhaustive UI translation is not a second business rule.** A ticket-facing screen can derive its display contract from the [Application](../GLOSSARY.md#application-layer) operation and let TypeScript require a label for every possible status:
 
 ```ts
 // Presentation excerpt, using the Application-owned CreateTicket type.
@@ -304,9 +304,9 @@ const statusLabels = {
 } satisfies Record<CreatedTicket['status'], string>
 ```
 
-Adding `reopened` to the ticket model makes the UI label map fail typechecking until the appropriate presentation text is added; it does **not** create another allowlist in the transport adapter. The Application-facing contract is intentionally the type imported by the UI, rather than a deep import of Domain internals.
+Adding `reopened` to the ticket model makes the UI label map fail typechecking until the appropriate presentation text is added; it does **not** create another allowlist in the transport [adapter](../GLOSSARY.md#adapter). The [Application](../GLOSSARY.md#application-layer)-facing contract is intentionally the type imported by the UI, rather than a deep import of [Domain](../GLOSSARY.md#domain) internals.
 
-**Deliberate limits of this introductory example:** authentication, authorization, retries, telemetry, duplicate submissions across devices and backend transactions are not implemented in the client snippets. Those require product-level decisions; none can be solved by adding a TypeScript port alone. Measure performance or deployment scaling needs before introducing additional runtime services.
+**Deliberate limits of this introductory example:** authentication, authorization, retries, telemetry, duplicate submissions across devices and backend transactions are not implemented in the client snippets. Those require product-level decisions; none can be solved by adding a TypeScript [port](../GLOSSARY.md#port) alone. Measure performance or deployment scaling needs before introducing additional runtime services.
 
 ## 5. Terminology and references
 
