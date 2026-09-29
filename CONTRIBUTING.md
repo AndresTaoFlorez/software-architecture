@@ -261,7 +261,7 @@ A frontend and an independently deployed backend may have **separate model owner
 
 Prefer cohesive feature/capability ownership, small public contracts, [local state](./GLOSSARY.md#local-state), explicit translation at boundaries and straightforward composition. Do not invent a global utility, generic base repository or framework merely because multiple features might exist in the future. Extract reuse only when the behavior and its owner are demonstrably shared; distinguish meaningful policy duplication from two independent contexts coincidentally using the same string.
 
-When an example is reproduced in multiple guides, define **one editorial source** and mechanically synchronize the other copies, or use links/excerpts instead. For the shared order-cancellation feature, edit [the canonical complete example](./clean-architecture/4-building-a-feature.md) and run `npm run sync:examples`; the four architecture landing pages keep generated copies of the shared [Domain](./GLOSSARY.md#domain)/[Application](./GLOSSARY.md#application-layer)/[Infrastructure](./GLOSSARY.md#infrastructure) parts and own only their pattern-specific presentation/composition. CI rejects drift with `npm run check:examples`.
+When an example is reproduced in multiple guides, define **one editorial source** and mechanically synchronize the other copies, or use links/excerpts instead. For the shared order-cancellation feature, edit [the canonical complete example](./clean-architecture/4-building-a-feature.md) and run `npm run sync:examples`; the four architecture landing pages keep generated copies of the shared [Domain](./GLOSSARY.md#domain)/[Application](./GLOSSARY.md#application-layer)/[Infrastructure](./GLOSSARY.md#infrastructure) parts and own only their pattern-specific presentation/composition. The local `npm run check:examples` command detects drift; no hosted workflow is required.
 
 Do not introduce:
 
@@ -309,7 +309,7 @@ Every substantial documentation PR must be reviewed three times.
 ### Pass 3 — mechanical consistency
 
 - No ASCII/text diagrams.
-- Mermaid syntax is checked with a real Mermaid parser and meanings are reviewed by a person/agent. The lightweight CI check only validates declarations and fences; see [Documentation Validation](./docs/validation.md).
+- Mermaid syntax should be checked with a real Mermaid parser and meanings reviewed by a person/agent. The lightweight local documentation check only validates declarations and fences; see [Documentation Validation](./docs/validation.md).
 - Glossary links are current.
 - Relative links are valid.
 - Headings/anchors used by other docs remain stable.
