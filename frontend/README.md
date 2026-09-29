@@ -2,7 +2,9 @@
 
 This section is the canonical frontend guidance for this repository.
 
-[Clean Architecture](../GLOSSARY.md#clean-architecture) and [Onion Architecture](../GLOSSARY.md#onion-architecture) define **dependency direction across application boundaries**. They do not prescribe how a large React/Vue/Svelte [Presentation layer](../GLOSSARY.md#presentation-layer) must be organized internally. This section fills that gap without pretending framework conventions are part of Clean or Onion.
+Imagine a ticket screen that displays assigned tickets and lets an analyst create a new one. Two different problems appear. First, the rule for creating a ticket should not depend on React or a particular HTTP library. Second, as the screen grows, its form, filters, loading state and table should not all become one enormous component.
+
+[Clean Architecture](../GLOSSARY.md#clean-architecture) and [Onion Architecture](../GLOSSARY.md#onion-architecture) address the first problem: which parts of the application may depend on which technical details. They do not prescribe how a large React/Vue/Svelte [Presentation layer](../GLOSSARY.md#presentation-layer) must organize its own pages and features. This section addresses the second problem without treating framework conventions as rules of Clean or Onion.
 
 The examples use React, Redux Toolkit and Panda CSS because they make the boundaries concrete. The underlying rules are framework-independent.
 
