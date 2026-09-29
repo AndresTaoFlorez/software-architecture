@@ -20,7 +20,7 @@ export const sharedFiles = [
 // implementation blocks have ONE editorial owner: the canonical Clean feature.
 // Presentation and composition deliberately remain page-specific.
 export function findSharedBlock(document, filename, isLanding = false) {
-  const section = isLanding ? document.indexOf('### Complete client implementation') : 0
+  const section = isLanding ? document.indexOf('### Complete') : 0
   if (section < 0) throw new Error('missing complete example section')
   const prefix = '```ts\n// ' + filename + '\n'
   const begin = document.indexOf(prefix, section)
