@@ -259,11 +259,14 @@ Every substantial documentation PR must be reviewed three times.
 
 ### Pass 1 — pedagogy and structure
 
-- Can a programmer with no architecture background follow the order?
-- Is history/context before implementation detail?
-- Are strong/weak scenarios explicit?
-- Can the reader place a simple function/type/file?
-- Are folder responsibilities explicit?
+- Can a programmer with no architecture background follow the order **and explain the central idea in their own words**?
+- Does the section begin with a recognizable situation and specific problem, rather than a technical name in search of an example?
+- Are unfamiliar terms explained when first needed, without circular definitions or chains of jargon? A glossary hyperlink alone is insufficient.
+- Can the reader follow what goes in, what happens, and what comes out of the simplest example before seeing the generalized model?
+- Are history/context, appropriate and inappropriate usage scenarios, and relevant trade-offs explicit?
+- Can the reader place a simple function/type/file and explain why it belongs there?
+- Are folder responsibilities explicit, and do diagram captions explain the nodes and meaning of the arrows?
+- Does the explanation retain correct technical meaning instead of relying on a misleading analogy?
 
 ### Pass 2 — architectural rigor
 
