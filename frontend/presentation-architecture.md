@@ -2,7 +2,9 @@
 
 ## 1. Presentation is an architectural boundary
 
-[Presentation](../GLOSSARY.md#presentation-layer) is not merely "the folder containing JSX".
+When an analyst clicks **Create Ticket**, the screen needs to read the form, disable the submit button while saving, and show an error if the request fails. Those tasks exist because someone is using a screen. The rule deciding whether a ticket may be created is different: it should still hold if another screen or an API triggers the same operation.
+
+That screen-facing responsibility is called [Presentation](../GLOSSARY.md#presentation-layer); it is not merely “the folder containing JSX”.
 
 It owns concerns whose meaning exists because a user interface exists:
 
