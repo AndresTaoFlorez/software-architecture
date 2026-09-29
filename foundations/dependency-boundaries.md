@@ -2,7 +2,11 @@
 
 ## 1. The rule
 
-The most reusable rule across Clean, Onion and [Ports & Adapters](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters) is simple:
+Suppose our ticket rules say a resolved ticket cannot be assigned again. The rule should continue to work if we replace React, change an HTTP library, or move the records to another database. If the rule imports `fetch`, a database model, or a UI component, a technical change can force us to revisit code that has no reason to change.
+
+A *source dependency* means one code module refers to another—for example, through an `import`. A *policy* is a rule or operation the application is responsible for. A *detail* is a particular way of displaying, storing, or transporting it; that detail is often easier to replace.
+
+The most reusable rule across Clean, Onion and [Ports & Adapters](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters) can now be stated precisely:
 
 > Source dependencies should point from volatile details toward stable policy, never the reverse.
 
