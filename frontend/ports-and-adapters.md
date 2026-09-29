@@ -153,8 +153,9 @@ The [use case](../GLOSSARY.md#use-case) coordinates the operation and delegates 
 `src/infrastructure/tickets/HttpTicketGateway.ts`:
 
 ```ts
+import { z } from 'zod'
 import {
-  isTicketStatus,
+  TICKET_STATUSES,
   isTicketSubject,
   normalizeTicketSubject,
   type Ticket,
@@ -164,32 +165,28 @@ import type {
   TicketGateway,
 } from '../../application/tickets/ports/TicketGateway'
 
-// The server's wire shape is external data, not a trusted Ticket.
-type TicketDto = {
-  ticket_id: string
-  subject: string
-  status: string
-}
+// This schema owns the *external wire shape*, not ticket business rules.
+// Status values and the subject rule come from Domain.
+const TicketResponseSchema = z.object({
+  ticket_id: z.string().min(1),
+  subject: z.string().refine(isTicketSubject, 'Subject is required'),
+  status: z.enum(TICKET_STATUSES),
+})
 
-function parseTicketDto(value: unknown): Ticket {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    throw new Error('Invalid ticket response')
-  }
+type TicketDto = z.infer<typeof TicketResponseSchema>
 
-  const dto = value as Partial<Record<keyof TicketDto, unknown>>
-  if (
-    typeof dto.ticket_id !== 'string' ||
-    !isTicketSubject(dto.subject) ||
-    !isTicketStatus(dto.status)
-  ) {
-    throw new Error('Invalid ticket response')
-  }
-
+function toTicket(dto: TicketDto): Ticket {
   return {
     id: dto.ticket_id,
     subject: normalizeTicketSubject(dto.subject),
     status: dto.status,
   }
+}
+
+function parseTicketDto(value: unknown): Ticket {
+  const parsed = TicketResponseSchema.safeParse(value)
+  if (!parsed.success) throw new Error('Invalid ticket response')
+  return toTicket(parsed.data)
 }
 
 export class HttpTicketGateway implements TicketGateway {
@@ -203,14 +200,21 @@ export class HttpTicketGateway implements TicketGateway {
     })
 
     if (!response.ok) throw new Error('Ticket creation unavailable')
-    return parseTicketDto(await response.json())
+
+    let payload: unknown
+    try {
+      payload = await response.json()
+    } catch {
+      throw new Error('Invalid ticket response')
+    }
+    return parseTicketDto(payload)
   }
 }
 ```
 
-The [adapter](../GLOSSARY.md#adapter) still owns **untrusted HTTP-response validation**: checking that JSON has the expected fields, rejecting malformed data, and translating the API's `ticket_id` to the frontend model's `id`. But it does **not** redefine the domain's valid status values or the non-blank subject rule: it calls `isTicketStatus`, `isTicketSubject` and `normalizeTicketSubject` from [Domain](../GLOSSARY.md#domain). The transport [DTO](../GLOSSARY.md#data-transfer-object-dto) represents an external shape (`status: string`); the returned `Ticket` has a domain-validated `TicketStatus`. A TypeScript union alone cannot validate JSON at runtime.
+This example uses **[Zod](https://zod.dev/basics)** (a runtime schema-validation library) rather than an unchecked type assertion and a hand-written object parser. `TicketResponseSchema.safeParse(value)` accepts `unknown`, checks the HTTP response, and returns typed data only on success; `TicketDto` is **inferred from that same schema** instead of declared separately. `status: z.enum(TICKET_STATUSES)` reads the one list owned by [Domain](../GLOSSARY.md#domain); `subject` delegates to the domain-owned `isTicketSubject`. The [adapter](../GLOSSARY.md#adapter) alone knows `ticket_id` and maps it to `Ticket.id`. A malformed JSON body and an incompatible response both become an integration error, not a fabricated domain object. Zod's `z.object` normally strips additional response fields, allowing additive protocol changes while checking all required fields.
 
-If another API represents statuses differently (for example, `IN_PROGRESS`), the [adapter](../GLOSSARY.md#adapter) translates that external value **into** a domain-owned status; that implementation must not quietly add new domain states. The backend independently enforces its authoritative rules, and API [contract tests](../GLOSSARY.md#contract-test) should detect frontend/backend vocabulary drift. In a larger application, also translate transport failures into an application-owned error/result instead of exposing raw HTTP mechanics through the public feature API.
+If another API represents statuses differently (for example, `IN_PROGRESS`), the [adapter](../GLOSSARY.md#adapter) translates that external value **into** a domain-owned status; that implementation must not quietly add new domain states. In a larger project, put a **reused external protocol schema** in the owning integration's `contracts/` area rather than copying a parser into each gateway; use generated OpenAPI/JSON Schema definitions if the API contract is already machine-readable. `TICKET_STATUSES` and protocol `ticket_id` still have **different owners**, so do not force a universal schema package across independently deployed services. The backend independently enforces its authoritative rules, and API [contract tests](../GLOSSARY.md#contract-test) should detect frontend/backend vocabulary drift. In a larger application, also translate transport failures into an application-owned error/result instead of exposing raw HTTP mechanics through the public feature API.
 
 ### Presentation and Composition: using the operation
 
@@ -267,7 +271,7 @@ const fakeGateway: TicketGateway = {
 const createTicket = makeCreateTicket(fakeGateway)
 ```
 
-The [executable walkthrough test](../scripts/frontend-ticket-example.test.mjs) typechecks the documented [Domain](../GLOSSARY.md#domain), [port](../GLOSSARY.md#port), [use case](../GLOSSARY.md#use-case), [adapter](../GLOSSARY.md#adapter) and React-facing hook, then exercises the injected HTTP implementation with valid statuses, malformed payloads, unexpected statuses and blank subjects. That check also rejects the dangerous shortcut of coercing untrusted values into a valid string. It is a regression test for the *documented example*, not a substitute for the backend's own tests.
+The [executable walkthrough test](../scripts/frontend-ticket-example.test.mjs) typechecks the documented [Domain](../GLOSSARY.md#domain), [port](../GLOSSARY.md#port), [use case](../GLOSSARY.md#use-case), [adapter](../GLOSSARY.md#adapter) and React-facing hook, then exercises the injected HTTP implementation with valid statuses, malformed payloads, unexpected statuses and blank subjects. That check rejects the dangerous shortcut of coercing untrusted values into a valid string and verifies the schema-based parser, including malformed JSON. It is a regression test for the *documented example*, not a substitute for the backend's own tests.
 
 A GraphQL or offline [adapter](../GLOSSARY.md#adapter) could also implement the same [port](../GLOSSARY.md#port) if the product needs it. **Do not introduce extra [ports](../GLOSSARY.md#port) solely to reproduce a diagram**: a simple read-only remote-data screen may be better served by a [server-state](../GLOSSARY.md#server-state)/query solution.
 
@@ -318,5 +322,7 @@ Adding `reopened` to the ticket model makes the UI label map fail typechecking u
 - **Public feature hook:** UI-facing [facade](../GLOSSARY.md#facade-pattern); it is not an [Infrastructure](../GLOSSARY.md#infrastructure) [adapter](../GLOSSARY.md#adapter) merely because it invokes the [use case](../GLOSSARY.md#use-case).
 
 **Primary source:** Alistair Cockburn, *[Hexagonal Architecture](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters)* (2005): https://alistair.cockburn.us/hexagonal-architecture/
+
+**Runtime schema reference:** Zod, [Defining schemas and `safeParse`](https://zod.dev/basics) · [Enums from `as const` values](https://zod.dev/api#enums). In an application, install Zod as a runtime dependency; it is a dev dependency only in this documentation/test repository.
 
 **Related sources:** Robert C. Martin, *The [Clean Architecture](../GLOSSARY.md#clean-architecture)*: https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html · Mark Seemann, *[Composition Root](../GLOSSARY.md#composition-root)*: https://blog.ploeh.dk/2011/07/28/CompositionRoot/ · React, *Reusing Logic with [Custom Hooks](../GLOSSARY.md#custom-hook)*: https://react.dev/learn/reusing-logic-with-custom-hooks
