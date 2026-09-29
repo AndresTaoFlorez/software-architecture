@@ -18,20 +18,46 @@ This is the outbound side of **[Ports & Adapters](../GLOSSARY.md#hexagonal-archi
 
 ## 2. Visual model
 
-![Conceptual Port & Adapter diagram for the frontend support-ticket example](./assets/ticket-port-adapter.svg)
+![Three-part diagram explaining the ticket frontend: the use case requires a TicketGateway interface, startup supplies HttpTicketGateway, and the actual request calls that adapter before contacting the external backend.](./assets/ticket-port-adapter.svg)
 
-**Figure 1.** Vector version of the supplied reference image. The solid arrows show conceptual calls/dependencies; dotted arrows show assembly and implementation relationships. This is **not** a runtime sequence: the [port](../GLOSSARY.md#port) is a TypeScript contract, **not** a separate runtime object forwarding to the HTTP [adapter](../GLOSSARY.md#adapter). The [Composition Root](../GLOSSARY.md#composition-root) constructs `HttpTicketGateway`, passes it into `makeCreateTicket`, and passes the resulting operation to [Presentation](../GLOSSARY.md#presentation-layer).
+**Figure 1. Read the panels separately, from top to bottom:**
+
+1. **Code relationships (design):** `createTicket` requires the application-owned `TicketGateway` interface; `HttpTicketGateway` implements it. These arrows show the relationship between code definitions, **not** which objects are called in sequence.
+2. **Startup (assembly):** the [Composition Root](../GLOSSARY.md#composition-root) creates a concrete `HttpTicketGateway`, passes it to `makeCreateTicket`, and makes the resulting operation available to the UI. The use case does not construct its dependency.
+3. **After the click (runtime):** `useTickets().submit()` calls `createTicket()`, which calls the **injected adapter object**; the adapter sends `POST /api/tickets` to the backend. The frontend boundary encloses Presentation, Application and its Infrastructure adapter. The backend is external **to this frontend**, even if both belong to the same product.
+
+The [port](../GLOSSARY.md#port) is a TypeScript contract, **not a separate runtime forwarding object**. That is why it appears in the first panel but not as an extra stop in the third. On the way back, the HTTP [adapter](../GLOSSARY.md#adapter) validates the server response and translates `ticket_id` into the application's `id`.
 
 <details>
-<summary>Editable Mermaid source of the figure</summary>
+<summary>Editable Mermaid sources corresponding to the figure</summary>
+
+**1. Code relationships — arrows describe required/implemented source contracts:**
 
 ```mermaid
-flowchart TB
-    ROOT["Composition Root"] -. "injects adapter" .-> USECASE["Application<br/>createTicket()"]
-    PRESENTATION["Presentation<br/>useTickets()"] --> USECASE
-    USECASE --> PORT["Port<br/>TicketGateway"]
-    ADAPTER["Infrastructure Adapter<br/>HttpTicketGateway"] -. "implements" .-> PORT
-    ADAPTER --> API["Backend API"]
+flowchart LR
+    subgraph FRONTEND["Frontend: code relationships"]
+        USECASE["Application use case<br/>createTicket()"] -->|"requires contract"| PORT["Application-owned port<br/>TicketGateway interface"]
+        ADAPTER["Infrastructure adapter<br/>HttpTicketGateway"] -->|"implements contract"| PORT
+    end
+```
+
+**2. Startup — the concrete objects are assembled before the UI uses them:**
+
+```ts
+const gateway = new HttpTicketGateway()
+const createTicket = makeCreateTicket(gateway)
+// Supply createTicket to the page / useTickets hook.
+```
+
+**3. Runtime — arrows show actual calls, not source-code dependency direction:**
+
+```mermaid
+flowchart LR
+    subgraph FRONTEND["Inside the frontend"]
+        UI["Presentation<br/>useTickets().submit(input)"] -->|"calls"| USECASE["Application<br/>createTicket(input)"]
+        USECASE -->|"calls injected object"| ADAPTER["Infrastructure<br/>HttpTicketGateway.create(input)"]
+    end
+    ADAPTER -->|"POST /api/tickets"| API["Backend API<br/>outside this frontend"]
 ```
 
 </details>
