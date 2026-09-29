@@ -117,13 +117,19 @@ Start from a familiar actor's requirement and build progressively: direct approa
 
 Show the rule/model, [use case](../GLOSSARY.md#use-case)/workflow, justified [ports](../GLOSSARY.md#port)/contracts, [adapter](../GLOSSARY.md#adapter), presentation, composition, and runtime flow versus source dependency direction. Use Mermaid for all flows.
 
+**Realistic scenario:** identify the actor, business outcome, authoritative policy/data owner, external trust boundaries, meaningful failures and any concurrency/authorization assumptions necessary for correctness. A beginner-oriented excerpt can omit production peripherals only when those exclusions are explicit. Do not create implementation types, checks or constants separately in every layer when they represent the same owned business rule.
+
+**Change-pressure exercise:** briefly show what happens when (1) a business value or transition changes, (2) an external integration changes, and (3) another feature/team/client is added. Name exactly which modules should change and which should remain stable. Consider hundreds of features and multiple maintainers without claiming that a fixed file count or a larger number of abstractions is inherently more scalable.
+
+**Shared example ownership:** when complete example code recurs in several guides, edit one canonical implementation and link or mechanically synchronize the copies. For the order-cancellation feature, the canonical source is [Building a Feature End-to-End](../clean-architecture/4-building-a-feature.md); use `npm run sync:examples` and enforce `npm run check:examples` before publishing replicated snippets.
+
 ## 11. Testing
 
-Explain pure/domain tests, application/use-case tests, [adapter](../GLOSSARY.md#adapter)/integration tests, presentation tests, architecture/dependency tests, and end-to-end tests where relevant. Do not prescribe arbitrary percentages.
+Explain pure/domain tests, application/use-case tests, [adapter](../GLOSSARY.md#adapter)/integration tests, presentation tests, architecture/dependency tests, and end-to-end tests where relevant. Do not prescribe arbitrary percentages. Include negative external-data cases, the domain-owned runtime guards when needed, contract compatibility between independently deployed systems, and race/error scenarios when a workflow changes authoritative state. Explain what is intentionally omitted from a small teaching example.
 
 ## 12. Trade-offs and failure modes
 
-Document real decay modes such as god services, god [ViewModels](../GLOSSARY.md#viewmodel), generic utility buckets, [service locator](../GLOSSARY.md#service-locator), technology types leaking inward, ceremonial interfaces, or duplicated models without boundary translation.
+Document real decay modes such as god services, god [ViewModels](../GLOSSARY.md#viewmodel), generic utility buckets, [service locator](../GLOSSARY.md#service-locator), technology types leaking inward, ceremonial interfaces, or duplicated models without boundary translation. Describe how likely requirement changes propagate through the design; an example is not maintainable solely because its current happy path works.
 
 ## 13. Advanced topics
 
