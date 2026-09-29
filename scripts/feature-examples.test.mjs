@@ -44,7 +44,12 @@ for (const document of documents) test(document + ': complete feature compiles a
       getCanonicalFileName: f => f, getCurrentDirectory: () => root, getNewLine: () => '\n',
     }))
     const load = name => import(pathToFileURL(path.join(root, name)).href)
-    const { Order, ShippedOrderCannotBeCancelled } = await load('domain/orders/Order.ts')
+    const { Order, ShippedOrderCannotBeCancelled, ORDER_STATUSES, isOrderStatus } = await load('domain/orders/Order.ts')
+    assert.deepEqual([...ORDER_STATUSES], ['pending', 'shipped', 'cancelled'])
+    for (const status of ORDER_STATUSES) assert.equal(isOrderStatus(status), true)
+    for (const invalid of [null, 9, {}, 'unknown', { toString: () => 'pending' }]) {
+      assert.equal(isOrderStatus(invalid), false, 'Domain must not coerce unknown values')
+    }
     const { makeCancelOrder, PersistenceFailure } = await load('application/orders/cancelOrder.ts')
     const { HttpOrderRepository } = await load('infrastructure/orders/HttpOrderRepository.ts')
     const shipped = new Order('1', 'shipped')
@@ -79,7 +84,11 @@ for (const document of documents) test(document + ': complete feature compiles a
     loaded.order.cancel()
     await repository.save(loaded.order, loaded.version)
     assert.deepEqual(written, ['/orders/a%2Fb', { id: 'a/b', status: 'cancelled' }, 'v1'])
-    for (const data of [null, {}, { id: 'a/b', status: 'unknown' }, { id: 'other', status: 'pending' }]) {
+    for (const data of [
+      null, {}, { id: 'a/b', status: 'unknown' },
+      { id: 'a/b', status: 42 }, { id: 'a/b', status: { toString: () => 'pending' } },
+      { id: 'other', status: 'pending' },
+    ]) {
       await assert.rejects(new HttpOrderRepository({ ...transport, get: async () => ({ data, version: 'v1' }) }).findById('a/b'), PersistenceFailure)
     }
     const vmFile = files.find(f => f.endsWith('CancelOrderViewModel.ts') || f.endsWith('CancellationModel.ts'))
