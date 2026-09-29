@@ -39,7 +39,7 @@ flowchart BT
     OUTER["Outer / volatile"] --> INNER["Inner / stable policy"]
 ```
 
-Immediately explain what every node and arrow means. Never assume the reader already knows the vocabulary.
+Introduce each role using the ongoing concrete example before generalizing. Immediately explain what every node and arrow means, including whether arrows represent source dependencies, runtime calls, construction/wiring, or another relationship. Never assume the reader already knows the vocabulary.
 
 ## 6. Layers or roles
 
