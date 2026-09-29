@@ -69,7 +69,7 @@ flowchart LR
 | `domain/tickets/Ticket.ts` | Ticket shape, valid status vocabulary/check and subject rule | Business meaning has one owner, independent of server field names and React |
 | `application/tickets/ports/TicketGateway.ts` | **Outbound [port](../GLOSSARY.md#port)** and command | The [use case](../GLOSSARY.md#use-case) defines what capability it needs |
 | `application/tickets/use-cases/createTicket.ts` | Use-case orchestration | No HTTP or React imports |
-| `infrastructure/tickets/HttpTicketGateway.ts` | **Outbound [adapter](../GLOSSARY.md#adapter)**, structural [DTO](../GLOSSARY.md#data-transfer-object-dto) validation and mapping | Only this boundary knows `fetch`/`ticket_id`; it reuses Domain for valid ticket values |
+| `infrastructure/tickets/HttpTicketGateway.ts` | **Outbound [adapter](../GLOSSARY.md#adapter)**, structural [DTO](../GLOSSARY.md#data-transfer-object-dto) validation and mapping | Only this boundary knows `fetch`/`ticket_id`; it reuses [Domain](../GLOSSARY.md#domain) for valid ticket values |
 | `presentation/features/tickets/model/useTickets.ts` | React-facing state/operations | Loading/error feedback belongs to the UI |
 | `composition/bootstrap.tsx` | Dependency construction and injection | Chooses the concrete [adapter](../GLOSSARY.md#adapter) without becoming a [Service Locator](../GLOSSARY.md#service-locator) |
 
