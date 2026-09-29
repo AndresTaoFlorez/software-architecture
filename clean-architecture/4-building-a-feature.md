@@ -10,7 +10,13 @@ Requirement: cancel a pending order, reject a shipped order, persist the change,
 
 ```ts
 // domain/orders/Order.ts
-export type OrderStatus = 'pending' | 'shipped' | 'cancelled'
+export const ORDER_STATUSES = ['pending', 'shipped', 'cancelled'] as const
+export type OrderStatus = (typeof ORDER_STATUSES)[number]
+
+export function isOrderStatus(value: unknown): value is OrderStatus {
+  return ORDER_STATUSES.some(status => status === value)
+}
+
 export class ShippedOrderCannotBeCancelled extends Error {}
 export class Order {
   readonly id: string
@@ -71,7 +77,7 @@ The repository [port](../GLOSSARY.md#port) protects loading/persisting business 
 
 ```ts
 // infrastructure/orders/HttpOrderRepository.ts
-import { Order, type OrderStatus } from '../../domain/orders/Order'
+import { Order, isOrderStatus, type OrderStatus } from '../../domain/orders/Order'
 import { PersistenceFailure, type OrderRepository } from '../../application/orders/cancelOrder'
 
 // Adapter-owned transport contract. A concrete fetch driver implements it.
@@ -79,14 +85,14 @@ export interface OrderTransport {
   get(path: string): Promise<{ data: unknown; version: string } | null>
   put(path: string, data: unknown, version: string): Promise<void>
 }
-type ApiOrderDto = { id: string; status: OrderStatus }
-function parseOrderDto(data: unknown): ApiOrderDto {
+type ApiOrderDto = { id: string; status: string } // external wire shape
+function parseOrderDto(data: unknown): { id: string; status: OrderStatus } {
   if (typeof data !== 'object' || data === null) throw new PersistenceFailure('unavailable')
   const dto = data as Record<string, unknown>
-  if (typeof dto.id !== 'string' || !['pending', 'shipped', 'cancelled'].includes(String(dto.status))) {
+  if (typeof dto.id !== 'string' || !isOrderStatus(dto.status)) {
     throw new PersistenceFailure('unavailable')
   }
-  return { id: dto.id, status: dto.status as OrderStatus }
+  return { id: dto.id, status: dto.status }
 }
 function toOrderDto(order: Order): ApiOrderDto { return { id: order.id, status: order.status } }
 
@@ -105,6 +111,8 @@ export class HttpOrderRepository implements OrderRepository {
   }
 }
 ```
+
+The external response is treated as `unknown` until its fields are checked. The [adapter](../GLOSSARY.md#adapter) owns the transport shape (`id` and response parsing), but reuses `isOrderStatus` from [Domain](../GLOSSARY.md#domain) for valid business values. `OrderStatus` and its runtime checker are derived from the same `ORDER_STATUSES` definition; this HTTP implementation must not maintain another status list. The wire [DTO](../GLOSSARY.md#data-transfer-object-dto) intentionally allows a general `string` because another API version may send an unsupported status; only the successfully parsed result is narrowed to `OrderStatus`.
 
 The [DTO](../GLOSSARY.md#data-transfer-object-dto), validation and [mapper](../GLOSSARY.md#mapper) stay with the [adapter](../GLOSSARY.md#adapter). The inner [port](../GLOSSARY.md#port) does not import them. This physical [Infrastructure](../GLOSSARY.md#infrastructure) file implements the canonical [Interface Adapter](../GLOSSARY.md#interface-adapter) role.
 
@@ -236,7 +244,18 @@ flowchart LR
 
 A read-only screen without meaningful application policy may need only a query [adapter](../GLOSSARY.md#adapter). Create a [port](../GLOSSARY.md#port) because it protects policy or an integration boundary, rather than to populate folders.
 
-## 4.8 Feature checklist
+## 4.8 Change-pressure review: not merely a five-file demo
+
+| Real product change | Expected owner and change | What should stay untouched |
+| --- | --- | --- |
+| Orders gain a new valid status | The Orders [Domain](../GLOSSARY.md#domain) owns `ORDER_STATUSES` and its transition rules. Update expected behavior tests and any screen-specific display text that must show the state. | Do not maintain a second status allowlist in the HTTP parser or duplicate cancellation rules in UI handlers. |
+| The order endpoint changes fields, transport or error format | The concrete transport/[adapter](../GLOSSARY.md#adapter) changes its [DTO](../GLOSSARY.md#data-transfer-object-dto) mapping. Check the API contract and supported deployment versions. | [Domain](../GLOSSARY.md#domain) policy and `makeCancelOrder` remain stable if the required operation does not change. |
+| Another screen, client or repository implementation uses cancellation | Compose another caller or supply a different implementation of the existing required capability **when justified**. Expose the feature through a narrow [public API](../GLOSSARY.md#public-api) rather than deep-importing internals. | Keep authoritative cancellation rules in the business model; do not clone the entire feature just to reuse one operation. |
+| Shipping and cancellation race | The backend must decide atomically against current state, with `If-Match`/versioning or a dedicated cancellation command as appropriate. Test conflicts and failure recovery. | A browser-only check must never be presented as the authority for the persisted business rule. |
+
+The small guide co-locates the cohesive order contract, result and orchestration for readability. At a larger scale, split these when their **ownership or reasons to change differ**, not simply because the folder reaches a file-count threshold. The canonical [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer)/[Infrastructure](../GLOSSARY.md#infrastructure) blocks in this chapter are the editorial source for the complete examples in the four landing pages; run `npm run sync:examples` after changing them, then `npm run check`.
+
+## 4.9 Feature checklist
 
 - Test shipped rejection and successful persistence through the application [port](../GLOSSARY.md#port).
 - Test conflict results; never silently overwrite newer state.

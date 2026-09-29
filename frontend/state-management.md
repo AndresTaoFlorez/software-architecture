@@ -1,8 +1,8 @@
 # State Management and Side Effects
 
-[State management](../GLOSSARY.md#state-management) is not a layer of Clean or [Onion Architecture](../GLOSSARY.md#onion-architecture). It is a [Presentation](../GLOSSARY.md#presentation-layer) mechanism.
+A ticket screen remembers several different things: whether its dialog is open, which ticket the analyst selected, and the latest list received from the server. These values do not all belong in the same place. A dialog's open/closed flag can live inside its component; selection shared by several components may belong to the ticket feature; remotely owned ticket data may need a fetch/cache mechanism.
 
-The first design question is not "which [store](../GLOSSARY.md#store)?". It is **who owns this state and why does it need to live?**
+Choosing who keeps each value, who may update it, and when it must be refreshed is [state management](../GLOSSARY.md#state-management). It is not a layer of Clean or [Onion Architecture](../GLOSSARY.md#onion-architecture); in this guide the client-side mechanism is part of [Presentation](../GLOSSARY.md#presentation-layer). The first question is not “which [store](../GLOSSARY.md#store)?” but **who needs this value, who owns the authoritative copy, and how long must it live?**
 
 ---
 
@@ -247,24 +247,30 @@ That does not mean every server call should bypass [Application](../GLOSSARY.md#
 
 ### Server-state dominant operation
 
-If a screen only needs cached remote data, with invalidation/refetch but little application policy:
+If a screen only needs cached remote data, with invalidation/refetch but little application policy, its runtime data path can be direct:
 
 ```mermaid
 flowchart LR
-    V["View / feature"] --> Q["Query adapter"] --> API["API"]
+    V["View / feature"] -->|"requests remote data"| Q["Query/cache mechanism"]
+    Q -->|"fetches and refreshes"| API["External API"]
 ```
 
 [RTK Query](../GLOSSARY.md#rtk-query), TanStack Query or another [server-state](../GLOSSARY.md#server-state) library may be enough.
 
 ### Policy-bearing operation
 
-If an operation validates business/application rules, coordinates multiple capabilities, has authorization policy or must stay independent of transport:
+If an operation owns business/application policy or coordinates multiple capabilities that must remain independent of a particular transport, give it a deliberately protected boundary. The following arrows show **source-code contracts and assembly**, not the sequence of runtime calls:
 
 ```mermaid
 flowchart LR
-    V["View"] --> P["Presentation adapter"] --> A["Application use case"] --> PORT["Port"]
-    I["Infrastructure adapter"] --> PORT
+    V["Presentation binding"] -->|"depends on operation"| A["Application use case"]
+    A -->|"requires"| PORT["Application-owned port: contract"]
+    I["Infrastructure adapter"] -->|"implements"| PORT
+    ROOT["Composition Root"] -.->|"constructs"| I
+    ROOT -.->|"supplies operation"| V
 ```
+
+At runtime, the [View](../GLOSSARY.md#view) invokes the operation, which calls its **injected [adapter](../GLOSSARY.md#adapter) object**; that [adapter](../GLOSSARY.md#adapter) communicates with the external system. The [port](../GLOSSARY.md#port) is not another object that forwards a request. See the [ticket creation walkthrough](./ports-and-adapters.md#2-visual-model) for the separate runtime diagram.
 
 Use the architecture because it protects something meaningful, not to wrap every GET request in ceremony.
 

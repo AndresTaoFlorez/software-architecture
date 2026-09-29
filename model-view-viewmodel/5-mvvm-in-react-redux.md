@@ -2,7 +2,9 @@
 
 # 5. MVVM in React + Redux Toolkit
 
-React and Redux Toolkit do not prescribe [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm). This chapter demonstrates **one optional mapping** when a project intentionally uses a [ViewModel](../GLOSSARY.md#viewmodel)/[Presentation](../GLOSSARY.md#presentation-layer) [facade](../GLOSSARY.md#facade-pattern) boundary.
+Suppose `OrdersPage` needs only `rows`, `isSaving` and `cancelOrder()`. It should not necessarily know which Redux action was dispatched or how the asynchronous request was stored. A public `useOrders()` hook can expose those screen-level values and actions while hiding the internal Redux mechanics.
+
+This is **one optional [ViewModel](../GLOSSARY.md#viewmodel)-style [Presentation](../GLOSSARY.md#presentation-layer) [facade](../GLOSSARY.md#facade-pattern)**. React and Redux Toolkit do not prescribe [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm), and the extra layer is useful only when that separation solves a concrete maintenance or testing problem.
 
 For the repository's current Redux guidance, also read **[State Management and Side Effects](../frontend/state-management.md)**.
 

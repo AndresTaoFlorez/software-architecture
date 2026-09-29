@@ -20,7 +20,12 @@ Sources:
 
 ## 2. What problem does MVVM solve?
 
-Stateful UI code easily mixes:
+Imagine an Orders screen with a **Cancel** button. It must show the current status, disable the button while saving, and display a useful error if the operation fails. Putting all this [state management](../GLOSSARY.md#state-management) inside the component that draws buttons and text makes the screen hard to test without rendering it.
+
+A **[View](../GLOSSARY.md#view)** is the rendering part: it shows values and forwards user actions. A **[ViewModel](../GLOSSARY.md#viewmodel)** holds the information prepared for that screen—such as `isSaving`, `errorMessage`, and a `cancel()` operation—without referencing the actual button or HTML element. The **[Model](../GLOSSARY.md#model)** is the underlying data and application behavior needed by that screen. Connecting these parts is the purpose of [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm).
+
+Without that separation, stateful UI code easily mixes:
+
 
 - rendering;
 - loading/error state;
@@ -250,13 +255,21 @@ The table above gives a possible React adaptation. The implementation below uses
 
 ### Complete implementation with an explicit ViewModel
 
+**Shared example ownership.** The [Domain](../GLOSSARY.md#domain), [Application](../GLOSSARY.md#application-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) blocks below are synchronized from [the canonical order-cancellation walkthrough](../clean-architecture/4-building-a-feature.md). Edit that one source and run `npm run sync:examples`; `npm run check:examples` rejects drift. This chapter owns its [ViewModel](../GLOSSARY.md#viewmodel)/DOM interaction and composition variant.
+
 This framework-neutral example uses a class plus an explicit DOM binding, so no React Hook is implied. React equivalents can expose the same contract through an intentionally designed hook.
 
 The business rule belongs in `domain/orders/Order.ts`; the operation, result, persistence failure and [port](../GLOSSARY.md#port) belong in `application/orders/cancelOrder.ts`. [DTO](../GLOSSARY.md#data-transfer-object-dto) validation/mapping and the concrete repository belong in `infrastructure/orders/HttpOrderRepository.ts`. [Presentation](../GLOSSARY.md#presentation-layer) owns gestures and feedback; `composition/bootstrap.ts` selects implementations. These are documentation conventions. A small file may contain cohesive contracts and functions; split them when ownership or change pressure requires it.
 
 ```ts
 // domain/orders/Order.ts
-export type OrderStatus = 'pending' | 'shipped' | 'cancelled'
+export const ORDER_STATUSES = ['pending', 'shipped', 'cancelled'] as const
+export type OrderStatus = (typeof ORDER_STATUSES)[number]
+
+export function isOrderStatus(value: unknown): value is OrderStatus {
+  return ORDER_STATUSES.some(status => status === value)
+}
+
 export class ShippedOrderCannotBeCancelled extends Error {}
 export class Order {
   readonly id: string
@@ -305,7 +318,7 @@ export function makeCancelOrder(orders: OrderRepository): CancelOrder {
 
 ```ts
 // infrastructure/orders/HttpOrderRepository.ts
-import { Order, type OrderStatus } from '../../domain/orders/Order'
+import { Order, isOrderStatus, type OrderStatus } from '../../domain/orders/Order'
 import { PersistenceFailure, type OrderRepository } from '../../application/orders/cancelOrder'
 
 // Adapter-owned transport contract. A concrete fetch driver implements it.
@@ -313,14 +326,14 @@ export interface OrderTransport {
   get(path: string): Promise<{ data: unknown; version: string } | null>
   put(path: string, data: unknown, version: string): Promise<void>
 }
-type ApiOrderDto = { id: string; status: OrderStatus }
-function parseOrderDto(data: unknown): ApiOrderDto {
+type ApiOrderDto = { id: string; status: string } // external wire shape
+function parseOrderDto(data: unknown): { id: string; status: OrderStatus } {
   if (typeof data !== 'object' || data === null) throw new PersistenceFailure('unavailable')
   const dto = data as Record<string, unknown>
-  if (typeof dto.id !== 'string' || !['pending', 'shipped', 'cancelled'].includes(String(dto.status))) {
+  if (typeof dto.id !== 'string' || !isOrderStatus(dto.status)) {
     throw new PersistenceFailure('unavailable')
   }
-  return { id: dto.id, status: dto.status as OrderStatus }
+  return { id: dto.id, status: dto.status }
 }
 function toOrderDto(order: Order): ApiOrderDto { return { id: order.id, status: order.status } }
 
@@ -339,6 +352,8 @@ export class HttpOrderRepository implements OrderRepository {
   }
 }
 ```
+
+The external response is treated as `unknown` until its fields are checked. The [adapter](../GLOSSARY.md#adapter) owns the transport shape (`id` and response parsing), but reuses `isOrderStatus` from [Domain](../GLOSSARY.md#domain) for valid business values. `OrderStatus` and its runtime checker are derived from the same `ORDER_STATUSES` definition; this HTTP implementation must not maintain another status list.
 
 ```ts
 // presentation/orders/CancelOrderViewModel.ts

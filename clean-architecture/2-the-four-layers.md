@@ -4,7 +4,9 @@
 
 # 2. The Four Circles
 
-The canonical [Clean Architecture](../GLOSSARY.md#clean-architecture) diagram contains four concentric circles. They are conceptual boundaries, not mandatory directory names.
+Imagine a user cancelling an order: the rule “shipped orders cannot be cancelled” is different from the operation “cancel this order,” which is different again from translating an HTTP request or writing a database row. The four circles below give these responsibilities different places so a technology change does not rewrite the rule.
+
+The canonical [Clean Architecture](../GLOSSARY.md#clean-architecture) diagram contains four concentric circles. They are conceptual boundaries, not mandatory directory names. The circles describe who may reference whose code, not four sequential runtime steps.
 
 ---
 

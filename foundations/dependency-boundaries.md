@@ -2,7 +2,11 @@
 
 ## 1. The rule
 
-The most reusable rule across Clean, Onion and [Ports & Adapters](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters) is simple:
+Suppose our ticket rules say a resolved ticket cannot be assigned again. The rule should continue to work if we replace React, change an HTTP library, or move the records to another database. If the rule imports `fetch`, a database model, or a UI component, a technical change can force us to revisit code that has no reason to change.
+
+A *source dependency* means one code module refers to another—for example, through an `import`. A *policy* is a rule or operation the application is responsible for. A *detail* is a particular way of displaying, storing, or transporting it; that detail is often easier to replace.
+
+The most reusable rule across Clean, Onion and [Ports & Adapters](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters) can now be stated precisely:
 
 > Source dependencies should point from volatile details toward stable policy, never the reverse.
 
@@ -64,6 +68,8 @@ Dependency inversion exists specifically to make those two directions different.
 A [port](../GLOSSARY.md#port) describes a purposeful conversation with something outside the protected policy. Cockburn describes [ports](../GLOSSARY.md#port) as application conversations and notes that both "one [port](../GLOSSARY.md#port) per [use case](../GLOSSARY.md#use-case)" and collapsing everything into only two giant [ports](../GLOSSARY.md#port) are unhelpful extremes.
 
 Prefer [ports](../GLOSSARY.md#port) with coherent capability boundaries:
+
+For the same distinction applied to a browser UI, follow **[Ports & Adapters in a frontend ticket-support application](../frontend/ports-and-adapters.md)** ([port](../GLOSSARY.md#port), HTTP [adapter](../GLOSSARY.md#adapter), [use case](../GLOSSARY.md#use-case), React hook and [Composition Root](../GLOSSARY.md#composition-root)).
 
 ```ts
 export interface ClosureGateway {
@@ -147,6 +153,14 @@ flowchart LR
 ```
 
 Not every boundary needs a bespoke mapping class. Plain functions are often enough.
+
+**Two different questions must not be conflated:**
+
+- **External-data validation (outer [adapter](../GLOSSARY.md#adapter)):** is this untrusted response actually an object with fields such as `ticket_id` and `status` of the expected shape? Map external names and convert integration failures here.
+- **Business validity ([Domain](../GLOSSARY.md#domain)):** which status values or ticket transitions are permitted? Declare each rule in one domain-owned place. Export a runtime guard or factory if unknown values must be checked; a TypeScript union disappears at runtime. The technical boundary **calls** the domain guard rather than repeating its list of values.
+- **[Application](../GLOSSARY.md#application-layer) orchestration:** use the validated model to perform the requested operation; do not silently redefine a business rule in a [use case](../GLOSSARY.md#use-case) or UI component.
+
+For a concrete example, see [the ticket gateway and its domain status checker](../frontend/ports-and-adapters.md#3-physical-ownership). An API can have a different external vocabulary: the integration maps that protocol to the domain's vocabulary, rather than extending the domain merely to accept a transport string. The backend remains authoritative for its own persisted state and enforcement; separate deployments should check compatibility through API contract/integration tests.
 
 ## 8. Domain is not "all shared types"
 

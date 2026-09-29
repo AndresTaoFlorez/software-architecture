@@ -7,7 +7,9 @@
 
 ## 2.1 The principle
 
-[Onion Architecture](../GLOSSARY.md#onion-architecture) protects the center from outer technology.
+Imagine a rule that blocks assigning a resolved ticket. If that rule imports a database client, changing the database can force changes in code that only decides whether assignment is allowed. Instead, the database-facing code can know the operation and supply its data without the rule knowing the database.
+
+This is what [Onion Architecture](../GLOSSARY.md#onion-architecture) means by protecting the center from outer technology. An arrow below means one source-code area may refer to the code in another; it does not mean every user action must execute in that order.
 
 ```mermaid
 flowchart LR

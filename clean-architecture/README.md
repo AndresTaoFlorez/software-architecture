@@ -18,6 +18,10 @@ Primary source: https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-archi
 
 ## 2. What problem does it solve?
 
+Imagine that cancelling an order is forbidden once it has shipped. A first implementation places the rule inside a React button and reads the status directly from the API response. Later, a second screen needs the same rule or the API renames its status field. The business decision now has to be found and corrected in UI/networking code.
+
+[Clean Architecture](../GLOSSARY.md#clean-architecture) separates that decision from the tools used to display or store the order: the cancellation rule is written in code that does not need to import React, `fetch`, or a database client. The outer code translates incoming data and asks the inner operation to perform the cancellation.
+
 Without explicit boundaries, code often grows around the framework or database:
 
 ```mermaid
@@ -67,6 +71,8 @@ It can be excessive when:
 <a id="the-idea-in-one-picture"></a>
 
 ## 5. The fundamental model
+
+Think of the circles below as answers to four separate questions about the same cancellation: **what business rule must always hold; what operation the application performs; how external requests/data are translated; and which specific framework or database does the technical work**. They describe responsibilities, not four objects that every request must visit in order.
 
 Martin's canonical diagram uses four conceptual circles:
 
@@ -276,11 +282,19 @@ For the full build, continue to **[Building a Feature End-to-End](./4-building-a
 
 ### Complete client implementation
 
+**Shared example ownership.** The [Domain](../GLOSSARY.md#domain), [Application](../GLOSSARY.md#application-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) blocks in this complete example are synchronized from [the canonical order-cancellation walkthrough](../clean-architecture/4-building-a-feature.md). Edit the canonical version and run `npm run sync:examples`; `npm run check:examples` rejects drift. This page owns its presentation-pattern-specific interaction and composition example.
+
 The business rule belongs in `domain/orders/Order.ts`; the operation, result, persistence failure and [port](../GLOSSARY.md#port) belong in `application/orders/cancelOrder.ts`. [DTO](../GLOSSARY.md#data-transfer-object-dto) validation/mapping and the concrete repository belong in `infrastructure/orders/HttpOrderRepository.ts`. [Presentation](../GLOSSARY.md#presentation-layer) owns gestures and feedback; `composition/bootstrap.ts` selects implementations. These are documentation conventions. A small file may contain cohesive contracts and functions; split them when ownership or change pressure requires it.
 
 ```ts
 // domain/orders/Order.ts
-export type OrderStatus = 'pending' | 'shipped' | 'cancelled'
+export const ORDER_STATUSES = ['pending', 'shipped', 'cancelled'] as const
+export type OrderStatus = (typeof ORDER_STATUSES)[number]
+
+export function isOrderStatus(value: unknown): value is OrderStatus {
+  return ORDER_STATUSES.some(status => status === value)
+}
+
 export class ShippedOrderCannotBeCancelled extends Error {}
 export class Order {
   readonly id: string
@@ -329,7 +343,7 @@ export function makeCancelOrder(orders: OrderRepository): CancelOrder {
 
 ```ts
 // infrastructure/orders/HttpOrderRepository.ts
-import { Order, type OrderStatus } from '../../domain/orders/Order'
+import { Order, isOrderStatus, type OrderStatus } from '../../domain/orders/Order'
 import { PersistenceFailure, type OrderRepository } from '../../application/orders/cancelOrder'
 
 // Adapter-owned transport contract. A concrete fetch driver implements it.
@@ -337,14 +351,14 @@ export interface OrderTransport {
   get(path: string): Promise<{ data: unknown; version: string } | null>
   put(path: string, data: unknown, version: string): Promise<void>
 }
-type ApiOrderDto = { id: string; status: OrderStatus }
-function parseOrderDto(data: unknown): ApiOrderDto {
+type ApiOrderDto = { id: string; status: string } // external wire shape
+function parseOrderDto(data: unknown): { id: string; status: OrderStatus } {
   if (typeof data !== 'object' || data === null) throw new PersistenceFailure('unavailable')
   const dto = data as Record<string, unknown>
-  if (typeof dto.id !== 'string' || !['pending', 'shipped', 'cancelled'].includes(String(dto.status))) {
+  if (typeof dto.id !== 'string' || !isOrderStatus(dto.status)) {
     throw new PersistenceFailure('unavailable')
   }
-  return { id: dto.id, status: dto.status as OrderStatus }
+  return { id: dto.id, status: dto.status }
 }
 function toOrderDto(order: Order): ApiOrderDto { return { id: order.id, status: order.status } }
 
@@ -363,6 +377,8 @@ export class HttpOrderRepository implements OrderRepository {
   }
 }
 ```
+
+The external response is treated as `unknown` until its fields are checked. The [adapter](../GLOSSARY.md#adapter) owns the transport shape (`id` and response parsing), but reuses `isOrderStatus` from [Domain](../GLOSSARY.md#domain) for valid business values. `OrderStatus` and its runtime checker are derived from the same `ORDER_STATUSES` definition; this HTTP implementation must not maintain another status list.
 
 ```ts
 // presentation/orders/CancelOrderButton.ts

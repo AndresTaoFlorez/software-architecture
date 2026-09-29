@@ -2,7 +2,9 @@
 
 ## 1. The Three Parts
 
-John Gossman's 2005 WPF formulation names a model of the view. Fowler's earlier [Presentation Model](../GLOSSARY.md#presentation-model) describes a related screen-oriented abstraction. Both separate screen state/behavior from concrete controls; [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) also draws on declarative binding. This relationship does not make every reactive framework an [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) application.
+Consider an Orders screen. The user clicks **Cancel**, the button is disabled during saving, and an error message appears if saving fails. The part that draws the button does not have to decide what `isSaving` or `errorMessage` should be. A separate [ViewModel](../GLOSSARY.md#viewmodel) can expose those values and a `cancel()` operation; the [View](../GLOSSARY.md#view) displays them and forwards the click. The underlying [Model](../GLOSSARY.md#model) supplies the order information and cancellation behavior needed by that screen.
+
+John Gossman's 2005 WPF formulation names this screen-oriented part a model of the view. Fowler's earlier [Presentation Model](../GLOSSARY.md#presentation-model) describes a related approach. Both separate screen state/behavior from concrete controls; [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) also draws on declarative binding. This relationship does not make every reactive framework an [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) application.
 
 ### 1.1 Model
 

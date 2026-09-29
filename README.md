@@ -6,6 +6,8 @@ A practical, source-backed reference for learning and applying software architec
 
 The repository is intentionally progressive: a programmer who has never studied architecture should be able to start here, understand **why boundaries exist**, learn **where code belongs**, and only then move into advanced patterns.
 
+Imagine that a ticket can no longer be closed after escalation. That rule should stay the same whether the user works in a web form, a mobile app, or an API. By contrast, the code that draws the form or sends an HTTP request may need to change independently. Architecture helps us decide which code is responsible for each job and which pieces are allowed to know about one another. The guides start from situations like this before introducing formal names and diagrams.
+
 Terminology is centralized in the **[Architecture Glossary](./GLOSSARY.md)**.
 
 <a id="choose-your-path"></a>
@@ -31,6 +33,7 @@ Read in this order:
 
 5. For modern frontend organization:
    - [Frontend Architecture](./frontend/README.md)
+   - [Ports & Adapters: frontend ticket-support example](./frontend/ports-and-adapters.md)
 
 <a id="quick-comparison"></a>
 
@@ -116,7 +119,7 @@ The frontend section explains the second architectural scale that Clean/Onion do
 - Panda CSS [recipes](./GLOSSARY.md#recipe);
 - [architecture tests](./GLOSSARY.md#architecture-test).
 
-Start: **[Frontend Architecture](./frontend/README.md)**.
+Start: **[Frontend Architecture](./frontend/README.md)**. For a short end-to-end walkthrough, see **[Ports & Adapters in a ticket-support frontend](./frontend/ports-and-adapters.md)**.
 
 
 ## How to contribute
@@ -125,7 +128,7 @@ Every contribution must follow **[CONTRIBUTING.md](./CONTRIBUTING.md)**.
 
 The rules include:
 
-- beginner-first progressive teaching;
+- beginner-first, first-principles explanations: observable situation → actual problem → smallest mechanism → precise term and boundaries;
 - history and source context;
 - explicit best/worst-fit scenarios;
 - Mermaid-only diagrams;
