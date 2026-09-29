@@ -237,11 +237,11 @@ Start with a concrete support workflow: an analyst escalates a ticket, which cha
 | Pressure | Boundary to inspect | Evidence of maintainability |
 | --- | --- | --- |
 | Escalation gains a new status or assignment restriction | Tickets policy and its public operation | One authoritative status/transition rule changes; the UI and transport reuse or translate it instead of maintaining competing lists. |
-| Notifications moves to an external provider or the API changes fields | Notification and HTTP-facing adapters; explicit event/command contracts | Ticket policy does not import a provider SDK or a queue message DTO. Integration failures have an owner and do not silently change business meaning. |
-| Another team adds SLA reporting and an additional UI | Tickets' supported public API; Reporting's independent read needs | Teams do not deep-import each other's private state, nor must unrelated capabilities share one global model package. |
+| Notifications moves to an external provider or the API changes fields | Notification and HTTP-facing [adapters](../GLOSSARY.md#adapter); explicit event/command contracts | Ticket policy does not import a provider SDK or a queue message [DTO](../GLOSSARY.md#data-transfer-object-dto). Integration failures have an owner and do not silently change business meaning. |
+| Another team adds SLA reporting and an additional UI | Tickets' supported [public API](../GLOSSARY.md#public-api); Reporting's independent read needs | Teams do not deep-import each other's private state, nor must unrelated capabilities share one global model package. |
 | Two analysts escalate/reassign the same ticket concurrently | Backend authoritative transaction and version/conflict behavior | A current-state check and atomic update prevent lost writes; a frontend button state is not treated as enforcement. |
 
-Avoid turning the example into a full distributed architecture before there is a reason to split deployment or data ownership. The decision test is **how many unrelated code owners must change for one normal business request, and where can an invariant be violated?** Document observable requirements, negative cases and the dependency boundaries required to protect them. Benchmark runtime bottlenecks rather than assuming that modularity or a specific pattern automatically improves speed.
+Avoid turning the example into a full distributed architecture before there is a reason to split deployment or data ownership. The decision test is **how many unrelated code owners must change for one normal business request, and where can an [invariant](../GLOSSARY.md#invariant) be violated?** Document observable requirements, negative cases and the dependency boundaries required to protect them. Benchmark runtime bottlenecks rather than assuming that modularity or a specific pattern automatically improves speed.
 
 ---
 
