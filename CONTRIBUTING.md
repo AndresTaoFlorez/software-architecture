@@ -245,23 +245,23 @@ Before publishing a substantial example, describe its real operating context: wh
 
 Review the design with at least **three plausible changes** before calling it maintainable:
 
-1. **Business rule changes:** a ticket gains a new status or its assignment policy changes. Which single owner changes? Would we have to hunt down repeated values/checks in components, mappers or multiple use cases?
-2. **Technical integration changes:** the API renames a field, we replace HTTP, or a second client uses the operation. Do the relevant adapter and composition change without editing unrelated business policy?
-3. **Product/team growth:** Tickets, Billing and Notifications evolve independently, with many files and features. Does each capability expose a narrow public API and own its model, or does it rely on deep imports and a global shared bucket?
+1. **Business rule changes:** a ticket gains a new status or its assignment policy changes. Which single owner changes? Would we have to hunt down repeated values/checks in components, [mappers](./GLOSSARY.md#mapper) or multiple [use cases](./GLOSSARY.md#use-case)?
+2. **Technical integration changes:** the API renames a field, we replace HTTP, or a second client uses the operation. Do the relevant [adapter](./GLOSSARY.md#adapter) and composition change without editing unrelated business policy?
+3. **Product/team growth:** Tickets, Billing and Notifications evolve independently, with many files and features. Does each capability expose a narrow [public API](./GLOSSARY.md#public-api) and own its model, or does it rely on deep imports and a global shared bucket?
 
 Then explain the impact: **which code should change, which code should stay untouched, and which tests detect accidental coupling**. Do not claim an abstraction is "scalable" merely because it introduces interfaces, generic services or more folders.
 
 ### Single ownership and independent systems
 
-Within each bounded model, state each business rule and finite vocabulary in one authoritative place. If TypeScript types and runtime checks describe the same set, derive both from the same definition; do not duplicate enum-like literals in API parsers, screens and workflows. Outer adapters validate unknown external shapes and translate formats while using the model's rules for business validity. Preserve distinct responsibilities: a field's transport representation can be checked in an adapter; the allowed domain values and transitions belong to the model that owns them.
+Within each bounded model, state each business rule and finite vocabulary in one authoritative place. If TypeScript types and runtime checks describe the same set, derive both from the same definition; do not duplicate enum-like literals in API parsers, screens and workflows. Outer [adapters](./GLOSSARY.md#adapter) validate unknown external shapes and translate formats while using the model's rules for business validity. Preserve distinct responsibilities: a field's transport representation can be checked in an [adapter](./GLOSSARY.md#adapter); the allowed domain values and transitions belong to the model that owns them.
 
-A frontend and an independently deployed backend may have **separate model ownership and release cycles**. "One source of truth" is not a mandate to distribute a frontend's domain package to every service. The backend is authoritative for persisted business behavior; shared schemas/generated clients and contract tests can coordinate the wire protocol where appropriate. Reconcile separately owned models explicitly instead of assuming identical types imply identical meaning.
+A frontend and an independently deployed backend may have **separate model ownership and release cycles**. "One source of truth" is not a mandate to distribute a frontend's domain package to every service. The backend is authoritative for persisted business behavior; shared schemas/generated clients and [contract tests](./GLOSSARY.md#contract-test) can coordinate the wire protocol where appropriate. Reconcile separately owned models explicitly instead of assuming identical types imply identical meaning.
 
 ### Maintainability is a measured design trade-off
 
-Prefer cohesive feature/capability ownership, small public contracts, local state, explicit translation at boundaries and straightforward composition. Do not invent a global utility, generic base repository or framework merely because multiple features might exist in the future. Extract reuse only when the behavior and its owner are demonstrably shared; distinguish meaningful policy duplication from two independent contexts coincidentally using the same string.
+Prefer cohesive feature/capability ownership, small public contracts, [local state](./GLOSSARY.md#local-state), explicit translation at boundaries and straightforward composition. Do not invent a global utility, generic base repository or framework merely because multiple features might exist in the future. Extract reuse only when the behavior and its owner are demonstrably shared; distinguish meaningful policy duplication from two independent contexts coincidentally using the same string.
 
-When an example is reproduced in multiple guides, define **one editorial source** and mechanically synchronize the other copies, or use links/excerpts instead. For the shared order-cancellation feature, edit [the canonical complete example](./clean-architecture/4-building-a-feature.md) and run `npm run sync:examples`; the four architecture landing pages keep generated copies of the shared Domain/Application/Infrastructure parts and own only their pattern-specific presentation/composition. CI rejects drift with `npm run check:examples`.
+When an example is reproduced in multiple guides, define **one editorial source** and mechanically synchronize the other copies, or use links/excerpts instead. For the shared order-cancellation feature, edit [the canonical complete example](./clean-architecture/4-building-a-feature.md) and run `npm run sync:examples`; the four architecture landing pages keep generated copies of the shared [Domain](./GLOSSARY.md#domain)/[Application](./GLOSSARY.md#application-layer)/[Infrastructure](./GLOSSARY.md#infrastructure) parts and own only their pattern-specific presentation/composition. CI rejects drift with `npm run check:examples`.
 
 Do not introduce:
 
@@ -301,7 +301,7 @@ Every substantial documentation PR must be reviewed three times.
 - Do [contract tests](./GLOSSARY.md#contract-test) or documented integration assumptions address frontend/backend vocabulary drift, without claiming frontend validation is authoritative on the server?
 - Has the author tested at least three realistic change scenarios (rule, integration, growth), and explained the expected blast radius and test coverage?
 - Do examples identify the authoritative business/data owner, trust boundaries, meaningful failure states, and concurrency/authorization assumptions without pretending to be complete production implementations?
-- Is related code owned by a cohesive feature/module instead of a global `shared` or generic-services catchall? Are public APIs narrower than module internals?
+- Is related code owned by a cohesive feature/module instead of a global `shared` or generic-services catchall? Are [public APIs](./GLOSSARY.md#public-api) narrower than module internals?
 - When code is shown in multiple chapters, is there a canonical source or an automated parity check, rather than requiring repeated manual fixes?
 - Are complexity and runtime-performance recommendations supported by actual requirements/measurements rather than arbitrary feature-count or team-size thresholds?
 - Are trade-offs and counterexamples acknowledged?
