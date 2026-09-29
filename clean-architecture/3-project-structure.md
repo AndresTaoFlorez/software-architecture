@@ -3,9 +3,9 @@
 
 # 3. Project Structure & Conventions
 
-[Clean Architecture](../GLOSSARY.md#clean-architecture) constrains dependencies; it does not prescribe one filesystem tree.
+Two projects can both have a folder named `domain/`. In one, the rule “shipped orders cannot be cancelled” imports only business code. In the other, that same rule imports a database client. Matching folder names do not make those designs equivalent.
 
-A folder structure is useful when it makes architectural ownership visible and gives tooling something stable to enforce. It becomes harmful when developers mistake the folder names for the architecture itself.
+[Clean Architecture](../GLOSSARY.md#clean-architecture) constrains **which modules may refer to which others**; it does not prescribe one filesystem tree. A folder layout helps when it makes each responsibility visible and gives tools a stable way to detect forbidden imports. It is harmful when folder names are treated as proof that the rules are respected.
 
 ---
 
