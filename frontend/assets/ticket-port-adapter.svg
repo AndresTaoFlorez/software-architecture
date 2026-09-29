@@ -46,8 +46,8 @@
   <rect x="28" y="438" width="1224" height="130" rx="20" fill="#172b46"/>
   <g font-family="Inter, Segoe UI, Arial, sans-serif" fill="#f1f6ff">
     <text x="54" y="475" font-size="22" font-weight="750">2 / AT STARTUP: CONNECT THE REAL OBJECTS</text>
-    <text x="745" y="508" font-size="18" fill="#c9d8e9">The Composition Root chooses the adapter</text>
-    <text x="745" y="535" font-size="18" fill="#c9d8e9">and passes it to the use case and UI.</text>
+    <text x="745" y="508" font-size="18" fill="#c9d8e9">Pass the adapter to the use case;</text>
+    <text x="745" y="535" font-size="18" fill="#c9d8e9">give the resulting operation to the UI.</text>
   </g>
   <g font-family="Consolas, Menlo, monospace" fill="#ffffff" font-size="19">
     <text x="54" y="509">const gateway = new HttpTicketGateway()</text>
@@ -78,7 +78,7 @@
   <g font-family="Consolas, Menlo, monospace" fill="#14253d">
     <text x="72" y="785" font-size="19" font-weight="600">useTickets()</text>
     <text x="72" y="807" font-size="18">.submit(input)</text>
-    <text x="357" y="791" font-size="19" font-weight="600">createTicket(input)</text>
+    <text x="354" y="791" font-size="17" font-weight="600">createTicket(input)</text>
     <text x="643" y="785" font-size="19" font-weight="600">HttpTicketGateway</text>
     <text x="643" y="807" font-size="18">.create(input)</text>
     <text x="992" y="791" font-size="19" font-weight="600">POST /api/tickets</text>
