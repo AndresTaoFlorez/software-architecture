@@ -2,9 +2,9 @@
 
 # 3. MVVM on the Frontend
 
-Modern component frameworks provide reactive rendering mechanisms that make separated-presentation patterns convenient. They do not select [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) for you.
+In a React ticket screen, a component might display `isSaving` and call `submit()`. A deliberately designed `useTickets()` can supply those screen-specific values and operations while another part handles the ticket-creation rule. That arrangement resembles a [ViewModel](../GLOSSARY.md#viewmodel) and [View](../GLOSSARY.md#view) separation; a random hook that only wraps `useState` does not automatically establish it.
 
-This chapter shows how [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm)/[Presentation Model](../GLOSSARY.md#presentation-model) responsibilities **can** be mapped onto a frontend without claiming every [store](../GLOSSARY.md#store) or hook is automatically a [ViewModel](../GLOSSARY.md#viewmodel).
+Modern component frameworks provide reactive rendering mechanisms that can help with such separation, but they do not select [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) for you. This chapter maps [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm)/[Presentation Model](../GLOSSARY.md#presentation-model) responsibilities onto a frontend without equating every [store](../GLOSSARY.md#store) or hook with a [ViewModel](../GLOSSARY.md#viewmodel).
 
 ---
 
