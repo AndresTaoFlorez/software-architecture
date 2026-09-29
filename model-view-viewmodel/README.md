@@ -261,7 +261,13 @@ The business rule belongs in `domain/orders/Order.ts`; the operation, result, pe
 
 ```ts
 // domain/orders/Order.ts
-export type OrderStatus = 'pending' | 'shipped' | 'cancelled'
+export const ORDER_STATUSES = ['pending', 'shipped', 'cancelled'] as const
+export type OrderStatus = (typeof ORDER_STATUSES)[number]
+
+export function isOrderStatus(value: unknown): value is OrderStatus {
+  return ORDER_STATUSES.some(status => status === value)
+}
+
 export class ShippedOrderCannotBeCancelled extends Error {}
 export class Order {
   readonly id: string
@@ -310,7 +316,7 @@ export function makeCancelOrder(orders: OrderRepository): CancelOrder {
 
 ```ts
 // infrastructure/orders/HttpOrderRepository.ts
-import { Order, type OrderStatus } from '../../domain/orders/Order'
+import { Order, isOrderStatus, type OrderStatus } from '../../domain/orders/Order'
 import { PersistenceFailure, type OrderRepository } from '../../application/orders/cancelOrder'
 
 // Adapter-owned transport contract. A concrete fetch driver implements it.
@@ -322,10 +328,10 @@ type ApiOrderDto = { id: string; status: OrderStatus }
 function parseOrderDto(data: unknown): ApiOrderDto {
   if (typeof data !== 'object' || data === null) throw new PersistenceFailure('unavailable')
   const dto = data as Record<string, unknown>
-  if (typeof dto.id !== 'string' || !['pending', 'shipped', 'cancelled'].includes(String(dto.status))) {
+  if (typeof dto.id !== 'string' || !isOrderStatus(dto.status)) {
     throw new PersistenceFailure('unavailable')
   }
-  return { id: dto.id, status: dto.status as OrderStatus }
+  return { id: dto.id, status: dto.status }
 }
 function toOrderDto(order: Order): ApiOrderDto { return { id: order.id, status: order.status } }
 
@@ -344,6 +350,8 @@ export class HttpOrderRepository implements OrderRepository {
   }
 }
 ```
+
+The external response is treated as `unknown` until its fields are checked. The adapter owns the transport shape (`id` and response parsing), but reuses `isOrderStatus` from Domain for valid business values. `OrderStatus` and its runtime checker are derived from the same `ORDER_STATUSES` definition; the adapter must not maintain another status list.
 
 ```ts
 // presentation/orders/CancelOrderViewModel.ts
