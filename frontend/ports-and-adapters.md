@@ -18,46 +18,54 @@ This is the outbound side of **[Ports & Adapters](../GLOSSARY.md#hexagonal-archi
 
 ## 2. Visual model
 
-![Three-part diagram explaining the ticket frontend: the use case requires a TicketGateway interface, startup supplies HttpTicketGateway, and the actual request calls that adapter before contacting the external backend.](./assets/ticket-port-adapter.svg)
+![Unified dark-mode diagram of ticket creation: the solid runtime path goes from the screen through createTicket and HttpTicketGateway to the external backend; dashed links show source-code contracts and a separate connector shows startup injection.](./assets/ticket-port-adapter.svg)
 
-**Figure 1. Read the panels separately, from top to bottom:**
+**Figure 1. One system, three relationship types.** The strongest horizontal path is the actual runtime flow: `Screen → createTicket() → HttpTicketGateway → POST /api/tickets → Backend API`. The backend is outside the frontend boundary.
 
-1. **Code relationships (design):** `createTicket` requires the application-owned `TicketGateway` interface; `HttpTicketGateway` implements it. These arrows show the relationship between code definitions, **not** which objects are called in sequence.
-2. **Startup (assembly):** the [Composition Root](../GLOSSARY.md#composition-root) creates a concrete `HttpTicketGateway`, passes it to `makeCreateTicket`, and makes the resulting operation available to the UI. The [use case](../GLOSSARY.md#use-case) does not construct its dependency.
-3. **After the click (runtime):** `useTickets().submit()` calls `createTicket()`, which calls the **injected [adapter](../GLOSSARY.md#adapter) object**; that implementation sends `POST /api/tickets` to the backend. The frontend boundary encloses [Presentation](../GLOSSARY.md#presentation-layer), [Application](../GLOSSARY.md#application-layer) and its [Infrastructure](../GLOSSARY.md#infrastructure) implementation. The backend is external **to this frontend**, even if both belong to the same product.
+The lighter dashed relationships above that path describe **source-code structure**, not extra runtime hops: `createTicket()` depends on the application-owned `TicketGateway` [port](../GLOSSARY.md#port), and `HttpTicketGateway` implements that contract. The startup connector below shows **composition**: [the Composition Root](../GLOSSARY.md#composition-root) creates the concrete adapter and passes it to `makeCreateTicket(gateway)` before the UI uses the resulting operation.
 
-The [port](../GLOSSARY.md#port) is a TypeScript contract, **not a separate runtime forwarding object**. That is why it appears in the first panel but not as an extra stop in the third. On the way back, the HTTP [adapter](../GLOSSARY.md#adapter) validates the server response and translates `ticket_id` into the application's `id`.
+The [port](../GLOSSARY.md#port) is a TypeScript contract, **not a separate runtime forwarding object**. Once composition is complete, `createTicket()` holds the injected [adapter](../GLOSSARY.md#adapter) object and calls it directly. On the way back, that HTTP adapter validates the server response and translates transport details such as `ticket_id` into the application's `id`.
 
 <details>
-<summary>Editable Mermaid sources corresponding to the figure</summary>
+<summary>Editable Mermaid source corresponding to the figure</summary>
 
-**1. Code relationships — arrows describe required/implemented source contracts:**
-
-```mermaid
-flowchart LR
-    subgraph FRONTEND["Frontend: code relationships"]
-        USECASE["Application use case<br/>createTicket()"] -->|"requires contract"| PORT["Application-owned port<br/>TicketGateway interface"]
-        ADAPTER["Infrastructure adapter<br/>HttpTicketGateway"] -->|"implements contract"| PORT
-    end
-```
-
-**2. Startup — the concrete objects are assembled before the UI uses them:**
-
-```ts
-const gateway = new HttpTicketGateway()
-const createTicket = makeCreateTicket(gateway)
-// Supply createTicket to the page / useTickets hook.
-```
-
-**3. Runtime — arrows show actual calls, not source-code dependency direction:**
+The Mermaid version is the editable **semantic companion** to the SVG. It preserves the same dependency, startup-wiring and runtime meanings; it is not intended to reproduce the SVG pixel for pixel.
 
 ```mermaid
 flowchart LR
-    subgraph FRONTEND["Inside the frontend"]
-        UI["Presentation<br/>useTickets().submit(input)"] -->|"calls"| USECASE["Application<br/>createTicket(input)"]
-        USECASE -->|"calls injected object"| ADAPTER["Infrastructure<br/>HttpTicketGateway.create(input)"]
+    subgraph FRONTEND["Frontend"]
+        UI["Screen<br/>UI"]
+        USECASE["createTicket()<br/>Use case"]
+        ADAPTER["HttpTicketGateway<br/>HTTP adapter"]
+        PORT["TicketGateway<br/>Port / contract"]
+
+        UI ==>|"runtime call"| USECASE
+        USECASE ==>|"runtime call"| ADAPTER
+
+        USECASE -.->|"depends on"| PORT
+        ADAPTER -.->|"implements"| PORT
+        ADAPTER -->|"injected at startup<br/>makeCreateTicket(gateway)"| USECASE
     end
-    ADAPTER -->|"POST /api/tickets"| API["Backend API<br/>outside this frontend"]
+
+    API["Backend API<br/>External system"]
+    ADAPTER ==>|"POST /api/tickets"| API
+
+    classDef ui fill:#20252c,stroke:#738091,color:#e6e9ee
+    classDef application fill:#1d2632,stroke:#7089ad,color:#e6e9ee
+    classDef port fill:#272431,stroke:#9489b2,color:#e6e9ee
+    classDef adapter fill:#1f2b28,stroke:#719d8d,color:#e6e9ee
+    classDef external fill:#2b261e,stroke:#ad8e5b,color:#e6e9ee
+
+    class UI ui
+    class USECASE application
+    class PORT port
+    class ADAPTER adapter
+    class API external
+
+    linkStyle 0,1 stroke:#e6e9ee,stroke-width:2.4px
+    linkStyle 2,3 stroke:#a69dc4,stroke-width:1.4px,stroke-dasharray:5 4
+    linkStyle 4 stroke:#7fae9d,stroke-width:1.6px
+    linkStyle 5 stroke:#c9a66b,stroke-width:2.4px
 ```
 
 </details>
