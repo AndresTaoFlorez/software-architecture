@@ -1,95 +1,126 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 957" width="1280" height="957" role="img" aria-labelledby="diagram-title diagram-description">
-  <title id="diagram-title">Frontend ticket creation: code relationships, assembly, and runtime calls</title>
-  <desc id="diagram-description">Three separate diagrams explain the frontend's Ports and Adapters design. First, the createTicket use case requires the application-owned TicketGateway interface, and HttpTicketGateway implements it. Second, the Composition Root constructs HttpTicketGateway and gives it to makeCreateTicket before the UI is used. Third, useTickets calls createTicket, which calls the injected HttpTicketGateway object; only that adapter sends an HTTP POST request to the backend outside the frontend. TicketGateway is a TypeScript contract, not a runtime forwarding object.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1380 790" width="1380" height="790" role="img" aria-labelledby="t d">
+  <title id="t">Creating a ticket: one system view</title>
+  <desc id="d">Runtime path Screen to createTicket to HttpTicketGateway to POST /api/tickets to Backend API. Source-code relationships (depends on, implements) are dashed and sit above. Startup wiring injects HttpTicketGateway into createTicket and sits below.</desc>
+
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
-      <path d="M1 1 L9 5 L1 9" fill="none" stroke="#415a77" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+    <style>
+      text { font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #E6E9EE; }
+      .m { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; }
+      .name { font-size: 16px; font-weight: 500; }
+      .role { font-size: 12.5px; fill: #9FA8B3; }
+      .desc { font-size: 13px; fill: #C3C9D1; }
+      .gut { font-size: 12.5px; fill: #737C87; letter-spacing: 0.3px; }
+      .rel { font-size: 12.5px; fill: #9FA8B3; }
+      .tiny { font-size: 12px; fill: #737C87; }
+      .note { font-size: 14.5px; fill: #E6E9EE; }
+    </style>
+
+    <marker id="dep" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M1.5 1.5 L8.5 5 L1.5 8.5" fill="none" stroke="#A69DC4" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="impl" viewBox="0 0 12 12" refX="10.5" refY="6" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M1.5 1.5 L10.5 6 L1.5 10.5 z" fill="none" stroke="#A69DC4" stroke-width="1.3" stroke-linejoin="round"/>
+    </marker>
+    <marker id="asm" viewBox="0 0 11 10" refX="10" refY="5" markerWidth="9" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M1 1 L10 5 L1 9 z" fill="#7FAE9D"/>
+    </marker>
+    <marker id="run" viewBox="0 0 11 10" refX="10" refY="5" markerWidth="11" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M1 1 L10 5 L1 9 z" fill="#E6E9EE"/>
+    </marker>
+    <marker id="runx" viewBox="0 0 11 10" refX="10" refY="5" markerWidth="11" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M1 1 L10 5 L1 9 z" fill="#C9A66B"/>
     </marker>
   </defs>
-  <rect width="1280" height="957" fill="#f5f8fc"/>
-  <g font-family="Inter, Segoe UI, Arial, sans-serif" fill="#14253d">
-    <text x="42" y="57" font-size="30" font-weight="750">Creating a ticket: what connects to what?</text>
-    <text x="42" y="90" font-size="18" fill="#455a74">One frontend, three different questions. Follow each panel separately.</text>
-  </g>
 
-  <!-- Panel 1: source-code relationships. A Port is a declared interface, not a forwarding node. -->
-  <rect x="28" y="125" width="1224" height="295" rx="20" fill="#ffffff" stroke="#d0dce9" stroke-width="2"/>
-  <g font-family="Inter, Segoe UI, Arial, sans-serif" fill="#14253d">
-    <text x="54" y="171" font-size="24" font-weight="750">1 / CODE RELATIONSHIPS</text>
-    <text x="54" y="202" font-size="18" fill="#52647b">These arrows show which definitions depend on which contract. They are not runtime calls.</text>
-  </g>
-  <rect x="56" y="243" width="288" height="105" rx="13" fill="#eeeaff" stroke="#7c65bd" stroke-width="2"/>
-  <rect x="495" y="243" width="288" height="105" rx="13" fill="#fff3cf" stroke="#bf8726" stroke-width="2"/>
-  <rect x="934" y="243" width="288" height="105" rx="13" fill="#e6f8ee" stroke="#3e9667" stroke-width="2"/>
-  <g font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">
-    <text x="76" y="274" fill="#594299">APPLICATION USE CASE</text>
-    <text x="515" y="274" fill="#855917">APPLICATION-OWNED PORT</text>
-    <text x="954" y="274" fill="#1c7147">INFRASTRUCTURE ADAPTER</text>
-  </g>
-  <g font-family="Consolas, Menlo, monospace" fill="#14253d">
-    <text x="76" y="310" font-size="22" font-weight="600">createTicket()</text>
-    <text x="515" y="307" font-size="22" font-weight="600">TicketGateway</text>
-    <text x="515" y="331" font-size="16">interface: create(input)</text>
-    <text x="954" y="310" font-size="21" font-weight="600">HttpTicketGateway</text>
-  </g>
-  <g stroke="#415a77" fill="none" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)">
-    <path d="M346 316 H491"/>
-    <path d="M931 316 H787"/>
-  </g>
-  <g font-family="Inter, Segoe UI, Arial, sans-serif" font-size="17" font-weight="650" fill="#415a77" text-anchor="middle">
-    <text x="419" y="290">requires</text>
-    <text x="859" y="290">implements</text>
-  </g>
-  <text x="56" y="389" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" fill="#3e526d">The port declares what is needed. The adapter supplies how it is done.</text>
+  <!-- Frontend boundary: one quiet line -->
+  <line x1="884" y1="164" x2="884" y2="690" stroke="#E6E9EE" stroke-opacity="0.28" stroke-width="1.25" stroke-dasharray="3 6"/>
+  <text x="872" y="150" class="rel" text-anchor="end">Frontend</text>
+  <text x="896" y="150" class="rel">Outside the frontend</text>
 
-  <!-- Panel 2: explicit startup assembly, before any user action. -->
-  <rect x="28" y="438" width="1224" height="130" rx="20" fill="#172b46"/>
-  <g font-family="Inter, Segoe UI, Arial, sans-serif" fill="#f1f6ff">
-    <text x="54" y="475" font-size="22" font-weight="750">2 / AT STARTUP: CONNECT THE REAL OBJECTS</text>
-    <text x="745" y="508" font-size="18" fill="#c9d8e9">Pass the adapter to the use case;</text>
-    <text x="745" y="535" font-size="18" fill="#c9d8e9">give the resulting operation to the UI.</text>
-  </g>
-  <g font-family="Consolas, Menlo, monospace" fill="#ffffff" font-size="19">
-    <text x="54" y="509">const gateway = new HttpTicketGateway()</text>
-    <text x="54" y="540">const createTicket = makeCreateTicket(gateway)</text>
-  </g>
+  <!-- Gutter labels for the three ways of reading the system -->
+  <text x="70" y="190" class="gut">Source code</text>
+  <text x="70" y="398" class="gut">Runtime</text>
+  <text x="70" y="560" class="gut">Startup</text>
 
-  <!-- Panel 3: concrete runtime request path; the port is intentionally absent. -->
-  <rect x="28" y="584" width="1224" height="348" rx="20" fill="#ffffff" stroke="#d0dce9" stroke-width="2"/>
-  <g font-family="Inter, Segoe UI, Arial, sans-serif" fill="#14253d">
-    <text x="54" y="629" font-size="24" font-weight="750">3 / RUNTIME: AFTER THE ANALYST CLICKS CREATE TICKET</text>
-    <text x="54" y="659" font-size="18" fill="#52647b">Follow the actual calls. The interface from panel 1 is not an extra object in this path.</text>
-  </g>
-  <rect x="45" y="681" width="876" height="160" rx="13" fill="#f8fbff" stroke="#7d9bb8" stroke-width="2" stroke-dasharray="7 5"/>
-  <g font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="750">
-    <text x="60" y="709" fill="#506b87">INSIDE THE FRONTEND</text>
-    <text x="977" y="709" fill="#92601a">BACKEND: OUTSIDE THIS FRONTEND</text>
-  </g>
-  <rect x="57" y="734" width="222" height="90" rx="11" fill="#e8f3ff" stroke="#4183b5" stroke-width="2"/>
-  <rect x="342" y="734" width="222" height="90" rx="11" fill="#eeeaff" stroke="#7c65bd" stroke-width="2"/>
-  <rect x="628" y="734" width="278" height="90" rx="11" fill="#e6f8ee" stroke="#3e9667" stroke-width="2"/>
-  <rect x="977" y="734" width="235" height="90" rx="11" fill="#fff0df" stroke="#c18736" stroke-width="2"/>
-  <g font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" font-weight="750">
-    <text x="72" y="757" fill="#235f90">PRESENTATION</text>
-    <text x="357" y="757" fill="#594299">APPLICATION</text>
-    <text x="643" y="757" fill="#1c7147">INFRASTRUCTURE</text>
-    <text x="992" y="757" fill="#92601a">EXTERNAL API</text>
-  </g>
-  <g font-family="Consolas, Menlo, monospace" fill="#14253d">
-    <text x="72" y="785" font-size="19" font-weight="600">useTickets()</text>
-    <text x="72" y="807" font-size="18">.submit(input)</text>
-    <text x="354" y="791" font-size="17" font-weight="600">createTicket(input)</text>
-    <text x="643" y="785" font-size="19" font-weight="600">HttpTicketGateway</text>
-    <text x="643" y="807" font-size="18">.create(input)</text>
-    <text x="992" y="791" font-size="19" font-weight="600">POST /api/tickets</text>
-  </g>
-  <g stroke="#415a77" stroke-width="2.5" stroke-linecap="round" fill="none" marker-end="url(#arrow)">
-    <path d="M281 780 H338"/>
-    <path d="M566 780 H624"/>
-    <path d="M908 780 H973"/>
-  </g>
-  <g font-family="Inter, Segoe UI, Arial, sans-serif" font-size="17" fill="#415a77">
-    <text x="54" y="866">The use case calls the adapter object it was given; no runtime port object forwards the call.</text>
-    <text x="54" y="897">On the way back, the adapter validates the response and translates ticket_id to id.</text>
-  </g>
+  <!-- ============ SOURCE-CODE LAYER ============ -->
+  <!-- TicketGateway (port / contract) -->
+  <rect x="473" y="170" width="230" height="116" rx="8" fill="#A69DC4" fill-opacity="0.07" stroke="#A69DC4" stroke-opacity="0.6" stroke-width="1.25" stroke-dasharray="5 4"/>
+  <line x1="474.5" y1="182" x2="474.5" y2="274" stroke="#A69DC4" stroke-opacity="0.7" stroke-width="3" stroke-linecap="round"/>
+  <text x="493" y="204" class="name m" style="fill:#CFC9E0">TicketGateway</text>
+  <text x="493" y="225" class="role">Port / contract</text>
+  <text x="493" y="250" class="desc">Describes what the</text>
+  <text x="493" y="267" class="desc">operation needs</text>
+
+  <!-- depends on -->
+  <path d="M439 410 V240 Q439 228 451 228 H471" fill="none" stroke="#A69DC4" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#dep)"/>
+  <text x="427" y="330" class="rel" text-anchor="end">depends on</text>
+  <!-- implements -->
+  <path d="M738 410 V240 Q738 228 726 228 H705" fill="none" stroke="#A69DC4" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#impl)"/>
+  <text x="750" y="330" class="rel">implements</text>
+
+  <!-- The contract is skipped at runtime -->
+  <line x1="588" y1="290" x2="588" y2="465" stroke="#737C87" stroke-width="1.2" stroke-dasharray="1.5 4" stroke-linecap="round"/>
+  <circle cx="588" cy="470" r="3.5" fill="#737C87"/>
+  <text x="600" y="372" class="tiny">skipped at runtime</text>
+
+  <!-- ============ RUNTIME LAYER ============ -->
+  <!-- Screen -->
+  <rect x="70" y="412" width="190" height="116" rx="8" fill="#93A0B2" fill-opacity="0.12" stroke="#93A0B2" stroke-opacity="0.55" stroke-width="1.25"/>
+  <line x1="71.5" y1="424" x2="71.5" y2="516" stroke="#93A0B2" stroke-width="3" stroke-linecap="round"/>
+  <text x="90" y="446" class="name">Screen</text>
+  <text x="90" y="467" class="role">UI</text>
+  <text x="90" y="492" class="desc">Starts the ticket</text>
+  <text x="90" y="509" class="desc">creation action</text>
+
+  <!-- createTicket() -->
+  <rect x="324" y="412" width="230" height="116" rx="8" fill="#7F98BC" fill-opacity="0.13" stroke="#7F98BC" stroke-opacity="0.6" stroke-width="1.25"/>
+  <line x1="325.5" y1="424" x2="325.5" y2="516" stroke="#7F98BC" stroke-width="3" stroke-linecap="round"/>
+  <text x="344" y="446" class="name m">createTicket()</text>
+  <text x="344" y="467" class="role">Use case</text>
+  <text x="344" y="492" class="desc">Coordinates the</text>
+  <text x="344" y="509" class="desc">ticket-creation operation</text>
+
+  <!-- HttpTicketGateway -->
+  <rect x="618" y="412" width="240" height="116" rx="8" fill="#7FAE9D" fill-opacity="0.12" stroke="#7FAE9D" stroke-opacity="0.6" stroke-width="1.25"/>
+  <line x1="619.5" y1="424" x2="619.5" y2="516" stroke="#7FAE9D" stroke-width="3" stroke-linecap="round"/>
+  <text x="638" y="446" class="name m">HttpTicketGateway</text>
+  <text x="638" y="467" class="role">HTTP adapter</text>
+  <text x="638" y="492" class="desc">Provides the HTTP</text>
+  <text x="638" y="509" class="desc">implementation</text>
+
+  <!-- Backend API -->
+  <rect x="1090" y="412" width="220" height="116" rx="8" fill="#C9A66B" fill-opacity="0.11" stroke="#C9A66B" stroke-opacity="0.6" stroke-width="1.25"/>
+  <line x1="1091.5" y1="424" x2="1091.5" y2="516" stroke="#C9A66B" stroke-width="3" stroke-linecap="round"/>
+  <text x="1110" y="446" class="name">Backend API</text>
+  <text x="1110" y="467" class="role">External system</text>
+  <text x="1110" y="492" class="desc">Receives the</text>
+  <text x="1110" y="509" class="desc">HTTP request</text>
+
+  <!-- Runtime calls: solid, dominant -->
+  <line x1="264" y1="470" x2="320" y2="470" stroke="#E6E9EE" stroke-width="2.5" marker-end="url(#run)"/>
+  <line x1="558" y1="470" x2="614" y2="470" stroke="#E6E9EE" stroke-width="2.5" marker-end="url(#run)"/>
+  <line x1="862" y1="470" x2="1086" y2="470" stroke="#C9A66B" stroke-width="2.5" marker-end="url(#runx)"/>
+  <text x="974" y="456" class="m" style="font-size:13px;fill:#C9A66B" text-anchor="middle">POST /api/tickets</text>
+  <text x="974" y="494" class="tiny" text-anchor="middle">HTTP request</text>
+
+  <!-- ============ STARTUP WIRING ============ -->
+  <circle cx="738" cy="532" r="3.5" fill="#7FAE9D"/>
+  <path d="M738 532 V584 Q738 596 726 596 H451 Q439 596 439 584 V533" fill="none" stroke="#7FAE9D" stroke-width="1.5" marker-end="url(#asm)"/>
+  <text x="588" y="580" class="rel" text-anchor="middle" style="fill:#9CC2B4">injected at startup</text>
+  <text x="588" y="620" class="m" text-anchor="middle" style="font-size:12.5px;fill:#C3C9D1">makeCreateTicket(gateway)</text>
+  <text x="588" y="640" class="tiny" text-anchor="middle">assembled when the app starts</text>
+
+  <!-- ============ LEGEND ============ -->
+  <text x="940" y="592" class="tiny">Line styles</text>
+  <line x1="940" y1="614" x2="986" y2="614" stroke="#A69DC4" stroke-width="1.4" stroke-dasharray="5 4"/>
+  <text x="1000" y="618" class="rel">source-code dependency</text>
+  <line x1="940" y1="638" x2="986" y2="638" stroke="#7FAE9D" stroke-width="1.5"/>
+  <text x="1000" y="642" class="rel">startup wiring</text>
+  <line x1="940" y1="662" x2="986" y2="662" stroke="#E6E9EE" stroke-width="2.5"/>
+  <text x="1000" y="666" class="rel">runtime call</text>
+
+  <!-- ============ TEACHING NOTE ============ -->
+  <line x1="70" y1="706" x2="70" y2="758" stroke="#A69DC4" stroke-opacity="0.7" stroke-width="2"/>
+  <text x="88" y="724" class="note"><tspan class="m" style="font-size:13.5px">TicketGateway</tspan> shapes the dependency in code.</text>
+  <text x="88" y="750" class="note">At runtime, <tspan class="m" style="font-size:13.5px">createTicket()</tspan> calls the injected <tspan class="m" style="font-size:13.5px">HttpTicketGateway</tspan> instance directly.</text>
 </svg>
