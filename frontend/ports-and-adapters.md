@@ -18,57 +18,88 @@ This is the outbound side of **[Ports & Adapters](../GLOSSARY.md#hexagonal-archi
 
 ## 2. Visual model
 
-![Unified dark-mode diagram of ticket creation: the solid runtime path goes from the screen through createTicket and HttpTicketGateway to the external backend; dashed links show source-code contracts and a separate connector shows startup injection.](./assets/ticket-port-adapter.svg)
+The repository now uses **Mermaid as the primary representation** for this example so the architecture remains editable, reviewable in GitHub, and less fragile than a hand-authored SVG.
 
-**Figure 1. One system, three relationship types.** The strongest horizontal path is the actual runtime flow: `Screen → createTicket() → HttpTicketGateway → POST /api/tickets → Backend API`. The backend is outside the frontend boundary.
+Read the connectors as three different semantics:
 
-The lighter dashed relationships above that path describe **source-code structure**, not extra runtime hops: `createTicket()` depends on the application-owned `TicketGateway` [port](../GLOSSARY.md#port), and `HttpTicketGateway` implements that contract. The startup connector below shows **composition**: [the Composition Root](../GLOSSARY.md#composition-root) creates the concrete adapter and passes it to `makeCreateTicket(gateway)` before the UI uses the resulting operation.
-
-The [port](../GLOSSARY.md#port) is a TypeScript contract, **not a separate runtime forwarding object**. Once composition is complete, `createTicket()` holds the injected [adapter](../GLOSSARY.md#adapter) object and calls it directly. On the way back, that HTTP adapter validates the server response and translates transport details such as `ticket_id` into the application's `id`.
-
-<details>
-<summary>Editable Mermaid source corresponding to the figure</summary>
-
-The Mermaid version is the editable **semantic companion** to the SVG. It preserves the same dependency, startup-wiring and runtime meanings; it is not intended to reproduce the SVG pixel for pixel.
+- `==>` **runtime call** — what actually executes after the user acts.
+- `-.->` **source-code dependency / contract relationship** — what code depends on what.
+- `-->` **startup wiring** — what the Composition Root constructs and injects before runtime.
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph FRONTEND["Frontend"]
-        UI["Screen<br/>UI"]
-        USECASE["createTicket()<br/>Use case"]
-        ADAPTER["HttpTicketGateway<br/>HTTP adapter"]
-        PORT["TicketGateway<br/>Port / contract"]
+        direction TB
 
-        UI ==>|"runtime call"| USECASE
-        USECASE ==>|"runtime call"| ADAPTER
+        subgraph PRESENTATION["Presentation"]
+            direction LR
+            SCREEN["Screen / TicketPage<br/>UI component"]
+            HOOK["useTickets(createTicket)<br/>Presentation hook"]
+            SCREEN ==>|"uses hook"| HOOK
+        end
 
-        USECASE -.->|"depends on"| PORT
+        subgraph APPLICATION["Application"]
+            direction LR
+            USECASE["createTicket()<br/>Use case"]
+            PORT["TicketGateway<br/>Outbound port / contract"]
+            USECASE -.->|"depends on"| PORT
+        end
+
+        subgraph DOMAIN["Domain"]
+            MODEL["Ticket model & rules<br/>Ticket · TicketStatus · TICKET_STATUSES<br/>normalizeTicketSubject() · isTicketSubject() · isTicketStatus()"]
+        end
+
+        subgraph INFRASTRUCTURE["Infrastructure"]
+            ADAPTER["HttpTicketGateway<br/>HTTP adapter"]
+        end
+
+        HOOK ==>|"submit(input)"| USECASE
+        USECASE ==>|"applies subject rule"| MODEL
+        USECASE ==>|"gateway.create(input)"| ADAPTER
+
+        PORT -.->|"returns Ticket"| MODEL
         ADAPTER -.->|"implements"| PORT
-        ADAPTER -->|"injected at startup<br/>makeCreateTicket(gateway)"| USECASE
+        ADAPTER -.->|"reuses Domain vocabulary / guards"| MODEL
+
+        BOOT["bootstrap.tsx<br/>Composition Root<br/>startup only"]
+        BOOT -->|"new HttpTicketGateway()"| ADAPTER
+        BOOT -->|"makeCreateTicket(gateway)"| USECASE
+        BOOT -->|"supplies createTicket"| HOOK
     end
 
-    API["Backend API<br/>External system"]
+    API["Backend API<br/>outside this frontend"]
     ADAPTER ==>|"POST /api/tickets"| API
 
-    classDef ui fill:#20252c,stroke:#738091,color:#e6e9ee
-    classDef application fill:#1d2632,stroke:#7089ad,color:#e6e9ee
-    classDef port fill:#272431,stroke:#9489b2,color:#e6e9ee
-    classDef adapter fill:#1f2b28,stroke:#719d8d,color:#e6e9ee
-    classDef external fill:#2b261e,stroke:#ad8e5b,color:#e6e9ee
+    classDef presentation fill:#161b22,stroke:#748392,color:#e6edf3
+    classDef application fill:#161b22,stroke:#7f98bc,color:#e6edf3
+    classDef port fill:#161b22,stroke:#a79dc5,color:#e6edf3,stroke-dasharray:5 4
+    classDef domain fill:#161b22,stroke:#b790c8,color:#e6edf3
+    classDef adapter fill:#161b22,stroke:#7fae9d,color:#e6edf3
+    classDef composition fill:#161b22,stroke:#7fae9d,color:#e6edf3
+    classDef external fill:#161b22,stroke:#c9a66b,color:#e6edf3
 
-    class UI ui
+    class SCREEN,HOOK presentation
     class USECASE application
     class PORT port
+    class MODEL domain
     class ADAPTER adapter
+    class BOOT composition
     class API external
-
-    linkStyle 0,1 stroke:#e6e9ee,stroke-width:2.4px
-    linkStyle 2,3 stroke:#a69dc4,stroke-width:1.4px,stroke-dasharray:5 4
-    linkStyle 4 stroke:#7fae9d,stroke-width:1.6px
-    linkStyle 5 stroke:#c9a66b,stroke-width:2.4px
 ```
 
-</details>
+**Figure 1. One frontend, with [Domain](../GLOSSARY.md#domain) made explicit.** The main runtime sequence is `Screen → useTickets(createTicket) → createTicket() → HttpTicketGateway → Backend API`. The backend is outside this frontend boundary.
+
+The [Domain](../GLOSSARY.md#domain) owns the ticket business vocabulary and rules: `Ticket`, `TicketStatus`, `TICKET_STATUSES`, `normalizeTicketSubject()`, `isTicketSubject()`, and `isTicketStatus()`. It is **not** another transport hop. In this example, `createTicket()` applies the domain-owned subject rule before delegating persistence; `TicketGateway` exposes `Ticket` in the application contract; and `HttpTicketGateway` reuses domain-owned vocabulary and guards while validating and mapping untrusted HTTP data.
+
+The dependency direction is therefore visible: [Application](../GLOSSARY.md#application-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) may depend inward on [Domain](../GLOSSARY.md#domain), while Domain knows nothing about React, HTTP, Zod transport schemas, server field names or composition code.
+
+`TicketGateway` remains an Application-owned outbound [port](../GLOSSARY.md#port). `createTicket()` depends on that contract and `HttpTicketGateway` implements it, but the interface is **not** a separate runtime forwarding object. Once startup composition is complete, the use case calls the injected adapter directly.
+
+`bootstrap.tsx` is the [Composition Root](../GLOSSARY.md#composition-root), shown separately because it participates in **startup**, not in the request path. It constructs `HttpTicketGateway`, calls `makeCreateTicket(gateway)`, and supplies the ready `createTicket` operation to [Presentation](../GLOSSARY.md#presentation-layer). That is [dependency injection](../GLOSSARY.md#dependency-injection-di), not runtime mediation.
+
+On the response path, `HttpTicketGateway` validates external data and translates transport details such as `ticket_id` into the application's `id`. The backend remains authoritative for persisted behavior and server-side rules; frontend Domain rules are not a security boundary.
+
+> **Architecture note:** Hexagonal Architecture does not require a folder literally named `domain/`. This repository uses an explicit Domain boundary because this ticket example has business vocabulary and rules worth owning independently from UI, orchestration and transport code.
 
 ## 3. Physical ownership
 
