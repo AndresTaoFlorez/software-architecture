@@ -18,26 +18,13 @@ This is the outbound side of **[Ports & Adapters](../GLOSSARY.md#hexagonal-archi
 
 ## 2. Visual model
 
-![Unified Ports & Adapters ticket diagram with Presentation, Application, Domain and Infrastructure layers. The runtime path goes from the screen through useTickets, createTicket and HttpTicketGateway to the external backend; Domain owns Ticket vocabulary and business rules; dashed links show source dependencies and green links show startup composition.](./assets/ticket-port-adapter.svg)
+The repository now uses **Mermaid as the primary representation** for this example so the architecture remains editable, reviewable in GitHub, and less fragile than a hand-authored SVG.
 
-**Figure 1. One frontend, with [Domain](../GLOSSARY.md#domain) made explicit.** The solid numbered path is the main runtime flow: the screen uses `useTickets(createTicket)`, `submit(input)` calls the supplied `createTicket()` [use case](../GLOSSARY.md#use-case), that operation calls its injected `TicketGateway` implementation, and `HttpTicketGateway` sends `POST /api/tickets` to the backend. The backend is outside this frontend boundary.
+Read the connectors as three different semantics:
 
-The [Domain](../GLOSSARY.md#domain) is not a decorative extra layer and it is not another transport hop. It owns the ticket business vocabulary and rules used by the rest of the frontend: `Ticket`, `TicketStatus`, `TICKET_STATUSES`, `normalizeTicketSubject()`, `isTicketSubject()`, and `isTicketStatus()`. In the current example, `createTicket()` executes the domain-owned subject rule before delegating persistence, while `TicketGateway` exposes `Ticket` in its application contract. The HTTP [adapter](../GLOSSARY.md#adapter) also reuses domain-owned vocabulary and guards when validating and mapping the untrusted response.
-
-Those relationships make the dependency direction visible: [Application](../GLOSSARY.md#application-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) may depend inward on [Domain](../GLOSSARY.md#domain), while Domain contains no React, HTTP, Zod transport schema, server field names or Composition Root code. The dashed relationships in the figure represent these **source-code dependencies**, not additional runtime forwarding objects.
-
-`TicketGateway` remains an application-owned outbound [port](../GLOSSARY.md#port). `createTicket()` depends on that contract and `HttpTicketGateway` implements it, but the port itself is not a runtime object between the use case and adapter. At runtime, the already-assembled `createTicket()` function calls the injected adapter object directly.
-
-The green relationships describe **startup composition**. `bootstrap.tsx` is the [Composition Root](../GLOSSARY.md#composition-root): it deliberately knows the concrete adapter, constructs `new HttpTicketGateway()`, calls `makeCreateTicket(gateway)`, and supplies the ready operation to [Presentation](../GLOSSARY.md#presentation-layer) through the page/root (for example via props or context). The request does **not** travel through `bootstrap.tsx`; its job is to assemble objects before the user action occurs. This is [dependency injection](../GLOSSARY.md#dependency-injection-di) at the outer composition boundary, not a runtime mediator.
-
-On the response path, `HttpTicketGateway` validates external data and translates transport details such as `ticket_id` into the application's `id`. The backend remains authoritative for persisted behavior and server-side rules; frontend Domain rules are not a security boundary.
-
-> **Architecture note:** Hexagonal Architecture does not require a folder literally named `domain/`. This repository uses an explicit Domain boundary because the ticket model has business vocabulary and rules worth owning independently from UI, orchestration and transport code.
-
-<details>
-<summary>Editable Mermaid source corresponding to the figure</summary>
-
-The Mermaid diagram is the editable **semantic companion** to the SVG. It preserves the same runtime, Domain ownership, source-dependency, boundary and startup-wiring meanings; it is not intended to reproduce the SVG pixel for pixel.
+- `==>` **runtime call** — what actually executes after the user acts.
+- `-.->` **source-code dependency / contract relationship** — what code depends on what.
+- `-->` **startup wiring** — what the Composition Root constructs and injects before runtime.
 
 ```mermaid
 flowchart TB
@@ -53,31 +40,31 @@ flowchart TB
 
         subgraph APPLICATION["Application"]
             direction LR
-            PORT["TicketGateway<br/>Port / contract"]
             USECASE["createTicket()<br/>Use case"]
+            PORT["TicketGateway<br/>Outbound port / contract"]
             USECASE -.->|"depends on"| PORT
         end
 
         subgraph DOMAIN["Domain"]
-            DOMAIN_MODEL["Ticket model & rules<br/>Ticket · TicketStatus · TICKET_STATUSES<br/>normalizeTicketSubject() · isTicketSubject() · isTicketStatus()"]
+            MODEL["Ticket model & rules<br/>Ticket · TicketStatus · TICKET_STATUSES<br/>normalizeTicketSubject() · isTicketSubject() · isTicketStatus()"]
         end
 
         subgraph INFRASTRUCTURE["Infrastructure"]
             ADAPTER["HttpTicketGateway<br/>HTTP adapter"]
         end
 
-        HOOK ==>|"submit calls supplied operation"| USECASE
-        USECASE ==>|"normalizeTicketSubject()"| DOMAIN_MODEL
-        USECASE ==>|"calls injected gateway"| ADAPTER
+        HOOK ==>|"submit(input)"| USECASE
+        USECASE ==>|"applies subject rule"| MODEL
+        USECASE ==>|"gateway.create(input)"| ADAPTER
 
-        PORT -.->|"returns Ticket"| DOMAIN_MODEL
+        PORT -.->|"returns Ticket"| MODEL
         ADAPTER -.->|"implements"| PORT
-        ADAPTER -.->|"uses Domain vocabulary / guards"| DOMAIN_MODEL
+        ADAPTER -.->|"reuses Domain vocabulary / guards"| MODEL
 
         BOOT["bootstrap.tsx<br/>Composition Root<br/>startup only"]
         BOOT -->|"new HttpTicketGateway()"| ADAPTER
         BOOT -->|"makeCreateTicket(gateway)"| USECASE
-        BOOT -->|"supplies createTicket to Presentation"| HOOK
+        BOOT -->|"supplies createTicket"| HOOK
     end
 
     API["Backend API<br/>outside this frontend"]
@@ -86,7 +73,7 @@ flowchart TB
     classDef presentation fill:#161b22,stroke:#748392,color:#e6edf3
     classDef application fill:#161b22,stroke:#7f98bc,color:#e6edf3
     classDef port fill:#161b22,stroke:#a79dc5,color:#e6edf3,stroke-dasharray:5 4
-    classDef domain fill:#161b22,stroke:#a79dc5,color:#e6edf3
+    classDef domain fill:#161b22,stroke:#b790c8,color:#e6edf3
     classDef adapter fill:#161b22,stroke:#7fae9d,color:#e6edf3
     classDef composition fill:#161b22,stroke:#7fae9d,color:#e6edf3
     classDef external fill:#161b22,stroke:#c9a66b,color:#e6edf3
@@ -94,18 +81,25 @@ flowchart TB
     class SCREEN,HOOK presentation
     class USECASE application
     class PORT port
-    class DOMAIN_MODEL domain
+    class MODEL domain
     class ADAPTER adapter
     class BOOT composition
     class API external
-
-    linkStyle 0,2,3,4 stroke:#e6edf3,stroke-width:2.3px
-    linkStyle 1,5,6,7 stroke:#a79dc5,stroke-width:1.4px,stroke-dasharray:5 4
-    linkStyle 8,9,10 stroke:#7fae9d,stroke-width:1.5px
-    linkStyle 11 stroke:#c9a66b,stroke-width:2.3px
 ```
 
-</details>
+**Figure 1. One frontend, with [Domain](../GLOSSARY.md#domain) made explicit.** The main runtime sequence is `Screen → useTickets(createTicket) → createTicket() → HttpTicketGateway → Backend API`. The backend is outside this frontend boundary.
+
+The [Domain](../GLOSSARY.md#domain) owns the ticket business vocabulary and rules: `Ticket`, `TicketStatus`, `TICKET_STATUSES`, `normalizeTicketSubject()`, `isTicketSubject()`, and `isTicketStatus()`. It is **not** another transport hop. In this example, `createTicket()` applies the domain-owned subject rule before delegating persistence; `TicketGateway` exposes `Ticket` in the application contract; and `HttpTicketGateway` reuses domain-owned vocabulary and guards while validating and mapping untrusted HTTP data.
+
+The dependency direction is therefore visible: [Application](../GLOSSARY.md#application-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) may depend inward on [Domain](../GLOSSARY.md#domain), while Domain knows nothing about React, HTTP, Zod transport schemas, server field names or composition code.
+
+`TicketGateway` remains an Application-owned outbound [port](../GLOSSARY.md#port). `createTicket()` depends on that contract and `HttpTicketGateway` implements it, but the interface is **not** a separate runtime forwarding object. Once startup composition is complete, the use case calls the injected adapter directly.
+
+`bootstrap.tsx` is the [Composition Root](../GLOSSARY.md#composition-root), shown separately because it participates in **startup**, not in the request path. It constructs `HttpTicketGateway`, calls `makeCreateTicket(gateway)`, and supplies the ready `createTicket` operation to [Presentation](../GLOSSARY.md#presentation-layer). That is [dependency injection](../GLOSSARY.md#dependency-injection-di), not runtime mediation.
+
+On the response path, `HttpTicketGateway` validates external data and translates transport details such as `ticket_id` into the application's `id`. The backend remains authoritative for persisted behavior and server-side rules; frontend Domain rules are not a security boundary.
+
+> **Architecture note:** Hexagonal Architecture does not require a folder literally named `domain/`. This repository uses an explicit Domain boundary because this ticket example has business vocabulary and rules worth owning independently from UI, orchestration and transport code.
 
 ## 3. Physical ownership
 
