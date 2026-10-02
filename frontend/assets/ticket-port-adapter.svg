@@ -1,18 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1380 790" width="1380" height="790" role="img" aria-labelledby="t d">
-  <title id="t">Creating a ticket: one system view</title>
-  <desc id="d">Runtime path Screen to createTicket to HttpTicketGateway to POST /api/tickets to Backend API. Source-code relationships (depends on, implements) are dashed and sit above. Startup wiring injects HttpTicketGateway into createTicket and sits below.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 990" width="1440" height="990" role="img" aria-labelledby="t d" xmlns:c2pa="http://c2pa.org/manifest"><metadata><c2pa:manifest>AAAWgmp1bWIAAAAeanVtZGMycGEAEQAQgAAAqgA4m3EDYzJwYQAAABZcanVtYgAAAEdqdW1kYzJtYQARABCAAACqADibcQN1cm46YzJwYTo2OTBkZjVjMi01NzNjLTRmZjktYmNiMy1mZDBmNmEzZTRhMjMAAAADl2p1bWIAAAApanVtZGMyYXMAEQAQgAAAqgA4m3EDYzJwYS5hc3NlcnRpb25zAAAAALxqdW1iAAAARGp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuaW5ncmVkaWVudC52MwAAAAAYYzJzaLu7kBgELUF+OpVL+jD14jEAAABwY2JvcqNpZGM6Zm9ybWF0bWltYWdlL3N2Zyt4bWxqaW5zdGFuY2VJRHgseG1wOmlpZDo1YTY3ZjI0OS0wYmEwLTQ4NjItODc0YS1hMDIwNjZlNWRlOWRscmVsYXRpb25zaGlwaHBhcmVudE9mAAAB4mp1bWIAAABBanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5hY3Rpb25zLnYyAAAAABhjMnNo/Gg//0GsEepVZOGPMg51SAAAAZljYm9yomdhY3Rpb25zgqJmYWN0aW9ua2MycGEub3BlbmVkanBhcmFtZXRlcnOha2luZ3JlZGllbnRzgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggsnUk9jp3+z6MLQ0CjUljajFuv8PPJXWAF6Rlf3ot8U2kZmFjdGlvbngdY29tLmFudGhyb3BpYy5jbGF1ZGUucHJvdmlkZWRqcGFyYW1ldGVyc6F4H2NvbS5hbnRocm9waWMub3JpZ2luLWNvbmZpZGVuY2VndW5rbm93bmtkZXNjcmlwdGlvbnhmQ2xhdWRlIHByb3ZpZGVkIHRoaXMgZmlsZSBhdCB0aGUgcmVxdWVzdCBvZiBhIHVzZXIgYW5kIG1heSBoYXZlIGNyZWF0ZWQgb3IgbW9kaWZpZWQgdGhlIGZpbGUgY29udGVudHMubXNvZnR3YXJlQWdlbnShZG5hbWVmQ2xhdWRlcmFsbEFjdGlvbnNJbmNsdWRlZPUAAADIanVtYgAAAEBqdW1kY2JvcgARABCAAACqADibcRNjMnBhLmhhc2guZGF0YQAAAAAYYzJzaHQyM4QVBL5casLrUHp23yUAAACAY2JvcqVjYWxnZnNoYTI1NmNwYWRNAAAAAAAAAAAAAAAAAGRoYXNoWCCnp2v1gmrzqSdk/DDJvF7vw3C+nrCAfw6v/FdzYJOismRuYW1lbmp1bWJmIG1hbmlmZXN0amV4Y2x1c2lvbnOBomVzdGFydBi5Zmxlbmd0aBkeBAAAAj5qdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAACD2Nib3KlY2FsZ2ZzaGEyNTZpc2lnbmF0dXJleE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOjY5MGRmNWMyLTU3M2MtNGZmOS1iY2IzLWZkMGY2YTNlNGEyMy9jMnBhLnNpZ25hdHVyZWppbnN0YW5jZUlEeCx4bXA6aWlkOjRmMzhhY2YyLWY5NTAtNDU0OS05ZmRmLTAxNzI0MjM3ZDE5MHJjcmVhdGVkX2Fzc2VydGlvbnODomN1cmx4LXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaW5ncmVkaWVudC52M2RoYXNoWCCydST2Onf7PowtDQKNSWNqMW6/w88ldYAXpGV/ei3xTaJjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFgguxHyxVUbIROG1t4RSzFeGvMgxIAitEIKBlzBCVRmH5eiY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFgg/vJ45tlo9sLSIjBy18v707kYJNxZ+xJvf2OWcWL9GAd0Y2xhaW1fZ2VuZXJhdG9yX2luZm+jZG5hbWVvQW50aHJvcGljIEZpbGVzZ3ZlcnNpb25lMS4wLjBrc3BlY1ZlcnNpb25lMi40LjAAABA4anVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAABAIY2JvctKEWQISogEmGCFZAgowggIGMIIBjaADAgECAhRA5aAK7sI50L64g/oGQgU9Z1UTADAKBggqhkjOPQQDAzBJMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEuMCwGA1UEAxMlQW50aHJvcGljIENvbnRlbnQgQ3JlZGVudGlhbHMgUm9vdCBDQTAeFw0yNjA4MDcxODQzNTZaFw0yODA4MDYxOTQzNTZaMEQxFzAVBgNVBAoTDkFudGhyb3BpYywgUEJDMSkwJwYDVQQDEyBBbnRocm9waWMgQ2xhdWRlIENvbnRlbnQgU2lnbmluZzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABJh6CmvLUBgFFNU0vUKlOVtE6djd17L5SuwX0LemFisBM3dkd/3cyjxFA3Qo5S46fX0/ihY0VZ7mfb9KF703t5OjWDBWMA4GA1UdDwEB/wQEAwIHgDAVBgNVHSUEDjAMBgorBgEEAYPoXgIBMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAUzlHiBIFOZFsj+OPEz5o+nMHXXMIwCgYIKoZIzj0EAwMDZwAwZAIwMXMdFJ4BetLLVY7ORuE9noqbbAZOZn/aArXyTwFAZfKrPzxF2vPoJNf1+UCdg1XGAjBwX1zd9WGqYkqmL5SFqw1QySjr1zJfpJM9+1rdDwSPLMOPOjKuiXjoU/pUUeG9RwmhY3BhZFkNngAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPZYQNrQWpMowVmLn47nq9dV0i9iIsPLlO3zEj8EissItaSr4YO3veBet9IbzyKmSSt+qXVtJAuYWDIC22jumuqcDUM=</c2pa:manifest></metadata>
+  <title id="t">Creating a ticket: layers and flow</title>
+  <desc id="d">Layered architecture. Runtime: Screen, useTickets hook, Redux store, bootstrap, createTicket use case, HttpTicketGateway adapter, Backend API. Presentation never calls the use case directly: it goes through bootstrap. The adapter is connected to the use case by dependency injection, not by bootstrap. TicketGateway is a source-code contract only.</desc>
 
   <defs>
     <style>
       text { font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif; fill: #E6E9EE; }
       .m { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; }
+      .head { font-size: 20px; font-weight: 500; }
+      .lede { font-size: 14px; fill: #9FA8B3; }
+      .layer { font-size: 15px; font-weight: 500; }
+      .lnote { font-size: 12.5px; fill: #8A94A0; }
       .name { font-size: 16px; font-weight: 500; }
       .role { font-size: 12.5px; fill: #9FA8B3; }
       .desc { font-size: 13px; fill: #C3C9D1; }
-      .gut { font-size: 12.5px; fill: #737C87; letter-spacing: 0.3px; }
       .rel { font-size: 12.5px; fill: #9FA8B3; }
-      .tiny { font-size: 12px; fill: #737C87; }
-      .note { font-size: 14.5px; fill: #E6E9EE; }
+      .tiny { font-size: 12px; fill: #8A94A0; }
+      .note { font-size: 13px; fill: #C3C9D1; }
+      .stepn { font-size: 11px; font-weight: 600; fill: #1B1F24; text-anchor: middle; }
     </style>
 
     <marker id="dep" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto">
@@ -22,7 +26,7 @@
       <path d="M1.5 1.5 L10.5 6 L1.5 10.5 z" fill="none" stroke="#A69DC4" stroke-width="1.3" stroke-linejoin="round"/>
     </marker>
     <marker id="asm" viewBox="0 0 11 10" refX="10" refY="5" markerWidth="9" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto">
-      <path d="M1 1 L10 5 L1 9 z" fill="#7FAE9D"/>
+      <path d="M1 1 L10 5 L1 9 z" fill="#8DB39A"/>
     </marker>
     <marker id="run" viewBox="0 0 11 10" refX="10" refY="5" markerWidth="11" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto">
       <path d="M1 1 L10 5 L1 9 z" fill="#E6E9EE"/>
@@ -32,95 +36,177 @@
     </marker>
   </defs>
 
-  <!-- Frontend boundary: one quiet line -->
-  <line x1="884" y1="164" x2="884" y2="690" stroke="#E6E9EE" stroke-opacity="0.28" stroke-width="1.25" stroke-dasharray="3 6"/>
-  <text x="872" y="150" class="rel" text-anchor="end">Frontend</text>
-  <text x="896" y="150" class="rel">Outside the frontend</text>
+  <!-- Header -->
+  <text x="40" y="58" class="head">Creating a ticket</text>
+  <text x="40" y="86" class="lede">A request travels down through the layers. Follow the numbers.</text>
 
-  <!-- Gutter labels for the three ways of reading the system -->
-  <text x="70" y="190" class="gut">Source code</text>
-  <text x="70" y="398" class="gut">Runtime</text>
-  <text x="70" y="560" class="gut">Startup</text>
+  <!-- ============ LAYER BANDS ============ -->
+  <g id="bands">
+    <rect x="40" y="120" width="1360" height="170" fill="#FFFFFF" fill-opacity="0.04"/>
+    <rect x="40" y="290" width="1360" height="170" fill="#FFFFFF" fill-opacity="0.02"/>
+    <rect x="40" y="460" width="1360" height="170" fill="#FFFFFF" fill-opacity="0.04"/>
+    <rect x="40" y="630" width="1360" height="170" fill="#FFFFFF" fill-opacity="0.02"/>
 
-  <!-- ============ SOURCE-CODE LAYER ============ -->
-  <!-- TicketGateway (port / contract) -->
-  <rect x="473" y="170" width="230" height="116" rx="8" fill="#A69DC4" fill-opacity="0.07" stroke="#A69DC4" stroke-opacity="0.6" stroke-width="1.25" stroke-dasharray="5 4"/>
-  <line x1="474.5" y1="182" x2="474.5" y2="274" stroke="#A69DC4" stroke-opacity="0.7" stroke-width="3" stroke-linecap="round"/>
-  <text x="493" y="204" class="name m" style="fill:#CFC9E0">TicketGateway</text>
-  <text x="493" y="225" class="role">Port / contract</text>
-  <text x="493" y="250" class="desc">Describes what the</text>
-  <text x="493" y="267" class="desc">operation needs</text>
+    <line x1="40" y1="120" x2="1400" y2="120" stroke="#E6E9EE" stroke-opacity="0.14"/>
+    <line x1="40" y1="290" x2="1400" y2="290" stroke="#E6E9EE" stroke-opacity="0.14"/>
+    <line x1="40" y1="460" x2="1400" y2="460" stroke="#E6E9EE" stroke-opacity="0.14"/>
+    <line x1="40" y1="630" x2="1400" y2="630" stroke="#E6E9EE" stroke-opacity="0.14"/>
 
-  <!-- depends on -->
-  <path d="M439 410 V240 Q439 228 451 228 H471" fill="none" stroke="#A69DC4" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#dep)"/>
-  <text x="427" y="330" class="rel" text-anchor="end">depends on</text>
-  <!-- implements -->
-  <path d="M738 410 V240 Q738 228 726 228 H705" fill="none" stroke="#A69DC4" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#impl)"/>
-  <text x="750" y="330" class="rel">implements</text>
+    <!-- Layer accent bars -->
+    <rect x="40" y="130" width="3" height="150" rx="1.5" fill="#93A0B2" fill-opacity="0.85"/>
+    <rect x="40" y="300" width="3" height="150" rx="1.5" fill="#6C9EAE" fill-opacity="0.85"/>
+    <rect x="40" y="470" width="3" height="150" rx="1.5" fill="#7F98BC" fill-opacity="0.85"/>
+    <rect x="40" y="640" width="3" height="150" rx="1.5" fill="#8DB39A" fill-opacity="0.85"/>
+    <rect x="40" y="810" width="3" height="150" rx="1.5" fill="#C9A66B" fill-opacity="0.85"/>
 
-  <!-- The contract is skipped at runtime -->
-  <line x1="588" y1="290" x2="588" y2="465" stroke="#737C87" stroke-width="1.2" stroke-dasharray="1.5 4" stroke-linecap="round"/>
-  <circle cx="588" cy="470" r="3.5" fill="#737C87"/>
-  <text x="600" y="372" class="tiny">skipped at runtime</text>
+    <!-- Frontend boundary -->
+    <line x1="40" y1="800" x2="1400" y2="800" stroke="#E6E9EE" stroke-opacity="0.4" stroke-width="1.25" stroke-dasharray="6 6"/>
+  </g>
 
-  <!-- ============ RUNTIME LAYER ============ -->
+  <!-- Layer labels (left gutter) -->
+  <g id="layer-labels">
+    <text x="64" y="192" class="layer">Presentation</text>
+    <text x="64" y="214" class="lnote">What the user sees</text>
+    <text x="64" y="231" class="lnote">and interacts with.</text>
+
+    <text x="64" y="362" class="layer">Bootstrap</text>
+    <text x="64" y="384" class="lnote">Connects the layers and</text>
+    <text x="64" y="401" class="lnote">hands ready-made pieces</text>
+    <text x="64" y="418" class="lnote">up to presentation.</text>
+
+    <text x="64" y="532" class="layer">Application</text>
+    <text x="64" y="554" class="lnote">The business rules and</text>
+    <text x="64" y="571" class="lnote">what they need.</text>
+
+    <text x="64" y="702" class="layer">Infrastructure</text>
+    <text x="64" y="724" class="lnote">Technical details,</text>
+    <text x="64" y="741" class="lnote">like talking HTTP.</text>
+
+    <text x="64" y="790" class="tiny">Frontend</text>
+    <text x="64" y="872" class="layer">Backend</text>
+    <text x="64" y="894" class="lnote">Outside the frontend.</text>
+  </g>
+
+  <!-- ============ NODES ============ -->
   <!-- Screen -->
-  <rect x="70" y="412" width="190" height="116" rx="8" fill="#93A0B2" fill-opacity="0.12" stroke="#93A0B2" stroke-opacity="0.55" stroke-width="1.25"/>
-  <line x1="71.5" y1="424" x2="71.5" y2="516" stroke="#93A0B2" stroke-width="3" stroke-linecap="round"/>
-  <text x="90" y="446" class="name">Screen</text>
-  <text x="90" y="467" class="role">UI</text>
-  <text x="90" y="492" class="desc">Starts the ticket</text>
-  <text x="90" y="509" class="desc">creation action</text>
+  <rect x="300" y="149" width="260" height="112" rx="8" fill="#93A0B2" fill-opacity="0.12" stroke="#93A0B2" stroke-opacity="0.55" stroke-width="1.25"/>
+  <line x1="301.5" y1="161" x2="301.5" y2="249" stroke="#93A0B2" stroke-width="3" stroke-linecap="round"/>
+  <text x="320" y="181" class="name">Screen</text>
+  <text x="320" y="202" class="role">UI component</text>
+  <text x="320" y="227" class="desc">Shows the form and</text>
+  <text x="320" y="244" class="desc">starts the action</text>
+
+  <!-- useTickets() -->
+  <rect x="680" y="149" width="260" height="112" rx="8" fill="#93A0B2" fill-opacity="0.12" stroke="#93A0B2" stroke-opacity="0.55" stroke-width="1.25"/>
+  <line x1="681.5" y1="161" x2="681.5" y2="249" stroke="#93A0B2" stroke-width="3" stroke-linecap="round"/>
+  <text x="700" y="181" class="name m">useTickets()</text>
+  <text x="700" y="202" class="role">Hook</text>
+  <text x="700" y="227" class="desc">Consumes what bootstrap</text>
+  <text x="700" y="244" class="desc">prepared; no wiring here</text>
+
+  <!-- Redux store -->
+  <rect x="680" y="319" width="260" height="112" rx="8" fill="#6C9EAE" fill-opacity="0.12" stroke="#6C9EAE" stroke-opacity="0.55" stroke-width="1.25"/>
+  <line x1="681.5" y1="331" x2="681.5" y2="419" stroke="#6C9EAE" stroke-width="3" stroke-linecap="round"/>
+  <text x="700" y="351" class="name">Redux store</text>
+  <text x="700" y="372" class="role">State, ready-made</text>
+  <text x="700" y="397" class="desc">Calls the use case that</text>
+  <text x="700" y="414" class="desc">bootstrap provides</text>
+
+  <!-- bootstrap -->
+  <rect x="1060" y="319" width="260" height="112" rx="8" fill="#6C9EAE" fill-opacity="0.12" stroke="#6C9EAE" stroke-opacity="0.55" stroke-width="1.25"/>
+  <line x1="1061.5" y1="331" x2="1061.5" y2="419" stroke="#6C9EAE" stroke-width="3" stroke-linecap="round"/>
+  <text x="1080" y="351" class="name m">bootstrap</text>
+  <text x="1080" y="372" class="role">Composition root</text>
+  <text x="1080" y="397" class="desc">Gives Redux the use case;</text>
+  <text x="1080" y="414" class="desc">never touches adapters</text>
+
+  <!-- TicketGateway (port) -->
+  <rect x="680" y="489" width="260" height="112" rx="8" fill="#A69DC4" fill-opacity="0.07" stroke="#A69DC4" stroke-opacity="0.6" stroke-width="1.25" stroke-dasharray="5 4"/>
+  <line x1="681.5" y1="501" x2="681.5" y2="589" stroke="#A69DC4" stroke-opacity="0.7" stroke-width="3" stroke-linecap="round"/>
+  <text x="700" y="521" class="name m" style="fill:#CFC9E0">TicketGateway</text>
+  <text x="700" y="542" class="role">Port / contract</text>
+  <text x="700" y="567" class="desc">Describes what the</text>
+  <text x="700" y="584" class="desc">operation needs</text>
 
   <!-- createTicket() -->
-  <rect x="324" y="412" width="230" height="116" rx="8" fill="#7F98BC" fill-opacity="0.13" stroke="#7F98BC" stroke-opacity="0.6" stroke-width="1.25"/>
-  <line x1="325.5" y1="424" x2="325.5" y2="516" stroke="#7F98BC" stroke-width="3" stroke-linecap="round"/>
-  <text x="344" y="446" class="name m">createTicket()</text>
-  <text x="344" y="467" class="role">Use case</text>
-  <text x="344" y="492" class="desc">Coordinates the</text>
-  <text x="344" y="509" class="desc">ticket-creation operation</text>
+  <rect x="1060" y="489" width="260" height="112" rx="8" fill="#7F98BC" fill-opacity="0.13" stroke="#7F98BC" stroke-opacity="0.6" stroke-width="1.25"/>
+  <line x1="1061.5" y1="501" x2="1061.5" y2="589" stroke="#7F98BC" stroke-width="3" stroke-linecap="round"/>
+  <text x="1080" y="521" class="name m">createTicket()</text>
+  <text x="1080" y="542" class="role">Use case</text>
+  <text x="1080" y="567" class="desc">Coordinates the</text>
+  <text x="1080" y="584" class="desc">ticket-creation operation</text>
 
   <!-- HttpTicketGateway -->
-  <rect x="618" y="412" width="240" height="116" rx="8" fill="#7FAE9D" fill-opacity="0.12" stroke="#7FAE9D" stroke-opacity="0.6" stroke-width="1.25"/>
-  <line x1="619.5" y1="424" x2="619.5" y2="516" stroke="#7FAE9D" stroke-width="3" stroke-linecap="round"/>
-  <text x="638" y="446" class="name m">HttpTicketGateway</text>
-  <text x="638" y="467" class="role">HTTP adapter</text>
-  <text x="638" y="492" class="desc">Provides the HTTP</text>
-  <text x="638" y="509" class="desc">implementation</text>
+  <rect x="1060" y="659" width="260" height="112" rx="8" fill="#8DB39A" fill-opacity="0.12" stroke="#8DB39A" stroke-opacity="0.6" stroke-width="1.25"/>
+  <line x1="1061.5" y1="671" x2="1061.5" y2="759" stroke="#8DB39A" stroke-width="3" stroke-linecap="round"/>
+  <text x="1080" y="691" class="name m">HttpTicketGateway</text>
+  <text x="1080" y="712" class="role">HTTP adapter</text>
+  <text x="1080" y="737" class="desc">Provides the HTTP</text>
+  <text x="1080" y="754" class="desc">implementation</text>
 
   <!-- Backend API -->
-  <rect x="1090" y="412" width="220" height="116" rx="8" fill="#C9A66B" fill-opacity="0.11" stroke="#C9A66B" stroke-opacity="0.6" stroke-width="1.25"/>
-  <line x1="1091.5" y1="424" x2="1091.5" y2="516" stroke="#C9A66B" stroke-width="3" stroke-linecap="round"/>
-  <text x="1110" y="446" class="name">Backend API</text>
-  <text x="1110" y="467" class="role">External system</text>
-  <text x="1110" y="492" class="desc">Receives the</text>
-  <text x="1110" y="509" class="desc">HTTP request</text>
+  <rect x="1060" y="819" width="260" height="112" rx="8" fill="#C9A66B" fill-opacity="0.11" stroke="#C9A66B" stroke-opacity="0.6" stroke-width="1.25"/>
+  <line x1="1061.5" y1="831" x2="1061.5" y2="919" stroke="#C9A66B" stroke-width="3" stroke-linecap="round"/>
+  <text x="1080" y="851" class="name">Backend API</text>
+  <text x="1080" y="872" class="role">External system</text>
+  <text x="1080" y="897" class="desc">Receives the</text>
+  <text x="1080" y="914" class="desc">HTTP request</text>
 
-  <!-- Runtime calls: solid, dominant -->
-  <line x1="264" y1="470" x2="320" y2="470" stroke="#E6E9EE" stroke-width="2.5" marker-end="url(#run)"/>
-  <line x1="558" y1="470" x2="614" y2="470" stroke="#E6E9EE" stroke-width="2.5" marker-end="url(#run)"/>
-  <line x1="862" y1="470" x2="1086" y2="470" stroke="#C9A66B" stroke-width="2.5" marker-end="url(#runx)"/>
-  <text x="974" y="456" class="m" style="font-size:13px;fill:#C9A66B" text-anchor="middle">POST /api/tickets</text>
-  <text x="974" y="494" class="tiny" text-anchor="middle">HTTP request</text>
+  <!-- ============ RUNTIME CALLS (solid) ============ -->
+  <line x1="564" y1="205" x2="676" y2="205" stroke="#E6E9EE" stroke-width="2.5" marker-end="url(#run)"/>
+  <line x1="810" y1="265" x2="810" y2="315" stroke="#E6E9EE" stroke-width="2.5" marker-end="url(#run)"/>
+  <line x1="944" y1="375" x2="1056" y2="375" stroke="#E6E9EE" stroke-width="2.5" marker-end="url(#run)"/>
+  <line x1="1190" y1="435" x2="1190" y2="485" stroke="#E6E9EE" stroke-width="2.5" marker-end="url(#run)"/>
+  <line x1="1190" y1="605" x2="1190" y2="655" stroke="#E6E9EE" stroke-width="2.5" marker-end="url(#run)"/>
+  <line x1="1190" y1="775" x2="1190" y2="815" stroke="#C9A66B" stroke-width="2.5" marker-end="url(#runx)"/>
+  <text x="1204" y="794" class="m" style="font-size:13px;fill:#C9A66B">POST /api/tickets</text>
 
-  <!-- ============ STARTUP WIRING ============ -->
-  <circle cx="738" cy="532" r="3.5" fill="#7FAE9D"/>
-  <path d="M738 532 V584 Q738 596 726 596 H451 Q439 596 439 584 V533" fill="none" stroke="#7FAE9D" stroke-width="1.5" marker-end="url(#asm)"/>
-  <text x="588" y="580" class="rel" text-anchor="middle" style="fill:#9CC2B4">injected at startup</text>
-  <text x="588" y="620" class="m" text-anchor="middle" style="font-size:12.5px;fill:#C3C9D1">makeCreateTicket(gateway)</text>
-  <text x="588" y="640" class="tiny" text-anchor="middle">assembled when the app starts</text>
+  <g>
+    <circle cx="620" cy="185" r="9" fill="#E6E9EE"/><text x="620" y="189" class="stepn">1</text>
+    <circle cx="792" cy="290" r="9" fill="#E6E9EE"/><text x="792" y="294" class="stepn">2</text>
+    <circle cx="1000" cy="355" r="9" fill="#E6E9EE"/><text x="1000" y="359" class="stepn">3</text>
+    <circle cx="1172" cy="460" r="9" fill="#E6E9EE"/><text x="1172" y="464" class="stepn">4</text>
+    <circle cx="1172" cy="630" r="9" fill="#E6E9EE"/><text x="1172" y="634" class="stepn">5</text>
+    <circle cx="1172" cy="795" r="9" fill="#E6E9EE"/><text x="1172" y="799" class="stepn">6</text>
+  </g>
+
+  <!-- ============ SOURCE-CODE RELATIONSHIPS (dashed) ============ -->
+  <line x1="1056" y1="545" x2="946" y2="545" stroke="#A69DC4" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#dep)"/>
+  <text x="1001" y="535" class="rel" text-anchor="middle">depends on</text>
+
+  <path d="M1056 715 H822 Q810 715 810 703 V604" fill="none" stroke="#A69DC4" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#impl)"/>
+  <text x="940" y="705" class="rel" text-anchor="middle">implements</text>
+
+  <!-- ============ DEPENDENCY INJECTION (startup wiring) ============ -->
+  <circle cx="1323" cy="715" r="3.5" fill="#8DB39A"/>
+  <path d="M1323 715 H1340 Q1352 715 1352 703 V557 Q1352 545 1340 545 H1323" fill="none" stroke="#8DB39A" stroke-width="1.5" marker-end="url(#asm)"/>
+  <text transform="translate(1374 630) rotate(-90)" class="rel" text-anchor="middle" style="fill:#A9CBB5">injected via DI at startup</text>
+
+  <!-- ============ INTEGRATED NOTES ============ -->
+  <line x1="1062" y1="166" x2="1062" y2="236" stroke="#E6E9EE" stroke-opacity="0.3" stroke-width="2"/>
+  <text x="1078" y="186" class="note">Presentation never calls the</text>
+  <text x="1078" y="205" class="note">use case directly. It goes</text>
+  <text x="1078" y="224" class="note">through bootstrap.</text>
+
+  <line x1="302" y1="326" x2="302" y2="394" stroke="#6C9EAE" stroke-opacity="0.75" stroke-width="2"/>
+  <text x="318" y="345" class="note">Bootstrap reaches the use case,</text>
+  <text x="318" y="364" class="note">never the adapter. Dependency</text>
+  <text x="318" y="383" class="note">injection connects the adapter.</text>
+
+  <line x1="302" y1="494" x2="302" y2="596" stroke="#A69DC4" stroke-opacity="0.75" stroke-width="2"/>
+  <text x="318" y="512" class="note"><tspan class="m" style="font-size:12.5px">TicketGateway</tspan> shapes the</text>
+  <text x="318" y="531" class="note">dependency in code.</text>
+  <text x="318" y="550" class="note">At runtime, <tspan class="m" style="font-size:12.5px">createTicket()</tspan></text>
+  <text x="318" y="569" class="note">calls the injected</text>
+  <text x="318" y="588" class="note"><tspan class="m" style="font-size:12.5px">HttpTicketGateway</tspan> directly.</text>
 
   <!-- ============ LEGEND ============ -->
-  <text x="940" y="592" class="tiny">Line styles</text>
-  <line x1="940" y1="614" x2="986" y2="614" stroke="#A69DC4" stroke-width="1.4" stroke-dasharray="5 4"/>
-  <text x="1000" y="618" class="rel">source-code dependency</text>
-  <line x1="940" y1="638" x2="986" y2="638" stroke="#7FAE9D" stroke-width="1.5"/>
-  <text x="1000" y="642" class="rel">startup wiring</text>
-  <line x1="940" y1="662" x2="986" y2="662" stroke="#E6E9EE" stroke-width="2.5"/>
-  <text x="1000" y="666" class="rel">runtime call</text>
-
-  <!-- ============ TEACHING NOTE ============ -->
-  <line x1="70" y1="706" x2="70" y2="758" stroke="#A69DC4" stroke-opacity="0.7" stroke-width="2"/>
-  <text x="88" y="724" class="note"><tspan class="m" style="font-size:13.5px">TicketGateway</tspan> shapes the dependency in code.</text>
-  <text x="88" y="750" class="note">At runtime, <tspan class="m" style="font-size:13.5px">createTicket()</tspan> calls the injected <tspan class="m" style="font-size:13.5px">HttpTicketGateway</tspan> instance directly.</text>
+  <text x="300" y="836" class="tiny">Line styles</text>
+  <line x1="300" y1="858" x2="346" y2="858" stroke="#A69DC4" stroke-width="1.4" stroke-dasharray="5 4"/>
+  <text x="360" y="862" class="rel">source-code dependency</text>
+  <circle cx="302" cy="882" r="3.5" fill="#8DB39A"/>
+  <line x1="302" y1="882" x2="346" y2="882" stroke="#8DB39A" stroke-width="1.5"/>
+  <text x="360" y="886" class="rel">dependency injection (startup wiring)</text>
+  <line x1="300" y1="906" x2="346" y2="906" stroke="#E6E9EE" stroke-width="2.5"/>
+  <text x="360" y="910" class="rel">runtime call</text>
 </svg>
