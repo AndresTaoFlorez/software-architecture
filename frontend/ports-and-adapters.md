@@ -18,54 +18,75 @@ This is the outbound side of **[Ports & Adapters](../GLOSSARY.md#hexagonal-archi
 
 ## 2. Visual model
 
-![Unified dark-mode diagram of ticket creation: the solid runtime path goes from the screen through createTicket and HttpTicketGateway to the external backend; dashed links show source-code contracts and a separate connector shows startup injection.](./assets/ticket-port-adapter.svg)
+![Unified ticket-creation diagram: the solid runtime path goes from the screen through useTickets, createTicket and HttpTicketGateway to the external backend; dashed links show source-code contracts; green links show bootstrap wiring performed before runtime.](./assets/ticket-port-adapter.svg)
 
-**Figure 1. One system, three relationship types.** The strongest horizontal path is the actual runtime flow: `Screen → createTicket() → HttpTicketGateway → POST /api/tickets → Backend API`. The backend is outside the frontend boundary.
+**Figure 1. One frontend, three kinds of relationship.** The solid numbered path is the runtime path: the screen uses `useTickets(createTicket)`, `submit(input)` calls the supplied `createTicket()` [use case](../GLOSSARY.md#use-case), that operation calls its injected `TicketGateway` implementation, and `HttpTicketGateway` sends `POST /api/tickets` to the backend. The backend is outside this frontend boundary.
 
-The lighter dashed relationships above that path describe **source-code structure**, not extra runtime hops: `createTicket()` depends on the application-owned `TicketGateway` [port](../GLOSSARY.md#port), and `HttpTicketGateway` implements that contract. The startup connector below shows **composition**: [the Composition Root](../GLOSSARY.md#composition-root) creates the concrete adapter and passes it to `makeCreateTicket(gateway)` before the UI uses the resulting operation.
+The dashed relationships describe **source-code dependencies**, not extra runtime hops. `createTicket()` depends on the application-owned `TicketGateway` [port](../GLOSSARY.md#port); `HttpTicketGateway` implements that contract. The port therefore shapes what the Application may call without becoming another object in the running request path.
 
-The [port](../GLOSSARY.md#port) is a TypeScript contract, **not a separate runtime forwarding object**. Once composition is complete, `createTicket()` holds the injected [adapter](../GLOSSARY.md#adapter) object and calls it directly. On the way back, that HTTP adapter validates the server response and translates transport details such as `ticket_id` into the application's `id`.
+The green relationships describe **startup composition**. `bootstrap.tsx` is the [Composition Root](../GLOSSARY.md#composition-root): it is expected to know the concrete [adapter](../GLOSSARY.md#adapter), construct `new HttpTicketGateway()`, call `makeCreateTicket(gateway)`, and supply the ready operation to [Presentation](../GLOSSARY.md#presentation-layer) through the page/root (for example via props or context). The request does **not** travel through `bootstrap.tsx`; its job is to assemble objects before the user action occurs. This is [dependency injection](../GLOSSARY.md#dependency-injection-di) performed at the outer composition boundary, not a runtime mediator between Presentation and Application.
+
+On the response path, `HttpTicketGateway` validates the external payload and translates transport details such as `ticket_id` into the application's `id`. The backend remains authoritative for persisted behavior and server-side rules.
 
 <details>
 <summary>Editable Mermaid source corresponding to the figure</summary>
 
-The Mermaid version is the editable **semantic companion** to the SVG. It preserves the same dependency, startup-wiring and runtime meanings; it is not intended to reproduce the SVG pixel for pixel.
+The Mermaid diagram is the editable **semantic companion** to the SVG. It preserves the same runtime, source-dependency, boundary and startup-wiring meanings; it is not intended to reproduce the SVG pixel for pixel.
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph FRONTEND["Frontend"]
-        UI["Screen<br/>UI"]
-        USECASE["createTicket()<br/>Use case"]
-        ADAPTER["HttpTicketGateway<br/>HTTP adapter"]
-        PORT["TicketGateway<br/>Port / contract"]
+        direction TB
 
-        UI ==>|"runtime call"| USECASE
-        USECASE ==>|"runtime call"| ADAPTER
+        subgraph PRESENTATION["Presentation"]
+            direction LR
+            SCREEN["Screen / TicketPage<br/>UI component"]
+            HOOK["useTickets(createTicket)<br/>Presentation hook"]
+            SCREEN ==>|"uses hook"| HOOK
+        end
 
-        USECASE -.->|"depends on"| PORT
+        subgraph APPLICATION["Application"]
+            direction LR
+            PORT["TicketGateway<br/>Port / contract"]
+            USECASE["createTicket()<br/>Use case"]
+            USECASE -.->|"depends on"| PORT
+        end
+
+        subgraph INFRASTRUCTURE["Infrastructure"]
+            ADAPTER["HttpTicketGateway<br/>HTTP adapter"]
+        end
+
+        HOOK ==>|"submit calls supplied operation"| USECASE
+        USECASE ==>|"calls injected gateway"| ADAPTER
         ADAPTER -.->|"implements"| PORT
-        ADAPTER -->|"injected at startup<br/>makeCreateTicket(gateway)"| USECASE
+
+        BOOT["bootstrap.tsx<br/>Composition Root<br/>startup only"]
+        BOOT -->|"new HttpTicketGateway()"| ADAPTER
+        BOOT -->|"makeCreateTicket(gateway)"| USECASE
+        BOOT -->|"supplies createTicket to Presentation"| HOOK
     end
 
-    API["Backend API<br/>External system"]
+    API["Backend API<br/>outside this frontend"]
     ADAPTER ==>|"POST /api/tickets"| API
 
-    classDef ui fill:#20252c,stroke:#738091,color:#e6e9ee
-    classDef application fill:#1d2632,stroke:#7089ad,color:#e6e9ee
-    classDef port fill:#272431,stroke:#9489b2,color:#e6e9ee
-    classDef adapter fill:#1f2b28,stroke:#719d8d,color:#e6e9ee
-    classDef external fill:#2b261e,stroke:#ad8e5b,color:#e6e9ee
+    classDef presentation fill:#20272f,stroke:#7f8c9c,color:#e7eaee
+    classDef application fill:#202938,stroke:#7f98bc,color:#e7eaee
+    classDef port fill:#292532,stroke:#a79dc5,color:#e7eaee,stroke-dasharray:5 4
+    classDef adapter fill:#202e29,stroke:#7fae9d,color:#e7eaee
+    classDef composition fill:#1f2c28,stroke:#7fae9d,color:#e7eaee
+    classDef external fill:#30291f,stroke:#c9a66b,color:#e7eaee
 
-    class UI ui
+    class SCREEN,HOOK presentation
     class USECASE application
     class PORT port
     class ADAPTER adapter
+    class BOOT composition
     class API external
 
-    linkStyle 0,1 stroke:#e6e9ee,stroke-width:2.4px
-    linkStyle 2,3 stroke:#a69dc4,stroke-width:1.4px,stroke-dasharray:5 4
-    linkStyle 4 stroke:#7fae9d,stroke-width:1.6px
-    linkStyle 5 stroke:#c9a66b,stroke-width:2.4px
+    linkStyle 0,2,3 stroke:#e7eaee,stroke-width:2.3px
+    linkStyle 1,4 stroke:#a79dc5,stroke-width:1.4px,stroke-dasharray:5 4
+    linkStyle 5,6,7 stroke:#7fae9d,stroke-width:1.5px
+    linkStyle 8 stroke:#c9a66b,stroke-width:2.3px
 ```
 
 </details>
