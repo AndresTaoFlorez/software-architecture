@@ -16,7 +16,7 @@ for (const document of documents) test(document + ': complete feature compiles a
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'architecture-feature-'))
   try {
     const files = []
-    const content = fs.readFileSync(document, 'utf8')
+    const content = fs.readFileSync(document, 'utf8').replaceAll('\r\n', '\n')
     const feature = document.endsWith('/README.md') ? content.slice(content.indexOf('### Complete')) : content
     visit(parseMarkdown(feature), node => {
       if (node.type !== 'code' || node.lang !== 'ts') return

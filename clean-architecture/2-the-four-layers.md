@@ -160,7 +160,7 @@ Hold replaceable mechanisms:
 
 - React/Vue/Svelte;
 - Express/NestJS/Spring;
-- SQL/ORM drivers;
+- SQL/[ORM](../GLOSSARY.md#orm) drivers;
 - browser storage;
 - message brokers;
 - HTTP clients;
@@ -203,7 +203,7 @@ The mapping is not one-to-one.
 
 For example, "[Presentation](../GLOSSARY.md#presentation-layer)" in a project may contain both [Interface Adapter](../GLOSSARY.md#interface-adapter) behavior ([ViewModels](../GLOSSARY.md#viewmodel)/[presenters](../GLOSSARY.md#presenter)) and Framework/Driver behavior (React components).
 
-[Infrastructure](../GLOSSARY.md#infrastructure) similarly often combines a repository [mapper](../GLOSSARY.md#mapper) ([Interface Adapters](../GLOSSARY.md#interface-adapter)) and an HTTP/ORM implementation ([Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers)). If separated, the driver implements a contract owned by the [mapper](../GLOSSARY.md#mapper) or inner policy; the [mapper](../GLOSSARY.md#mapper) does not import the driver.
+[Infrastructure](../GLOSSARY.md#infrastructure) similarly often combines a repository [mapper](../GLOSSARY.md#mapper) ([Interface Adapters](../GLOSSARY.md#interface-adapter)) and an HTTP/[ORM](../GLOSSARY.md#orm) implementation ([Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers)). If separated, the driver implements a contract owned by the [mapper](../GLOSSARY.md#mapper) or inner policy; the [mapper](../GLOSSARY.md#mapper) does not import the driver.
 
 Therefore, do not insist that every project folder corresponds to exactly one canonical circle. Composition is outer executable glue and follows the same inward rule; it is no exemption.
 
@@ -231,7 +231,7 @@ They should preserve the cross-layer boundary but are not themselves [Clean Arch
 
 ## 2.8 Backend organization is similarly concrete
 
-[Controllers](../GLOSSARY.md#controller), transport [DTOs](../GLOSSARY.md#data-transfer-object-dto), ORM mappings, transactions and messaging [adapters](../GLOSSARY.md#adapter) are outer concerns.
+[Controllers](../GLOSSARY.md#controller), transport [DTOs](../GLOSSARY.md#data-transfer-object-dto), [ORM](../GLOSSARY.md#orm) mappings, transactions and messaging [adapters](../GLOSSARY.md#adapter) are outer concerns.
 
 See **[Clean Architecture on the Backend](8-clean-on-the-backend.md)**.
 

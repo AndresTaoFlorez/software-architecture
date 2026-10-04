@@ -6,6 +6,8 @@
 
 ← [Repository home](../README.md) · [Glossary](../GLOSSARY.md) · [Code placement](../foundations/code-placement.md) · [Naming](../conventions/naming-and-file-placement.md)
 
+For HTTP and NestJS mechanics from first principles, start with the [Backend Architecture learning path](../backend/README.md). [Clean on the backend](8-clean-on-the-backend.md) maps that canonical ticket capability to Clean's policy boundaries without repeating the implementation.
+
 ## 1. History and origin
 
 Robert C. Martin published **"The [Clean Architecture](../GLOSSARY.md#clean-architecture)"** in 2012 as a synthesis of related approaches including [Hexagonal Architecture](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters), [Onion Architecture](../GLOSSARY.md#onion-architecture), Boundary-Control-[Entity](../GLOSSARY.md#domain-entity) and other boundary-oriented designs. He expanded the subject in the 2017 book *[Clean Architecture](../GLOSSARY.md#clean-architecture)*.
@@ -102,7 +104,7 @@ Do not confuse the canonical circles with this repository's physical `infrastruc
 
 | Clean concept | Owns | Put here | Do not put here | May depend on |
 | --- | --- | --- | --- | --- |
-| [Entities](../GLOSSARY.md#clean-entities-circle) | enterprise/domain rules that survive delivery changes | entities, [value objects](../GLOSSARY.md#value-object), [invariants](../GLOSSARY.md#invariant), domain policies | React, Redux, HTTP, ORM, API [DTOs](../GLOSSARY.md#data-transfer-object-dto), use-case orchestration | other inner domain concepts |
+| [Entities](../GLOSSARY.md#clean-entities-circle) | enterprise/domain rules that survive delivery changes | entities, [value objects](../GLOSSARY.md#value-object), [invariants](../GLOSSARY.md#invariant), domain policies | React, Redux, HTTP, [ORM](../GLOSSARY.md#orm), API [DTOs](../GLOSSARY.md#data-transfer-object-dto), use-case orchestration | other inner domain concepts |
 | [Use Cases](../GLOSSARY.md#use-case) | application-specific operations | commands/results, [application services](../GLOSSARY.md#application-service), required [ports](../GLOSSARY.md#port) | concrete DB/HTTP/UI implementations | entities/domain policy |
 | [Interface Adapters](../GLOSSARY.md#interface-adapter) | translation across boundaries | controllers, [presenters](../GLOSSARY.md#presenter), [mappers](../GLOSSARY.md#mapper), boundary-facing [adapters](../GLOSSARY.md#adapter) | authoritative business rules or framework/driver dependencies that would reverse the canonical circle direction | [use cases](../GLOSSARY.md#use-case)/entities and [adapter](../GLOSSARY.md#adapter)-owned translation code |
 | [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers) | replaceable technology mechanisms | React, routers, HTTP servers, DB drivers, SDKs, CSS systems | inner policy that only exists because the framework made it convenient | inward abstractions/[adapters](../GLOSSARY.md#adapter) as needed |
@@ -142,8 +144,8 @@ flowchart TD
 
 | Path | Owns | Why it exists | Must not contain |
 | --- | --- | --- | --- |
-| `domain/` | business meaning and [invariants](../GLOSSARY.md#invariant) | policy should survive UI/DB replacement | framework state, HTTP clients, [DTOs](../GLOSSARY.md#data-transfer-object-dto), ORM records |
-| `application/` | application operations and required capabilities | orchestration stays independent from concrete mechanisms | React components, SQL/ORM clients, concrete HTTP [adapters](../GLOSSARY.md#adapter) |
+| `domain/` | business meaning and [invariants](../GLOSSARY.md#invariant) | policy should survive UI/DB replacement | framework state, HTTP clients, [DTOs](../GLOSSARY.md#data-transfer-object-dto), [ORM](../GLOSSARY.md#orm) records |
+| `application/` | application operations and required capabilities | orchestration stays independent from concrete mechanisms | React components, SQL/[ORM](../GLOSSARY.md#orm) clients, concrete HTTP [adapters](../GLOSSARY.md#adapter) |
 | `infrastructure/` | concrete I/O [adapters](../GLOSSARY.md#adapter) and external representations | volatile technology is translated at the boundary | presentation components or authoritative domain policy |
 | `presentation/` | rendering, interaction and view-oriented state | UI concerns need their own owner | database/HTTP implementations when the strict boundary is used |
 | `composition/` | concrete assembly/bootstrap | one outer place selects implementations | business decisions and use-case branching |
@@ -477,8 +479,8 @@ Common failures:
 - **ceremonial interfaces** — one interface is created for every class/endpoint without a boundary reason;
 - **god [application service](../GLOSSARY.md#application-service)** — unrelated [use cases](../GLOSSARY.md#use-case) accumulate under one generic service;
 - **[service locator](../GLOSSARY.md#service-locator)** — consumers import the container instead of receiving dependencies;
-- **[DTO](../GLOSSARY.md#data-transfer-object-dto) leakage** — transport/ORM/browser types become inner models;
-- **framework leakage** — React/Redux/ORM APIs appear in [Application](../GLOSSARY.md#application-layer)/[Domain](../GLOSSARY.md#domain);
+- **[DTO](../GLOSSARY.md#data-transfer-object-dto) leakage** — transport/[ORM](../GLOSSARY.md#orm)/browser types become inner models;
+- **framework leakage** — React/Redux/[ORM](../GLOSSARY.md#orm) APIs appear in [Application](../GLOSSARY.md#application-layer)/[Domain](../GLOSSARY.md#domain);
 - **anemic ceremony** — layers are added to a trivial CRUD screen without policy worth protecting.
 
 <a id="learning-path"></a>

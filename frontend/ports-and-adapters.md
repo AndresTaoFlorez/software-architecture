@@ -24,7 +24,7 @@ Read the connectors as three different semantics:
 
 - `==>` **runtime call** — what actually executes after the user acts.
 - `-.->` **source-code dependency / contract relationship** — what code depends on what.
-- `-->` **startup wiring** — what the Composition Root constructs and injects before runtime.
+- `-->` **startup wiring** — what the [Composition Root](../GLOSSARY.md#composition-root) constructs and injects before runtime.
 
 ```mermaid
 flowchart TB
@@ -91,15 +91,15 @@ flowchart TB
 
 The [Domain](../GLOSSARY.md#domain) owns the ticket business vocabulary and rules: `Ticket`, `TicketStatus`, `TICKET_STATUSES`, `normalizeTicketSubject()`, `isTicketSubject()`, and `isTicketStatus()`. It is **not** another transport hop. In this example, `createTicket()` applies the domain-owned subject rule before delegating persistence; `TicketGateway` exposes `Ticket` in the application contract; and `HttpTicketGateway` reuses domain-owned vocabulary and guards while validating and mapping untrusted HTTP data.
 
-The dependency direction is therefore visible: [Application](../GLOSSARY.md#application-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) may depend inward on [Domain](../GLOSSARY.md#domain), while Domain knows nothing about React, HTTP, Zod transport schemas, server field names or composition code.
+The dependency direction is therefore visible: [Application](../GLOSSARY.md#application-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) may depend inward on [Domain](../GLOSSARY.md#domain), while [Domain](../GLOSSARY.md#domain) knows nothing about React, HTTP, Zod transport schemas, server field names or composition code.
 
-`TicketGateway` remains an Application-owned outbound [port](../GLOSSARY.md#port). `createTicket()` depends on that contract and `HttpTicketGateway` implements it, but the interface is **not** a separate runtime forwarding object. Once startup composition is complete, the use case calls the injected adapter directly.
+`TicketGateway` remains an [Application](../GLOSSARY.md#application-layer)-owned outbound [port](../GLOSSARY.md#port). `createTicket()` depends on that contract and `HttpTicketGateway` implements it, but the interface is **not** a separate runtime forwarding object. Once startup composition is complete, the [use case](../GLOSSARY.md#use-case) calls the injected [adapter](../GLOSSARY.md#adapter) directly.
 
 `bootstrap.tsx` is the [Composition Root](../GLOSSARY.md#composition-root), shown separately because it participates in **startup**, not in the request path. It constructs `HttpTicketGateway`, calls `makeCreateTicket(gateway)`, and supplies the ready `createTicket` operation to [Presentation](../GLOSSARY.md#presentation-layer). That is [dependency injection](../GLOSSARY.md#dependency-injection-di), not runtime mediation.
 
-On the response path, `HttpTicketGateway` validates external data and translates transport details such as `ticket_id` into the application's `id`. The backend remains authoritative for persisted behavior and server-side rules; frontend Domain rules are not a security boundary.
+On the response path, `HttpTicketGateway` validates external data and translates transport details such as `ticket_id` into the application's `id`. The backend remains authoritative for persisted behavior and server-side rules; frontend [Domain](../GLOSSARY.md#domain) rules are not a security boundary.
 
-> **Architecture note:** Hexagonal Architecture does not require a folder literally named `domain/`. This repository uses an explicit Domain boundary because this ticket example has business vocabulary and rules worth owning independently from UI, orchestration and transport code.
+> **Architecture note:** [Hexagonal Architecture](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters) does not require a folder literally named `domain/`. This repository uses an explicit [Domain](../GLOSSARY.md#domain) boundary because this ticket example has business vocabulary and rules worth owning independently from UI, orchestration and transport code.
 
 ## 3. Physical ownership
 
@@ -112,7 +112,7 @@ On the response path, `HttpTicketGateway` validates external data and translates
 | `presentation/features/tickets/model/useTickets.ts` | React-facing state/operations | Loading/error feedback belongs to the UI |
 | `composition/bootstrap.tsx` | Dependency construction and injection | Chooses the concrete [adapter](../GLOSSARY.md#adapter) without becoming a [Service Locator](../GLOSSARY.md#service-locator) |
 
-These names are **repository conventions**, not universal requirements of Cockburn's architecture. `Gateway` expresses interaction with an external service. Use `Repository` when the abstraction genuinely models retrieval/persistence of domain objects as a collection, not simply because an HTTP endpoint exists.
+These names are **repository conventions**, not universal requirements of Cockburn's architecture. `Gateway` expresses interaction with an external service. Use `Repository` when the abstraction genuinely models retrieval/persistence of domain objects as a collection, not simply because an [HTTP endpoint](../GLOSSARY.md#http-endpoint) exists.
 
 ### Domain: ticket vocabulary and rules
 

@@ -1,5 +1,65 @@
 [
   {
+    "term": "HTTP Endpoint",
+    "anchor": "http-endpoint",
+    "aliases": [{ "text": "HTTP endpoint", "caseSensitive": false }, { "text": "HTTP endpoints", "caseSensitive": false }]
+  },
+  {
+    "term": "HTTP Route",
+    "anchor": "http-route",
+    "aliases": [{ "text": "HTTP route", "caseSensitive": false }, { "text": "HTTP routes", "caseSensitive": false }]
+  },
+  {
+    "term": "Route Handler",
+    "anchor": "route-handler",
+    "aliases": [{ "text": "route handler", "caseSensitive": false }, { "text": "route handlers", "caseSensitive": false }]
+  },
+  {
+    "term": "HTTP Router / Routing",
+    "anchor": "http-routing",
+    "aliases": [{ "text": "HTTP router", "caseSensitive": false }, { "text": "HTTP routing", "caseSensitive": false }]
+  },
+  {
+    "term": "NestJS Provider",
+    "anchor": "nestjs-provider",
+    "aliases": [{ "text": "NestJS provider", "caseSensitive": false }, { "text": "Nest providers", "caseSensitive": false }, { "text": "Nest provider", "caseSensitive": false }]
+  },
+  {
+    "term": "NestJS Module",
+    "anchor": "nestjs-module",
+    "aliases": [{ "text": "NestJS module", "caseSensitive": false }, { "text": "Nest modules", "caseSensitive": false }, { "text": "Nest module", "caseSensitive": false }]
+  },
+  {
+    "term": "Pipe (NestJS)",
+    "anchor": "nestjs-pipe",
+    "aliases": [{ "text": "Nest pipe", "caseSensitive": false }, { "text": "NestJS pipe", "caseSensitive": false }]
+  },
+  {
+    "term": "Guard (NestJS)",
+    "anchor": "nestjs-guard",
+    "aliases": [{ "text": "Nest guard", "caseSensitive": false }, { "text": "NestJS guard", "caseSensitive": false }]
+  },
+  {
+    "term": "Interceptor (NestJS)",
+    "anchor": "nestjs-interceptor",
+    "aliases": [{ "text": "Nest interceptor", "caseSensitive": false }, { "text": "NestJS interceptor", "caseSensitive": false }]
+  },
+  {
+    "term": "Exception Filter (NestJS)",
+    "anchor": "nestjs-exception-filter",
+    "aliases": [{ "text": "Nest exception filter", "caseSensitive": false }, { "text": "NestJS exception filter", "caseSensitive": false }]
+  },
+  {
+    "term": "Object-Relational Mapper (ORM)",
+    "anchor": "orm",
+    "aliases": [{ "text": "object-relational mapper", "caseSensitive": false }, { "text": "ORM", "caseSensitive": true }, { "text": "ORMs", "caseSensitive": true }]
+  },
+  {
+    "term": "Layered Architecture",
+    "anchor": "layered-architecture",
+    "aliases": [{ "text": "Layered Architecture", "caseSensitive": false }]
+  },
+  {
     "term": "Abstract Syntax Tree (AST)",
     "anchor": "abstract-syntax-tree-ast",
     "aliases": [
