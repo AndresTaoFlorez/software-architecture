@@ -85,9 +85,9 @@ flowchart BT
     UC["Use Cases"]
     E["Entities"]
 
-    F --> IA
-    IA --> UC
-    UC --> E
+    F -. "depends on" .-> IA
+    IA -. "depends on" .-> UC
+    UC -. "depends on" .-> E
 ```
 
 The essential rule is not "exactly four folders". It is the [Dependency Rule](../GLOSSARY.md#dependency-rule):
@@ -100,7 +100,7 @@ The arrow means **source dependency**, not runtime call direction.
 
 The canonical circles are conceptual. A real codebase can split one circle across multiple modules or place several outer mechanisms in one physical area.
 
-Do not confuse the canonical circles with this repository's physical `infrastructure/` folder. A concrete HTTP/database [adapter](../GLOSSARY.md#adapter) may contain both translation behavior and framework/driver glue in one physical module. That pragmatic module is still outer code; it does **not** justify making a canonical [Interface Adapter](../GLOSSARY.md#interface-adapter) depend outward on [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers).
+See [translation and framework glue in one outer module](../foundations/dependency-boundaries.md#combined-outer-modules) for the practical mapping used here. Folder names do not replace responsibility and dependency rules.
 
 | Clean concept | Owns | Put here | Do not put here | May depend on |
 | --- | --- | --- | --- | --- |
@@ -193,16 +193,20 @@ The recommended source [dependency graph](../GLOSSARY.md#dependency-graph) is:
 
 ```mermaid
 flowchart LR
-    PRES["Presentation"] --> APP["Application"]
-    INFRA["Infrastructure"] --> APP
-    APP --> DOMAIN["Domain"]
+    PRES["Presentation"] -. "imports" .-> APP["Application"]
+    INFRA["Infrastructure"] -. "imports contracts" .-> APP
+    APP -. "imports rules" .-> DOMAIN["Domain"]
 
     ROOT["Composition"] -. "constructs" .-> PRES
     ROOT -. "constructs" .-> INFRA
     ROOT -. "constructs" .-> APP
+    linkStyle 0,1,2 stroke-width:1px,stroke-dasharray:6 4
+    linkStyle 3,4,5 stroke-width:1px,stroke-dasharray:2 5
 ```
 
 A [use case](../GLOSSARY.md#use-case) may call outward at runtime through an injected [port](../GLOSSARY.md#port), but the source code still depends inward.
+
+Long dashes show imports; short dots show startup wiring. Solid sequence arrows below show runtime calls. Folder-tree arrows mean containment rather than execution.
 
 Example:
 
@@ -283,6 +287,8 @@ Source dependencies remain inward even though runtime control reaches the outer 
 For the full build, continue to **[Building a Feature End-to-End](./4-building-a-feature.md)**.
 
 ### Complete client implementation
+
+This order-cancellation example runs in a browser client; the server remains authoritative for persisted orders. Continue with [Clean on the backend](8-clean-on-the-backend.md) for the authoritative ticket operation and [Onion on the backend](../onion-architecture/7-onion-on-the-backend.md) for another reading of the same core.
 
 **Shared example ownership.** The [Domain](../GLOSSARY.md#domain), [Application](../GLOSSARY.md#application-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) blocks in this complete example are synchronized from [the canonical order-cancellation walkthrough](../clean-architecture/4-building-a-feature.md). Edit the canonical version and run `npm run sync:examples`; `npm run check:examples` rejects drift. This page owns its presentation-pattern-specific interaction and composition example.
 

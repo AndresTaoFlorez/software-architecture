@@ -11,6 +11,9 @@ Official framework/library pages were reviewed on **2026-10-03**. Nest's supplie
 - [TypeScript — Everyday Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions): assertions do not validate values at runtime.
 - [TypeScript — More on Functions](https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown): unknown input requires checks before use.
 - [Node.js — `crypto.randomUUID`](https://nodejs.org/api/crypto.html#cryptorandomuuidoptions): established ID generation at composition.
+- [Node.js — Error causes](https://nodejs.org/api/errors.html#errorcause): preserve a technical cause inside an error without exposing it through a plain application result; reviewed 2026-10-04.
+- [MDN — JavaScript execution model](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model): synchronous run-to-completion within one execution agent, the quota simulation's scope; reviewed 2026-10-04.
+- [PostgreSQL — Transaction isolation](https://www.postgresql.org/docs/current/transaction-iso.html): a transaction must use concurrency protection appropriate to the required guarantee; reviewed 2026-10-04.
 
 ## NestJS mechanisms
 

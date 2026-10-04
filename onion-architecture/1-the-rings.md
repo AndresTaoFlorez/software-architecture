@@ -7,13 +7,15 @@
 
 # 1. The Rings
 
-Suppose an analyst changes a ticket's status. The rule deciding whether that change is allowed should stay valid whether the analyst uses React or a mobile app and whether the ticket is saved through HTTP or a database. We put that business rule nearest the center, the operation coordinating the change around it, and the technical UI/storage details outside.
+An analyst creates a support ticket about a failed invoice download. Its subject must be valid, the new ticket must start open, and the server must save it before reporting success. Changing the HTTP framework or database should not change those rules. Keep the ticket's meaning at the center, its creation workflow around it, and external delivery/storage outside.
+
+We follow the [canonical TypeScript ticket](../backend/2-typescript-first-boundaries.md), rather than invent another domain for each ring. Its complete modules and tests are linked there. Small expressions below show their use, not replacement implementations. The backend support capability owns the persisted ticket; browser checks only improve feedback.
 
 This guide uses four practical areas to explain [Onion Architecture](../GLOSSARY.md#onion-architecture):
 
 ```mermaid
 flowchart BT
-    O["Presentation / Infrastructure"] --> A["Application"] --> D["Domain"]
+    O["Presentation / Infrastructure"] -. "imports inner policy" .-> A["Application"] -. "imports rules" .-> D["Domain"]
 ```
 
 The drawing is a dependency model, not a call-stack diagram. Runtime control can move outward through injected [ports](../GLOSSARY.md#port) while source dependencies still point inward.
@@ -26,7 +28,7 @@ The drawing is a dependency model, not a call-stack diagram. Runtime control can
 
 ### Responsibility
 
-Own business concepts, [invariants](../GLOSSARY.md#invariant) and behavior that are independent of delivery and infrastructure mechanisms.
+`Ticket.create` trims the subject, rejects an empty or overlong subject, and chooses `open`. [Domain](../GLOSSARY.md#domain) owns these business decisions independently of delivery and storage. An [invariant](../GLOSSARY.md#invariant) is a condition that valid tickets must always satisfy; creation enforces the subject rule here.
 
 Typical contents:
 
@@ -37,25 +39,13 @@ Typical contents:
 - [domain errors](../GLOSSARY.md#domain-error);
 - policies/[invariants](../GLOSSARY.md#invariant).
 
-The following is a responsibility excerpt; imports and supporting types are omitted. For a complete executable feature, follow the [cancellation walkthrough](../clean-architecture/4-building-a-feature.md).
+The following expression uses the canonical `Ticket` module; import it from `domain/Ticket`. Its status vocabulary recognizes values but does not automatically define transitions or pick an initial state by list order.
 
 Example:
 
 ```ts
-export class ClosurePeriod {
-  private constructor(
-    readonly startsOn: LocalDate,
-    readonly endsOn: LocalDate,
-  ) {}
-
-  static create(startsOn: LocalDate, endsOn: LocalDate) {
-    if (endsOn.isBefore(startsOn)) {
-      throw new InvalidClosurePeriod()
-    }
-
-    return new ClosurePeriod(startsOn, endsOn)
-  }
-}
+const ticket = Ticket.create('T-42', '  Invoice download fails  ', 'PDF fails for INV-42.')
+const data = ticket.snapshot() // normalized subject; status is open
 ```
 
 ### Must not know
@@ -73,10 +63,7 @@ export class ClosurePeriod {
 
 ### Dependency direction
 
-```mermaid
-flowchart LR
-    D["Domain"] --> D
-```
+[Domain](../GLOSSARY.md#domain) imports other domain code when necessary and no outer application modules. A self-arrow adds nothing to that rule.
 
 "Depends on nothing" is useful shorthand for "depends on no outer [application layer](../GLOSSARY.md#application-layer)". [Domain](../GLOSSARY.md#domain) code can of course depend on the language/runtime standard library and carefully chosen domain-safe libraries.
 
@@ -94,7 +81,7 @@ If the system mainly transports data with little domain behavior, an anemic-look
 
 ### Responsibility
 
-Own application-specific policy: the operations the application performs and the capabilities those operations require.
+Someone must ask for a valid ticket, await persistence, then report success or an expected failure. That workflow is `CreateTicket`, our application operation. It asks [Domain](../GLOSSARY.md#domain) to enforce the subject rule rather than repeating the limit.
 
 Typical contents:
 
@@ -105,38 +92,13 @@ Typical contents:
 - application errors;
 - orchestration across [Domain](../GLOSSARY.md#domain) objects and [ports](../GLOSSARY.md#port).
 
-The following is a responsibility excerpt; imports and supporting types are omitted. For a complete executable feature, follow the [cancellation walkthrough](../clean-architecture/4-building-a-feature.md).
+The following expression assumes an assembled repository and identity generator, and uses the canonical `CreateTicket`. Its command and result are plain data, independent of HTTP. Awaiting persistence prevents premature success; recognized storage outages become `unavailable`, while unexpected defects propagate.
 
 Example:
 
 ```ts
-export interface ExecuteClosureCommand {
-  startsOn: LocalDate
-  endsOn: LocalDate
-  officeId: string
-}
-
-export interface ValidatedClosure {
-  period: ClosurePeriod
-  officeId: string
-}
-
-export interface ClosureGateway {
-  enqueue(command: ValidatedClosure): Promise<ClosureJob>
-}
-
-export function makeExecuteClosure(deps: {
-  gateway: ClosureGateway
-}) {
-  return async function execute(command: ExecuteClosureCommand) {
-    const period = ClosurePeriod.create(command.startsOn, command.endsOn)
-
-    return deps.gateway.enqueue({
-      officeId: command.officeId,
-      period,
-    })
-  }
-}
+const createTicket = new CreateTicket(repository, makeId)
+const result = await createTicket.execute({ subject: 'Invoice download fails', description: '' })
 ```
 
 ### Must not know
@@ -153,11 +115,12 @@ export function makeExecuteClosure(deps: {
 
 ```mermaid
 flowchart LR
-    A["Application"] --> A
-    A --> D["Domain"]
+    A["Application"] -. "imports rules" .-> D["Domain"]
 ```
 
 [Ports](../GLOSSARY.md#port) live here when they express capabilities required by application policy.
+
+`TicketRepository.insert(ticket)` belongs here because this workflow needs persistence. Palermo describes repository interfaces near the domain model; [the backend chapter](7-onion-on-the-backend.md) compares those choices by who needs the capability, without relocating every contract automatically.
 
 Do not create one [port](../GLOSSARY.md#port) per endpoint automatically. [Port](../GLOSSARY.md#port) granularity follows cohesive conversations/capabilities.
 
@@ -169,7 +132,7 @@ Do not create one [port](../GLOSSARY.md#port) per endpoint automatically. [Port]
 
 ### Responsibility
 
-Adapt external technology to contracts understood by inner policy.
+The server needs to turn a valid ticket into stored data. `PrismaTicketRepository` maps a domain snapshot into database fields and invokes the database library. The memory implementation supplies the same insert contract for teaching/tests; it does not provide durability.
 
 Typical contents:
 
@@ -182,43 +145,29 @@ Typical contents:
 - message-broker or realtime protocol clients;
 - filesystem/object-storage implementations.
 
-The following is a responsibility excerpt; imports and supporting types are omitted. For a complete executable feature, follow the [cancellation walkthrough](../clean-architecture/4-building-a-feature.md).
-
-Example:
-
-```ts
-export class HttpClosureGateway implements ClosureGateway {
-  constructor(private readonly http: HttpClient) {}
-
-  async enqueue(command: ValidatedClosure): Promise<ClosureJob> {
-    const dto = toExecuteClosureDto(command)
-    const response = await this.http.post('/closures', dto)
-
-    return fromClosureJobDto(response.data)
-  }
-}
-```
+See the [complete memory implementation](../backend/2-typescript-first-boundaries.md) and [reviewed Prisma boundary](../backend/4-create-ticket-with-nestjs.md). The latter records safe technical diagnostics before translating a recognized outage; the client does not receive database details.
 
 The [adapter](../GLOSSARY.md#adapter) knows the inner contract. The [Application layer](../GLOSSARY.md#application-layer) does not know this class.
 
 ### Translation belongs at boundaries
 
-External types should normally stop here:
+This insert maps outward from ticket data to database fields. Generated row/query types remain technical code. The arrows here show data translation, not source imports:
 
 ```mermaid
 flowchart LR
-    DTO["ApiClosureDto"] --> M["Mapper"] --> AD["Application / Domain representation"]
+    DATA["Ticket snapshot / domain data"] -->|"mapped by"| M["PrismaTicketRepository / mapper"] -->|"produces"| ROW["Insert fields / database input"]
 ```
 
 Do not leak OpenAPI generated models, [ORM](../GLOSSARY.md#orm) records or SDK objects inward simply because their TypeScript shapes happen to match.
+
+If retrieval is added, checking row shape is insufficient: an [adapter](../GLOSSARY.md#adapter) must also use a domain-owned restoration factory to validate stored business values without resetting their status. The current creation-only example does not implement retrieval.
 
 ### Dependency direction
 
 ```mermaid
 flowchart LR
-    I["Infrastructure"] --> I
-    I --> A["Application"]
-    I --> D["Domain"]
+    I["Infrastructure"] -. "implements contract" .-> A["Application"]
+    I -. "uses data" .-> D["Domain"]
 ```
 
 [Infrastructure](../GLOSSARY.md#infrastructure) must not depend on [Presentation](../GLOSSARY.md#presentation-layer).
@@ -231,7 +180,7 @@ flowchart LR
 
 ### Responsibility
 
-Own rendering, interaction and UI-specific state/behavior.
+An HTTP caller sends unknown data and needs an HTTP reply. `TicketHttpHandler` asks its parser to check the body shape, calls `CreateTicket`, then maps the result to HTTP. An invalid shape is a delivery error; a blank subject is a domain rejection. Delivery does not duplicate the subject rule. [Presentation](../GLOSSARY.md#presentation-layer) also includes rendering and interaction in a browser client.
 
 Typical contents:
 
@@ -244,22 +193,13 @@ Typical contents:
 - [design-system](../GLOSSARY.md#design-system) primitives and styles;
 - UI-specific validation/formatting.
 
-The following is a responsibility excerpt; imports and supporting types are omitted. For a complete executable feature, follow the [cancellation walkthrough](../clean-architecture/4-building-a-feature.md).
+The following expression uses the canonical plain HTTP handler. [The Nest controller](../backend/4-create-ticket-with-nestjs.md) adds framework routing. For a complete browser-client example, see [order cancellation](../clean-architecture/4-building-a-feature.md); its server owns the authoritative persisted order rules.
 
 Example:
 
 ```ts
-export function useClosures() {
-  const state = useClosuresState()
-  const actions = useClosuresActions()
-
-  return {
-    rows: state.rows,
-    busy: state.status === 'pending',
-    query: actions.query,
-    reset: actions.reset,
-  }
-}
+const handler = new TicketHttpHandler(createTicket)
+const response = await handler.handle({ subject: 'Invoice download fails', description: '' })
 ```
 
 ### Presentation may contain real logic
@@ -282,8 +222,8 @@ Recommended strict flow:
 
 ```mermaid
 flowchart LR
-    P["Presentation"] --> A["Application"] --> PORT["Port"]
-    I["Infrastructure adapter"] --> PORT
+    P["Presentation"] -. "imports operation" .-> A["Application"] -. "requires" .-> PORT["Port"]
+    I["Infrastructure adapter"] -. "implements" .-> PORT
 ```
 
 If a project deliberately allows [Presentation](../GLOSSARY.md#presentation-layer) to use a technical [adapter](../GLOSSARY.md#adapter) directly for a simple UI-only concern, document that as a scoped architectural decision. Do not present the leak as the canonical Onion boundary.
@@ -294,8 +234,7 @@ A strict default:
 
 ```mermaid
 flowchart LR
-    P["Presentation"] --> P
-    P --> A["Application"]
+    P["Presentation"] -. "imports contract" .-> A["Application"]
 ```
 
 Some systems allow [Presentation](../GLOSSARY.md#presentation-layer) to import [Domain](../GLOSSARY.md#domain) types directly because [Domain](../GLOSSARY.md#domain) is inward. Others require all [Presentation](../GLOSSARY.md#presentation-layer) contracts to arrive through [Application](../GLOSSARY.md#application-layer). Pick and enforce one policy.
@@ -319,12 +258,14 @@ See:
 The executable still needs a bootstrap location that knows concrete implementations:
 
 ```ts
-const closureGateway = new HttpClosureGateway(http)
-const executeClosure = makeExecuteClosure({ gateway: closureGateway })
-const store = createAppStore({ executeClosure })
+const repository = new InMemoryTicketRepository()
+const createTicket = new CreateTicket(repository, makeId)
+const handler = new TicketHttpHandler(createTicket)
 ```
 
 Composition is an outer assembly boundary, not another domain layer.
+
+This excerpt omits imports and assumes `makeId` from the executable. [Canonical assembly](../backend/2-typescript-first-boundaries.md) includes them. Replacing memory changes this binding, not ticket policy. The [backend system view](7-onion-on-the-backend.md) shows calls, imports and wiring together.
 
 See **[Composition Root](../foundations/composition-root.md)**.
 
@@ -349,6 +290,8 @@ flowchart LR
 ```
 
 Separate the policy from the mechanism.
+
+The current ticket does not implement authentication, tenant isolation or reliable auditing. At larger scale, extend the narrow ticket API rather than letting Billing deep-import its controller or repository. [Backend exercises](../backend/6-boundary-exercises.md) test another caller and a competing quota requirement without a framework.
 
 ## Sources
 
