@@ -7,14 +7,14 @@
 
 ## 2.1 The principle
 
-Imagine a rule that blocks assigning a resolved ticket. If that rule imports a database client, changing the database can force changes in code that only decides whether assignment is allowed. Instead, the database-facing code can know the operation and supply its data without the rule knowing the database.
+Imagine the rule that rejects a blank ticket subject. If that rule imports a database client, changing the database can force changes in code that only decides whether a ticket is valid. Instead, the database-facing code can know the operation and supply its data without the rule knowing the database.
 
 This is what [Onion Architecture](../GLOSSARY.md#onion-architecture) means by protecting the center from outer technology. An arrow below means one source-code area may refer to the code in another; it does not mean every user action must execute in that order.
 
 ```mermaid
 flowchart LR
-    P["Presentation"] --> A["Application"] --> D["Domain"]
-    I["Infrastructure"] --> A
+    P["Presentation"] -. "imports operation" .-> A["Application"] -. "imports rules" .-> D["Domain"]
+    I["Infrastructure"] -. "imports contract" .-> A
 ```
 
 The important arrow is the **source-code dependency**.
@@ -30,56 +30,28 @@ Runtime flow may call an external system in the opposite direction through an in
 
 ## 2.2 Dependency inversion
 
-[Application](../GLOSSARY.md#application-layer) needs an external capability:
+[Application](../GLOSSARY.md#application-layer) needs to insert a valid ticket. Its canonical `TicketRepository` describes that capability. The operation names that contract; `PrismaTicketRepository` names the contract too and supplies its technical implementation. [Application](../GLOSSARY.md#application-layer) does not import Prisma. This reversal of the implementation's source dependency is **dependency inversion**.
+
+The [canonical plain modules](../backend/2-typescript-first-boundaries.md) define the policy/contract, and [the Nest chapter](../backend/4-create-ticket-with-nestjs.md) shows the complete reviewed database [adapter](../GLOSSARY.md#adapter). The assembly excerpt below assumes the database client and identity generator are already supplied:
 
 ```ts
-export interface OrderRepository {
-  save(order: Order): Promise<void>
-}
+const repository = new PrismaTicketRepository(db, diagnostic => console.error(diagnostic))
+const createTicket = new CreateTicket(repository, makeId)
 ```
 
-[Infrastructure](../GLOSSARY.md#infrastructure) supplies it:
-
-```ts
-export class SqlOrderRepository implements OrderRepository {
-  // ...
-}
-```
-
-[Application](../GLOSSARY.md#application-layer) consumes only the abstraction:
-
-```ts
-export function makePlaceOrder(deps: {
-  orders: OrderRepository
-}) {
-  return async function placeOrder(command: PlaceOrderCommand) {
-    const order = Order.place(command)
-    await deps.orders.save(order)
-    return order.id
-  }
-}
-```
-
-Composition connects both:
-
-```ts
-const orders = new SqlOrderRepository(db)
-const placeOrder = makePlaceOrder({ orders })
-```
-
-Source dependency:
+Trace the same objects in one view. Solid lines are runtime calls; long dashes are source dependencies; short dots are startup wiring. `TicketRepository` is not an intermediary runtime object.
 
 ```mermaid
 flowchart LR
-    SQL["SqlOrderRepository"] --> PORT["OrderRepository"]
-    UC["placeOrder"] --> PORT
-```
-
-Runtime call:
-
-```mermaid
-flowchart LR
-    UC["placeOrder"] --> SQL["SqlOrderRepository"] --> DB["Database"]
+    UC["CreateTicket / operation"] -->|"calls insert"| SQL["PrismaTicketRepository / adapter"]
+    SQL -->|"inserts record"| DB["Database / external system"]
+    SQL -. "implements" .-> PORT["TicketRepository / contract"]
+    UC -. "requires" .-> PORT
+    ROOT["Bootstrap / composition"] -. "constructs" .-> SQL
+    ROOT -. "supplies repository" .-> UC
+    linkStyle 0,1 stroke-width:2px
+    linkStyle 2,3 stroke-width:1px,stroke-dasharray:6 4
+    linkStyle 4,5 stroke-width:1px,stroke-dasharray:2 5
 ```
 
 No contradiction exists because dependency direction and control flow are different concepts.
@@ -124,16 +96,25 @@ Architectural rules operate on source dependencies, not only runtime bundle depe
 
 ## 2.5 Re-exports do not change ownership
 
-This does not magically make a [Domain](../GLOSSARY.md#domain) or [Infrastructure](../GLOSSARY.md#infrastructure) type an [Application](../GLOSSARY.md#application-layer) type:
+Re-exporting a type does not change who owns its meaning. First consider an invalid outward dependency:
 
 ```ts
 // application/contract.ts
-export type { ApiClosureDto } from '@/infrastructure'
+export type { ApiTicketDto } from '@/infrastructure'
 ```
 
 [Presentation](../GLOSSARY.md#presentation-layer) importing it through `application/contract` still depends conceptually on an [Infrastructure](../GLOSSARY.md#infrastructure)-owned shape.
 
-[Public APIs](../GLOSSARY.md#public-api) should expose concepts owned by the module, not launder unrelated types through a [barrel](../GLOSSARY.md#barrel-file).
+[Public APIs](../GLOSSARY.md#public-api) should expose intentionally supported concepts, not launder unrelated external types through a [barrel](../GLOSSARY.md#barrel-file).
+
+Now consider a deliberately supported inward type. The Tickets application result includes the domain-owned `TicketData` snapshot. An application public entry may expose that type when consumers need to name it:
+
+```ts
+// Alternative tickets/public.ts excerpt, if consumers need the snapshot type.
+export type { TicketData } from './domain/Ticket'
+```
+
+The source dependency points inward and the type still belongs to [Domain](../GLOSSARY.md#domain). This is valid when the public contract intentionally supports that representation; it couples consumers to that supported shape. It does not give callers entity mutation methods or permit exporting an [ORM](../GLOSSARY.md#orm) row. A stricter application-specific result can instead map selected fields. The [canonical ticket API](../backend/2-typescript-first-boundaries.md#3-save-without-naming-a-database-in-the-operation) exposes the operation and command/result without adding this optional export.
 
 ---
 
@@ -162,18 +143,12 @@ Avoid the misleading linear stack:
 
 ```mermaid
 flowchart LR
-    P["Presentation"] --> A["Application"] --> I["Infrastructure"] --> D["Domain"]
+    P["Presentation"] -. "imports" .-> A["Application"] -. "forbidden import" .-> I["Infrastructure"] -. "imports" .-> D["Domain"]
 ```
 
 That makes [Application](../GLOSSARY.md#application-layer) depend on [Infrastructure](../GLOSSARY.md#infrastructure) or suggests [Infrastructure](../GLOSSARY.md#infrastructure) is an inner service layer.
 
-The intended model is:
-
-```mermaid
-flowchart LR
-    P["Presentation"] --> A["Application"] --> D["Domain"]
-    I["Infrastructure"] --> A
-```
+The intended model is the inward graph in section 2.1 and the combined call/dependency view in section 2.2. [Presentation](../GLOSSARY.md#presentation-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) sit outside [Application](../GLOSSARY.md#application-layer); neither is an obligatory intermediate layer between [Application](../GLOSSARY.md#application-layer) and [Domain](../GLOSSARY.md#domain).
 
 [Infrastructure](../GLOSSARY.md#infrastructure) implements [Application](../GLOSSARY.md#application-layer)-owned [ports](../GLOSSARY.md#port).
 

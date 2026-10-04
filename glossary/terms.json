@@ -1,5 +1,10 @@
 [
   {
+    "term": "Output Port",
+    "anchor": "output-port",
+    "aliases": [{ "text": "output port", "caseSensitive": false }, { "text": "output ports", "caseSensitive": false }]
+  },
+  {
     "term": "HTTP Endpoint",
     "anchor": "http-endpoint",
     "aliases": [{ "text": "HTTP endpoint", "caseSensitive": false }, { "text": "HTTP endpoints", "caseSensitive": false }]

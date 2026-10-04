@@ -19,7 +19,7 @@ First follow the [backend learning path](../backend/README.md) for request, rout
 | [Interface Adapters](../GLOSSARY.md#interface-adapter) | request/result and ticket/record translation | plain parser/mapping functions in outer delivery/persistence areas |
 | [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers) | Nest runtime/decorators, Prisma client, driver and assembly | technical glue in those outer areas and composition |
 
-The circle names are conceptual. Nest's decorated controller combines translation with framework glue; the Prisma implementation combines mapping with database glue. These are **combined outer modules**, not pure canonical [Interface Adapters](../GLOSSARY.md#interface-adapter) depending outward on a separate [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers) circle. Splitting translation into independent plain functions can strengthen that additional boundary when justified. The protected inner modules remain framework-independent.
+The circle names are conceptual. The controller and persistence implementation follow the [combined outer-module choice](../foundations/dependency-boundaries.md#combined-outer-modules): translation and technical glue share a file while [Domain](../GLOSSARY.md#domain) and [Application](../GLOSSARY.md#application-layer) remain independent. That canonical explanation describes when a further split pays off; it is not a requirement to create more classes.
 
 Dashed arrows below describe **source dependencies toward inner policy**. The repository contract is a source requirement, not a runtime intermediary:
 
@@ -50,6 +50,10 @@ The [creation operation](../backend/2-typescript-first-boundaries.md#3-save-with
 
 At runtime it calls the actual injected implementation. In source it refers only to the inward-owned contract. This allows outward runtime control without reversing the [Dependency Rule](../GLOSSARY.md#dependency-rule). Manual injection and Nest factory providers are two assembly mechanisms for the same boundary.
 
+The caller receives a simple result and chooses its representation. HTTP maps it to JSON/status codes; a CLI maps it to a message/exit code. This return-based boundary is sufficient here.
+
+Suppose a later bulk ticket import needs to report progress before the entire operation completes. [Application](../GLOSSARY.md#application-layer) could call `progress({ completed, rejected })` on a supplied collaborator as it processes records. An application-owned **[output port](../GLOSSARY.md#output-port)** defines that plain output interaction; an outer [presenter](../GLOSSARY.md#presenter) implements it to format terminal or streamed response data. The operation imports its interface, never the [presenter](../GLOSSARY.md#presenter) class, and startup supplies the implementation. This is a possible motivating requirement, not a bulk-import feature implemented by our ticket example. Martin's [boundary-crossing example](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) also shows an output boundary for a final response. A separate [presenter](../GLOSSARY.md#presenter) can be useful in that design; one is not required around this returned promise. An [output port](../GLOSSARY.md#output-port) alone does not provide reliable event delivery, backpressure or background-job progress storage.
+
 ## 8.4 Infrastructure
 
 The [Prisma adapter](../backend/4-create-ticket-with-nestjs.md#5-replace-memory-when-the-ticket-must-survive-restart) maps `Ticket.status` into database `state`, performs one insert and translates recognized storage outages into an application-owned failure. It imports the inner model/contract; the inner code does not import it. Unexpected defects remain diagnosable rather than being labelled business rejection.
@@ -62,11 +66,11 @@ An [ORM](../GLOSSARY.md#orm) record must not automatically become an entity. Fut
 
 The [controller](../backend/4-create-ticket-with-nestjs.md#3-finish-the-http-boundary) accepts parsed input, invokes the [use case](../GLOSSARY.md#use-case) and maps its result to HTTP fields/statuses. It does not choose ticket initial state. A CLI or message consumer would map its own input/output while calling the same operation. Those alternatives need their own verified identity, permission and delivery assumptions.
 
-The physical HTTP area contains Nest glue as well as translation; see the combined-role qualification in section 8.1. Clean's canonical translation responsibility does not authorize arbitrary outward source dependencies in inner policy.
+The physical HTTP area contains Nest glue as well as translation; see [the canonical combined-role explanation](../foundations/dependency-boundaries.md#combined-outer-modules). Clean's translation responsibility does not authorize outward source dependencies in inner policy.
 
 ## 8.6 Transactions
 
-A single ticket insert is atomic enough for the first requirement. If creating a ticket must also reserve quota, the workflow needs a transaction/concurrency policy covering that check and write. A separate read followed by an insert can race. [Application](../GLOSSARY.md#application-layer) owns the required guarantee; infrastructure implements it, potentially through a purposeful [Unit of Work](../GLOSSARY.md#unit-of-work) [port](../GLOSSARY.md#port) or a cohesive atomic repository operation. No generic transaction abstraction is needed before that requirement exists.
+A single ticket insert is atomic enough for the first requirement. If creating a ticket must also reserve quota, [Domain](../GLOSSARY.md#domain) owns the capacity rule; [Application](../GLOSSARY.md#application-layer) requires that the current-capacity check and write complete together without competing calls exceeding it; [Infrastructure](../GLOSSARY.md#infrastructure) implements that guarantee. A separate read followed by an insert can race. The implementation may use a transaction with appropriate isolation, a purposeful [Unit of Work](../GLOSSARY.md#unit-of-work) [port](../GLOSSARY.md#port), or a cohesive atomic repository operation. No generic transaction abstraction is needed before that requirement exists. [The quota exercise](../backend/6-boundary-exercises.md#3-compete-for-a-shared-quota) makes the failure and required guarantee observable without a database.
 
 Keep [ORM](../GLOSSARY.md#orm) transaction objects out of [Domain](../GLOSSARY.md#domain). A network failure after commit can leave an uncertain outcome; neither Clean's [Dependency Rule](../GLOSSARY.md#dependency-rule) nor a transaction alone deduplicates client retries. [The canonical limits](../backend/4-create-ticket-with-nestjs.md#7-review-changes-and-failures-before-calling-it-maintainable) explain the next decisions.
 
@@ -97,6 +101,8 @@ Composition can import concrete implementations because its job is assembly. Inn
 Both systems can protect rules from replaceable mechanisms, but their policies differ: the browser owns interaction; the backend owns authoritative persisted behavior. Sharing the dependency principle does not erase that trust boundary.
 
 For separate **runtime calls, source dependencies and startup wiring**, use [the canonical system view](../backend/4-create-ticket-with-nestjs.md#6-three-relationships-in-one-system-view). For comparisons without equating Clean, Onion and Hexagonal, use [the backend style chapter](../backend/5-architectural-styles-with-nestjs.md). For verification, see [boundary tests](../backend/4-create-ticket-with-nestjs.md#8-verification-at-the-right-boundary).
+
+Then compare [Onion's reading of the same backend](../onion-architecture/7-onion-on-the-backend.md) and try [the progressive boundary exercises](../backend/6-boundary-exercises.md). The order-cancellation walkthrough in this Clean guide is a browser client; this chapter's backend policy is authoritative for persisted tickets.
 
 ## Sources
 
