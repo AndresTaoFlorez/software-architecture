@@ -92,7 +92,7 @@ interface SessionRepository {
 }
 ```
 
-Also avoid ceremonial fragmentation where every HTTP endpoint receives its own interface despite sharing one cohesive external capability.
+Also avoid ceremonial fragmentation where every [HTTP endpoint](../GLOSSARY.md#http-endpoint) receives its own interface despite sharing one cohesive external capability.
 
 ## 5. A port is not automatically a Repository
 
@@ -129,7 +129,7 @@ For large files, use an application-owned streaming abstraction instead of eager
 
 The same rule applies to:
 
-- ORM entities;
+- [ORM](../GLOSSARY.md#orm) entities;
 - generated OpenAPI clients;
 - framework request/response objects;
 - Redux action types;

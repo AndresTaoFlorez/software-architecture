@@ -6,6 +6,8 @@
 
 ← [Repository home](../README.md) · [Glossary](../GLOSSARY.md) · [Code placement](../foundations/code-placement.md) · [Naming](../conventions/naming-and-file-placement.md)
 
+For a server-side application, first follow [Backend Architecture](../backend/README.md). Its [Onion mapping of Create Ticket](../backend/5-architectural-styles-with-nestjs.md#7-onion-keep-the-domain-model-central) shows domain centrality and inward dependencies using the same NestJS capability as the other style comparisons.
+
 <a id="1-introduction--purpose"></a>
 
 ## 1. History and origin
@@ -18,7 +20,7 @@ Primary source: https://jeffreypalermo.com/2008/07/
 
 ## 2. What problem does it solve?
 
-Suppose our ticket platform decides that a resolved ticket cannot be assigned to an analyst again. That decision is about tickets, not about the table in which they are stored. If the rule is written against an ORM row (the database library's representation of the record), replacing the database tool can force changes to ticket behavior.
+Suppose our ticket platform decides that a resolved ticket cannot be assigned to an analyst again. That decision is about tickets, not about the table in which they are stored. If the rule is written against an [ORM](../GLOSSARY.md#orm) row (the database library's representation of the record), replacing the database tool can force changes to ticket behavior.
 
 [Onion Architecture](../GLOSSARY.md#onion-architecture) puts such business rules at the center, in code that does not need to know which database, HTTP client, or UI happens to be in use. Other parts call that code and handle the technical details around it.
 
@@ -32,7 +34,7 @@ flowchart LR
     SERVICE --> SDK["External SDK"]
 ```
 
-When ORM/API/framework models become the application's language:
+When [ORM](../GLOSSARY.md#orm)/API/framework models become the application's language:
 
 - domain rules inherit infrastructure constraints;
 - tests require technical systems;
@@ -102,7 +104,7 @@ This repository uses four practical areas plus an executable composition boundar
 
 | Area | Owns | Put here | Do not put here | May depend on |
 | --- | --- | --- | --- | --- |
-| [Domain](../GLOSSARY.md#domain) | business concepts and [invariants](../GLOSSARY.md#invariant) | entities, [value objects](../GLOSSARY.md#value-object), domain policies/events | React, Redux, HTTP, ORM, [DTOs](../GLOSSARY.md#data-transfer-object-dto) | [Domain](../GLOSSARY.md#domain) only |
+| [Domain](../GLOSSARY.md#domain) | business concepts and [invariants](../GLOSSARY.md#invariant) | entities, [value objects](../GLOSSARY.md#value-object), domain policies/events | React, Redux, HTTP, [ORM](../GLOSSARY.md#orm), [DTOs](../GLOSSARY.md#data-transfer-object-dto) | [Domain](../GLOSSARY.md#domain) only |
 | [Application](../GLOSSARY.md#application-layer) | application operations and required capabilities | [use cases](../GLOSSARY.md#use-case), commands/results, [ports](../GLOSSARY.md#port) | concrete UI/DB/HTTP implementations | [Application](../GLOSSARY.md#application-layer) + [Domain](../GLOSSARY.md#domain) |
 | [Infrastructure](../GLOSSARY.md#infrastructure) | technical [adapters](../GLOSSARY.md#adapter) and external representations | HTTP/DB/storage/SDK implementations, [DTOs](../GLOSSARY.md#data-transfer-object-dto), [mappers](../GLOSSARY.md#mapper) | [Presentation](../GLOSSARY.md#presentation-layer) and authoritative business policy | [Infrastructure](../GLOSSARY.md#infrastructure) + [Application](../GLOSSARY.md#application-layer) + [Domain](../GLOSSARY.md#domain) |
 | [Presentation](../GLOSSARY.md#presentation-layer) | views, interactions and view-oriented state | pages, components, hooks/[ViewModels](../GLOSSARY.md#viewmodel), UI [store](../GLOSSARY.md#store) | concrete [Infrastructure](../GLOSSARY.md#infrastructure) in the strict boundary used here | [Presentation](../GLOSSARY.md#presentation-layer) + [Application](../GLOSSARY.md#application-layer) |
@@ -473,11 +475,11 @@ Costs:
 
 Common failure modes:
 
-- **ORM-centered domain** — database schema dictates business objects;
+- **[ORM](../GLOSSARY.md#orm)-centered domain** — database schema dictates business objects;
 - **god [application service](../GLOSSARY.md#application-service)** — every capability enters one service;
 - **god [port](../GLOSSARY.md#port)** — one interface contains unrelated external conversations;
 - **[service locator](../GLOSSARY.md#service-locator)** — inner code reaches into the container;
-- **outer-type leakage** — browser/SDK/ORM/transport types appear inward;
+- **outer-type leakage** — browser/SDK/[ORM](../GLOSSARY.md#orm)/transport types appear inward;
 - **ceremonial onion** — directories exist but imports still point outward;
 - **over-modeling** — rich [Domain](../GLOSSARY.md#domain) abstractions are invented for behavior that does not exist.
 

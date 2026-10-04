@@ -25,15 +25,17 @@ Read in this order:
 3. **[Architecture Foundations](./foundations/README.md)**\
    Learn dependency direction, composition, module boundaries, [public APIs](./GLOSSARY.md#public-api), tests, and scaling.
 
-4. Choose an architecture/presentation pattern:
+4. Choose a practical learning path:
+   - [Frontend Architecture](./frontend/README.md): browser interaction, feature ownership and client integration.
+   - [Backend Architecture](./backend/README.md): `POST /tickets`, plain TypeScript boundaries, NestJS and durable persistence.
+
+5. Explore an architecture/presentation pattern:
    - [Clean Architecture](./clean-architecture)
    - [Onion Architecture](./onion-architecture)
    - [MVC](./model-view-controller)
    - [MVVM](./model-view-viewmodel)
 
-5. For modern frontend organization:
-   - [Frontend Architecture](./frontend/README.md)
-   - [Ports & Adapters: frontend ticket-support example](./frontend/ports-and-adapters.md)
+For a short frontend feature walkthrough, see [Ports & Adapters: frontend ticket-support example](./frontend/ports-and-adapters.md). Frontend and backend models have independent ownership; the backend enforces authoritative persisted behavior.
 
 <a id="quick-comparison"></a>
 
@@ -62,9 +64,10 @@ flowchart TD
     M --> REACT["React"]
     M --> REDUX["Redux Toolkit"]
     M --> PANDA["Panda CSS"]
+    M -->|"example"| NEST["NestJS"]
 ```
 
-These categories are deliberately different.
+These arrows organize topics and examples; they do not show source imports or runtime calls. The categories are deliberately different.
 
 - A **[Dependency Rule](./GLOSSARY.md#dependency-rule)** is an architectural constraint.
 - A **[Repository](./GLOSSARY.md#repository)** is a design pattern.
@@ -121,6 +124,12 @@ The frontend section explains the second architectural scale that Clean/Onion do
 
 Start: **[Frontend Architecture](./frontend/README.md)**. For a short end-to-end walkthrough, see **[Ports & Adapters in a ticket-support frontend](./frontend/ports-and-adapters.md)**.
 
+
+## Backend architecture
+
+Follow a support-platform user creating a ticket from the external HTTP request to the backend's authoritative business rules and back. Learn route versus endpoint versus controller versus handler, untrusted JSON parsing, manual [dependency injection](./GLOSSARY.md#dependency-injection-di), application-owned persistence contracts, and then Nest's controllers, providers, modules and request hooks. The same capability grows from memory to a versioned Prisma/PostgreSQL illustration and is compared through Layered, Hexagonal, Clean and Onion principles.
+
+Start: **[Backend Architecture](./backend/README.md)**. The track separates framework lifecycle, runtime calls, source dependencies and startup wiring. [Nest's framework structure and architectural styles](./backend/5-architectural-styles-with-nestjs.md) explains their relationship.
 
 ## How to contribute
 

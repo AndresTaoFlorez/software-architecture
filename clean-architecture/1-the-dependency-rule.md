@@ -111,7 +111,7 @@ Examples of outer representations:
 
 - database rows;
 - framework request/response objects;
-- ORM models;
+- [ORM](../GLOSSARY.md#orm) models;
 - raw API response [DTOs](../GLOSSARY.md#data-transfer-object-dto);
 - generated SDK types.
 

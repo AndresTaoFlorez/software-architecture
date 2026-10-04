@@ -12,6 +12,7 @@ Mandatory rules:
 
 - Follow the documentation order and mandatory [first-principles explanation protocol](./CONTRIBUTING.md#3-progressive-disclosure) in `CONTRIBUTING.md`. Apply the protocol to new or revised guides, definitions, glossary entries, diagram explanations, and substantive examples.
 - Assume the reader can program but has no prior architecture vocabulary. Begin with a familiar situation and a concrete problem; show what the code does before giving its formal name.
+- Apply the canonical [TypeScript-first mechanism rule](./CONTRIBUTING.md#typescript-first-mechanisms), including its safe-infrastructure limits, before introducing framework conveniences.
 - Do not define one unfamiliar idea by chaining other unexplained technical terms. Explain essential new words in place; a glossary link supports but never substitutes for an understandable sentence.
 - For each central concept, show a minimal **realistic** example, who does what, why the separation matters, and what it does **not** do. Distinguish source dependencies, runtime calls, and wiring when discussing relationships.
 - Apply the [realistic-example and change-pressure gate](./CONTRIBUTING.md#10-examples) to substantial code and diagrams: identify the actor, authoritative business owner, trust boundary, meaningful failure assumptions and what changes under a new business rule, another integration, and growth across many features/teams. Never treat "it compiles" or "we added more layers" as proof of maintainability or scale.

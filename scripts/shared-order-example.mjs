@@ -22,15 +22,20 @@ export const sharedFiles = [
 export function findSharedBlock(document, filename, isLanding = false) {
   const section = isLanding ? document.indexOf('### Complete') : 0
   if (section < 0) throw new Error('missing complete example section')
-  const prefix = '```ts\n// ' + filename + '\n'
-  const begin = document.indexOf(prefix, section)
-  if (begin < 0) throw new Error('missing shared example block: ' + filename)
-  const close = document.indexOf('\n```', begin + prefix.length)
-  if (close < 0) throw new Error('unclosed shared example block: ' + filename)
+  const opening = new RegExp('```ts\\r?\\n// ' + filename.replaceAll('.', '\\.') + '\\r?\\n', 'g')
+  opening.lastIndex = section
+  const match = opening.exec(document)
+  if (!match) throw new Error('missing shared example block: ' + filename)
+  const begin = match.index
+  const closing = /\r?\n```/g
+  closing.lastIndex = opening.lastIndex
+  const close = closing.exec(document)
+  if (!close) throw new Error('unclosed shared example block: ' + filename)
+  const end = close.index + close[0].length
   // Ambiguous duplicate complete snippets make synchronization unsafe.
-  const again = document.indexOf(prefix, close + 4)
-  if (again >= 0) throw new Error('duplicate shared example block: ' + filename)
-  return { begin, end: close + 4, code: document.slice(begin, close + 4) }
+  opening.lastIndex = end
+  if (opening.exec(document)) throw new Error('duplicate shared example block: ' + filename)
+  return { begin, end, code: document.slice(begin, end) }
 }
 
 export function synchronizeLanding(canonical, landing) {
@@ -39,8 +44,10 @@ export function synchronizeLanding(canonical, landing) {
   for (const filename of sharedFiles) {
     const source = findSharedBlock(canonical, filename).code
     const mirror = findSharedBlock(result, filename, true)
-    if (source !== mirror.code) {
-      result = result.slice(0, mirror.begin) + source + result.slice(mirror.end)
+    const normalized = source.replaceAll('\r\n', '\n')
+    if (normalized !== mirror.code.replaceAll('\r\n', '\n')) {
+      const replacement = mirror.code.includes('\r\n') ? normalized.replaceAll('\n', '\r\n') : normalized
+      result = result.slice(0, mirror.begin) + replacement + result.slice(mirror.end)
       drifted.push(filename)
     }
   }

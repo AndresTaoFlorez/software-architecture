@@ -13,7 +13,7 @@ Good automated checks include:
 - [Presentation](../GLOSSARY.md#presentation-layer) cannot import concrete [Infrastructure](../GLOSSARY.md#infrastructure) [adapters](../GLOSSARY.md#adapter) when the project requires use-case boundaries.
 - Feature consumers cannot deep-import another feature's internals.
 - UI components cannot import Redux internals when a public [ViewModel](../GLOSSARY.md#viewmodel)/hook boundary is part of the architecture.
-- [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer) cannot import browser, ORM or generated transport types.
+- [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer) cannot import browser, [ORM](../GLOSSARY.md#orm) or generated transport types.
 - Circular dependencies are forbidden.
 - Deprecated folder names and legacy APIs cannot return.
 

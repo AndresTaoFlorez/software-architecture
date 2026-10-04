@@ -102,7 +102,7 @@ flowchart TD
 
 Cover at minimum a business rule, use-case workflow, HTTP/database/SDK code, UI rendering/state, type/[DTO](../GLOSSARY.md#data-transfer-object-dto), helper/utility, and composition/bootstrap.
 
-If the architecture is only a presentation pattern, state which decisions are outside its scope and point to the layered architecture/code-placement guide.
+If the architecture is only a presentation pattern, state which decisions are outside its scope and point to the [layered architecture](../GLOSSARY.md#layered-architecture)/code-placement guide.
 
 ## 9. Naming
 
