@@ -34,3 +34,17 @@ test('sync detects and repairs changed business logic without rewriting pattern-
   assert.deepEqual(checked.drifted, ['domain/orders/Order.ts'])
   assert.equal(checked.content, landing, 'only mirrored block is restored')
 })
+
+test('shared example extraction accepts CRLF and preserves each mirror newline style', () => {
+  const source = canonical.replaceAll('\r\n', '\n')
+  const landing = fs.readFileSync('model-view-controller/README.md', 'utf8').replaceAll('\r\n', '\n')
+  const windows = landing.replaceAll('\n', '\r\n')
+  assert.deepEqual(synchronizeLanding(source, windows), { content: windows, drifted: [] })
+  assert.deepEqual(synchronizeLanding(source.replaceAll('\n', '\r\n'), landing), {
+    content: landing, drifted: [],
+  })
+  const altered = windows.replace("this.#status = 'cancelled'", "this.#status = 'pending'")
+  const repaired = synchronizeLanding(source, altered)
+  assert.deepEqual(repaired.drifted, ['domain/orders/Order.ts'])
+  assert.equal(repaired.content, windows)
+})
