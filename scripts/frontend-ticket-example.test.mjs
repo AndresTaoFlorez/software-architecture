@@ -35,7 +35,7 @@ function extractExample(document, filename, language) {
 test('frontend ticket walkthrough typechecks and preserves the domain/DTO boundary', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ticket-guide-'))
   try {
-    const content = fs.readFileSync(guide, 'utf8')
+    const content = fs.readFileSync(guide, 'utf8').replaceAll('\r\n', '\n')
     const files = []
     const samples = new Map()
     fs.writeFileSync(path.join(root, 'package.json'), '{"type":"module"}')
@@ -108,7 +108,7 @@ test('frontend ticket walkthrough typechecks and preserves the domain/DTO bounda
     fs.writeFileSync(domainFile, evolvedDomain)
     try {
       const evolvedDiagnostics = ts.getPreEmitDiagnostics(ts.createProgram(inputs, compilerOptions))
-      assert.ok(evolvedDiagnostics.some(d => d.file?.fileName === statusFile),
+      assert.ok(evolvedDiagnostics.some(d => d.file && path.resolve(d.file.fileName) === path.resolve(statusFile)),
         'new domain status must require an intentional UI label')
     } finally {
       fs.writeFileSync(domainFile, originalDomain)
