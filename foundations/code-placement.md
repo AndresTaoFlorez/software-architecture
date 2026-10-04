@@ -59,7 +59,7 @@ Do **not** put here:
 - React hooks/components;
 - Redux slices;
 - API [DTOs](../GLOSSARY.md#data-transfer-object-dto);
-- ORM rows;
+- [ORM](../GLOSSARY.md#orm) rows;
 - `FormState`;
 - `UploadQueueItem`;
 - browser `File`;

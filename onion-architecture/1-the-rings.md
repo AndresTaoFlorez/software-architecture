@@ -66,7 +66,7 @@ export class ClosurePeriod {
 - Redux/Pinia/Zustand;
 - browser storage;
 - HTTP clients;
-- ORM/database APIs;
+- [ORM](../GLOSSARY.md#orm)/database APIs;
 - generated transport types;
 - CSS/Panda/Tailwind;
 - routers/controllers.
@@ -145,7 +145,7 @@ export function makeExecuteClosure(deps: {
 
 - concrete HTTP/database/storage [adapters](../GLOSSARY.md#adapter);
 - React/Redux/UI framework state;
-- ORM models;
+- [ORM](../GLOSSARY.md#orm) models;
 - transport request/response objects;
 - browser APIs such as `File` unless the application is intentionally browser-specific.
 
@@ -210,7 +210,7 @@ flowchart LR
     DTO["ApiClosureDto"] --> M["Mapper"] --> AD["Application / Domain representation"]
 ```
 
-Do not leak OpenAPI generated models, ORM records or SDK objects inward simply because their TypeScript shapes happen to match.
+Do not leak OpenAPI generated models, [ORM](../GLOSSARY.md#orm) records or SDK objects inward simply because their TypeScript shapes happen to match.
 
 ### Dependency direction
 

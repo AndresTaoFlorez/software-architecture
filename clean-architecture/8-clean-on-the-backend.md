@@ -1,277 +1,107 @@
 > **[Clean Architecture](README.md)** › [Clean Architecture](../GLOSSARY.md#clean-architecture) on the Backend.
 
-
 # 8. Clean Architecture on the Backend
 
-Imagine a server receiving `POST /tickets`. Its HTTP handler reads the request; an application operation checks the ticket input; database-facing code persists it. The operation should not have to import Express, Prisma or the raw HTTP request type merely to decide whether the ticket is valid.
+An analyst submits `POST /tickets`. The backend owns whether the ticket is valid, creates its initial state and saves it. Replacing Nest's HTTP delivery or Prisma persistence should not rewrite that decision. [Clean Architecture](../GLOSSARY.md#clean-architecture) describes the source dependency constraints that protect it.
 
-This is the backend form of the [Dependency Rule](../GLOSSARY.md#dependency-rule): source-code references point from particular technical mechanisms toward application policy, not from the policy back to the mechanisms.
-
-The concrete outer mechanisms here include HTTP servers, queues, schedulers, databases, ORMs, filesystem access and external SDKs.
-
-What **does not** follow is that frontend and backend must contain identical [Domain](../GLOSSARY.md#domain) or [Application](../GLOSSARY.md#application-layer) source files.
-
----
+First follow the [backend learning path](../backend/README.md) for request, routing, controller, [DI](../GLOSSARY.md#dependency-injection-di) and persistence mechanisms. The [canonical ticket implementation](../backend/2-typescript-first-boundaries.md) and [Nest wiring](../backend/4-create-ticket-with-nestjs.md) own the snippets. This chapter explains what is specific to Clean rather than keeping a second implementation or switching to an unrelated User example.
 
 <a id="81-the-four-circles-on-the-server"></a>
 
 ## 8.1 A backend mapping
 
+`Ticket.create()` decides the subject and initial state; `CreateTicket.execute()` coordinates that rule and saving; the outer code translates JSON and storage fields. Only after those responsibilities are concrete do Clean's circle names become useful:
+
+| Clean circle | Ticket responsibility | Physical mapping in this handbook |
+| --- | --- | --- |
+| [Entities](../GLOSSARY.md#clean-entities-circle) / general business policy | valid subject, owned status vocabulary and initial state | `tickets/domain/Ticket.ts` |
+| [Use Cases](../GLOSSARY.md#use-case) / application policy | create and persist; required repository capability | `tickets/application/` |
+| [Interface Adapters](../GLOSSARY.md#interface-adapter) | request/result and ticket/record translation | plain parser/mapping functions in outer delivery/persistence areas |
+| [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers) | Nest runtime/decorators, Prisma client, driver and assembly | technical glue in those outer areas and composition |
+
+The circle names are conceptual. Nest's decorated controller combines translation with framework glue; the Prisma implementation combines mapping with database glue. These are **combined outer modules**, not pure canonical [Interface Adapters](../GLOSSARY.md#interface-adapter) depending outward on a separate [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers) circle. Splitting translation into independent plain functions can strengthen that additional boundary when justified. The protected inner modules remain framework-independent.
+
+Dashed arrows below describe **source dependencies toward inner policy**. The repository contract is a source requirement, not a runtime intermediary:
+
 ```mermaid
-flowchart TD
-    N0["src/"]
-    N1["domain/"]
-    N2["users/"]
-    N3["application/"]
-    N4["users/"]
-    N5["ports/"]
-    N6["use-cases/"]
-    N7["infrastructure/"]
-    N8["persistence/"]
-    N9["integrations/"]
-    N10["interface/"]
-    N11["http/"]
-    N12["messaging/"]
-    N13["composition/"]
-    N0 --> N1
-    N1 --> N2
-    N0 --> N3
-    N3 --> N4
-    N4 --> N5
-    N4 --> N6
-    N0 --> N7
-    N7 --> N8
-    N7 --> N9
-    N0 --> N10
-    N10 --> N11
-    N10 --> N12
-    N0 --> N13
+flowchart LR
+    H["Ticket HTTP delivery / outer module"] -. "source imports" .-> U["CreateTicket / use case"]
+    U -. "source imports" .-> D["Ticket / business policy"]
+    U -. "source requires" .-> P["TicketRepository / application contract"]
+    I["PrismaTicketRepository / outer module"] -. "source implements" .-> P
+    I -. "source reads model" .-> D
 ```
 
-Some teams call the outer HTTP/controller area `presentation`; others use `interface`, `delivery` or framework-specific modules. The name matters less than the [dependency rule](../GLOSSARY.md#dependency-rule).
-
----
-
-Code below is a set of boundary excerpts: supporting `UserId`, errors, mapping functions and ORM schema are assumed. Persistence must implement the service's concurrency/transaction policy; the update below does not by itself guarantee race-free business behavior. For complete client types and wiring, see [Building a Feature](4-building-a-feature.md).
+Folder names are documentation conventions. Inward references are the architectural constraint; a correctly named folder cannot repair outward imports.
 
 <a id="82-step-1--the-entity-unchanged"></a>
 
 ## 8.2 Domain
 
-The backend [Domain](../GLOSSARY.md#domain) owns business concepts and [invariants](../GLOSSARY.md#invariant) that are authoritative in that service/[bounded context](../GLOSSARY.md#bounded-context).
+The support business owns the rule that a new ticket starts open and has a nonblank bounded subject. `Ticket` enforces those rules without Nest, HTTP request types, [DTOs](../GLOSSARY.md#data-transfer-object-dto) or [ORM](../GLOSSARY.md#orm) records. Martin's [Entities circle](../GLOSSARY.md#clean-entities-circle) describes general business policy, not a requirement that every policy be an identity-bearing class.
 
-```ts
-export class User {
-  constructor(
-    readonly id: UserId,
-    private status: UserStatus,
-  ) {}
-
-  deactivate() {
-    if (this.status === 'deleted') {
-      throw new UserCannotBeDeactivated()
-    }
-
-    this.status = 'inactive'
-  }
-}
-```
-
-A frontend may model a `User` too. That does not automatically make the two models the same object or justify a shared package.
-
-Share code only when the semantics, ownership and release coupling are genuinely shared.
-
----
+The [canonical domain code](../backend/2-typescript-first-boundaries.md#2-decide-what-a-valid-ticket-means-in-one-place) derives static status types and the runtime guard from one list. Client validation is not authority over persisted tickets. A frontend model can share terminology while having independent ownership and release timing; identical type shapes do not establish identical semantics.
 
 <a id="83-step-2--the-port-and-the-use-case-unchanged-shape"></a>
 
 ## 8.3 Application
 
-[Application](../GLOSSARY.md#application-layer) code orchestrates use-case policy:
+The [creation operation](../backend/2-typescript-first-boundaries.md#3-save-without-naming-a-database-in-the-operation) invokes the domain factory, awaits `insert` on its supplied repository and returns a plain result. Its contract names the capability it needs rather than Prisma's generated API.
 
-```ts
-export interface UserRepository {
-  findById(id: UserId): Promise<User | null>
-  save(user: User): Promise<void>
-}
-
-export function makeDeactivateUser(deps: {
-  users: UserRepository
-}) {
-  return async function deactivateUser(id: UserId) {
-    const user = await deps.users.findById(id)
-
-    if (!user) throw new UserNotFound(id)
-
-    user.deactivate()
-    await deps.users.save(user)
-  }
-}
-```
-
-The [use case](../GLOSSARY.md#use-case) does not import the ORM or web framework.
-
-A frontend may have a different application operation such as `submitDeactivateUserConfirmation`, because client interaction and authoritative server transaction are different responsibilities.
-
----
+At runtime it calls the actual injected implementation. In source it refers only to the inward-owned contract. This allows outward runtime control without reversing the [Dependency Rule](../GLOSSARY.md#dependency-rule). Manual injection and Nest factory providers are two assembly mechanisms for the same boundary.
 
 ## 8.4 Infrastructure
 
-Concrete persistence implements [Application](../GLOSSARY.md#application-layer)-owned capabilities:
+The [Prisma adapter](../backend/4-create-ticket-with-nestjs.md#5-replace-memory-when-the-ticket-must-survive-restart) maps `Ticket.status` into database `state`, performs one insert and translates recognized storage outages into an application-owned failure. It imports the inner model/contract; the inner code does not import it. Unexpected defects remain diagnosable rather than being labelled business rejection.
 
-```ts
-export class PrismaUserRepository implements UserRepository {
-  constructor(private readonly db: PrismaClient) {}
-
-  async findById(id: UserId): Promise<User | null> {
-    const record = await this.db.user.findUnique({
-      where: { id: id.value },
-    })
-
-    return record ? mapUserRecord(record) : null
-  }
-
-  async save(user: User): Promise<void> {
-    const record = toUserRecord(user)
-    await this.db.user.update({ where: { id: record.id }, data: record })
-  }
-}
-```
-
-The ORM record does not leak into the [use case](../GLOSSARY.md#use-case).
-
-The same principle applies to:
-
-- message brokers;
-- object storage;
-- payment SDKs;
-- email providers;
-- search engines;
-- remote APIs.
-
----
+An [ORM](../GLOSSARY.md#orm) record must not automatically become an entity. Future loading needs a domain-owned restoration operation that preserves existing state and validates domain values, not `Ticket.create()` resetting the row to open.
 
 <a id="84-step-3--the-interface-adapters-controller--orm-repository"></a>
 
 ## 8.5 Interface adapters / delivery
 
-An HTTP controller translates a transport request into an application command and translates the result to a transport response. Here `HttpRequest`/`HttpResponse` are [adapter](../GLOSSARY.md#adapter)-owned shapes supplied/consumed by outer router glue. Importing framework-owned request types into a separate canonical [Interface Adapter](../GLOSSARY.md#interface-adapter) would point outward. A physical delivery module may combine both roles, but document that combination.
+The [controller](../backend/4-create-ticket-with-nestjs.md#3-finish-the-http-boundary) accepts parsed input, invokes the [use case](../GLOSSARY.md#use-case) and maps its result to HTTP fields/statuses. It does not choose ticket initial state. A CLI or message consumer would map its own input/output while calling the same operation. Those alternatives need their own verified identity, permission and delivery assumptions.
 
-```ts
-export function makeDeactivateUserController(deps: {
-  deactivateUser: (id: UserId) => Promise<void>
-}) {
-  return async function controller(req: HttpRequest): Promise<HttpResponse> {
-    const id = UserId.parse(req.params.id)
-
-    await deps.deactivateUser(id)
-
-    return { status: 204 }
-  }
-}
-```
-
-The controller should **receive** the [use case](../GLOSSARY.md#use-case) from composition. It should not import the [Composition Root](../GLOSSARY.md#composition-root) and locate it itself.
-
-Bad:
-
-```ts
-import { deactivateUser } from '@/composition/container'
-```
-
-Better:
-
-```mermaid
-flowchart TD
-    C["Composition Root"] --> R["Construct repository"]
-    C --> U["Construct use case"]
-    C --> H["Construct controller / router"]
-```
-
-This keeps composition one-directional.
-
----
-
+The physical HTTP area contains Nest glue as well as translation; see the combined-role qualification in section 8.1. Clean's canonical translation responsibility does not authorize arbitrary outward source dependencies in inner policy.
 
 ## 8.6 Transactions
 
-Transaction ownership is application-specific and deserves an explicit boundary.
+A single ticket insert is atomic enough for the first requirement. If creating a ticket must also reserve quota, the workflow needs a transaction/concurrency policy covering that check and write. A separate read followed by an insert can race. [Application](../GLOSSARY.md#application-layer) owns the required guarantee; infrastructure implements it, potentially through a purposeful [Unit of Work](../GLOSSARY.md#unit-of-work) [port](../GLOSSARY.md#port) or a cohesive atomic repository operation. No generic transaction abstraction is needed before that requirement exists.
 
-Options include:
-
-- a [Unit of Work](../GLOSSARY.md#unit-of-work) [port](../GLOSSARY.md#port) owned by [Application](../GLOSSARY.md#application-layer);
-- a transaction boundary applied around a [use case](../GLOSSARY.md#use-case) at composition/framework level;
-- [repository](../GLOSSARY.md#repository) operations that are already atomic enough for the [use case](../GLOSSARY.md#use-case).
-
-Do not let the ORM's transaction object spread through [Domain](../GLOSSARY.md#domain) merely because it is convenient.
-
----
+Keep [ORM](../GLOSSARY.md#orm) transaction objects out of [Domain](../GLOSSARY.md#domain). A network failure after commit can leave an uncertain outcome; neither Clean's [Dependency Rule](../GLOSSARY.md#dependency-rule) nor a transaction alone deduplicates client retries. [The canonical limits](../backend/4-create-ticket-with-nestjs.md#7-review-changes-and-failures-before-calling-it-maintainable) explain the next decisions.
 
 ## 8.7 Validation
 
-Separate validation by meaning:
+The HTTP parser checks an unknown body's shape. `Ticket.create()` owns business validity. [Application](../GLOSSARY.md#application-layer) coordinates the operation. Storage constraints defend persistence and must be reconciled with those owned rules. A [DTO](../GLOSSARY.md#data-transfer-object-dto)'s string check and [Domain](../GLOSSARY.md#domain)'s nonblank-subject check answer different questions; repeating the 160-unit rule in both would create two policy owners.
 
-```mermaid
-flowchart LR
-    H["Malformed HTTP input"] --> HV["Delivery / interface validation"]
-    AP["Application precondition"] --> A["Application"]
-    BI["Business invariant"] --> D["Domain"]
-    DB["Database constraint"] --> I["Infrastructure safety net + mapped error"]
-```
-
-The same rule may be defended at more than one level for security/user experience, but each layer should express it in its own vocabulary.
-
----
+An outer validator can **call** the domain factory/guard or translate a domain failure for immediate feedback. It must not invent another status allowlist. See [the TypeScript-first validation explanation](../backend/2-typescript-first-boundaries.md#1-check-what-arrived-before-trusting-its-type).
 
 ## 8.8 Shared contracts with frontend
 
-A generated API client or shared [DTO](../GLOSSARY.md#data-transfer-object-dto) package can be useful, but it should represent the **wire contract**, not force frontend and backend internal models to become identical.
+The HTTP response is a versioned wire representation, not a shared domain object. The backend maps its ticket to `ticket_id`; the [frontend adapter](../frontend/ports-and-adapters.md) can translate that into its own model. Their command/response contract must be coordinated, including field and vocabulary evolution.
 
-```mermaid
-flowchart TD
-    B["Backend domain model"] --> DTO["Response DTO / schema"] --> W["Wire contract"] --> FDTO["Frontend infrastructure DTO"] --> FM["Frontend application / presentation model"]
-```
-
-This explicit mapping protects both sides from accidental coupling.
-
----
+A generated client/shared [DTO](../GLOSSARY.md#data-transfer-object-dto) package can help encode the wire agreement when useful. It does not require frontend and backend [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer) source files to be identical. Use API contract/integration tests to observe compatibility rather than treat shared TypeScript types as runtime validation.
 
 <a id="85-step-4--frameworks--drivers--the-composition-root"></a>
 
 ## 8.9 Composition
 
-```ts
-const db = new PrismaClient()
-const users = new PrismaUserRepository(db)
-const deactivateUser = makeDeactivateUser({ users })
-const controller = makeDeactivateUserController({ deactivateUser })
+[TicketsModule](../backend/4-create-ticket-with-nestjs.md#4-wire-memory-first) selects the concrete repository, constructs plain `CreateTicket` through a factory and lets Nest inject it into the controller. Database setup and resource lifetime stay at this outer executable edge.
 
-router.post('/users/:id/deactivate', adapt(controller))
-```
-
-Composition names concrete implementations. Inner code does not.
-
-See **[Composition Root](../foundations/composition-root.md)**.
-
----
+Composition can import concrete implementations because its job is assembly. Inner code must not import the module/container and locate dependencies itself. Decorating an application class with `@Injectable()` is convenient but introduces a Nest source dependency; the canonical factories avoid it. This is a deliberate trade-off, not a universal ban on framework integration. See [Composition Root](../foundations/composition-root.md).
 
 <a id="86-the-whole-flow-in-mirror-image"></a>
 
 ## 8.10 Frontend comparison
 
-The dependency **principle** is shared:
+Both systems can protect rules from replaceable mechanisms, but their policies differ: the browser owns interaction; the backend owns authoritative persisted behavior. Sharing the dependency principle does not erase that trust boundary.
 
-```mermaid
-flowchart LR
-    O["Outer mechanism"] --> AD["Adapter"] --> A["Application"] --> D["Domain"]
-```
-
-The concrete policies and models are not required to be the same.
-
-A backend and frontend can share pure domain code where that is genuinely the same domain, but architecture should never assume source-code sharing as proof of correctness.
+For separate **runtime calls, source dependencies and startup wiring**, use [the canonical system view](../backend/4-create-ticket-with-nestjs.md#6-three-relationships-in-one-system-view). For comparisons without equating Clean, Onion and Hexagonal, use [the backend style chapter](../backend/5-architectural-styles-with-nestjs.md). For verification, see [boundary tests](../backend/4-create-ticket-with-nestjs.md#8-verification-at-the-right-boundary).
 
 ## Sources
 
-- Robert C. Martin, "The [Clean Architecture](../GLOSSARY.md#clean-architecture)": https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
-- Martin Fowler, [Repository](../GLOSSARY.md#repository): https://martinfowler.com/eaaCatalog/repository.html
-- Martin Fowler, [Unit of Work](../GLOSSARY.md#unit-of-work): https://martinfowler.com/eaaCatalog/unitOfWork.html
+- [Robert C. Martin — The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html): [dependency rule](../GLOSSARY.md#dependency-rule), policy levels and boundary data.
+- [Martin Fowler — Repository](https://martinfowler.com/eaaCatalog/repository.html): application/business collection-like persistence.
+- [Martin Fowler — Unit of Work](https://martinfowler.com/eaaCatalog/unitOfWork.html): coordinated persistence changes.
+- [Mark Seemann — Composition Root](https://blog.ploeh.dk/2011/07/28/CompositionRoot/): outer assembly.
+- [Backend references](../backend/references.md): official Nest/TypeScript/Prisma sources for the canonical implementation.

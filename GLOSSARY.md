@@ -1,6 +1,6 @@
 # Software Architecture Glossary
 
-This glossary defines the architecture and frontend-engineering concepts used throughout this repository.
+This glossary defines the architecture, frontend and backend concepts used throughout this repository.
 
 Each entry contains a concise definition, a purpose, a repository-oriented example, and primary or authoritative references. Links from the rest of the repository point to the explicit anchors in this file.
 
@@ -43,6 +43,7 @@ Each entry contains a concise definition, a purpose, a repository-oriented examp
 - [Domain Service](#domain-service)
 - [Domain-Driven Design (DDD)](#domain-driven-design-ddd)
 - [Event Sourcing](#event-sourcing)
+- [Exception Filter (NestJS)](#nestjs-exception-filter)
 - [Facade Pattern](#facade-pattern)
 - [Factory Pattern](#factory-pattern)
 - [Fake](#fake)
@@ -51,12 +52,18 @@ Each entry contains a concise definition, a purpose, a repository-oriented examp
 - [Frameworks & Drivers](#frameworks-and-drivers)
 - [Gateway](#gateway)
 - [Global State](#global-state)
+- [Guard (NestJS)](#nestjs-guard)
 - [Hexagonal Architecture / Ports and Adapters](#hexagonal-architecture-ports-and-adapters)
+- [HTTP Endpoint](#http-endpoint)
+- [HTTP Route](#http-route)
+- [HTTP Router / Routing](#http-routing)
 - [Idempotency](#idempotency)
 - [Infrastructure](#infrastructure)
+- [Interceptor (NestJS)](#nestjs-interceptor)
 - [Interface Adapter](#interface-adapter)
 - [Invariant](#invariant)
 - [Last-Write-Wins (LWW)](#last-write-wins-lww)
+- [Layered Architecture](#layered-architecture)
 - [Listener Middleware](#listener-middleware)
 - [Local State](#local-state)
 - [Mapper](#mapper)
@@ -71,12 +78,16 @@ Each entry contains a concise definition, a purpose, a repository-oriented examp
 - [Model-View-ViewModel (MVVM)](#model-view-viewmodel-mvvm)
 - [Modular Monolith](#modular-monolith)
 - [Monorepo](#monorepo)
+- [NestJS Module](#nestjs-module)
+- [NestJS Provider](#nestjs-provider)
+- [Object-Relational Mapper (ORM)](#orm)
 - [Observer Pattern](#observer-pattern)
 - [Observer Synchronization](#observer-synchronization)
 - [Onion Architecture](#onion-architecture)
 - [Optimistic Concurrency](#optimistic-concurrency)
 - [Optimistic Update](#optimistic-update)
 - [Passive View](#passive-view)
+- [Pipe (NestJS)](#nestjs-pipe)
 - [Port](#port)
 - [Presentation Layer](#presentation-layer)
 - [Presentation Model](#presentation-model)
@@ -85,6 +96,7 @@ Each entry contains a concise definition, a purpose, a repository-oriented examp
 - [Recipe](#recipe)
 - [Reducer](#reducer)
 - [Repository Pattern](#repository)
+- [Route Handler](#route-handler)
 - [RTK Query](#rtk-query)
 - [Selector](#selector)
 - [Semantic Token](#semantic-token)
@@ -274,9 +286,9 @@ The code that interprets an incoming user action and decides which operation it 
 
 **Purpose.** Translate input into operations without owning rendering or authoritative business rules.
 
-**Example.** An HTTP controller converts route parameters into a `DeactivateUser` command.
+**Example.** Nest's `TicketsController` groups handlers; its `create()` handler translates `POST /tickets` into a `CreateTicket` command. The controller class is not itself an endpoint and may expose several operations.
 
-**Sources.** [Fowler — GUI Architectures](https://martinfowler.com/eaaDev/uiArchs.html)
+**Sources.** [Fowler — GUI Architectures](https://martinfowler.com/eaaDev/uiArchs.html) · [Nest — Controllers](https://docs.nestjs.com/controllers)
 
 ---
 
@@ -1497,3 +1509,171 @@ A TypeScript import used to name a type without importing its runtime value. For
 **Example.** An Application `import type` from Infrastructure still violates the documented inward source rule.
 
 **Sources.** [TypeScript — Modules Reference](https://www.typescriptlang.org/docs/handbook/modules/reference.html#type-only-imports-and-exports)
+
+---
+
+<a id="http-endpoint"></a>
+
+## HTTP Endpoint
+
+A callable HTTP operation offered by an API. For the analyst, `POST /tickets` means submit ticket data for creation; `GET /tickets` would be another operation even with the same path. Here endpoint identifies the public method/path operation and its contract, while a route describes the server's matching rule. Industry usage sometimes means only the URL, so clarify the intended meaning.
+
+**Purpose.** Identify an externally callable operation without confusing it with its implementation.
+
+**Example.** `POST /tickets` is an endpoint; `TicketsController` is a class that may group several endpoint handlers, not itself an endpoint.
+
+**Sources.** [Nest — Controllers and routing](https://docs.nestjs.com/controllers) · [RFC 9110 — HTTP methods](https://www.rfc-editor.org/rfc/rfc9110.html#section-9)
+
+---
+
+<a id="http-route"></a>
+
+## HTTP Route
+
+The server's matching rule that associates an HTTP method and path or path pattern with code to execute. The ticket server matches `POST` plus `/tickets` to `TicketsController.create()`. The rule is configuration, not a business operation or controller object; a parameterized rule can match many concrete URLs. Teams often use route and endpoint loosely as synonyms.
+
+**Purpose.** Select the intended handler from a request's method and target path.
+
+**Example.** A separate `GET /tickets/:id` rule may select a different handler in the same controller. Changing that route does not change the rule for valid ticket subjects.
+
+**Sources.** [Nest — Controller routing](https://docs.nestjs.com/controllers#routing)
+
+---
+
+<a id="route-handler"></a>
+
+## Route Handler
+
+The function selected to execute for a matched request. After ticket routing selects `TicketsController.create()`, that method receives parsed arguments, invokes ticket creation and returns the chosen response data. A handler is callable code, distinct from the public HTTP operation or its matching rule.
+
+**Purpose.** Connect a matched request to application behavior and transport output.
+
+**Example.** `create()` is the handler for `POST /tickets`; `TicketsController` groups it with other methods. The name `create` alone does not register an HTTP route or own ticket validity.
+
+**Sources.** [Nest — Controllers](https://docs.nestjs.com/controllers)
+
+---
+
+<a id="http-routing"></a>
+
+## HTTP Router / Routing
+
+The server must choose different code for `POST /tickets` and `GET /tickets`. Routing is that selection using registered method/path rules; the router is the mechanism performing it. It does not decide whether a ticket subject is valid.
+
+**Purpose.** Direct an incoming HTTP request to the configured handler.
+
+**Example.** Nest builds routing metadata from `@Controller('tickets')` and `@Post()` so the platform dispatches creation requests to `create()`. A router is not an application use case or DI container.
+
+**Sources.** [Nest — Controllers](https://docs.nestjs.com/controllers)
+
+---
+
+<a id="nestjs-provider"></a>
+
+## NestJS Provider
+
+Instead of repeating object construction, the program can register a dependency for Nest to create or supply. That managed dependency is a provider: a class instance, value or factory result identified by a runtime token. The concept describes container registration, not architectural responsibility.
+
+**Purpose.** Supply collaborators and manage their lifetimes through Nest's DI system.
+
+**Example.** A factory registers plain `CreateTicket` and supplies its repository; a Symbol token selects the memory or database implementation. Both are providers, but they own different responsibilities. A provider is not a business layer, and `@Injectable()` alone does not register it.
+
+**Sources.** [Nest — Providers](https://docs.nestjs.com/providers) · [Nest — Custom providers](https://docs.nestjs.com/fundamentals/custom-providers)
+
+---
+
+<a id="nestjs-module"></a>
+
+## NestJS Module
+
+The framework needs to know which controllers and dependencies belong together and which dependencies other groups may use. A class decorated with `@Module()` records those registrations, imports and exports. This is Nest's module system for framework organization and container visibility.
+
+**Purpose.** Organize registrations and their availability in the framework graph.
+
+**Example.** `TicketsModule` registers `TicketsController`, binds the repository and exports `CreateTicket`. It is not automatically an architectural layer, business model boundary or feature boundary; source-code imports need their own rules.
+
+**Sources.** [Nest — Modules](https://docs.nestjs.com/modules)
+
+---
+
+<a id="nestjs-pipe"></a>
+
+## Pipe (NestJS)
+
+Before the ticket handler receives its body argument, code can check or transform that value. A Nest pipe performs this work through `transform(value, metadata)` before handler execution; it can return a parsed value or reject it with an exception.
+
+**Purpose.** Integrate argument parsing, validation or transformation into Nest's request processing.
+
+**Example.** `CreateTicketPipe` invokes the manual parser for an unknown body and maps bad shapes to `400`. It does not persist tickets or become the owner of subject and initial-state rules. TypeScript annotations alone are not pipes or runtime validation.
+
+**Sources.** [Nest — Pipes](https://docs.nestjs.com/pipes) · [Nest — Validation](https://docs.nestjs.com/techniques/validation)
+
+---
+
+<a id="nestjs-guard"></a>
+
+## Guard (NestJS)
+
+Before creation executes, the server may need to decide whether an authenticated caller may enter the operation. A Nest guard makes an access decision using an execution context identifying the selected handler. It can permit, reject or throw an appropriate failure.
+
+**Purpose.** Apply access policy at a known framework invocation boundary.
+
+**Example.** A ticket guard requires a principal previously verified by established authentication code. It does not make arbitrary request data a verified identity, validate ticket subject rules or enforce permissions for non-HTTP callers automatically.
+
+**Sources.** [Nest — Guards](https://docs.nestjs.com/guards)
+
+---
+
+<a id="nestjs-interceptor"></a>
+
+## Interceptor (NestJS)
+
+Timing ticket creation requires code before execution and when it completes or fails. A Nest interceptor wraps the remaining execution using `next.handle()` and can observe or transform its Observable result, a stream of completion/data/failure notifications.
+
+**Purpose.** Apply behavior around handler execution and its result without duplicating it in every handler.
+
+**Example.** A timing interceptor records elapsed handler time with `finalize`. It is not the early raw-request middleware, a persistence port, or authority over ticket state. Output transformations must respect the agreed API contract.
+
+**Sources.** [Nest — Interceptors](https://docs.nestjs.com/interceptors) · [Nest — Request lifecycle](https://docs.nestjs.com/faq/request-lifecycle)
+
+---
+
+<a id="nestjs-exception-filter"></a>
+
+## Exception Filter (NestJS)
+
+An uncaught failure during a ticket request needs an HTTP representation rather than a database stack trace. A Nest exception filter handles matching uncaught exceptions and writes the transport response. Catching an error inside the operation instead prevents it from reaching that filter.
+
+**Purpose.** Translate exceptional failures at the transport edge.
+
+**Example.** A filter can map an application-owned storage failure to `503` if that failure escapes. The canonical operation returns an `unavailable` result instead, so its controller maps the result through Nest HTTP exceptions. A filter is not a mandatory success-path step or an owner of business invariants.
+
+**Sources.** [Nest — Exception filters](https://docs.nestjs.com/exception-filters) · [Nest — Request lifecycle](https://docs.nestjs.com/faq/request-lifecycle)
+
+---
+
+<a id="orm"></a>
+
+## Object-Relational Mapper (ORM)
+
+To store tickets in relational tables, a tool can map programming-language records/objects to database data and offer query operations. Such a tool is an object-relational mapper (ORM). Prisma generates a typed client from its database model; these generated records describe storage rather than automatically enforcing ticket behavior.
+
+**Purpose.** Implement relational data interaction with mapping/query conveniences.
+
+**Example.** `PrismaTicketRepository` maps `Ticket.status` to stored `state` and calls `db.ticket.create()`. Prisma's client or an ORM-specific repository API is not automatically the application-owned Repository Pattern contract, and a generated row is not automatically a domain entity.
+
+**Sources.** [Prisma ORM 7 — Client introduction](https://www.prisma.io/docs/orm/v7/prisma-client/setup-and-configuration/introduction) · [Fowler — Repository](https://martinfowler.com/eaaCatalog/repository.html)
+
+---
+
+<a id="layered-architecture"></a>
+
+## Layered Architecture
+
+Ticket input handling, business decisions and storage can be grouped by the different work they do. A layered architecture organizes those responsibility groups and defines which may depend on or call others. Conventional presentation/business/data arrangements often permit downward source dependencies; inward inversion is a separate design choice.
+
+**Purpose.** Separate kinds of work and constrain interactions between responsibility groups.
+
+**Example.** HTTP code invokes creation behavior, and persistence code stores the ticket. Naming files Controller, Service and Repository does not alone establish good layers or protect domain policy. Open versus closed layers and dependency rules must be specified; layers are not necessarily separately deployed services.
+
+**Sources.** [Fowler — Presentation Domain Data Layering](https://martinfowler.com/bliki/PresentationDomainDataLayering.html) · [Backend style comparison](./backend/5-architectural-styles-with-nestjs.md)

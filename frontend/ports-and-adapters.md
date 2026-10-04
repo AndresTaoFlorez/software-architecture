@@ -22,9 +22,9 @@ This is the outbound side of **[Ports & Adapters](../GLOSSARY.md#hexagonal-archi
 
 **Figure 1. One system, three relationship types.** The strongest horizontal path is the actual runtime flow: `Screen → createTicket() → HttpTicketGateway → POST /api/tickets → Backend API`. The backend is outside the frontend boundary.
 
-The lighter dashed relationships above that path describe **source-code structure**, not extra runtime hops: `createTicket()` depends on the application-owned `TicketGateway` [port](../GLOSSARY.md#port), and `HttpTicketGateway` implements that contract. The startup connector below shows **composition**: [the Composition Root](../GLOSSARY.md#composition-root) creates the concrete adapter and passes it to `makeCreateTicket(gateway)` before the UI uses the resulting operation.
+The lighter dashed relationships above that path describe **source-code structure**, not extra runtime hops: `createTicket()` depends on the application-owned `TicketGateway` [port](../GLOSSARY.md#port), and `HttpTicketGateway` implements that contract. The startup connector below shows **composition**: [the Composition Root](../GLOSSARY.md#composition-root) creates the concrete [adapter](../GLOSSARY.md#adapter) and passes it to `makeCreateTicket(gateway)` before the UI uses the resulting operation.
 
-The [port](../GLOSSARY.md#port) is a TypeScript contract, **not a separate runtime forwarding object**. Once composition is complete, `createTicket()` holds the injected [adapter](../GLOSSARY.md#adapter) object and calls it directly. On the way back, that HTTP adapter validates the server response and translates transport details such as `ticket_id` into the application's `id`.
+The [port](../GLOSSARY.md#port) is a TypeScript contract, **not a separate runtime forwarding object**. Once composition is complete, `createTicket()` holds the injected [adapter](../GLOSSARY.md#adapter) object and calls it directly. On the way back, that HTTP [adapter](../GLOSSARY.md#adapter) validates the server response and translates transport details such as `ticket_id` into the application's `id`.
 
 <details>
 <summary>Editable Mermaid source corresponding to the figure</summary>
@@ -81,7 +81,7 @@ flowchart LR
 | `presentation/features/tickets/model/useTickets.ts` | React-facing state/operations | Loading/error feedback belongs to the UI |
 | `composition/bootstrap.tsx` | Dependency construction and injection | Chooses the concrete [adapter](../GLOSSARY.md#adapter) without becoming a [Service Locator](../GLOSSARY.md#service-locator) |
 
-These names are **repository conventions**, not universal requirements of Cockburn's architecture. `Gateway` expresses interaction with an external service. Use `Repository` when the abstraction genuinely models retrieval/persistence of domain objects as a collection, not simply because an HTTP endpoint exists.
+These names are **repository conventions**, not universal requirements of Cockburn's architecture. `Gateway` expresses interaction with an external service. Use `Repository` when the abstraction genuinely models retrieval/persistence of domain objects as a collection, not simply because an [HTTP endpoint](../GLOSSARY.md#http-endpoint) exists.
 
 ### Domain: ticket vocabulary and rules
 
