@@ -1,0 +1,50 @@
+# Backend References
+
+← [Backend learning path](README.md)
+
+Official framework/library pages were reviewed on **2026-10-03**. Nest's supplied framework organization and our architectural interpretations are distinguished in [chapter 5](5-architectural-styles-with-nestjs.md#3-does-nestjs-impose-an-architecture). Prisma code deliberately targets the versioned **[ORM](../GLOSSARY.md#orm) 7** API; a different major version needs its own setup/error review.
+
+## HTTP and TypeScript mechanisms
+
+- [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110.html): request/response, methods, representations, status codes and retry semantics.
+- [TypeScript — Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html): runtime checks refine static types.
+- [TypeScript — Everyday Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions): assertions do not validate values at runtime.
+- [TypeScript — More on Functions](https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown): unknown input requires checks before use.
+- [Node.js — `crypto.randomUUID`](https://nodejs.org/api/crypto.html#cryptorandomuuidoptions): established ID generation at composition.
+
+## NestJS mechanisms
+
+| Source | Claim/mechanism used |
+| --- | --- |
+| [Introduction](https://docs.nestjs.com/) | supplied Angular-inspired framework organization |
+| [Controllers](https://docs.nestjs.com/controllers) | route registration, handlers, body arguments and standard responses |
+| [Providers](https://docs.nestjs.com/providers) | managed dependencies and registration |
+| [Custom providers](https://docs.nestjs.com/fundamentals/custom-providers) | runtime tokens, class/value/factory bindings |
+| [Modules](https://docs.nestjs.com/modules) | imports, providers, controllers, exports and visibility |
+| [Middleware](https://docs.nestjs.com/middleware) | request/response/next and platform-specific signatures |
+| [Guards](https://docs.nestjs.com/guards) | execution context and access decisions |
+| [Pipes](https://docs.nestjs.com/pipes) | argument validation/transformation |
+| [Interceptors](https://docs.nestjs.com/interceptors) | wrapping Observable execution and result processing |
+| [Exception filters](https://docs.nestjs.com/exception-filters) | exception-to-transport handling |
+| [Request lifecycle](https://docs.nestjs.com/faq/request-lifecycle) | hook ordering, return unwinding and failure paths |
+| [Validation](https://docs.nestjs.com/techniques/validation) | ValidationPipe and class-validator/class-transformer dependencies |
+| [Lifecycle events](https://docs.nestjs.com/fundamentals/lifecycle-events) | resource teardown and shutdown hooks |
+
+## Durable persistence illustration
+
+- [Prisma ORM 7 — Client setup](https://www.prisma.io/docs/orm/v7/prisma-client/setup-and-configuration/introduction): PostgreSQL driver [adapter](../GLOSSARY.md#adapter) and configured client.
+- [Prisma ORM 7 — Generation](https://www.prisma.io/docs/orm/v7/prisma-client/setup-and-configuration/generating-prisma-client): explicit output location and generated imports.
+- [Prisma ORM 7 — CRUD](https://www.prisma.io/docs/orm/v7/prisma-client/queries/crud): record insertion through the client.
+- [Prisma ORM 7 — Errors](https://www.prisma.io/docs/orm/v7/reference/error-reference): technical error classification; integration tests must verify deployment-specific behavior.
+
+## Architectural ideas
+
+- [Alistair Cockburn — Hexagonal Architecture (2005)](https://alistair.cockburn.us/hexagonal-architecture/): application inside, device [adapters](../GLOSSARY.md#adapter) outside, purpose-oriented interactions.
+- [Robert C. Martin — The Clean Architecture (2012)](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html): inward source dependencies and business/application policy versus mechanisms.
+- [Jeffrey Palermo — Onion Architecture, part 1 (2008)](https://jeffreypalermo.com/2008/07/the-onion-architecture-part-1/): domain center and outer infrastructure; links to the original series.
+- [Martin Fowler — Presentation Domain Data Layering](https://martinfowler.com/bliki/PresentationDomainDataLayering.html): responsibility separation in a layered system.
+- [Martin Fowler — Repository](https://martinfowler.com/eaaCatalog/repository.html): collection-like business-object persistence abstraction.
+- [Martin Fowler — Service Layer](https://martinfowler.com/eaaCatalog/serviceLayer.html): application operation boundary and coordination.
+- [Mark Seemann — Composition Root (2011)](https://blog.ploeh.dk/2011/07/28/CompositionRoot/): explicit assembly close to the executable entry point.
+
+The subject-length rule, command/result shapes, chosen HTTP failure mapping, Symbol location and folder layout are illustrative product choices or documentation conventions. These sources explain principles and framework behavior, not those exact choices.

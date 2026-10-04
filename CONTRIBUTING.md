@@ -103,6 +103,16 @@ For code-placement tutorials specifically, show **where a simple piece of code g
 
 Do not hide essential folder/layout guidance in an "advanced" chapter. A landing page must be useful on its own: a reader should not have to open an advanced page to learn basic responsibilities, allowed/forbidden dependencies, naming, or the first end-to-end feature.
 
+<a id="typescript-first-mechanisms"></a>
+
+### TypeScript-first mechanisms
+
+Understand and implement the smallest safe mechanism explicitly in TypeScript before introducing a library, framework helper or abstraction that removes its repetition. Apply this repository-wide, including backend material: start with the real requirement and concrete difficulty, explain the mechanism and its name, show a small explicit implementation, identify its limits, then introduce the convenience and explain its architectural consequence. This extends the concept-explanation protocol above rather than replacing it.
+
+For example, check an unknown ticket body with ordinary runtime checks before a validation pipe; pass a repository into a constructor before showing container bindings; store a ticket in memory before introducing durable database integration. Define request, route, handler and controller locally before relying on those names. A glossary link is a reference, not the explanation.
+
+This is an educational sequence, not a requirement to recreate infrastructure. Explain the role and use established implementations for HTTP stacks, database drivers/pools, authentication, cryptography, password hashing and token signing. Do not add dependencies merely to decorate a small mechanism. Keep business validity with its authoritative owner when a library takes over transport checks. The [backend ticket track](./backend/README.md) applies this progression.
+
 ## 4. Distinguish rule types
 
 Every prescriptive statement should be classifiable as one of:
