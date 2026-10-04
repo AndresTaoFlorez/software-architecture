@@ -21,11 +21,11 @@ Robert C. Martin's diagram uses:
 flowchart LR
     N0["Entities"]
     N1["Use Cases"]
-    N1 -. "depends on" .-> N0
+    N1 --> N0
     N2["Interface Adapters"]
-    N2 -. "depends on" .-> N1
+    N2 --> N1
     N3["Frameworks & Drivers"]
-    N3 -. "depends on" .-> N2
+    N3 --> N2
 ```
 
 Inner circles contain higher-level policy. Outer circles contain mechanisms and details.
@@ -84,19 +84,19 @@ const users = new SqlUserRepository(db)
 const getUser = makeGetUser({ users })
 ```
 
-Trace the same objects in one view: solid arrows are runtime calls, long dashes are source dependencies, short dots are startup wiring. The contract is not a runtime forwarding object.
+Source dependencies:
 
 ```mermaid
 flowchart LR
-    UC["getUser / operation"] -->|"calls findById"| SQL["SqlUserRepository / adapter"]
-    SQL -->|"queries"| DB["Database / external system"]
-    SQL -. "implements" .-> PORT["UserRepository / contract"]
-    UC -. "requires" .-> PORT
-    ROOT["Bootstrap / composition"] -. "constructs" .-> SQL
-    ROOT -. "supplies repository" .-> UC
-    linkStyle 0,1 stroke-width:2px
-    linkStyle 2,3 stroke-width:1px,stroke-dasharray:6 4
-    linkStyle 4,5 stroke-width:1px,stroke-dasharray:2 5
+    SQL["SqlUserRepository"] --> PORT["UserRepository"]
+    UC["getUser"] --> PORT
+```
+
+Runtime control:
+
+```mermaid
+flowchart LR
+    UC["getUser"] --> SQL["SqlUserRepository"] --> DB["Database"]
 ```
 
 Dependency inversion makes those directions intentionally different.
@@ -142,7 +142,7 @@ It does not say:
 
 That last point matters.
 
-Martin places views alongside controllers and [presenters](../GLOSSARY.md#presenter) in [Interface Adapters](../GLOSSARY.md#interface-adapter). See [the combined outer-module explanation](../foundations/dependency-boundaries.md#combined-outer-modules) for how a practical React component or HTTP repository can also contain framework glue. The stricter project policy here forbids [Presentation](../GLOSSARY.md#presentation-layer) from importing [Infrastructure](../GLOSSARY.md#infrastructure), even when both contain outer mechanisms.
+Martin places views alongside controllers and [presenters](../GLOSSARY.md#presenter) in [Interface Adapters](../GLOSSARY.md#interface-adapter). Such an [adapter](../GLOSSARY.md#adapter) must not import an outward-owned HTTP driver. A physical React component or HTTP repository can combine [adapter](../GLOSSARY.md#adapter) behavior with framework glue; placing both in an outer physical folder does not make an outward canonical dependency valid. Either separate the glue behind an [adapter](../GLOSSARY.md#adapter)-owned contract or explicitly describe the merged physical module. The stricter policy here also forbids [Presentation](../GLOSSARY.md#presentation-layer) from importing [Infrastructure](../GLOSSARY.md#infrastructure), even when both contain outer mechanisms.
 
 Document those stricter rules as project architecture, not as quotations from [Clean Architecture](../GLOSSARY.md#clean-architecture).
 
@@ -154,20 +154,17 @@ For the application structures documented here, we usually enforce:
 
 ```mermaid
 flowchart LR
-    A["Application"] -. "imports" .-> D["Domain"]
-    I["Infrastructure"] -. "imports contracts" .-> A
-    I -. "imports data" .-> D
-    P["Presentation"] -. "imports" .-> A
+    D["Domain"] --> D
+    A["Application"] --> D
+    I["Infrastructure"] --> A
+    I --> D
+    P["Presentation"] --> A
     C["Composition"] -. wires .-> I
     C -. wires .-> P
     C -. wires .-> A
-    linkStyle 0,1,2,3 stroke-width:1px,stroke-dasharray:6 4
-    linkStyle 4,5,6 stroke-width:1px,stroke-dasharray:2 5
 ```
 
 This is a practical mapping of the Clean goal, not the canonical four-circle taxonomy.
-
-Long dashes mean imports; short dots mean startup wiring. [Domain](../GLOSSARY.md#domain) can import other domain code and no outer area; a self-arrow is unnecessary.
 
 See **[Dependency Boundaries](../foundations/dependency-boundaries.md)**.
 

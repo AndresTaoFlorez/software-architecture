@@ -108,7 +108,7 @@ export class TicketsModule {}
 ```ts
 import { Module } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
-import { TicketsModule } from '../tickets/nest'
+import { TicketsModule } from '../tickets/composition/TicketsModule'
 
 @Module({ imports: [TicketsModule] })
 class AppModule {}
@@ -121,22 +121,7 @@ async function bootstrap() {
 void bootstrap()
 ```
 
-Expose the framework assembly through its own entry point:
-
-`src/tickets/nest.ts`:
-
-```ts
-export { TicketsModule } from './composition/TicketsModule'
-```
-
-In an actual Nest project, these modules use Nest's supported TypeScript decorator configuration and the usual platform/runtime dependencies. This repository does not install them. The two public entry points answer different questions:
-
-| Consumer needs | Supported source import | What it guarantees |
-| --- | --- | --- |
-| creation operation, command and result | `tickets/public` from chapter 2 | a plain TypeScript API; no Nest/database dependency |
-| Nest registration of the capability | `tickets/nest` | outer executable assembly exporting `TicketsModule` |
-
-For example, another [Nest module](../GLOSSARY.md#nestjs-module) imports `TicketsModule` from `tickets/nest` in its metadata and its consumer imports the `CreateTicket` class token from `tickets/public`. Nest's `exports: [CreateTicket]` makes the registered provider visible to that importing module; it does not export TypeScript names or prohibit deep imports. Source checks enforce those supported entry points separately. The consumer must not register a second `CreateTicket`/memory store merely to make injection succeed. Tickets' own controller/composition can use internal paths because they belong to the same capability. [Nest module visibility](https://docs.nestjs.com/modules), [public source contracts](../foundations/module-boundaries-and-public-apis.md).
+In an actual Nest project, these modules use Nest's supported TypeScript decorator configuration and the usual platform/runtime dependencies. This repository does not install them. `CreateTicket` is exported as the narrow in-process capability, not the repository or HTTP parser. Another module imports `TicketsModule` to inject it; it should not re-register it with a different local storage instance or deep-import internals.
 
 ## 5. Replace memory when the ticket must survive restart
 
@@ -173,8 +158,7 @@ import {
   TicketPersistenceUnavailable, type TicketRepository,
 } from '../application/TicketRepository'
 
-function isStorageUnavailable(error: unknown): error is
-  Prisma.PrismaClientInitializationError | Prisma.PrismaClientKnownRequestError {
+function isStorageUnavailable(error: unknown): boolean {
   if (error instanceof Prisma.PrismaClientInitializationError) {
     return ['P1001', 'P1002', 'P1008', 'P1017'].includes(error.errorCode ?? '')
   }
@@ -183,14 +167,7 @@ function isStorageUnavailable(error: unknown): error is
 }
 
 export class PrismaTicketRepository implements TicketRepository {
-  constructor(
-    private readonly db: PrismaClient,
-    private readonly recordFailure: (diagnostic: {
-      operation: 'ticket.insert'
-      category: 'storage-unavailable'
-      code: string
-    }) => void,
-  ) {}
+  constructor(private readonly db: PrismaClient) {}
 
   async insert(ticket: Ticket): Promise<void> {
     const data = ticket.snapshot()
@@ -200,14 +177,7 @@ export class PrismaTicketRepository implements TicketRepository {
         description: data.description, state: data.status,
       } })
     } catch (error) {
-      if (isStorageUnavailable(error)) {
-        // Record safe technical context before Application turns this into a result.
-        const code = error instanceof Prisma.PrismaClientInitializationError
-          ? error.errorCode ?? 'unknown'
-          : error.code
-        this.recordFailure({ operation: 'ticket.insert', category: 'storage-unavailable', code })
-        throw new TicketPersistenceUnavailable('Ticket storage unavailable', { cause: error })
-      }
+      if (isStorageUnavailable(error)) throw new TicketPersistenceUnavailable()
       throw error
     }
   }
@@ -216,9 +186,7 @@ export class PrismaTicketRepository implements TicketRepository {
 
 Field mapping is explicit and confined to this [adapter](../GLOSSARY.md#adapter). `create()` resolves after the database operation; its returned database record is unnecessary and never becomes a Ticket automatically. An application-owned repository is not Prisma's generated query API or TypeORM's [ORM](../GLOSSARY.md#orm)-specific repository abstraction. It expresses the capability required by our policy; the technology API implements it.
 
-The example classifier maps recognized connection/time/pool failures to the application failure. Before translating, the [adapter](../GLOSSARY.md#adapter) records an operation/category and the recognized Prisma code; it deliberately omits ticket content, connection strings and raw error messages. The translated error retains its original `cause` while that error exists, but [Application](../GLOSSARY.md#application-layer) consumes the recognized error and returns plain data: only the recorded safe diagnostic survives that path. Logging only in the HTTP controller would be too late. This small diagnostic identifies the failed operation and technical category/code; fuller investigation needs deliberate redaction and correlation at this same boundary, before translation. The supplied sink must not throw or block translation; production needs access-controlled collection/retention. A function is sufficient for this narrow technical dependency; no domain logger hierarchy is needed. [Node.js error causes](https://nodejs.org/api/errors.html#errorcause) document the ES2022 mechanism used here.
-
-Unique-key violations such as `P2002`, invalid queries, schema drift and unrecognized driver errors propagate for internal diagnosis, rather than pretending every defect is a temporary outage. This is an intentionally limited **Prisma 7 error policy**; integration tests must verify errors produced by the selected driver [adapter](../GLOSSARY.md#adapter) and deployment, and extend classification deliberately. A `503` is not proof that retrying creates no duplicate ticket.
+The example classifier maps recognized connection/time/pool failures to the application failure. Unique-key violations such as `P2002`, invalid queries, schema drift and unrecognized driver errors propagate for internal diagnosis, rather than pretending every defect is a temporary outage. This is an intentionally limited **Prisma 7 error policy**; integration tests must verify errors produced by the selected driver [adapter](../GLOSSARY.md#adapter) and deployment, and extend classification deliberately. A `503` is not proof that retrying creates no duplicate ticket.
 
 Sources: [Prisma 7 generation](https://www.prisma.io/docs/orm/v7/prisma-client/setup-and-configuration/generating-prisma-client), [CRUD](https://www.prisma.io/docs/orm/v7/prisma-client/queries/crud), [error reference](https://www.prisma.io/docs/orm/v7/reference/error-reference).
 
@@ -260,10 +228,7 @@ To switch the earlier `TicketsModule`, import `DatabaseModule` and `DatabaseReso
 {
   provide: TICKET_REPOSITORY,
   inject: [DatabaseResource],
-  useFactory: (database: DatabaseResource) => new PrismaTicketRepository(
-    database.client,
-    diagnostic => console.error(diagnostic), // safe structured fields only; illustrative sink
-  ),
+  useFactory: (database: DatabaseResource) => new PrismaTicketRepository(database.client),
 }
 ```
 

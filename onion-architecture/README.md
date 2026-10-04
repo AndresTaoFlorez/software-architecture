@@ -6,7 +6,7 @@
 
 ← [Repository home](../README.md) · [Glossary](../GLOSSARY.md) · [Code placement](../foundations/code-placement.md) · [Naming](../conventions/naming-and-file-placement.md)
 
-For a server-side application, first follow [Backend Architecture](../backend/README.md), then [Onion on the backend](7-onion-on-the-backend.md). Follow the same ticket from its domain rules through its operation, required storage capability and HTTP/database [adapters](../GLOSSARY.md#adapter).
+For a server-side application, first follow [Backend Architecture](../backend/README.md). Its [Onion mapping of Create Ticket](../backend/5-architectural-styles-with-nestjs.md#7-onion-keep-the-domain-model-central) shows domain centrality and inward dependencies using the same NestJS capability as the other style comparisons.
 
 <a id="1-introduction--purpose"></a>
 
@@ -80,8 +80,8 @@ flowchart BT
     APP["Application"]
     DOMAIN["Domain"]
 
-    OUTER -. "depends on" .-> APP
-    APP -. "depends on" .-> DOMAIN
+    OUTER --> APP
+    APP --> DOMAIN
 ```
 
 [Presentation](../GLOSSARY.md#presentation-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) are outer concerns. [Application](../GLOSSARY.md#application-layer) surrounds [Domain](../GLOSSARY.md#domain).
@@ -214,8 +214,8 @@ The arrows here show **source-code contract relationships only**; `OrderReposito
 
 ```mermaid
 flowchart LR
-    UC["cancelOrder use case"] -. "requires" .-> PORT["Application-owned OrderRepository contract"]
-    HTTP["HttpOrderRepository"] -. "implements" .-> PORT
+    UC["cancelOrder use case"] -->|"requires"| PORT["Application-owned OrderRepository contract"]
+    HTTP["HttpOrderRepository"] -->|"implements"| PORT
 ```
 
 [Application](../GLOSSARY.md#application-layer) owns the language "load/save orders". [Infrastructure](../GLOSSARY.md#infrastructure) owns HTTP and calls the external API at runtime after it has been injected into the operation. The [port](../GLOSSARY.md#port) itself makes no HTTP request.
@@ -278,8 +278,6 @@ sequenceDiagram
 The same capability can later receive another [adapter](../GLOSSARY.md#adapter) without changing the core policy.
 
 ### Complete client implementation
-
-The order-cancellation example below runs in a browser client; the server remains authoritative for persisted orders. For the authoritative ticket backend, use [Onion on the backend](7-onion-on-the-backend.md) and its linked canonical TypeScript modules.
 
 **Shared example ownership.** The [Domain](../GLOSSARY.md#domain), [Application](../GLOSSARY.md#application-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) blocks in this complete example are synchronized from [the canonical order-cancellation walkthrough](../clean-architecture/4-building-a-feature.md). Edit the canonical version and run `npm run sync:examples`; `npm run check:examples` rejects drift. This page owns its presentation-pattern-specific interaction and composition example.
 
@@ -497,7 +495,6 @@ Read in this order:
 4. **[Advanced Patterns](./4-advanced-patterns.md)**
 5. **[Styling & Animation](./5-styling-and-animation.md)**
 6. **[Evolution & Scaling](./6-scaling.md)**
-7. **[Onion on the Backend](./7-onion-on-the-backend.md)**
 
 The first two chapters deepen placement and dependency rules already introduced here. Advanced topics come later.
 
