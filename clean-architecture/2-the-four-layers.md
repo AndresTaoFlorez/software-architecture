@@ -138,7 +138,7 @@ export class HttpOrderRepository implements OrderRepository {
 }
 ```
 
-Here `HttpClient` is an [adapter](../GLOSSARY.md#adapter)-owned transport interface, supplied by outer framework glue; it is not an import from a concrete HTTP driver. `mapOrderDto` and `toOrderDto` are boundary mapping functions. For a practical module containing both mapping and technical calls, see [combined outer modules](../foundations/dependency-boundaries.md#combined-outer-modules).
+Here `HttpClient` is an [adapter](../GLOSSARY.md#adapter)-owned transport interface, supplied by outer framework glue; it is not an import from a concrete HTTP driver. `mapOrderDto` and `toOrderDto` are boundary mapping functions. A physical [Infrastructure](../GLOSSARY.md#infrastructure) module may combine both roles, but the combined folder is not a new canonical circle.
 
 ### Repository is not a synonym for adapter
 
@@ -177,7 +177,7 @@ Do not read:
 
 ```mermaid
 flowchart LR
-    F["Frameworks & Drivers"] -. "depends on" .-> A["Interface Adapters"] -. "depends on" .-> U["Use Cases"] -. "depends on" .-> E["Entities"]
+    F["Frameworks & Drivers"] --> A["Interface Adapters"] --> U["Use Cases"] --> E["Entities"]
 ```
 
 as "every request must call exactly one thing in each circle".
@@ -201,7 +201,9 @@ This repository often uses:
 
 The mapping is not one-to-one.
 
-The [combined outer-module explanation](../foundations/dependency-boundaries.md#combined-outer-modules) shows when a React component or database [adapter](../GLOSSARY.md#adapter) can contain translation and framework glue, and when separating them pays for itself.
+For example, "[Presentation](../GLOSSARY.md#presentation-layer)" in a project may contain both [Interface Adapter](../GLOSSARY.md#interface-adapter) behavior ([ViewModels](../GLOSSARY.md#viewmodel)/[presenters](../GLOSSARY.md#presenter)) and Framework/Driver behavior (React components).
+
+[Infrastructure](../GLOSSARY.md#infrastructure) similarly often combines a repository [mapper](../GLOSSARY.md#mapper) ([Interface Adapters](../GLOSSARY.md#interface-adapter)) and an HTTP/[ORM](../GLOSSARY.md#orm) implementation ([Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers)). If separated, the driver implements a contract owned by the [mapper](../GLOSSARY.md#mapper) or inner policy; the [mapper](../GLOSSARY.md#mapper) does not import the driver.
 
 Therefore, do not insist that every project folder corresponds to exactly one canonical circle. Composition is outer executable glue and follows the same inward rule; it is no exemption.
 
@@ -229,7 +231,7 @@ They should preserve the cross-layer boundary but are not themselves [Clean Arch
 
 ## 2.8 Backend organization is similarly concrete
 
-[Controllers](../GLOSSARY.md#controller), transport [DTOs](../GLOSSARY.md#data-transfer-object-dto), [ORM](../GLOSSARY.md#orm) mappings and messaging [adapters](../GLOSSARY.md#adapter) are outer mechanisms. A transaction spans two decisions: [Domain](../GLOSSARY.md#domain) owns the relevant business rule, [Application](../GLOSSARY.md#application-layer) requires which changes must complete together, and [Infrastructure](../GLOSSARY.md#infrastructure) implements that guarantee with storage transactions or conditional writes. A database transaction object stays outside inner policy; the required guarantee does not. See [the ticket transaction example](8-clean-on-the-backend.md#86-transactions).
+[Controllers](../GLOSSARY.md#controller), transport [DTOs](../GLOSSARY.md#data-transfer-object-dto), [ORM](../GLOSSARY.md#orm) mappings, transactions and messaging [adapters](../GLOSSARY.md#adapter) are outer concerns.
 
 See **[Clean Architecture on the Backend](8-clean-on-the-backend.md)**.
 

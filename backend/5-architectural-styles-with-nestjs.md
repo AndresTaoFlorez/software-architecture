@@ -76,7 +76,7 @@ The initial-state rule applies regardless of transport; creating and saving is a
 | [Interface Adapters](../GLOSSARY.md#interface-adapter) / representation translation | parsing and mapping JSON fields; ticket-to-row mapping | authoritative ticket policy |
 | [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers) / mechanisms | Nest decorators/runtime, Prisma client, PostgreSQL driver, executable assembly | inner business decisions |
 
-“[Entities](../GLOSSARY.md#clean-entities-circle)” is Martin's business-policy circle, not a requirement that every policy be a [DDD](../GLOSSARY.md#domain-driven-design-ddd) identity-bearing object. The Nest controller and Prisma repository use the [combined outer-module choice](../foundations/dependency-boundaries.md#combined-outer-modules): translation and technical glue share a file while inner policy stays independent. The linked explanation owns the trade-off and alternative; the four conceptual circles do not require four folders or a driver interface for every library call.
+“[Entities](../GLOSSARY.md#clean-entities-circle)” is Martin's business-policy circle, not a requirement that every policy be a [DDD](../GLOSSARY.md#domain-driven-design-ddd) identity-bearing object. The physical Nest controller combines HTTP/framework glue with translation; the physical Prisma repository combines database glue with mapping. Calling the whole files pure canonical [Interface Adapters](../GLOSSARY.md#interface-adapter) would conceal their outward library dependencies. They are pragmatic **combined outer modules**, preserving the inner boundary rather than a literal one-folder-per-circle implementation. For stricter separation, keep plain translation functions inward of thin Nest/Prisma glue; introduce that extra boundary when independent replacement/testing justifies it.
 
 This diagram shows **allowed source dependencies between conceptual circles**, not an execution pipeline:
 
@@ -103,7 +103,7 @@ flowchart BT
     APP -. "source depends inward" .-> D["Ticket / central model"]
 ```
 
-Continue with [Onion on the backend](../onion-architecture/7-onion-on-the-backend.md), which traces the same ticket and explains contract ownership and independently runnable inner policy. [Palermo's original series](https://jeffreypalermo.com/2008/07/the-onion-architecture-part-1/) supplies the domain-centered principle; this source hierarchy is our illustrative mapping.
+Read [Palermo's original series](https://jeffreypalermo.com/2008/07/the-onion-architecture-part-1/) and the repository's [Onion guide](../onion-architecture/README.md). [Domain](../GLOSSARY.md#domain) centrality and inward dependencies are the principle; this source hierarchy is our illustrative mapping.
 
 ## 8. Compare without renaming everything into synonyms
 
@@ -122,7 +122,7 @@ Under each description, a new subject rule belongs to its single domain owner; p
 
 Extra contracts, mapping and source rules cost work. Add them where they protect an actual boundary, not to win a style label. None resolves distributed commit/retry ambiguity, good modeling or performance by itself. Measure runtime needs separately and test the boundary whose failure matters.
 
-You can now read the broader [Clean](../clean-architecture/README.md) and [Onion](../onion-architecture/README.md) guides with HTTP and Nest mechanics already understood. Continue with [boundary exercises](6-boundary-exercises.md) to change a rule, add a CLI and reproduce a shared-quota race using plain TypeScript. Optional transactions, reliable messaging and independent deployment should follow their motivating product requirements, not precede the first ticket.
+You can now read the broader [Clean](../clean-architecture/README.md) and [Onion](../onion-architecture/README.md) guides with HTTP and Nest mechanics already understood. Optional transactions, reliable messaging and independent deployment should follow their motivating product requirements, not precede the first ticket.
 
 ## Sources
 

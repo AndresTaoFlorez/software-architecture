@@ -153,7 +153,7 @@ export function mountCancelOrderButton(root: HTMLElement, id: string, cancelOrde
 }
 ```
 
-The button owns feedback and gestures; [Application](../GLOSSARY.md#application-layer) coordinates cancellation and asks [Domain](../GLOSSARY.md#domain) whether it is allowed. This file uses the [combined outer-module choice](../foundations/dependency-boundaries.md#combined-outer-modules) for presentation behavior and DOM glue.
+The button owns feedback and gestures; [Application](../GLOSSARY.md#application-layer) owns the cancellation decision. This physical module combines a presentation [adapter](../GLOSSARY.md#adapter) with DOM glue. For separate canonical modules, put rendering behind a presentation-owned contract implemented by the outer driver.
 
 A React feature can receive `CancelOrder` via props/context; Redux bindings can receive it through `extraArgument`. Consumers must not import a container to retrieve it.
 

@@ -38,20 +38,17 @@ The canonical rules for those dependencies live in **[Architecture Foundations](
 
 ```mermaid
 flowchart LR
-    A["Application"] -. "imports" .-> D["Domain"]
-    I["Infrastructure"] -. "imports contracts" .-> A
-    I -. "imports data" .-> D
-    P["Presentation"] -. "imports" .-> A
+    D["Domain"] --> D
+    A["Application"] --> D
+    I["Infrastructure"] --> A
+    I --> D
+    P["Presentation"] --> A
     C["Composition"] -. wires .-> I
     C -. wires .-> P
     C -. wires .-> A
-    linkStyle 0,1,2,3 stroke-width:1px,stroke-dasharray:6 4
-    linkStyle 4,5,6 stroke-width:1px,stroke-dasharray:2 5
 ```
 
 Whether [Presentation](../GLOSSARY.md#presentation-layer) may import [Domain](../GLOSSARY.md#domain) types directly is a project decision. A stricter application-contract boundary may forbid it to reduce coupling between UI and domain representation.
-
-Long dashes show imports; short dots show startup wiring. [Domain](../GLOSSARY.md#domain) may import other domain code and no outer area. Folder-tree arrows elsewhere on this page mean containment, not imports or calls.
 
 ---
 

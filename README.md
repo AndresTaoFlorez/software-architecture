@@ -131,8 +131,6 @@ Follow a support-platform user creating a ticket from the external HTTP request 
 
 Start: **[Backend Architecture](./backend/README.md)**. The track separates framework lifecycle, runtime calls, source dependencies and startup wiring. [Nest's framework structure and architectural styles](./backend/5-architectural-styles-with-nestjs.md) explains their relationship.
 
-Read the same ticket through [Clean on the backend](./clean-architecture/8-clean-on-the-backend.md) and [Onion on the backend](./onion-architecture/7-onion-on-the-backend.md), then try [plain TypeScript exercises](./backend/6-boundary-exercises.md) for policy changes, a CLI caller and a shared quota.
-
 ## How to contribute
 
 Every contribution must follow **[CONTRIBUTING.md](./CONTRIBUTING.md)**.
