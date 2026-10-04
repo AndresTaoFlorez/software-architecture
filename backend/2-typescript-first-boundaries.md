@@ -46,7 +46,7 @@ These conditions must hold when tickets are created through HTTP, a CLI or a wor
 ```ts
 export const TICKET_STATUSES = ['open', 'in_progress', 'resolved'] as const
 export type TicketStatus = (typeof TICKET_STATUSES)[number]
-export const INITIAL_TICKET_STATUS: TicketStatus = TICKET_STATUSES[0]
+export const INITIAL_TICKET_STATUS: TicketStatus = 'open'
 
 export function isTicketStatus(value: unknown): value is TicketStatus {
   return TICKET_STATUSES.some(status => status === value)
@@ -89,6 +89,8 @@ export class Ticket {
 ```
 
 The HTTP parser answers “are these fields strings?”; the factory answers “is this a valid ticket subject, and what initial state does creation assign?” A blank string passes the first question and fails the second. The factory owns the rule; a [DTO](../GLOSSARY.md#data-transfer-object-dto) validator, controller or application operation must call it rather than maintain another check. `TicketData` is a plain snapshot, not a database record or transport [DTO](../GLOSSARY.md#data-transfer-object-dto), and the private data prevents changing status by mutating a returned snapshot.
+
+The initial state is named explicitly inside the same domain owner. Reordering `TICKET_STATUSES`, or adding `reopened`, must not change creation to another state. The list defines membership; `INITIAL_TICKET_STATUS` defines creation; future transition methods would define which changes are allowed. These are different decisions, not reasons to duplicate the vocabulary across layers.
 
 This first entity supports creation only. Loading existing tickets would need a separate domain-owned restoration factory using `isTicketStatus` and validity rules; calling `create()` on a resolved database row would incorrectly reset it to open. Do not add that operation until retrieval is needed.
 
@@ -149,6 +151,17 @@ export class CreateTicket {
 The injected ID function is justified because the backend must allocate identity before building the ticket and tests need deterministic identities. A function suffices; a new `IdGenerator` hierarchy or clock is unnecessary. Production composition uses Node's established UUID generator. No crypto is reimplemented.
 
 The [port](../GLOSSARY.md#port) has a real replacement pressure: memory in tests, durable storage in the deployed process. It does not offer arbitrary queries, [ORM](../GLOSSARY.md#orm) transactions or generic methods for all product features. It does not solve duplicate requests.
+
+Another capability needs a supported entry point rather than an import into ticket internals. A **[public API](../GLOSSARY.md#public-api)** states which operations and types the Tickets owner promises to maintain. This plain entry point deliberately exposes creation and its input/result; storage and HTTP parsing remain private:
+
+`src/tickets/public.ts`:
+
+```ts
+export { CreateTicket } from './application/CreateTicket'
+export type { CreateTicketCommand, CreateTicketResult } from './application/CreateTicket'
+```
+
+An external application consumer imports from `tickets/public`; code inside Tickets can use its local modules. The result intentionally includes a plain domain snapshot through its application contract. Exposing that type does not change its owner, and it does not expose entity methods or database rows. Chapter 4 provides a separate Nest entry point for executable assembly. Source import checks must enforce these supported paths; a TypeScript export alone cannot prevent deep imports.
 
 ## 4. Start with memory and explicit construction
 
