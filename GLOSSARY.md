@@ -86,6 +86,7 @@ Each entry contains a concise definition, a purpose, a repository-oriented examp
 - [Onion Architecture](#onion-architecture)
 - [Optimistic Concurrency](#optimistic-concurrency)
 - [Optimistic Update](#optimistic-update)
+- [Output Port](#output-port)
 - [Passive View](#passive-view)
 - [Pipe (NestJS)](#nestjs-pipe)
 - [Port](#port)
@@ -877,6 +878,20 @@ Showing a proposed result in the UI before the server has confirmed it. For exam
 **Example.** A todo appears checked immediately while the API request is still pending.
 
 **Sources.** [Redux Toolkit — Manual Cache Updates](https://redux-toolkit.js.org/rtk-query/usage/manual-cache-updates)
+
+---
+
+<a id="output-port"></a>
+
+## Output Port
+
+Suppose creating a ticket must send its plain result to a formatter chosen at startup. The operation can call a method such as `present(result)` on a collaborator without knowing whether that collaborator prepares an HTTP response or screen data. An output port is the inner-owned contract for that outgoing interaction; an outer presenter implements it. The operation imports its contract, never the presenter class.
+
+**Purpose.** Let application policy request output handling while keeping delivery-specific formatting outside it. Returning a plain result to the caller is also valid; an output port is useful when the operation needs to drive a separate output interaction, and is not required for every returned value.
+
+**Example.** `CreateTicketOutput.present(result: CreateTicketResult): void` belongs to Application; an HTTP presenter implements it. The canonical ticket operation instead returns a promise of a plain result, which HTTP and CLI callers translate themselves.
+
+**Sources.** [Martin — The Clean Architecture, Crossing boundaries](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 
 ---
 

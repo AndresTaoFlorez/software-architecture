@@ -16,13 +16,15 @@ A useful generic model is:
 
 ```mermaid
 flowchart LR
-    UI["UI"] --> AD["Adapters"]
-    HTTP["HTTP / storage"] --> AD
-    DB["DB / SDKs"] --> AD
-    AD --> APP["Application"] --> D["Domain"]
+    UI["UI glue"] -. "depends on" .-> AD["Adapters"]
+    HTTP["HTTP / storage glue"] -. "depends on" .-> AD
+    DB["DB / SDK glue"] -. "depends on" .-> AD
+    AD -. "depends on" .-> APP["Application"] -. "depends on" .-> D["Domain"]
 ```
 
 The exact number of circles is not architectural law. Martin explicitly describes the four-circle diagram as schematic and allows additional boundaries as long as the [Dependency Rule](../GLOSSARY.md#dependency-rule) holds.
+
+These dashed arrows describe application-owned source modules, not imports inside third-party SDK packages. A practical [adapter](../GLOSSARY.md#adapter) combining translation and technical glue follows [section 11](#combined-outer-modules).
 
 ## 2. A practical four-area mapping
 
@@ -39,26 +41,19 @@ This table is a **recommended project policy**, not a quotation from [Clean Arch
 
 ## 3. Do not confuse runtime flow with source dependency
 
-At runtime a [use case](../GLOSSARY.md#use-case) can call outward:
+At runtime a [use case](../GLOSSARY.md#use-case) can call an outer supplied repository, while both source modules refer to an inner contract. Trace the same system below: solid paths are calls, long dashes are source dependencies, short dots are startup wiring. The [port](../GLOSSARY.md#port) is not a forwarding object.
 
 ```mermaid
 flowchart LR
-    N0["Use case"]
-    N1["repository implementation"]
-    N2["HTTP API"]
-    N0 --> N1
-    N1 --> N2
-```
-
-while source dependencies still point inward:
-
-```mermaid
-flowchart LR
-    N0["HttpRepository"]
-    N1["RepositoryPort"]
-    N2["UseCase"]
-    N0 --> N1
-    N2 --> N1
+    U["Use case / application"] -->|"calls supplied object"| I["HttpRepository / adapter"]
+    I -->|"sends request"| API["HTTP API / external system"]
+    U -. "requires" .-> P["RepositoryPort / contract"]
+    I -. "implements" .-> P
+    C["Bootstrap / composition"] -. "constructs" .-> I
+    C -. "supplies repository" .-> U
+    linkStyle 0,1 stroke-width:2px
+    linkStyle 2,3 stroke-width:1px,stroke-dasharray:6 4
+    linkStyle 4,5 stroke-width:1px,stroke-dasharray:2 5
 ```
 
 Dependency inversion exists specifically to make those two directions different.
@@ -196,6 +191,25 @@ Ask:
 5. Does the abstraction have a coherent domain/application name?
 
 If the answers are mostly no, direct code may be simpler and more honest.
+
+<a id="combined-outer-modules"></a>
+
+## 11. Translation and framework glue can share an outer module
+
+`TicketsController` selects HTTP fields and invokes creation, but also uses Nest decorators. `PrismaTicketRepository` maps ticket fields and invokes a generated database client. Each file combines **boundary translation** with **framework/driver glue**: the small technical code connecting a framework to our operation.
+
+Clean names translation **[Interface Adapters](../GLOSSARY.md#interface-adapter)** and the concrete mechanisms **[Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers)**. Those are conceptual responsibilities, not a demand for two files for every integration. Here we explicitly merge those outer responsibilities while protecting [Domain](../GLOSSARY.md#domain) and [Application](../GLOSSARY.md#application-layer) from both. That is a pragmatic physical mapping, not a claim that a pure inner [adapter](../GLOSSARY.md#adapter) can import an outward application module.
+
+| Choice | What imports what | When the cost pays off |
+| --- | --- | --- |
+| Combined outer module, as in the ticket walkthrough | controller/repository imports inner contracts plus the external library | a small cohesive integration with little independent translation complexity |
+| Separate translation from technical glue | plain translator uses inner data and any translator-owned contract; external glue supplies that contract | translation needs independent reuse/testing or several concrete mechanisms |
+
+Do not introduce a transport interface, [presenter](../GLOSSARY.md#presenter) or [mapper](../GLOSSARY.md#mapper) class solely to reproduce the four-circle picture. Start with the actual change: would replacing Nest require rewriting ticket validity, or just delivery? Would another storage [adapter](../GLOSSARY.md#adapter) reuse a substantial translator, or merely four field assignments? Separate the modules when the answer identifies a protected responsibility.
+
+In either choice, an inner policy module cannot import a concrete outer implementation, its request objects or generated records. Source dependencies cross each **chosen** boundary inward. A third-party library import and an import into an outer application module are different kinds of dependency; show which conceptual responsibilities the actual code combines rather than infer its role from the library name alone.
+
+This is the handbook's physical mapping and trade-off, informed by [Martin's translation and mechanism circles](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html). It does not change [the runtime/wiring distinction](#3-do-not-confuse-runtime-flow-with-source-dependency).
 
 ## Sources
 

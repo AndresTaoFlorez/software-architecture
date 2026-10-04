@@ -15,9 +15,12 @@ This track follows **one operation, `POST /tickets`**, from a network message to
 | [3. NestJS building blocks](3-nestjs-building-blocks.md) | What do controllers, providers, modules and lifecycle hooks add? |
 | [4. Create Ticket with NestJS](4-create-ticket-with-nestjs.md) | Where does each file go, how is it wired, and how does database persistence replace memory? |
 | [5. Architectural styles with NestJS](5-architectural-styles-with-nestjs.md) | How do Layered, Hexagonal, Clean and Onion read the same capability differently? |
+| [6. Boundary exercises](6-boundary-exercises.md) | What changes when a rule evolves, a CLI invokes the operation, or two callers compete for capacity? |
 | [References](references.md) | Which primary sources support the mechanisms and interpretations? |
 
 The [TypeScript-first teaching rule](../CONTRIBUTING.md#typescript-first-mechanisms) governs the progression. Chapter 2 is the canonical source for the plain ticket modules; later chapters import them rather than repeat their business policy.
+
+For a closer reading of the same backend, continue with [Clean on the backend](../clean-architecture/8-clean-on-the-backend.md) and [Onion on the backend](../onion-architecture/7-onion-on-the-backend.md). Both reuse those canonical modules.
 
 ## Place your first feature
 
