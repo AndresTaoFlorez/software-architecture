@@ -37,8 +37,8 @@ This file owns the business [invariant](../GLOSSARY.md#invariant). It knows no H
 ## 4.2 Step 2 — define the Application capability
 
 ```ts
-// application/orders/cancelOrder.ts
-import { Order, ShippedOrderCannotBeCancelled } from '../../domain/orders/Order'
+// application/orders/use-cases/cancelOrder.ts
+import { Order, ShippedOrderCannotBeCancelled } from '@/domain/orders/Order'
 
 export interface OrderRepository {
   findById(id: string): Promise<{ order: Order; version: string } | null>
@@ -76,9 +76,9 @@ The repository [port](../GLOSSARY.md#port) protects loading/persisting business 
 ## 4.3 Step 3 — implement the outer adapter
 
 ```ts
-// infrastructure/orders/HttpOrderRepository.ts
-import { Order, isOrderStatus, type OrderStatus } from '../../domain/orders/Order'
-import { PersistenceFailure, type OrderRepository } from '../../application/orders/cancelOrder'
+// infrastructure/http/orders/adapters/HttpOrderRepository.ts
+import { Order, isOrderStatus, type OrderStatus } from '@/domain/orders/Order'
+import { PersistenceFailure, type OrderRepository } from '@/application/orders/use-cases/cancelOrder'
 
 // Adapter-owned transport contract. A concrete fetch driver implements it.
 export interface OrderTransport {
@@ -121,8 +121,8 @@ The [DTO](../GLOSSARY.md#data-transfer-object-dto), validation and [mapper](../G
 ## 4.4 Step 4 — adapt Application to Presentation
 
 ```ts
-// presentation/orders/CancelOrderButton.ts
-import type { CancelOrder } from '../../application/orders/cancelOrder'
+// presentation/orders/components/CancelOrderButton/CancelOrderButton.ts
+import type { CancelOrder } from '@/application/orders/use-cases/cancelOrder'
 
 export function mountCancelOrderButton(root: HTMLElement, id: string, cancelOrder: CancelOrder) {
   const button = document.createElement('button')
@@ -161,9 +161,9 @@ A React feature can receive `CancelOrder` via props/context; Redux bindings can 
 
 ```ts
 // composition/bootstrap.ts
-import { makeCancelOrder, PersistenceFailure } from '../application/orders/cancelOrder'
-import { HttpOrderRepository, type OrderTransport } from '../infrastructure/orders/HttpOrderRepository'
-import { mountCancelOrderButton } from '../presentation/orders/CancelOrderButton'
+import { makeCancelOrder, PersistenceFailure } from '@/application/orders/use-cases/cancelOrder'
+import { HttpOrderRepository, type OrderTransport } from '@/infrastructure/http/orders/adapters/HttpOrderRepository'
+import { mountCancelOrderButton } from '@/presentation/orders/components/CancelOrderButton/CancelOrderButton'
 
 async function request(path: string, init?: RequestInit): Promise<Response> {
   try { return await fetch(path, init) }

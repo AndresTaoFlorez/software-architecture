@@ -12,8 +12,8 @@ const landingPages = [
 
 export const sharedFiles = [
   'domain/orders/Order.ts',
-  'application/orders/cancelOrder.ts',
-  'infrastructure/orders/HttpOrderRepository.ts',
+  'application/orders/use-cases/cancelOrder.ts',
+  'infrastructure/http/orders/adapters/HttpOrderRepository.ts',
 ]
 
 // Each landing page is self-contained for readers, but these three identical

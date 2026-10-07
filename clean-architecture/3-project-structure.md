@@ -111,32 +111,9 @@ See **[Module Boundaries and Public APIs](../foundations/module-boundaries-and-p
 
 ## 3.4 Structuring the physical Presentation area
 
-[Clean Architecture](../GLOSSARY.md#clean-architecture) tells us that UI technology is an outer detail. It does **not** define how a large [Presentation](../GLOSSARY.md#presentation-layer) codebase should organize pages, components, hooks, state, [selectors](../GLOSSARY.md#selector) or [design-system](../GLOSSARY.md#design-system) code.
+A user interface and an incoming HTTP [Controller](../GLOSSARY.md#controller) both translate a caller's interaction into an [Application](../GLOSSARY.md#application-layer) operation. That outer responsibility is mapped to `presentation/` in this handbook. Clean does not prescribe its internal React or Nest folder structure.
 
-The canonical repository guidance is therefore centralized in:
-
-- **[Frontend Architecture](../frontend/README.md)**
-- **[Presentation Architecture](../frontend/presentation-architecture.md)**
-- **[State Management](../frontend/state-management.md)**
-
-Frontend default; backend HTTP/CLI delivery uses `presentation/http/` and `presentation/cli/`:
-
-```mermaid
-flowchart TD
-    P["presentation/"] --> APP["app/"]
-    P --> PAGES["pages/"]
-    P --> FEATURES["features/"]
-    P --> SHARED["shared/"]
-    FEATURES --> ORDERS["orders/"]
-    ORDERS --> UI["ui/"]
-    ORDERS --> MODEL["model/"]
-    ORDERS --> LIB["lib/"]
-    ORDERS --> INDEX["index.ts"]
-    SHARED --> SUI["ui/"]
-    SHARED --> SLIB["lib/"]
-```
-
-This is a [Presentation](../GLOSSARY.md#presentation-layer) organization strategy, not a fifth [Clean Architecture](../GLOSSARY.md#clean-architecture) circle.
+This generic guide stops at the `presentation/` boundary. Follow [Frontend Architecture](../frontend/README.md) for capability-owned pages/components/hooks/state, or [the backend Ticket map](../backend/4-create-ticket-with-nestjs.md#physical-structure) for HTTP/CLI responsibilities. Each guide gives exact first-feature paths without treating framework files as architectural rules.
 
 ---
 
@@ -144,21 +121,7 @@ This is a [Presentation](../GLOSSARY.md#presentation-layer) organization strateg
 
 ## 3.5 Styles and animation
 
-Styling stays in [Presentation](../GLOSSARY.md#presentation-layer), but the repository no longer prescribes generic CSS placement from the Clean guide.
-
-Use the central **[Styling and Design-System Architecture](../frontend/styling-and-design-system.md)**.
-
-The default principle is **ownership and [colocation](../GLOSSARY.md#colocation)**:
-
-```mermaid
-flowchart TD
-    C["FeatureComponent/"] --> TSX["FeatureComponent.tsx"]
-    C --> ST["FeatureComponent.styles.ts"]
-    C --> TY["FeatureComponent.types.ts"]
-    C --> IX["index.ts"]
-```
-
-Shared [design-system](../GLOSSARY.md#design-system) [recipes](../GLOSSARY.md#recipe) have a different owner from feature-local styles. Do not duplicate a [recipe](../GLOSSARY.md#recipe) in both places.
+A component's styles exist to render the interaction, so [Presentation](../GLOSSARY.md#presentation-layer) owns them. Keep component-specific styles with that component and shared [design-system](../GLOSSARY.md#design-system) [recipes](../GLOSSARY.md#recipe) with their established visual owner. Detailed placement belongs in [Styling and Design-System Architecture](../frontend/styling-and-design-system.md); this generic guide does not define a second UI taxonomy.
 
 ---
 
@@ -239,8 +202,8 @@ See **[Executable Architecture](../foundations/architecture-testing.md)**.
 
 | Convention | Example |
 | --- | --- |
-| Feature model location | `features/orders/model/` |
-| Colocated component style file | `Component/Component.styles.ts` |
+| [Application](../GLOSSARY.md#application-layer) use-case location | `application/orders/use-cases/cancelOrder.ts` |
+| Physical delivery boundary | `presentation/`; frontend/backend guides define the contents |
 | Feature public entry point | `index.ts` |
 
 ### Framework convention
@@ -256,5 +219,4 @@ Treating all three as equally fundamental creates cargo-cult architecture.
 ## Sources
 
 - Robert C. Martin, "The [Clean Architecture](../GLOSSARY.md#clean-architecture)": https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
-- Redux Style Guide: https://redux.js.org/style-guide/
-- Feature-Sliced Design, slices/segments: https://feature-sliced.design/docs/reference/slices-segments
+- Canonical [frontend](../frontend/README.md) and [backend](../backend/README.md) guidance supplies the framework-specific placement conventions.

@@ -132,7 +132,7 @@ export const queryFilters = sva({
 })
 ```
 
-The generated import assumes Panda's `outdir` is `styled-system` and the `@/*` TypeScript/bundler alias resolves from the project root. Adapt both together. Local `sva` ownership is this repository's default, not a Panda restriction: atomic [recipes](../GLOSSARY.md#recipe) can also be shared.
+The generated import assumes Panda's `outdir` is `src/styled-system` and our canonical `@/*` alias resolves to `src/*` in both TypeScript and the runtime/bundler. Configure both together; see [source import resolution](../conventions/naming-and-file-placement.md#9-source-imports-and-runtime-resolution). Local `sva` ownership is this repository's default, not a Panda restriction: atomic [recipes](../GLOSSARY.md#recipe) can also be shared.
 
 This fits colocated component ownership:
 
@@ -404,12 +404,12 @@ For a sufficiently large application:
 ```mermaid
 flowchart TD
     P["presentation/"] --> D["design-system/"]
-    P --> F["features/"]
+    P --> F["scheduling/components/"]
     P --> S["shared/"]
     D --> R["recipes/"]
     D --> T["tokens/"]
     D --> RD["README.md"]
-    S --> UI["ui/"]
+    S --> UI["components/"]
 ```
 
 or keep Panda's global configuration at the project root if that is what the build tool expects.

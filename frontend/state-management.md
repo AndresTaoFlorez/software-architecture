@@ -37,37 +37,23 @@ Redux's official style guide recommends keeping [global state](../GLOSSARY.md#gl
 
 ## 2. Keep a feature's state logic together
 
-For a simple Redux Toolkit feature, one slice file may be enough:
+Begin with the canonical capability's `pages/`, `components/`, `hooks/` and `state/` folders. A simple Redux Toolkit capability can put its state logic in `presentation/auth/state/auth.slice.ts`; `createSlice` colocates [reducer](../GLOSSARY.md#reducer) logic and generated actions.
+
+As real responsibilities emerge, split files **inside that capability**, without moving back to global technical buckets:
 
 ```mermaid
 flowchart TD
-    N0["model/"]
-    N1["auth.slice.ts"]
-    N0 --> N1
+    C["presentation/closures/"] --> S["state/"]
+    C --> H["hooks/"]
+    S --> SL["closures.slice.ts"]
+    S --> SEL["closures.selectors.ts"]
+    S --> TH["closures.thunks.ts"]
+    S --> LI["closures.listeners.ts"]
+    S --> B["closures.bindings.ts"]
+    H --> F["useClosures.ts"]
 ```
 
-Redux Toolkit intentionally encourages colocating [reducer](../GLOSSARY.md#reducer) logic and generated actions in `createSlice`.
-
-As complexity grows, split by responsibility **inside the feature**, not back into application-wide technical folders:
-
-```mermaid
-flowchart TD
-    N0["features/closures/model/"]
-    N1["closures.slice.ts"]
-    N2["closures.selectors.ts"]
-    N3["closures.thunks.ts"]
-    N4["closures.listeners.ts"]
-    N5["closures.bindings.ts"]
-    N6["useClosures.ts"]
-    N0 --> N1
-    N0 --> N2
-    N0 --> N3
-    N0 --> N4
-    N0 --> N5
-    N0 --> N6
-```
-
-This is a scaling technique, not a mandatory template. A five-line feature does not need six files.
+Arrows mean containment. State files own transitions, derivation and state-library integration; the hook composes the screen-facing contract. The stable folders start with the capability, while individual files are added only when needed. A five-line feature does not need six files.
 
 ---
 

@@ -39,20 +39,24 @@ The contract names a requirement, not a running storage object. Both concrete cl
 | Example file under `src/` | Owns | May import | Keep out |
 | --- | --- | --- | --- |
 | `domain/tickets/Ticket.ts` | valid ticket data and creation rules | domain | Nest, HTTP [DTOs](../GLOSSARY.md#data-transfer-object-dto), database rows |
-| `application/tickets/CreateTicket.ts` | create-and-persist workflow and plain result | application, domain | Prisma, controllers |
+| `application/tickets/use-cases/CreateTicket.ts` | create-and-persist workflow and plain result | application, domain | Prisma, controllers |
 | `application/tickets/ports/TicketRepository.ts` | persistence contract and recognized persistence failure | application, domain | database API types |
-| `presentation/http/tickets/createTicketRequest.ts` | unknown HTTP body parsing | application, local presentation | a second subject/status rule |
-| `presentation/http/tickets/TicketsController.ts` | HTTP invocation and response mapping | application, presentation, Nest | SQL and creation policy |
-| `presentation/cli/tickets/createTicketCli.ts` | CLI arguments, messages and exit codes | application, presentation | HTTP parsing |
-| `infrastructure/persistence/tickets/InMemoryTicketRepository.ts` | teaching storage substitute | infrastructure, application, domain | HTTP response behavior |
-| `infrastructure/persistence/tickets/PrismaTicketRepository.ts` | durable database insert and field mapping | infrastructure, application, domain, Prisma | ownership of initial status |
+| `presentation/http/tickets/parsers/parseCreateTicketRequest.ts` | unknown HTTP body parsing | local presentation [DTO](../GLOSSARY.md#data-transfer-object-dto)/error | a second subject/status rule |
+| `presentation/http/tickets/dto/CreateTicketRequestDto.ts` | incoming HTTP shape | presentation | use-case policy |
+| `application/tickets/contracts/CreateTicketCommand.ts` | operation input | application | HTTP representation |
+| `application/tickets/contracts/CreateTicketResult.ts` | operation output | application, domain | HTTP status codes |
+| `presentation/http/tickets/mappers/mapCreateTicketResponse.ts` | selected HTTP response fields | application result, local response [DTO](../GLOSSARY.md#data-transfer-object-dto) | persistence records |
+| `presentation/http/tickets/controllers/TicketsController.ts` | HTTP invocation and response mapping | application, presentation, Nest | SQL and creation policy |
+| `presentation/cli/tickets/handlers/createTicketCli.ts` | CLI arguments, messages and exit codes | application, presentation | HTTP parsing |
+| `infrastructure/persistence/tickets/adapters/InMemoryTicketRepository.ts` | teaching storage substitute | infrastructure, application, domain | HTTP response behavior |
+| `infrastructure/persistence/tickets/adapters/PrismaTicketRepository.ts` | durable database insert and field mapping | infrastructure, application, domain, Prisma | ownership of initial status |
 | `composition/modules/TicketsModule.ts` | bindings between concrete objects | all objects it assembles, Nest | business decisions |
 
 The architectural rule concerns responsibility and dependency direction. The **repository convention** puts layers first, then capabilities within them; Martin, Palermo and Cockburn do not prescribe these exact paths. Choose placement by why the code exists, and let helpers follow that owner. As the product grows, group cohesive capabilities and sub-capabilities inside each layer; see [the Scheduling example](../foundations/code-placement.md#12-grow-capabilities-inside-each-layer). Other projects can use capability-first packaging without violating inward dependencies.
 
 ## How to read backend file names
 
-The path tells us **who owns the responsibility**. The filename tells us **what role or implementation it is**. For example, `infrastructure/persistence/tickets/PrismaTicketRepository.ts` is outer technical code, concerned with storage, owned by Tickets, using Prisma to implement the inward persistence contract.
+The path tells us **who owns the responsibility**. The filename tells us **what role or implementation it is**. For example, `infrastructure/persistence/tickets/adapters/PrismaTicketRepository.ts` is outer technical code, concerned with storage, owned by Tickets, using Prisma to implement the inward persistence contract.
 
 | Name | Why it is named that way |
 | --- | --- |
@@ -62,9 +66,9 @@ The path tells us **who owns the responsibility**. The filename tells us **what 
 | `InMemoryTicketRepository.ts` | `InMemory` identifies process-memory storage. It implements the same contract for learning/tests but loses data on exit and is not shared between replicas. The prefix identifies a mechanism, not a layer rule. |
 | `PrismaTicketRepository.ts` | The Prisma implementation of `TicketRepository`. Replacing this technology changes the implementation while [Application](../GLOSSARY.md#application-layer) still requires the same persistence contract. |
 | `TicketsController.ts` | Nest's controller groups related [route handlers](../GLOSSARY.md#route-handler). A method handles one selected route; the class is not an endpoint, [use case](../GLOSSARY.md#use-case) or domain object. `@Controller('tickets')` supplies a prefix; `@Post()` or `@Get(':id')` registers a method/path. See [two handlers in one controller](3-nestjs-building-blocks.md#1-register-the-functions-we-already-understand). |
-| `CreateTicketPipe.ts` | A [Nest pipe](../GLOSSARY.md#nestjs-pipe) processes a handler argument: parsing, validation or transformation. Here it asks whether incoming data can be accepted for the handler. `Ticket.create()` separately asks whether it is a valid business ticket. Both the pipe and controller belong to HTTP [Presentation](../GLOSSARY.md#presentation-layer). |
+| `CreateTicketPipe.ts` | A [Nest pipe](../GLOSSARY.md#nestjs-pipe) processes a handler argument: parsing, validation or transformation. Here it calls `parseCreateTicketRequest` and maps a known parsing failure to HTTP `400`; the [Parser](../GLOSSARY.md#parser) itself is plain TypeScript. `Ticket.create()` separately asks whether it is a valid business ticket. Both the pipe and controller belong to HTTP [Presentation](../GLOSSARY.md#presentation-layer). |
 | `AuthenticatedGuard.ts` | A [Nest Guard](../GLOSSARY.md#nestjs-guard) decides whether the caller may invoke the selected operation. It checks a previously verified identity; it does not parse ticket fields. [Compare Guard and Pipe](3-nestjs-building-blocks.md#guard-and-pipe-answer-different-questions) before adding this optional access requirement. |
-| `createTicketRequest.ts` | Contains the incoming shape and its parsing function, not routing, workflow or entity behavior. We use camelCase for this function-oriented file; `CreateTicketRequest` is the PascalCase type inside it. A type annotation cannot check JSON. |
+| `parseCreateTicketRequest.ts` | Plain unknown-input parsing; it returns `CreateTicketRequestDto` from the neighboring `dto/` folder. It does not route requests or own ticket validity. A type annotation alone cannot check JSON. |
 | `TicketsModule.ts` | Nest registration/composition: it tells the container what to construct and expose. It is not an architectural layer, automatically a [bounded context](../GLOSSARY.md#bounded-context) or automatically a business capability. It can align with Tickets by design. |
 | `ticket.tokens.ts` | Nest needs a runtime key because TypeScript interfaces disappear. The exported Symbol identifies the repository binding in its [dependency injection container](../GLOSSARY.md#di-container). This is composition glue, not ticket policy. |
 | `index.ts` | An explicit source entry point. `application/tickets/index.ts` exposes supported operations/types; `composition/modules/index.ts` exposes Nest assembly. TypeScript exports select source names; [Nest module](../GLOSSARY.md#nestjs-module) `exports` selects providers visible to importing modules. The architectural [public API](../GLOSSARY.md#public-api) is the supported contract we deliberately choose and enforce. Neither export mechanism alone prevents deep imports. |

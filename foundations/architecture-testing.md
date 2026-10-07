@@ -95,13 +95,13 @@ If each feature exposes only `index.ts`, enforce that cross-feature imports targ
 Allowed:
 
 ```ts
-import { useAuth } from '@/presentation/features/auth'
+import { useAuth } from '@/presentation/auth'
 ```
 
 Forbidden:
 
 ```ts
-import { authSlice } from '@/presentation/features/auth/model/auth.slice'
+import { authSlice } from '@/presentation/auth/state/auth.slice'
 ```
 
 The feature itself may freely import its own internals.
@@ -117,7 +117,7 @@ flowchart TD
 
 Tests can forbid `react-redux`, `@reduxjs/toolkit`, [store](../GLOSSARY.md#store) modules and slices from UI surface folders.
 
-This is stricter than Redux's general recommendation, which permits React components to use typed Redux hooks directly. It is therefore a **project architecture choice**, not a universal Redux rule. Document that distinction.
+This is stricter than Redux's general recommendation, which permits [React components](../GLOSSARY.md#react-component) to use typed Redux hooks directly. It is therefore a **project architecture choice**, not a universal Redux rule. Document that distinction.
 
 ## 6. Test behavior and boundaries separately
 

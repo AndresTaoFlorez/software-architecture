@@ -5,14 +5,18 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { test } from 'node:test'
 import ts from 'typescript'
+import { rewriteExampleImports } from './example-imports.mjs'
 
 const guide = 'frontend/ports-and-adapters.md'
 const modules = [
   ['src/domain/tickets/Ticket.ts', 'ts'],
   ['src/application/tickets/ports/TicketGateway.ts', 'ts'],
   ['src/application/tickets/use-cases/createTicket.ts', 'ts'],
-  ['src/infrastructure/tickets/HttpTicketGateway.ts', 'ts'],
-  ['src/presentation/features/tickets/model/useTickets.ts', 'tsx'],
+  ['src/infrastructure/http/tickets/adapters/HttpTicketGateway.ts', 'ts'],
+  ['src/infrastructure/http/tickets/dto/TicketApiDto.ts', 'ts'],
+  ['src/infrastructure/http/tickets/parsers/parseTicketApiResponse.ts', 'ts'],
+  ['src/infrastructure/http/tickets/mappers/mapTicketApiDto.ts', 'ts'],
+  ['src/presentation/tickets/hooks/useTickets.ts', 'tsx'],
 ]
 
 function extractExample(document, filename, language) {
@@ -74,16 +78,17 @@ test('frontend ticket walkthrough typechecks and preserves the domain/DTO bounda
     const excerptOpen = content.lastIndexOf(opener, excerptAt)
     const excerptEnd = content.indexOf('\n```', excerptAt)
     assert.ok(excerptOpen >= 0 && excerptEnd > excerptAt, 'malformed status mapping snippet')
-    const statusFile = path.join(root, 'src/presentation/tickets/status-labels.ts')
+    const statusFile = path.join(root, 'src/presentation/tickets/formatters/formatTicketStatusLabel.ts')
     fs.mkdirSync(path.dirname(statusFile), { recursive: true })
     fs.writeFileSync(statusFile,
-      "import type { CreateTicket } from '../../application/tickets/use-cases/createTicket'\n" +
+      "import type { CreateTicket } from '@/application/tickets/use-cases/createTicket'\n" +
       content.slice(excerptOpen + opener.length, excerptEnd) + '\n')
 
     const compilerOptions = {
       target: ts.ScriptTarget.ES2022,
       module: ts.ModuleKind.ESNext,
       moduleResolution: ts.ModuleResolutionKind.Bundler,
+      paths: { '@/*': [path.join(root, 'src', '*')] },
       strict: true,
       noEmit: true,
       types: [],
@@ -114,9 +119,8 @@ test('frontend ticket walkthrough typechecks and preserves the domain/DTO bounda
       fs.writeFileSync(domainFile, originalDomain)
     }
 
-    // Emit the documented TypeScript to JS for behavior checks. Relative
-    // imports in the documentation are bundler-style, so append .js to the
-    // emitted imports rather than modifying or weakening the original source.
+    // TypeScript paths do not rewrite emitted imports. Adapt only the temporary
+    // execution copy after typechecking the original aliases and local imports.
     for (const [name, source] of samples) {
       const js = ts.transpileModule(source, {
         fileName: name,
@@ -124,15 +128,15 @@ test('frontend ticket walkthrough typechecks and preserves the domain/DTO bounda
           target: ts.ScriptTarget.ES2022,
           module: ts.ModuleKind.ESNext,
         },
-      }).outputText.replace(/(from\s+['"])(\.[^'"]+)(['"])/g,
-        (_full, before, imported, after) => before + imported + '.js' + after)
-      fs.writeFileSync(path.join(root, name.replace(/\.ts$/, '.js')), js)
+      }).outputText
+      fs.writeFileSync(path.join(root, name.replace(/\.ts$/, '.js')),
+        rewriteExampleImports(js, name.slice(4), path.join(root, 'src'), '.js'))
     }
 
     const load = name => import(pathToFileURL(path.join(root, name)).href)
     const domain = await load('src/domain/tickets/Ticket.js')
     const { makeCreateTicket } = await load('src/application/tickets/use-cases/createTicket.js')
-    const { HttpTicketGateway } = await load('src/infrastructure/tickets/HttpTicketGateway.js')
+    const { HttpTicketGateway } = await load('src/infrastructure/http/tickets/adapters/HttpTicketGateway.js')
 
     assert.deepEqual([...domain.TICKET_STATUSES], ['open', 'in_progress', 'resolved'])
     for (const valid of domain.TICKET_STATUSES) assert.equal(domain.isTicketStatus(valid), true)
@@ -228,12 +232,15 @@ test('frontend ticket walkthrough typechecks and preserves the domain/DTO bounda
     // Domain is the only owner of status *values*. The adapter declares
     // the wire schema and derives both its enum and DTO type from sources;
     // it may not hand-cast unknown payloads into an API shape.
-    const gatewaySource = samples.get('src/infrastructure/tickets/HttpTicketGateway.ts')
+    const gatewaySource = samples.get('src/infrastructure/http/tickets/adapters/HttpTicketGateway.ts')
+    const dtoSource = samples.get('src/infrastructure/http/tickets/dto/TicketApiDto.ts')
+    const parserSource = samples.get('src/infrastructure/http/tickets/parsers/parseTicketApiResponse.ts')
     assert.match(samples.get('src/domain/tickets/Ticket.ts'), /export const TICKET_STATUSES =/)
-    assert.match(gatewaySource, /status:\s*z\.enum\(TICKET_STATUSES\)/)
-    assert.match(gatewaySource, /type TicketDto = z\.infer<typeof TicketResponseSchema>/)
-    assert.match(gatewaySource, /TicketResponseSchema\.safeParse\(value\)/)
-    assert.doesNotMatch(gatewaySource,
+    assert.match(dtoSource, /status:\s*z\.enum\(TICKET_STATUSES\)/)
+    assert.match(dtoSource, /type TicketApiDto = z\.infer<typeof TicketApiSchema>/)
+    assert.match(parserSource, /TicketApiSchema\.safeParse\(value\)/)
+    assert.match(gatewaySource, /mapTicketApiDto\(parseTicketApiResponse\(payload\)\)/)
+    assert.doesNotMatch(gatewaySource + dtoSource + parserSource,
       /as Partial<Record|status\s*!==\s*['"]open['"]|\[['"]open['"],\s*['"]in_progress['"]/)
   } finally {
     assert.equal(path.dirname(root), os.tmpdir())

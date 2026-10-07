@@ -14,8 +14,7 @@
   https://kentcdodds.com/blog/colocation
 - **Evans, E.** (2003). *[Domain-Driven Design](../GLOSSARY.md#domain-driven-design-ddd): Tackling Complexity in the Heart of Software*.
   Addison-Wesley. ([Entities](../GLOSSARY.md#domain-entity); the domain model as the core.)
-- **Feature-Sliced Design.** *Architectural methodology for frontend projects.* (Feature-first slicing of
-  the UI.) https://feature-sliced.design/
+- **Feature-Sliced Design.** Alternative frontend architectural methodology with its own layers, slices and dependency rules. It is not the canonical five-layer structure used here. https://feature-sliced.design/docs/get-started/overview
 - **Fowler, M.** (2002). *Patterns of Enterprise [Application](../GLOSSARY.md#application-layer) Architecture*. Addison-Wesley.
   ([Repository](../GLOSSARY.md#repository); Service Layer.) https://martinfowler.com/eaaCatalog/repository.html
 - **Fowler, M.** (2007). *[Mocks](../GLOSSARY.md#mock) Aren't [Stubs](../GLOSSARY.md#stub)*. ([Stubs](../GLOSSARY.md#stub) vs. [mocks](../GLOSSARY.md#mock); classicist vs. mockist testing.)

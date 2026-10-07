@@ -22,48 +22,43 @@ flowchart TD
 
 Every file belongs to the same capability, but changing that capability requires jumping across the entire [Presentation](../GLOSSARY.md#presentation-layer) tree.
 
-Within `presentation/`, prefer a feature-owned UI module:
+Within `presentation/`, start with a capability-owned UI module:
 
 ```mermaid
 flowchart TD
-    N0["features/"]
-    N1["closures/"]
-    N2["ui/"]
-    N3["model/"]
-    N4["lib/"]
-    N5["index.ts"]
-    N0 --> N1
-    N1 --> N2
-    N1 --> N3
-    N1 --> N4
-    N1 --> N5
+    C["presentation/closures/"] --> P["pages/"]
+    C --> UI["components/"]
+    C --> H["hooks/"]
+    C --> S["state/"]
+    C --> F["formatters/ · if needed"]
+    C --> API["index.ts · supported API"]
 ```
 
-The exact segment names are conventions. The [invariant](../GLOSSARY.md#invariant) is ownership.
+Arrows mean directory containment. These stable responsibility names are our convention; ownership and supported dependencies are the boundary. They start together without forcing empty files. See the [full Scheduling map](../frontend/presentation-architecture.md#2-organize-by-ownership-not-only-by-technical-type).
 
-Redux's official style guide independently recommends [feature folders](../GLOSSARY.md#feature-folder) because colocating feature logic makes it easier to maintain. Feature-Sliced Design formalizes the same high-cohesion idea with slices and [public APIs](../GLOSSARY.md#public-api); this repository borrows that principle without requiring the full FSD layer taxonomy.
+Redux's [style guide](https://redux.js.org/style-guide/) recommends feature grouping. [Feature-Sliced Design](https://feature-sliced.design/docs/get-started/overview) is a separate architectural methodology, presented as an alternative in the frontend landing page rather than a partial taxonomy used here.
 
 ## 2. Public API per non-trivial module
 
 External consumers should import through a module entry point:
 
 ```ts
-// features/closures/index.ts
-export { ClosuresPanel } from './ui/ClosuresPanel'
-export { useClosures } from './model/useClosures'
-export type { ClosureViewModel } from './model/closure.types'
+// presentation/closures/index.ts
+export { ClosuresPanel } from './components/ClosuresPanel/ClosuresPanel'
+export { useClosures } from './hooks/useClosures'
+export type { ClosureViewModel } from './hooks/useClosures'
 ```
 
 Consumer:
 
 ```ts
-import { ClosuresPanel, useClosures } from '@/presentation/features/closures'
+import { ClosuresPanel, useClosures } from '@/presentation/closures'
 ```
 
 Avoid deep imports:
 
 ```ts
-import { executeClosureThunk } from '@/presentation/features/closures/model/closures.thunks'
+import { executeClosureThunk } from '@/presentation/closures/state/closures.thunks'
 ```
 
 A [public API](../GLOSSARY.md#public-api) makes internal refactors local.
@@ -86,8 +81,8 @@ This erases the difference between public and private implementation.
 Prefer explicit exports:
 
 ```ts
-export { useClosures } from './model/useClosures'
-export type { ClosureViewModel } from './model/closure.types'
+export { useClosures } from './hooks/useClosures'
+export type { ClosureViewModel } from './hooks/useClosures'
 ```
 
 A single application-wide "contract.ts" that re-exports unrelated domain, application and presentation types can hide ownership rather than improve it.
@@ -100,10 +95,9 @@ Move code to `shared` only when it is genuinely independent of the originating f
 
 Good:
 
-- `shared/ui/Button`
-- `shared/ui/DataTable`
-- `shared/lib/date`
-- `shared/lib/format-bytes`
+- `presentation/shared/components/Button/Button.tsx`
+- `presentation/shared/components/DataTable/DataTable.tsx`
+- `presentation/shared/formatters/formatBytes.ts`
 
 Suspicious:
 
@@ -120,7 +114,7 @@ A shared library should be nameable by purpose. If its purpose is "things used i
 | --- | --- | --- |
 | A ticket gains `reopened` | Tickets domain vocabulary and affected ticket policy; UI translation where explicitly needed | Billing, generic visual Badge, unrelated stores |
 | The billing API renames `invoice_state` | Billing's transport [mapper](../GLOSSARY.md#mapper) / API contract | Tickets domain model, shared UI primitives |
-| Notifications reacts to `TicketResolved` | Tickets publishes an intentionally supported fact; Notifications interprets it through a documented contract | Notifications must not deep-import `features/tickets/model/internal*.ts` |
+| Notifications reacts to `TicketResolved` | Tickets publishes an intentionally supported fact; Notifications interprets it through a documented contract | Notifications must not deep-import `presentation/tickets/state/internal*.ts` |
 
 One large codebase needs **local ownership**, not one all-purpose model package. Reuse a stable shared policy only when the semantics, lifecycle and owner are truly the same.
 
@@ -130,9 +124,9 @@ Do not maintain both categories without a written distinction.
 
 Recommended default:
 
-- `shared/ui` — framework-level or application-wide UI primitives;
-- `shared/lib` — focused reusable libraries;
-- feature-local `lib` — helpers that still belong to one capability.
+- `presentation/shared/components/` — independently reusable visual primitives;
+- `presentation/shared/formatters/` — display formatting with several unrelated consumers;
+- `presentation/closures/formatters/` — display transformations owned only by Closures.
 
 Avoid a generic `common` folder. It tends to become a second shared dump.
 
@@ -144,11 +138,11 @@ Prefer:
 
 ```mermaid
 flowchart TD
-    F["features/closures/"] --> FT["ui/QueryFilters/QueryFilters.types.ts — component contract"]
-    F --> FS["model/closure-state.types.ts — feature presentation state"]
+    F["presentation/closures/"] --> FT["components/QueryFilters/QueryFilters.types.ts"]
+    F --> FS["state/closure-state.types.ts · view state"]
     F --> FI["index.ts — public API"]
-    A["application/closures/"] --> AT["execute-closure.types.ts — use-case contract"]
-    I["infrastructure/closures/"] --> IT["closure-api.dto.ts — transport shape"]
+    A["application/closures/"] --> AT["contracts/ExecuteClosureResult.ts · operation contract"]
+    I["infrastructure/http/closures/"] --> IT["dto/ClosureApiDto.ts · external shape"]
 ```
 
 Types erased at runtime still create source-level coupling.
@@ -170,9 +164,9 @@ Do not solve coupling by adding more [barrels](../GLOSSARY.md#barrel-file).
 
 Prefer:
 
-- `closure-validation.ts`
-- `judicial-date-range.ts`
-- `catalog-normalization.ts`
+- `presentation/closures/formatters/formatClosureMessage.ts` for visible text;
+- `domain/closures/ClosurePeriod.ts` for the business date-range value;
+- `infrastructure/http/catalogs/mappers/mapCatalogApiDto.ts` for API field translation.
 
 over:
 

@@ -43,9 +43,9 @@ test('a shipped order cannot be cancelled', () => {
 ```
 
 ```ts
-// application/orders/cancelOrder.test.ts
+// application/orders/use-cases/cancelOrder.test.ts
 import { expect, test } from 'vitest'
-import { Order } from '../../domain/orders/Order'
+import { Order } from '@/domain/orders/Order'
 import { makeCancelOrder, PersistenceFailure, type OrderRepository } from './cancelOrder'
 test('persists cancellation using the loaded version', async () => {
   let saved: { status: string; version: string } | undefined

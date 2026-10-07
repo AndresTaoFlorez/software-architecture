@@ -137,7 +137,6 @@ flowchart TD
     AORD --> USE["use-cases/"]
     AORD --> PORTS["ports/"]
     INFRA --> IORD["orders/"]
-    PRES --> FORD["features/orders/"]
     COMP --> BOOT["bootstrap.ts"]
 ```
 
@@ -149,7 +148,7 @@ flowchart TD
 | `presentation/` | UI interaction/view state and incoming HTTP/CLI delivery | isolates caller-specific change | database clients and outbound integration implementations |
 | `composition/` | object graph/bootstrap | selects implementations without [service location](../GLOSSARY.md#service-locator) | domain/application branching |
 
-The folder names and layer-first hierarchy are documentation conventions; the inward dependency direction is the architecture. Capabilities and sub-capabilities grow inside their layer, as [Scheduling illustrates](../foundations/code-placement.md#12-grow-capabilities-inside-each-layer). The browser example here and the [backend delivery paths](../backend/README.md#place-your-first-feature) use that same convention; Palermo did not prescribe this filesystem layout.
+The folder names and layer-first hierarchy are documentation conventions; the inward dependency direction is the architecture. Capabilities and sub-capabilities grow inside their layer, as [Scheduling illustrates](../foundations/code-placement.md#12-grow-capabilities-inside-each-layer). The [frontend structure](../frontend/README.md) and the [backend delivery paths](../backend/README.md#place-your-first-feature) use that same convention; Palermo did not prescribe this filesystem layout.
 
 
 <a id="7-type-placement-in-onion-architecture"></a>
@@ -204,7 +203,7 @@ export interface OrderRepository {
 [Infrastructure](../GLOSSARY.md#infrastructure) implements that capability:
 
 ```ts
-// infrastructure/orders/HttpOrderRepository.ts
+// infrastructure/http/orders/adapters/HttpOrderRepository.ts
 export class HttpOrderRepository implements OrderRepository {
   // HTTP-specific details
 }
@@ -236,9 +235,9 @@ Follow **[Naming and File Placement Conventions](../conventions/naming-and-file-
 | [use case](../GLOSSARY.md#use-case) | `cancelOrder.ts` |
 | [port](../GLOSSARY.md#port) | `OrderRepository.ts`, `PaymentGateway.ts` |
 | concrete [adapter](../GLOSSARY.md#adapter) | `HttpOrderRepository.ts` |
-| [DTO](../GLOSSARY.md#data-transfer-object-dto) | `orderApi.dto.ts` |
-| [mapper](../GLOSSARY.md#mapper) | `orderApi.mapper.ts` |
-| React component | `CancelOrderButton.tsx` |
+| [DTO](../GLOSSARY.md#data-transfer-object-dto) | `OrderApiDto.ts` |
+| [mapper](../GLOSSARY.md#mapper) | `mapOrderApiDto.ts` |
+| [React component](../GLOSSARY.md#react-component) | `CancelOrderButton.tsx` |
 | feature [facade](../GLOSSARY.md#facade-pattern) | `useOrders.ts` |
 
 Avoid generic names such as `GenericService`, `CommonRepository`, `Manager` and `helpers.ts` when a capability owner can be named.
@@ -252,10 +251,10 @@ Requirement:
 | Artifact | File | Owner | Why here | Why not elsewhere |
 | --- | --- | --- | --- | --- |
 | [invariant](../GLOSSARY.md#invariant) | `domain/orders/Order.ts` | [Domain](../GLOSSARY.md#domain) | business truth | must not depend on UI/HTTP |
-| required persistence capability | `application/orders/cancelOrder.ts` | [Application](../GLOSSARY.md#application-layer) | [use case](../GLOSSARY.md#use-case) defines what it needs | [Infrastructure](../GLOSSARY.md#infrastructure) should not define inward policy |
-| operation | `application/orders/cancelOrder.ts` | [Application](../GLOSSARY.md#application-layer) | orchestrates load → domain behavior → save | [Domain](../GLOSSARY.md#domain) should not do I/O |
-| HTTP [adapter](../GLOSSARY.md#adapter) | `infrastructure/orders/HttpOrderRepository.ts` | [Infrastructure](../GLOSSARY.md#infrastructure) | speaks transport | [Application](../GLOSSARY.md#application-layer) should not know HTTP |
-| button | `presentation/orders/CancelOrderButton.ts` | [Presentation](../GLOSSARY.md#presentation-layer) | renders + captures gesture | [invariant](../GLOSSARY.md#invariant) must not live in JSX |
+| required persistence capability | `application/orders/use-cases/cancelOrder.ts` | [Application](../GLOSSARY.md#application-layer) | [use case](../GLOSSARY.md#use-case) defines what it needs | [Infrastructure](../GLOSSARY.md#infrastructure) should not define inward policy |
+| operation | `application/orders/use-cases/cancelOrder.ts` | [Application](../GLOSSARY.md#application-layer) | orchestrates load → domain behavior → save | [Domain](../GLOSSARY.md#domain) should not do I/O |
+| HTTP [adapter](../GLOSSARY.md#adapter) | `infrastructure/http/orders/adapters/HttpOrderRepository.ts` | [Infrastructure](../GLOSSARY.md#infrastructure) | speaks transport | [Application](../GLOSSARY.md#application-layer) should not know HTTP |
+| button | `presentation/orders/components/CancelOrderButton/CancelOrderButton.ts` | [Presentation](../GLOSSARY.md#presentation-layer) | renders + captures gesture | [invariant](../GLOSSARY.md#invariant) must not live in JSX |
 | assembly | `composition/bootstrap.ts` | Composition | wires concrete objects | inner modules should not resolve dependencies |
 
 ```mermaid
@@ -283,7 +282,7 @@ The order-cancellation example below runs in a browser client; the server remain
 
 **Shared example ownership.** The [Domain](../GLOSSARY.md#domain), [Application](../GLOSSARY.md#application-layer) and [Infrastructure](../GLOSSARY.md#infrastructure) blocks in this complete example are synchronized from [the canonical order-cancellation walkthrough](../clean-architecture/4-building-a-feature.md). Edit the canonical version and run `npm run sync:examples`; `npm run check:examples` rejects drift. This page owns its presentation-pattern-specific interaction and composition example.
 
-The business rule belongs in `domain/orders/Order.ts`; the operation, result, persistence failure and [port](../GLOSSARY.md#port) belong in `application/orders/cancelOrder.ts`. [DTO](../GLOSSARY.md#data-transfer-object-dto) validation/mapping and the concrete repository belong in `infrastructure/orders/HttpOrderRepository.ts`. [Presentation](../GLOSSARY.md#presentation-layer) owns gestures and feedback; `composition/bootstrap.ts` selects implementations. These are documentation conventions. A small file may contain cohesive contracts and functions; split them when ownership or change pressure requires it.
+The business rule belongs in `domain/orders/Order.ts`; the operation, result, persistence failure and [port](../GLOSSARY.md#port) belong in `application/orders/use-cases/cancelOrder.ts`. [DTO](../GLOSSARY.md#data-transfer-object-dto) validation/mapping and the concrete repository belong in `infrastructure/http/orders/adapters/HttpOrderRepository.ts`. [Presentation](../GLOSSARY.md#presentation-layer) owns gestures and feedback; `composition/bootstrap.ts` selects implementations. These are documentation conventions. A small file may contain cohesive contracts and functions; split them when ownership or change pressure requires it.
 
 ```ts
 // domain/orders/Order.ts
@@ -308,8 +307,8 @@ export class Order {
 ```
 
 ```ts
-// application/orders/cancelOrder.ts
-import { Order, ShippedOrderCannotBeCancelled } from '../../domain/orders/Order'
+// application/orders/use-cases/cancelOrder.ts
+import { Order, ShippedOrderCannotBeCancelled } from '@/domain/orders/Order'
 
 export interface OrderRepository {
   findById(id: string): Promise<{ order: Order; version: string } | null>
@@ -341,9 +340,9 @@ export function makeCancelOrder(orders: OrderRepository): CancelOrder {
 ```
 
 ```ts
-// infrastructure/orders/HttpOrderRepository.ts
-import { Order, isOrderStatus, type OrderStatus } from '../../domain/orders/Order'
-import { PersistenceFailure, type OrderRepository } from '../../application/orders/cancelOrder'
+// infrastructure/http/orders/adapters/HttpOrderRepository.ts
+import { Order, isOrderStatus, type OrderStatus } from '@/domain/orders/Order'
+import { PersistenceFailure, type OrderRepository } from '@/application/orders/use-cases/cancelOrder'
 
 // Adapter-owned transport contract. A concrete fetch driver implements it.
 export interface OrderTransport {
@@ -380,8 +379,8 @@ export class HttpOrderRepository implements OrderRepository {
 The external response is treated as `unknown` until its fields are checked. The [adapter](../GLOSSARY.md#adapter) owns the transport shape (`id` and response parsing), but reuses `isOrderStatus` from [Domain](../GLOSSARY.md#domain) for valid business values. `OrderStatus` and its runtime checker are derived from the same `ORDER_STATUSES` definition; this HTTP implementation must not maintain another status list.
 
 ```ts
-// presentation/orders/CancelOrderButton.ts
-import type { CancelOrder } from '../../application/orders/cancelOrder'
+// presentation/orders/components/CancelOrderButton/CancelOrderButton.ts
+import type { CancelOrder } from '@/application/orders/use-cases/cancelOrder'
 
 export function mountCancelOrderButton(root: HTMLElement, id: string, cancelOrder: CancelOrder) {
   const button = document.createElement('button')
@@ -414,9 +413,9 @@ export function mountCancelOrderButton(root: HTMLElement, id: string, cancelOrde
 
 ```ts
 // composition/bootstrap.ts
-import { makeCancelOrder, PersistenceFailure } from '../application/orders/cancelOrder'
-import { HttpOrderRepository, type OrderTransport } from '../infrastructure/orders/HttpOrderRepository'
-import { mountCancelOrderButton } from '../presentation/orders/CancelOrderButton'
+import { makeCancelOrder, PersistenceFailure } from '@/application/orders/use-cases/cancelOrder'
+import { HttpOrderRepository, type OrderTransport } from '@/infrastructure/http/orders/adapters/HttpOrderRepository'
+import { mountCancelOrderButton } from '@/presentation/orders/components/CancelOrderButton/CancelOrderButton'
 
 async function request(path: string, init?: RequestInit): Promise<Response> {
   try { return await fetch(path, init) }

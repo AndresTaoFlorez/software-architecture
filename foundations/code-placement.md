@@ -154,7 +154,7 @@ The concrete implementation goes outward.
 Put technical I/O implementations in `infrastructure/`.
 
 ```ts
-// src/infrastructure/orders/HttpOrderRepository.ts
+// src/infrastructure/http/orders/adapters/HttpOrderRepository.ts
 export class HttpOrderRepository implements OrderRepository {
   constructor(private readonly http: HttpClient) {}
 
@@ -172,36 +172,47 @@ Typical [Infrastructure](../GLOSSARY.md#infrastructure) files:
 - `StripePaymentGateway.ts`
 - API [DTOs](../GLOSSARY.md#data-transfer-object-dto) and [mappers](../GLOSSARY.md#mapper).
 
+<a id="6-presentation-placement-in-a-feature-oriented-frontend"></a>
+
 ## 6. Presentation
 
-Put code in `presentation/` when it exists because of the way callers interact with the application: a UI, incoming HTTP or a CLI. In the backend, `presentation/http/tickets/` owns the request parser, [Nest pipe](../GLOSSARY.md#nestjs-pipe) and controller; `presentation/cli/tickets/` owns arguments, messages and exit codes. An outbound HTTP client that calls another system instead belongs to [Infrastructure](../GLOSSARY.md#infrastructure). The same protocol can serve different responsibilities.
+An analyst can create a ticket through a browser screen or through a server endpoint. Both accept a caller's input and present results, but their technical responsibilities differ:
 
-The following structure is the frontend-specific part of [Presentation](../GLOSSARY.md#presentation-layer):
-
-```mermaid
-flowchart TD
-    P["presentation/"]
-    P --> APP["app/ — providers, routes, store bootstrap"]
-    P --> PAGES["pages/ — route-level composition"]
-    P --> FEATURES["features/ — capability-owned UI"]
-    P --> SHARED["shared/ — stable cross-feature UI/lib"]
-
-    FEATURES --> CLOSURES["closures/"]
-    CLOSURES --> UI["ui/"]
-    CLOSURES --> MODEL["model/"]
-    CLOSURES --> LIB["lib/"]
-```
-
-Examples:
-
-| Code | Location | Why |
+| Layer | Frontend | Backend |
 | --- | --- | --- |
-| `ClosuresPage.tsx` | `presentation/pages/closures/` | route-level composition |
-| `QueryFilters.tsx` | `features/closures/ui/` | feature UI |
-| `useClosures.ts` | `features/closures/model/` | public [Presentation](../GLOSSARY.md#presentation-layer) [facade](../GLOSSARY.md#facade-pattern) |
-| `closures.slice.ts` | `features/closures/model/` | shared client feature state |
-| `closure-validation.ts` | `features/closures/lib/` | UI input feedback only; authoritative business validity belongs inward |
-| `Button.tsx` | `shared/ui/` | cross-feature primitive |
+| [Domain](../GLOSSARY.md#domain) | Business rules/values used by the client; server remains authoritative | Authoritative business rules/values |
+| [Application](../GLOSSARY.md#application-layer) | [Use cases](../GLOSSARY.md#use-case) and required [ports](../GLOSSARY.md#port) | [Use cases](../GLOSSARY.md#use-case) and required [ports](../GLOSSARY.md#port) |
+| [Infrastructure](../GLOSSARY.md#infrastructure) | Outgoing HTTP, browser storage, external SDKs | Persistence, external APIs, messaging |
+| [Presentation](../GLOSSARY.md#presentation-layer) | Pages, components, hooks, render/interaction state | Incoming HTTP controllers, guards, pipes, parsers, [DTOs](../GLOSSARY.md#data-transfer-object-dto) and CLI handlers |
+| Composition | Providers and dependency/bootstrap assembly | [Nest modules](../GLOSSARY.md#nestjs-module), tokens and startup |
+
+An outbound HTTP client calls another system, so it belongs to [Infrastructure](../GLOSSARY.md#infrastructure) in both environments. An incoming HTTP request enters backend [Presentation](../GLOSSARY.md#presentation-layer). Neither “HTTP” nor “[DTO](../GLOSSARY.md#data-transfer-object-dto)” identifies a layer by itself.
+
+Keep the five top-level layers. For frontend [Presentation](../GLOSSARY.md#presentation-layer), begin with `presentation/scheduling/{pages,components,hooks,state}/`; Tickets and Patients use the same sibling capability convention. Backend delivery begins with `presentation/http/tickets/{controllers,guards,pipes,parsers,dto,mappers}/` and `presentation/cli/tickets/handlers/`. These describe available places, not files to generate without a responsibility.
+
+### Exact owned paths
+
+Prefix these paths with `src/`. The [complete frontend Scheduling map](../frontend/presentation-architecture.md#2-organize-by-ownership-not-only-by-technical-type) and [backend Ticket map](../backend/4-create-ticket-with-nestjs.md#physical-structure) explain the surrounding capability.
+
+| Artifact | Exact path | Why |
+| --- | --- | --- |
+| Nest [Controller](../GLOSSARY.md#controller) | `presentation/http/tickets/controllers/TicketsController.ts` | Groups incoming [route handlers](../GLOSSARY.md#route-handler) |
+| [Nest Guard](../GLOSSARY.md#nestjs-guard) | `presentation/http/tickets/guards/AuthenticatedGuard.ts` | Decides access using an already verified principal |
+| [Nest Pipe](../GLOSSARY.md#nestjs-pipe) | `presentation/http/tickets/pipes/CreateTicketPipe.ts` | Integrates the [Parser](../GLOSSARY.md#parser) with a Nest handler argument and maps failure |
+| Plain request [Parser](../GLOSSARY.md#parser) | `presentation/http/tickets/parsers/parseCreateTicketRequest.ts` | Checks unknown transport shape without Nest |
+| HTTP request [DTO](../GLOSSARY.md#data-transfer-object-dto) | `presentation/http/tickets/dto/CreateTicketRequestDto.ts` | Incoming HTTP representation |
+| HTTP response [DTO](../GLOSSARY.md#data-transfer-object-dto) | `presentation/http/tickets/dto/TicketResponseDto.ts` | Outgoing HTTP representation |
+| HTTP response [mapper](../GLOSSARY.md#mapper) | `presentation/http/tickets/mappers/mapCreateTicketResponse.ts` | Converts successful [Application](../GLOSSARY.md#application-layer) data into HTTP fields |
+| Prisma [adapter](../GLOSSARY.md#adapter) | `infrastructure/persistence/tickets/adapters/PrismaTicketRepository.ts` | Implements the persistence capability with Prisma |
+| Persistence [mapper](../GLOSSARY.md#mapper), when retrieval requires one | `infrastructure/persistence/tickets/mappers/mapTicketPersistenceRecord.ts` | Converts stored representation without resetting existing business state |
+| Frontend Page | `presentation/scheduling/pages/AgendaPage.tsx` | Composes the route/screen |
+| Frontend Component | `presentation/scheduling/components/AppointmentCard/AppointmentCard.tsx` | Focused appointment display/interaction |
+| Frontend Hook | `presentation/scheduling/hooks/useAgenda.ts` | Reuses React interaction/composition |
+| Frontend State | `presentation/scheduling/state/agenda.state.ts` | Render/interaction data |
+| Frontend API [Parser](../GLOSSARY.md#parser) | `infrastructure/http/scheduling/parsers/parseAgendaApiResponse.ts` | Checks unknown data returned by another system |
+| Frontend API [DTO](../GLOSSARY.md#data-transfer-object-dto) | `infrastructure/http/scheduling/dto/AgendaApiDto.ts` | Owns that external wire shape |
+
+[Presentation](../GLOSSARY.md#presentation-layer) must reuse inward-owned business checks rather than duplicate them in a form or request [Parser](../GLOSSARY.md#parser). The [Parser](../GLOSSARY.md#parser) checks transport shape; [Domain](../GLOSSARY.md#domain) checks business validity. The [backend mechanism guide](../backend/3-nestjs-building-blocks.md#guard-and-pipe-answer-different-questions) explains the separate access and framework decisions.
 
 ## 7. Composition
 
@@ -220,36 +231,61 @@ Do not import this container from a [use case](../GLOSSARY.md#use-case), hook, c
 
 ## 8. Where does a type belong?
 
-```mermaid
-flowchart TD
-    T{"What does the type describe?"}
-    T -->|"business concept"| D["domain/"]
-    T -->|"use-case input/output or port"| A["application/"]
-    T -->|"external API / storage / SDK representation"| I["infrastructure/"]
-    T -->|"incoming HTTP / CLI input or form/view state"| P["presentation/"]
-```
+Suppose HTTP calls the field `ticket_id` while [Application](../GLOSSARY.md#application-layer) uses `id`. The HTTP type describes the protocol; the [Application](../GLOSSARY.md#application-layer) result describes the operation. Even structurally identical objects can have different owners. A [DTO](../GLOSSARY.md#data-transfer-object-dto) is a representation crossing a particular data boundary, not every plain object.
 
-Examples:
-
-| Type | Owner |
+| Representation | Exact file and owner |
 | --- | --- |
-| `Money` | [Domain](../GLOSSARY.md#domain) |
-| `ExecuteClosureCommand` | [Application](../GLOSSARY.md#application-layer) |
-| `ApiClosureDto` | [Infrastructure](../GLOSSARY.md#infrastructure) |
-| `ClosureFormState` | [Presentation](../GLOSSARY.md#presentation-layer) |
-| `UploadQueueItem` | [Presentation](../GLOSSARY.md#presentation-layer) |
+| Backend incoming HTTP request | `presentation/http/tickets/dto/CreateTicketRequestDto.ts` |
+| Backend outgoing HTTP response | `presentation/http/tickets/dto/TicketResponseDto.ts` |
+| Frontend backend-API response | `infrastructure/http/tickets/dto/TicketApiDto.ts` |
+| External payment provider | `infrastructure/integrations/payments/dto/StripePaymentDto.ts` |
+| Custom database record, only when needed | `infrastructure/persistence/tickets/dto/TicketPersistenceRecord.ts` |
+| [Application](../GLOSSARY.md#application-layer) input, **not an HTTP [DTO](../GLOSSARY.md#data-transfer-object-dto)** | `application/tickets/contracts/CreateTicketCommand.ts` |
+| [Application](../GLOSSARY.md#application-layer) output, **not an HTTP response [DTO](../GLOSSARY.md#data-transfer-object-dto)** | `application/tickets/contracts/CreateTicketResult.ts` |
+| Business value | `domain/billing/Money.ts` |
+| Component-only props | `presentation/scheduling/components/AppointmentCard/AppointmentCard.types.ts` |
+
+A generated Prisma record type can make a custom `TicketPersistenceRecord` unnecessary. [Domain](../GLOSSARY.md#domain) values and [Application](../GLOSSARY.md#application-layer) contracts do not gain an external owner because several callers use them.
+
+### Parsing and mapping follow the boundary
+
+A [Parser](../GLOSSARY.md#parser) accepts unknown input and either returns an accepted representation or reports failure. A [mapper](../GLOSSARY.md#mapper) translates a representation whose validity has already been established. Neither name implies one architectural layer.
+
+| What is parsed? | Exact file | Why |
+| --- | --- | --- |
+| Incoming backend `POST /tickets` body | `presentation/http/tickets/parsers/parseCreateTicketRequest.ts` | The calling transport is [Presentation](../GLOSSARY.md#presentation-layer)'s boundary |
+| Backend `GET /agenda` response received by the frontend | `infrastructure/http/scheduling/parsers/parseAgendaApiResponse.ts` | The client is consuming an external integration |
+| Stripe provider event, after signature verification | `infrastructure/integrations/payments/parsers/parseStripeEvent.ts` | It interprets provider-specific data; signature verification must use the provider's supported mechanism |
+| A business Money representation | `domain/billing/Money.ts`, or `domain/billing/parsers/parseMoney.ts` if a separate parser is useful | [Domain](../GLOSSARY.md#domain) owns the value's validity, not the transport |
+
+For a webhook, the HTTP [Controller](../GLOSSARY.md#controller) owns request delivery/access and delegates provider interpretation to the integration. A shape [Parser](../GLOSSARY.md#parser) alone does not authenticate a webhook.
+
+| Mapping | Exact file |
+| --- | --- |
+| Frontend API [DTO](../GLOSSARY.md#data-transfer-object-dto) to internal agenda representation | `infrastructure/http/scheduling/mappers/mapAgendaApiDto.ts` |
+| Stored record to [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer) representation, when needed | `infrastructure/persistence/tickets/mappers/mapTicketPersistenceRecord.ts` |
+| Successful [Application](../GLOSSARY.md#application-layer) ticket data to HTTP response [DTO](../GLOSSARY.md#data-transfer-object-dto) | `presentation/http/tickets/mappers/mapCreateTicketResponse.ts` |
+| [Application](../GLOSSARY.md#application-layer) data to a display row | `presentation/scheduling/formatters/formatAppointmentRow.ts`; use a specific [Presentation](../GLOSSARY.md#presentation-layer) [mapper](../GLOSSARY.md#mapper) instead when structural mapping deserves its own responsibility |
+
+Do not introduce a global `mappers/` folder. A persistence [mapper](../GLOSSARY.md#mapper) restores stored identity/status through the domain's supported restoration mechanism. It must not call a creation factory that resets a resolved ticket to `open`. The current creation-only example needs no retrieval [mapper](../GLOSSARY.md#mapper).
 
 ## 9. Where does a helper function belong?
 
-Do not default to `utils/`.
+A function used twice still has a meaning. Name/place it for the responsibility that owns that meaning, rather than for the fact that it is reusable.
 
-Ask what owns the meaning.
+| Meaning | Exact file |
+| --- | --- |
+| Scheduling policy: working hours, overlaps, breaks, closure dates | `domain/scheduling/availability/calculateAvailableSlots.ts` |
+| Agenda-loading orchestration | `application/scheduling/use-cases/GetAgenda.ts` |
+| Backend API translation | `infrastructure/http/scheduling/mappers/mapAgendaApiDto.ts` |
+| Appointment time displayed in the selected locale | `presentation/scheduling/formatters/formatAppointmentTime.ts` |
+| Ticket status displayed as a label | `presentation/tickets/formatters/formatTicketStatusLabel.ts` |
+| Visible HTTP error response formatting, if reused | `presentation/http/tickets/formatters/formatTicketErrorResponse.ts` |
+| Byte-size display shared by unrelated screens | `presentation/shared/formatters/formatBytes.ts`, only after shared ownership is established |
 
-- formats a closure-specific message → `features/closures/lib/`;
-- maps an API [DTO](../GLOSSARY.md#data-transfer-object-dto) → [Infrastructure](../GLOSSARY.md#infrastructure) [mapper](../GLOSSARY.md#mapper);
-- validates a business [invariant](../GLOSSARY.md#invariant) → [Domain](../GLOSSARY.md#domain);
-- coordinates a [use case](../GLOSSARY.md#use-case) → [Application](../GLOSSARY.md#application-layer);
-- generic `formatBytes` used across unrelated features → `presentation/shared/lib/` or another explicit shared library.
+Avoid `src/utils/`, `src/helpers/`, `src/common/` and `src/lib/`. A formatter producing a payment provider's protocol belongs to that [Infrastructure](../GLOSSARY.md#infrastructure) integration, not to display formatting.
+
+Placement follows **meaning and reason to change, not size**. A complex availability function can contain hundreds of lines of actual scheduling policy and remain [Domain](../GLOSSARY.md#domain) code; its size may justify splitting cohesive functions within [Domain](../GLOSSARY.md#domain), not moving them to “utils”. A five-line persistence [mapper](../GLOSSARY.md#mapper) remains [Infrastructure](../GLOSSARY.md#infrastructure) code. Neither complexity nor brevity establishes a generic shared owner.
 
 <a id="10-a-complete-placement-example"></a>
 
@@ -257,16 +293,16 @@ Ask what owns the meaning.
 
 Requirement:
 
-> The user submits a cancellation from a React page. The application must reject shipped orders and persist a successful cancellation through HTTP.
+> The user submits a cancellation from a [React page](../GLOSSARY.md#react-page). The application must reject shipped orders and persist a successful cancellation through HTTP.
 
 | Artifact | File | Reason |
 | --- | --- | --- |
 | [invariant](../GLOSSARY.md#invariant) | `domain/orders/Order.ts` | business truth |
 | [repository](../GLOSSARY.md#repository) capability | `application/orders/ports/OrderRepository.ts` | required by application policy |
 | [use case](../GLOSSARY.md#use-case) | `application/orders/use-cases/cancelOrder.ts` | orchestrates operation |
-| HTTP [adapter](../GLOSSARY.md#adapter) | `infrastructure/orders/HttpOrderRepository.ts` | technical detail |
-| feature [facade](../GLOSSARY.md#facade-pattern) | `presentation/features/orders/model/useOrders.ts` | view-facing API |
-| button | `presentation/features/orders/ui/CancelOrderButton.tsx` | rendering + interaction |
+| HTTP [adapter](../GLOSSARY.md#adapter) | `infrastructure/http/orders/adapters/HttpOrderRepository.ts` | technical detail |
+| feature [facade](../GLOSSARY.md#facade-pattern) | `presentation/orders/hooks/useOrders.ts` | view-facing API |
+| button | `presentation/orders/components/CancelOrderButton/CancelOrderButton.tsx` | rendering + interaction |
 | wiring | `composition/bootstrap.ts` | selects concrete [adapter](../GLOSSARY.md#adapter) |
 
 The following arrows describe source references and construction, not a runtime [port](../GLOSSARY.md#port) object:
@@ -293,7 +329,7 @@ The folder answers **who owns it**. The filename answers **what role it plays**.
 
 Suppose Tickets gains a neighboring Scheduling capability for appointments, availability and calendars. A flat `application/` with hundreds of unrelated files would make ownership hard to find. Keep architectural responsibility as the first directory and group business capability inside it: `application/tickets/`, `application/scheduling/`, `application/patients/` and `application/billing/`. [Domain](../GLOSSARY.md#domain) and the outer layers use their corresponding owners; [Infrastructure](../GLOSSARY.md#infrastructure) can group persistence/integrations, and [Presentation](../GLOSSARY.md#presentation-layer) can group HTTP/CLI delivery before the capability.
 
-When Scheduling becomes large, subdivide it **within its layer**. Arrows below mean containment:
+Start with stable responsibility folders inside each capability: [Application](../GLOSSARY.md#application-layer) uses `use-cases/`, `ports/` and `contracts/`; frontend [Presentation](../GLOSSARY.md#presentation-layer) uses `pages/`, `components/`, `hooks/` and `state/`. If real separate business responsibilities emerge, subdivide them **within their layer**. Arrows below mean containment; this is a possible later subdivision, not a full stack per entity:
 
 ```mermaid
 flowchart TD

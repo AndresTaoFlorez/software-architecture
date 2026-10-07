@@ -201,7 +201,7 @@ This repository often uses:
 
 The mapping is not one-to-one.
 
-The [combined outer-module explanation](../foundations/dependency-boundaries.md#combined-outer-modules) shows when a React component or database [adapter](../GLOSSARY.md#adapter) can contain translation and framework glue, and when separating them pays for itself.
+The [combined outer-module explanation](../foundations/dependency-boundaries.md#combined-outer-modules) shows when a [React component](../GLOSSARY.md#react-component) or database [adapter](../GLOSSARY.md#adapter) can contain translation and framework glue, and when separating them pays for itself.
 
 Therefore, do not insist that every project folder corresponds to exactly one canonical circle. Composition is outer executable glue and follows the same inward rule; it is no exemption.
 

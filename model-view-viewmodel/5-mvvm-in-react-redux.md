@@ -16,7 +16,7 @@ A possible mapping:
 
 | [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) role | React/Redux owner |
 | --- | --- |
-| [View](../GLOSSARY.md#view) | React component rendering + local rendering concerns |
+| [View](../GLOSSARY.md#view) | [React component](../GLOSSARY.md#react-component) rendering + local rendering concerns |
 | [ViewModel](../GLOSSARY.md#viewmodel) [facade](../GLOSSARY.md#facade-pattern) | feature hook such as `useClosures()` |
 | shared view state | Redux slice + [selectors](../GLOSSARY.md#selector) |
 | binding | React Redux subscriptions/hooks, hidden or exposed according to project policy |
