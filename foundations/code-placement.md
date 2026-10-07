@@ -97,12 +97,19 @@ It must **not** live in `CancelOrderButton.tsx`, because a CLI/API could cancel 
 
 Put code in `application/` when it expresses **what the application does** and coordinates domain behavior plus external capabilities.
 
+Dashed arrows show source references: the operation knows the model and its required storage contract; the concrete implementation also knows that contract. At runtime, it calls the supplied storage object directly, without an intermediate [port](../GLOSSARY.md#port) process.
+
 ```mermaid
 flowchart LR
-    UI["Presentation"] --> UC["cancelOrder use case"]
-    UC --> DOMAIN["Order.cancel()"]
-    UC --> PORT["OrderRepository port"]
-    ADAPTER["Infrastructure adapter"] --> PORT
+    UI["Cancellation delivery / Presentation"] -. "source uses operation" .-> UC["cancelOrder / Application"]
+    UC -. "source uses model" .-> DOMAIN["Order / Domain"]
+    UC -. "source requires" .-> PORT["OrderRepository / contract"]
+    ADAPTER["HttpOrderRepository / Infrastructure"] -. "source implements" .-> PORT
+    classDef policy fill:#263238,stroke:#85979e,color:#e4ebee
+    classDef outer fill:#30363d,stroke:#8b949e,color:#e4ebee
+    class UC,DOMAIN,PORT policy
+    class UI,ADAPTER outer
+    linkStyle default stroke:#7c898f,stroke-width:1px,stroke-dasharray:6 4
 ```
 
 Example:
@@ -305,18 +312,25 @@ Requirement:
 | button | `presentation/orders/components/CancelOrderButton/CancelOrderButton.tsx` | rendering + interaction |
 | wiring | `composition/bootstrap.ts` | selects concrete [adapter](../GLOSSARY.md#adapter) |
 
-The following arrows describe source references and construction, not a runtime [port](../GLOSSARY.md#port) object:
+The button requests cancellation through the hook; the operation applies the order rule and calls its supplied HTTP storage implementation. Solid arrows show those runtime calls. Long dashes show selected source requirements/implementation; short dotted arrows show startup construction. The operation also imports its domain model, as section 3 shows. The contract is not a runtime hop:
 
 ```mermaid
 flowchart LR
-    BTN["CancelOrderButton"] --> VM["useOrders"]
-    VM --> UC["cancelOrder"]
-    UC --> ORDER["Order.cancel"]
-    UC --> PORT["OrderRepository"]
-    HTTP["HttpOrderRepository"] --> PORT
-    ROOT["Composition Root"] -. wires .-> HTTP
-    ROOT -. wires .-> UC
-    ROOT -. wires .-> VM
+    BTN["CancelOrderButton / component"] -->|"runtime request"| VM["useOrders / hook"]
+    VM -->|"runtime cancel"| UC["cancelOrder / use case"]
+    UC -->|"runtime cancel"| ORDER["Order / business rule"]
+    UC -->|"runtime load and save"| HTTP["HttpOrderRepository / implementation"]
+    UC -. "source requires" .-> PORT["OrderRepository / contract"]
+    HTTP -. "source implements" .-> PORT
+    ROOT["bootstrap / Composition Root"] -. "startup constructs" .-> HTTP
+    ROOT -. "startup supplies repository" .-> UC
+    ROOT -. "startup supplies operation" .-> VM
+    classDef policy fill:#263238,stroke:#85979e,color:#e4ebee
+    classDef outer fill:#30363d,stroke:#8b949e,color:#e4ebee
+    class UC,ORDER,PORT policy
+    class BTN,VM,HTTP,ROOT outer
+    linkStyle 4,5 stroke:#7c898f,stroke-width:1px,stroke-dasharray:6 4
+    linkStyle 6,7,8 stroke:#a5a096,stroke-width:1px,stroke-dasharray:2 4
 ```
 
 ## 11. Naming

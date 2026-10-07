@@ -5,7 +5,7 @@ import path from 'node:path'
 import test from 'node:test'
 import { linkMarkdown, checkGlossary } from './glossary-links.mjs'
 import { documentErrors, progressionErrors } from './docs-quality.mjs'
-import { anchors, glossaryErrors, parseMarkdown } from './markdown.mjs'
+import { anchors, glossaryErrors, markdownFiles, parseMarkdown } from './markdown.mjs'
 
 const terms = [
   { term: 'MVVM', anchor: 'mvvm', aliases: [{ text: 'MVVM', caseSensitive: true }] },
@@ -31,6 +31,30 @@ test('linker preserves Markdown constructs and exact source formatting', () => {
   assert.ok(output.endsWith('[MVVM](./GLOSSARY.md#mvvm) and **[MVVM](./GLOSSARY.md#mvvm)**.\r\n'))
   assert.equal(linkMarkdown(output, file, terms, target), output)
   assert.equal(linkMarkdown(input, target, terms, target), input)
+})
+
+test('documentation scans and glossary writes leave working attachments untouched', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'docs-audit-'))
+  t.after(() => {
+    assert.equal(path.dirname(path.resolve(root)), path.resolve(os.tmpdir()))
+    assert.ok(path.basename(root).startsWith('docs-audit-'))
+    fs.rmSync(root, { recursive: true })
+  })
+  fs.mkdirSync(path.join(root, 'glossary'))
+  fs.writeFileSync(path.join(root, 'glossary', 'terms.json'), JSON.stringify(terms))
+  fs.writeFileSync(path.join(root, 'GLOSSARY.md'), glossary)
+  fs.mkdirSync(path.join(root, 'chapter'))
+  const guide = path.join(root, 'chapter', 'guide.md')
+  fs.writeFileSync(guide, 'MVVM\n')
+  const attachments = path.join(root, '.codex-remote-attachments', 'request')
+  fs.mkdirSync(attachments, { recursive: true })
+  const attachment = path.join(attachments, 'review.md')
+  const original = 'MVVM\n\n[Review input](missing.md)\n'
+  fs.writeFileSync(attachment, original)
+  assert.deepEqual(markdownFiles(root).sort(), [path.join(root, 'GLOSSARY.md'), guide].sort())
+  assert.deepEqual(checkGlossary(root, true).errors, [])
+  assert.equal(fs.readFileSync(guide, 'utf8'), '[MVVM](../GLOSSARY.md#mvvm)\n')
+  assert.equal(fs.readFileSync(attachment, 'utf8'), original)
 })
 
 test('ambiguous source-repository wording stays unlinked', () => {
