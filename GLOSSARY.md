@@ -147,6 +147,8 @@ Code that connects the application to a specific external input or technology wi
 
 **Example.** `HttpOrderRepository` adapts an HTTP API to the `OrderRepository` port.
 
+**Backend example.** In the Hexagonal reading of Tickets, `TicketsController` is the inbound adapter; its parser/Pipe are helpers. `InMemoryTicketRepository` and `PrismaTicketRepository` are outbound adapters implementing the Application-owned persistence contract. See [the exact file mapping](./backend/5-architectural-styles-with-nestjs.md#where-are-the-ports-and-adapters-in-this-example). Outside that style mapping, the walkthrough calls them the HTTP Controller and persistence implementations.
+
 **Frontend example.** `HttpTicketGateway` translates `POST /api/tickets` and an API `ticket_id` into the `TicketGateway` contract and an application ticket. See [the ticket-support walkthrough](./frontend/ports-and-adapters.md).
 
 **Sources.** [Cockburn — Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/) · [Martin — The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
@@ -283,7 +285,7 @@ A test that checks whether two pieces of software agree about what they send and
 
 ## Controller
 
-The code that interprets an incoming user action and decides which operation it requests. In classic MVC, clicking a ticket's **Resolve** button reaches a Controller, which asks the Model to perform the relevant operation. In a backend framework, a controller may instead translate an HTTP request into an application-use-case call; sharing the name does not make both variants identical.
+In Nest HTTP, a class that groups related route handler methods. `TicketsController` contains `create()`, the method selected for `POST /tickets`; it invokes the separate `CreateTicket` use case and maps the result to HTTP. Routing metadata selects the method; the class is not an endpoint, matching rule, use case or Domain entity. In classic MVC the word has a broader input-coordination role: clicking a ticket's **Resolve** button reaches a Controller that asks the Model to act. These contexts share a name, not identical framework behavior.
 
 **Purpose.** Translate input into operations without owning rendering or authoritative business rules.
 
@@ -905,6 +907,8 @@ A description of an interaction that the application needs from other code, or o
 
 **Example.** `Clock.now()` is a port when application policy must be independent of system time.
 
+**Backend example.** In Hexagonal Architecture, `TicketRepository` is the outbound port: the persistence contract Application requires. `CreateTicket.execute(command)` is the offered operation for inbound callers; its existing API needs no extra interface file. The concrete storage objects are implementations, not additional ports. See [the ticket file mapping](./backend/5-architectural-styles-with-nestjs.md#where-are-the-ports-and-adapters-in-this-example).
+
 **Frontend example.** `application/tickets/ports/TicketGateway.ts` defines the operation needed by the ticket-creation use case, without depending on HTTP or React. See [the ticket-support walkthrough](./frontend/ports-and-adapters.md).
 
 **Sources.** [Cockburn — Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/)
@@ -985,7 +989,7 @@ A function that receives the previous state and an action describing what happen
 
 ## Repository Pattern
 
-A way to let application/domain code work with stored business objects as though accessing a collection, without depending on the storage technology. For example, `OrderRepository.findById()` and `save()` might use SQL in production and memory in a test. Not every HTTP integration is a Repository; in this glossary the term means the design pattern, not a Git repository.
+A way to let Application/Domain code work with stored business objects as though accessing a collection, without depending on the storage technology. In the backend ticket example, `TicketRepository` is the Application-owned persistence contract requiring `insert(ticket)`; `InMemoryTicketRepository` and `PrismaTicketRepository` supply memory and database implementations. Their shared suffix identifies the same contract, while their prefixes identify how it is fulfilled. Not every HTTP integration is a Repository; here the term means the persistence design pattern, not a Git repository or Nest primitive.
 
 **Purpose.** Provide collection-like access to persisted domain objects while hiding persistence details.
 
@@ -1531,7 +1535,7 @@ A TypeScript import used to name a type without importing its runtime value. For
 
 ## HTTP Endpoint
 
-A callable HTTP operation offered by an API. For the analyst, `POST /tickets` means submit ticket data for creation; `GET /tickets` would be another operation even with the same path. Here endpoint identifies the public method/path operation and its contract, while a route describes the server's matching rule. Industry usage sometimes means only the URL, so clarify the intended meaning.
+A public HTTP operation offered by an API, defined by its method, path and request/response contract. For the analyst, `POST /tickets` accepts ticket fields and returns creation data or a documented failure; `GET /tickets` would be another operation even with the same path. An endpoint is not normally a separate file: Nest routing metadata declares its implementation in a Controller. A route is the server's matching rule. Industry usage sometimes means only the URL, so clarify the intended meaning.
 
 **Purpose.** Identify an externally callable operation without confusing it with its implementation.
 
@@ -1615,7 +1619,7 @@ The framework needs to know which controllers and dependencies belong together a
 
 ## Pipe (NestJS)
 
-Before the ticket handler receives its body argument, code can check or transform that value. A Nest pipe performs this work through `transform(value, metadata)` before handler execution; it can return a parsed value or reject it with an exception.
+Before the ticket handler receives its body argument, code can check or transform that value. A Nest Pipe answers “can this handler argument be parsed, validated or transformed into the expected transport input?” It performs this work through `transform(value, metadata)` before handler execution, returning the accepted value or rejecting it with an exception. It does not decide whether the caller has access.
 
 **Purpose.** Integrate argument parsing, validation or transformation into Nest's request processing.
 
@@ -1629,13 +1633,13 @@ Before the ticket handler receives its body argument, code can check or transfor
 
 ## Guard (NestJS)
 
-Before creation executes, the server may need to decide whether an authenticated caller may enter the operation. A Nest guard makes an access decision using an execution context identifying the selected handler. It can permit, reject or throw an appropriate failure.
+Before creation executes, the server may need to decide **may this caller invoke this selected operation?** A Nest Guard makes that access decision using an execution context identifying the selected handler. It can permit, reject or throw an appropriate failure. It runs before Pipes, which process handler arguments; valid input alone grants no access. The Guard can rely on an established authentication integration that has already verified identity, rather than implementing the whole authentication protocol.
 
 **Purpose.** Apply access policy at a known framework invocation boundary.
 
 **Example.** A ticket guard requires a principal previously verified by established authentication code. It does not make arbitrary request data a verified identity, validate ticket subject rules or enforce permissions for non-HTTP callers automatically.
 
-**Sources.** [Nest — Guards](https://docs.nestjs.com/guards)
+**Sources.** [Nest — Guards](https://docs.nestjs.com/guards) · [Nest — Request lifecycle](https://docs.nestjs.com/faq/request-lifecycle)
 
 ---
 

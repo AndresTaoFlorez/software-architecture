@@ -96,7 +96,13 @@ This first entity supports creation only. Loading existing tickets would need a 
 
 ## 3. Save without naming a database in the operation
 
-Creation must not report success before saving. Hard-coding a database client inside that operation would make its tests and policy depend on a database installation. Instead the operation asks for just `insert(ticket)`. The required persistence capability is an application-owned **[port](../GLOSSARY.md#port)**. Because it adds business objects to stored collection-like state, it is a narrow write side of the **[Repository Pattern](../GLOSSARY.md#repository)**; retrieval methods can follow real requirements.
+Creation must not report success before saving. Hard-coding a database client inside `CreateTicket` would make its tests and policy depend on a database installation. Instead the [use case](../GLOSSARY.md#use-case) requires just `insert(ticket)`. `TicketRepository` is this **[Application](../GLOSSARY.md#application-layer)-owned persistence contract**: it specifies what the [use case](../GLOSSARY.md#use-case) needs, without specifying how storage works. Because it adds business objects to stored collection-like state, it is a narrow write side of the **[Repository Pattern](../GLOSSARY.md#repository)**; retrieval methods can follow real requirements.
+
+| Artifact | Exact role | Layer |
+| --- | --- | --- |
+| `TicketRepository` | **what** `CreateTicket` requires: persistence contract | [Application](../GLOSSARY.md#application-layer) |
+| `InMemoryTicketRepository` | **how** memory implements that contract | [Infrastructure](../GLOSSARY.md#infrastructure) |
+| `PrismaTicketRepository` | **how** Prisma/database access implements that contract | [Infrastructure](../GLOSSARY.md#infrastructure) |
 
 `src/application/tickets/ports/TicketRepository.ts`:
 
@@ -112,7 +118,16 @@ export interface TicketRepository {
 }
 ```
 
-The operation creates, awaits the insert and returns plain data. That coordination is a **[use case](../GLOSSARY.md#use-case)**, also a small **[application service](../GLOSSARY.md#application-service)**. It delegates validity to [Domain](../GLOSSARY.md#domain) and translates a recognized storage failure into a result that callers can interpret without knowing SQL or HTTP.
+Both implementation classes promise to provide the methods required by `TicketRepository`. TypeScript expresses that promise with `implements`, and checks that the class satisfies the interface; it does not supply the implementation or prove its runtime guarantees. Relationship excerpt, **class bodies omitted** (the memory body follows in section 4; Prisma follows in chapter 4):
+
+```ts
+export class InMemoryTicketRepository implements TicketRepository { /* body omitted */ }
+export class PrismaTicketRepository implements TicketRepository { /* body omitted */ }
+```
+
+All three names contain `TicketRepository` because the two concrete classes implement the same persistence contract. **Repository** names the design pattern/persistence role; **InMemory** names a storage mechanism; **Prisma** names a technology. These are not three layers or three Nest mechanisms. [TypeScript's implements guidance](https://www.typescriptlang.org/docs/handbook/2/classes.html#implements-clauses) explains the compile-time check. The existing `ports/` path is our contract-folder convention; [chapter 5 explains its Hexagonal interpretation](5-architectural-styles-with-nestjs.md#where-are-the-ports-and-adapters-in-this-example).
+
+`CreateTicket` creates, awaits the insert and returns plain data. That coordination is the **[Application](../GLOSSARY.md#application-layer) [use case](../GLOSSARY.md#use-case)**. It delegates validity to [Domain](../GLOSSARY.md#domain) and translates a recognized storage failure into a result that callers can interpret without knowing SQL or HTTP.
 
 `src/application/tickets/CreateTicket.ts`:
 
@@ -150,7 +165,7 @@ export class CreateTicket {
 
 The injected ID function is justified because the backend must allocate identity before building the ticket and tests need deterministic identities. A function suffices; a new `IdGenerator` hierarchy or clock is unnecessary. Production composition uses Node's established UUID generator. No crypto is reimplemented.
 
-The [port](../GLOSSARY.md#port) has a real replacement pressure: memory in tests, durable storage in the deployed process. It does not offer arbitrary queries, [ORM](../GLOSSARY.md#orm) transactions or generic methods for all product features. It does not solve duplicate requests.
+`TicketRepository` has a real replacement pressure: memory in tests, durable storage in the deployed process. Its contract does not offer arbitrary queries, [ORM](../GLOSSARY.md#orm) transactions or generic methods for all product features. It does not solve duplicate requests.
 
 Another capability needs a supported entry point rather than an import into ticket internals. A **[public API](../GLOSSARY.md#public-api)** states which operations and types the Tickets owner promises to maintain. This plain entry point deliberately exposes creation and its input/result; storage and HTTP parsing remain private:
 
@@ -165,7 +180,7 @@ An external consumer imports from `application/tickets`, resolved through its `i
 
 ## 4. Start with memory and explicit construction
 
-An object can satisfy `insert` by keeping a map. This **in-memory repository** provides a working teaching/test implementation without a database. It is still outer storage code and loses all data when the process ends.
+An object can satisfy `insert` by keeping a map. `InMemoryTicketRepository` is the memory implementation of `TicketRepository`, providing working teaching/test storage without a database. It belongs to [Infrastructure](../GLOSSARY.md#infrastructure) and loses all data when the process ends.
 
 `src/infrastructure/persistence/tickets/InMemoryTicketRepository.ts`:
 
@@ -183,7 +198,7 @@ export class InMemoryTicketRepository implements TicketRepository {
 }
 ```
 
-Now the caller needs a plain handler that parses input, invokes the operation and maps the result into an HTTP-shaped reply. This [adapter](../GLOSSARY.md#adapter) does not implement routing or a protocol stack; a server platform would bind it to `POST /tickets`.
+Now the caller needs a plain handler that parses input, invokes the [use case](../GLOSSARY.md#use-case) and maps the result into an HTTP-shaped reply. `TicketHttpHandler` belongs to [Presentation](../GLOSSARY.md#presentation-layer). It does not register a route or implement HTTP itself; a server platform binds its invocation to `POST /tickets`.
 
 `src/presentation/http/tickets/TicketHttpHandler.ts`:
 
@@ -223,8 +238,8 @@ Composition excerpt, with imports from the modules above:
 ```ts
 const repository = new InMemoryTicketRepository()
 const createTicket = new CreateTicket(repository, () => 'T-42')
-const controller = new TicketHttpHandler(createTicket)
-const response = await controller.handle({
+const httpHandler = new TicketHttpHandler(createTicket)
+const response = await httpHandler.handle({
   subject: 'Invoice download fails',
   description: 'PDF download returns an error for INV-42.',
 })
@@ -232,7 +247,68 @@ const response = await controller.handle({
 
 Giving the repository to the constructor is already **[Dependency Injection](../GLOSSARY.md#dependency-injection-di) ([DI](../GLOSSARY.md#dependency-injection-di))**: the consumer receives its collaborator from outside. The connected objects form an **object graph**. The code assembling them is the [composition root](../GLOSSARY.md#composition-root). The fixed ID is for one demonstration call only; repeated calls need fresh IDs. No container is needed here, and no consumer reaches into composition to find an object (which would be a [service locator](../GLOSSARY.md#service-locator)).
 
-**[DI](../GLOSSARY.md#dependency-injection-di) differs from the [Dependency Inversion Principle](../GLOSSARY.md#dependency-inversion-principle-dip) ([DIP](../GLOSSARY.md#dependency-inversion-principle-dip)).** Injecting a concrete `PrismaTicketRepository` into a class that imports it would be [DI](../GLOSSARY.md#dependency-injection-di), while still depending on the database detail. Depending on `TicketRepository`, an inward-owned capability, lets the implementation depend toward the application's requirement. That source dependency design expresses [DIP](../GLOSSARY.md#dependency-inversion-principle-dip); the manual construction supplies the runtime object. See [composition](../foundations/composition-root.md) and [dependency boundaries](../foundations/dependency-boundaries.md).
+**[DI](../GLOSSARY.md#dependency-injection-di) differs from the [Dependency Inversion Principle](../GLOSSARY.md#dependency-inversion-principle-dip) ([DIP](../GLOSSARY.md#dependency-inversion-principle-dip)).** Injecting a concrete `PrismaTicketRepository` into a class that imports it would be [DI](../GLOSSARY.md#dependency-injection-di), while still depending on the database detail. Depending on `TicketRepository`, the [Application](../GLOSSARY.md#application-layer)-owned persistence contract, lets the implementation depend toward the application's requirement. That source dependency design expresses [DIP](../GLOSSARY.md#dependency-inversion-principle-dip); the manual construction supplies the runtime object. See [composition](../foundations/composition-root.md) and [dependency boundaries](../foundations/dependency-boundaries.md).
+
+### Register the route with Node.js
+
+The handler is callable, but a network request still needs to reach it. Node's standard `createServer` supplies request/response objects; we can compare the method and path ourselves. This **routing excerpt** uses the assembled `httpHandler` above. `readJsonBody(req)` is intentionally out of scope: a body decoder must enforce size/content limits and handle malformed JSON before passing decoded `unknown` data onward. This excerpt isolates routing and response serialization, not a complete HTTP server:
+
+```ts
+import { createServer } from 'node:http'
+
+const createTicketHandler = (body: unknown) => httpHandler.handle(body)
+
+const server = createServer(async (req, res) => {
+  const url = new URL(req.url ?? '/', 'http://localhost')
+  if (req.method === 'POST' && url.pathname === '/tickets') {
+    try {
+      const body = await readJsonBody(req)
+      const response = await createTicketHandler(body)
+      res.writeHead(response.status, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify(response.body))
+    } catch {
+      res.writeHead(500)
+      res.end() // safe fallback; internal diagnostics are outside this excerpt
+    }
+    return
+  }
+  res.writeHead(404)
+  res.end()
+})
+```
+
+The `if` is the manual **route**: match POST and `/tickets` to `createTicketHandler`, the selected **[route handler](../GLOSSARY.md#route-handler)**. The endpoint remains the public `POST /tickets` operation with its request/response contract. `url.pathname` keeps a query string out of path matching. `writeHead` sets response status/headers; `end` sends serialized output and completes the response. Starting/stopping the server and decoder-specific `400` handling are omitted; the broad catch above only illustrates a safe fallback. [Node's HTTP API](https://nodejs.org/api/http.html) documents these standard mechanisms.
+
+Nest's `@Controller('tickets')` plus `@Post()` registers this same relationship through metadata, and its body decoding/response machinery removes the repeated plumbing. Chapter 3 shows that convenience after this mechanism. Neither manual routing nor decorators create the `CreateTicket` [use case](../GLOSSARY.md#use-case).
+
+### Check access before processing the argument
+
+Suppose the support team now restricts HTTP creation to authenticated callers. First an established authentication integration must verify identity and supply a trusted context; an arbitrary body/header object is not that context. The following optional [Presentation](../GLOSSARY.md#presentation-layer) wrapper assumes that verification has already happened. It adds the access decision and reuses `TicketHttpHandler` for parsing, invocation and response mapping:
+
+`src/presentation/http/tickets/handleAuthenticatedCreateTicket.ts`:
+
+```ts
+import type { TicketHttpHandler } from './TicketHttpHandler'
+
+export interface RequestContext {
+  user?: { id: string }
+}
+
+export async function handleAuthenticatedCreateTicket(
+  context: RequestContext,
+  body: unknown,
+  httpHandler: TicketHttpHandler,
+): Promise<{ status: number; body: unknown }> {
+  if (!context.user) {
+    return { status: 401, body: { error: 'unauthorized' } }
+  }
+  return httpHandler.handle(body)
+}
+```
+
+The `if` asks **may this caller invoke the selected operation?** It returns before parsing or calling the [use case](../GLOSSARY.md#use-case) when identity is absent. After permission to continue, `TicketHttpHandler.handle` calls the existing `parseCreateTicketRequest(body)` to check object/string arguments, invokes `CreateTicket.execute(command)`, then maps its result to HTTP. `Ticket.create()` alone checks the subject rule and assigns initial state.
+
+Nest provides separate hooks for the first two decisions: a **Guard** for access and a **Pipe** for argument parsing/validation/transformation. A valid body does not authenticate a caller; an authenticated caller can still send invalid input. This wrapper implements only the presence check for a previously verified user, not token verification, tenant membership or permissions beyond authentication. It is optional and not bound into the basic server excerpt or chapter 4's creation-only module. [Chapter 3 compares both hooks on one request](3-nestjs-building-blocks.md#guard-and-pipe-answer-different-questions).
 
 ## 5. What a library will remove
 
@@ -244,6 +320,6 @@ Use established HTTP, database, authentication and cryptographic implementations
 
 ## 6. Check the boundary
 
-The [executable check](../scripts/backend-ticket-example.test.mjs) extracts these canonical modules, compiles them using the existing TypeScript dependency and runs creation and rejection cases. It checks bad shapes, forbidden client state, blank/long subjects, domain status guards, no save on invalid business input, persistence failure, safe response mapping and propagation of unexpected defects. Nest and a database are unnecessary for those checks.
+The [executable check](../scripts/backend-ticket-example.test.mjs) extracts the complete canonical modules, compiles them using the existing TypeScript dependency and runs creation and rejection cases. It checks bad shapes, forbidden client state, blank/long subjects, domain status guards, no save on invalid business input, persistence failure, safe response mapping and propagation of unexpected defects. It also proves that the optional access wrapper stops before body processing or use-case execution, while permitted callers still receive transport and business validation. Nest and a database are unnecessary for those checks. The incomplete Node routing excerpt is source-reviewed, not compiled/executed by that module check.
 
 Memory cannot prove database durability, network error translation or HTTP hook ordering. Chapter 4 separates those integration tests from policy tests. Follow [Repository](https://martinfowler.com/eaaCatalog/repository.html), [Service Layer](https://martinfowler.com/eaaCatalog/serviceLayer.html), [Composition Root](https://blog.ploeh.dk/2011/07/28/CompositionRoot/) and [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) for the architectural sources.

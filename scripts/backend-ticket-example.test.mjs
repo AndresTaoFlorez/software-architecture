@@ -14,6 +14,7 @@ const names = [
   'infrastructure/persistence/tickets/InMemoryTicketRepository.ts',
   'presentation/http/tickets/createTicketRequest.ts',
   'presentation/http/tickets/TicketHttpHandler.ts',
+  'presentation/http/tickets/handleAuthenticatedCreateTicket.ts',
   'application/tickets/index.ts',
 ]
 const exerciseNames = [
@@ -193,6 +194,7 @@ test('backend ticket modules compile and preserve validation, persistence and de
     const { InMemoryTicketRepository } = load('infrastructure/persistence/tickets/InMemoryTicketRepository.js')
     const { TicketHttpHandler } = load('presentation/http/tickets/TicketHttpHandler.js')
     const { parseCreateTicketRequest, InvalidTicketRequest } = load('presentation/http/tickets/createTicketRequest.js')
+    const { handleAuthenticatedCreateTicket } = load('presentation/http/tickets/handleAuthenticatedCreateTicket.js')
     const input = { subject: '  Invoice download fails  ', description: 'PDF download fails for INV-42.' }
 
     for (const status of domain.TICKET_STATUSES) assert.equal(domain.isTicketStatus(status), true)
@@ -229,6 +231,35 @@ test('backend ticket modules compile and preserve validation, persistence and de
     }
     assert.equal(repository.records.size, 1, 'Invalid request or subject must not save')
     assert.equal((await operation.execute({ ...input, subject: 'x'.repeat(160) })).ok, true)
+
+    const accessRecords = new InMemoryTicketRepository()
+    let accessId = 0
+    const accessHttp = new TicketHttpHandler(new CreateTicket(accessRecords, () => 'access-' + ++accessId))
+    const unreadableBody = Object.defineProperty({}, 'subject', {
+      get() { throw new Error('Unauthenticated body must not be processed') },
+    })
+    for (const body of [input, unreadableBody]) {
+      assert.deepEqual(await handleAuthenticatedCreateTicket({}, body, accessHttp), {
+        status: 401, body: { error: 'unauthorized' },
+      })
+    }
+    assert.equal(accessId, 0, 'Access rejection must not invoke the use case')
+    assert.equal(accessRecords.records.size, 0, 'Access rejection must not persist')
+    const verifiedContext = { user: { id: 'verified-user' } }
+    assert.deepEqual(await handleAuthenticatedCreateTicket(verifiedContext, { ...input, subject: 17 }, accessHttp), {
+      status: 400, body: { error: 'invalid-request' },
+    })
+    assert.equal(accessId, 0, 'Permitted callers still need transport validation before the use case')
+    assert.deepEqual(await handleAuthenticatedCreateTicket(verifiedContext, { ...input, subject: '  ' }, accessHttp), {
+      status: 400, body: { error: 'invalid-subject' },
+    })
+    assert.equal(accessId, 1, 'Business validation runs in the use case, after transport validation')
+    assert.equal(accessRecords.records.size, 0, 'Business rejection must not persist')
+    const permitted = await handleAuthenticatedCreateTicket(verifiedContext, input, accessHttp)
+    assert.equal(permitted.status, 201)
+    assert.equal(permitted.body.ticket_id, 'access-2')
+    assert.equal(permitted.body.status, 'open')
+    assert.equal(accessRecords.records.size, 1)
 
     let acceptInsert
     const waiting = new CreateTicket({ insert: () => new Promise(resolve => { acceptInsert = resolve }) }, () => 'waiting')

@@ -42,14 +42,19 @@ flowchart TD
 
 The same creation task should run when invoked from a test, HTTP, a CLI or a queue. We first describe the interactions the application offers and requires; technology-specific code adapts each external device to those conversations. Those interactions are **[ports](../GLOSSARY.md#port)**, and the connecting implementations are **[adapters](../GLOSSARY.md#adapter)**. [Hexagonal Architecture](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters) distinguishes the inside application from outside devices rather than prescribing six classes or six folders.
 
-| Ticket artifact | Hexagonal role |
-| --- | --- |
-| `TicketsController` and its parser/pipe | inbound/driving HTTP [adapter](../GLOSSARY.md#adapter) |
-| `CreateTicket.execute(command)` | offered application operation, the inbound [port](../GLOSSARY.md#port); no extra interface is required |
-| `Ticket` | business behavior inside the application |
-| `TicketRepository.insert(ticket)` | outbound/driven persistence [port](../GLOSSARY.md#port) |
-| `PrismaTicketRepository` | outbound persistence [adapter](../GLOSSARY.md#adapter) |
-| PostgreSQL | external device/system |
+### Where are the Ports and Adapters in this example?
+
+The earlier chapters call each artifact by its generic role. Here we explicitly map those same files to Hexagonal vocabulary. Paths are relative to the illustrative application's `src/`:
+
+| File / offered operation | Generic role | Hexagonal role |
+| --- | --- | --- |
+| `presentation/http/tickets/TicketsController.ts` | Nest HTTP [Controller](../GLOSSARY.md#controller) | inbound [adapter](../GLOSSARY.md#adapter): connects the HTTP caller to the offered application operation |
+| `application/tickets/CreateTicket.ts` — `execute(command)` | [Application](../GLOSSARY.md#application-layer) [use case](../GLOSSARY.md#use-case) / offered operation | inbound application API ([port](../GLOSSARY.md#port)): the operation exposed to incoming callers |
+| `application/tickets/ports/TicketRepository.ts` | [Application](../GLOSSARY.md#application-layer)-owned persistence contract | outbound [port](../GLOSSARY.md#port): what the application requires from storage |
+| `infrastructure/persistence/tickets/InMemoryTicketRepository.ts` | memory implementation of `TicketRepository` | outbound [adapter](../GLOSSARY.md#adapter): supplies the required persistence using memory |
+| `infrastructure/persistence/tickets/PrismaTicketRepository.ts` | Prisma/database implementation of `TicketRepository` | outbound [adapter](../GLOSSARY.md#adapter): supplies the required persistence using Prisma |
+
+`CreateTicket.execute(...)` already supplies the entry point; an extra inbound interface file would add no needed behavior here. `createTicketRequest.ts` and `CreateTicketPipe.ts` are argument-processing helpers used by the HTTP [adapter](../GLOSSARY.md#adapter), not additional [adapters](../GLOSSARY.md#adapter) in this mapping. `Ticket` owns business behavior inside; PostgreSQL is the external database. These interpretations follow [Cockburn's original ports-and-adapters article](https://alistair.cockburn.us/hexagonal-architecture/): separate purpose-specific interactions from the devices that connect to them. An interface keyword or filename alone does not establish that separation.
 
 Below, solid arrows are **runtime calls**, dashed arrows are **source contract relationships**. `TicketRepository` is not an intermediate runtime object:
 

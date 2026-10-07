@@ -82,22 +82,40 @@ The exact suffixes are conventions. Their purpose is to make ownership discovera
 
 ### Backend names
 
-When an operation needs to save tickets, name its abstraction after that required capability. When several implementations exist, prefix a concrete [adapter](../GLOSSARY.md#adapter) with its technology or mechanism. The [backend walkthrough](../backend/README.md#how-to-read-backend-file-names) explains the actual behavior behind these names.
+When a [use case](../GLOSSARY.md#use-case) needs to save tickets, name its persistence contract after that requirement. When several implementations exist, prefix the concrete implementation with its technology or storage mechanism. Both share the contract's suffix because both satisfy the same requirement. The [backend walkthrough](../backend/README.md#how-to-read-backend-file-names) explains the actual behavior behind these names; [the Hexagonal comparison](../backend/5-architectural-styles-with-nestjs.md#where-are-the-ports-and-adapters-in-this-example) separately maps contracts and implementations to [ports](../GLOSSARY.md#port)/[adapters](../GLOSSARY.md#adapter).
 
 | Name | Meaning | Where the terminology comes from |
 | --- | --- | --- |
-| `Ticket.ts` | business concept | domain modeling |
-| `CreateTicket.ts` | application operation, implemented as a class | use-case responsibility; PascalCase is our class/file convention |
-| `TicketRepository.ts` | required persistence capability | Repository design pattern; contract placement follows its owner |
-| `InMemoryTicketRepository.ts` | storage in process memory | mechanism prefix, our naming convention |
-| `PrismaTicketRepository.ts` | database [adapter](../GLOSSARY.md#adapter) using Prisma | technology name plus contract role |
+| `Ticket.ts` | [Domain entity](../GLOSSARY.md#domain-entity) | domain modeling |
+| `CreateTicket.ts` | [Application](../GLOSSARY.md#application-layer) [use case](../GLOSSARY.md#use-case), implemented as a class | use-case responsibility; PascalCase is our class/file convention |
+| `TicketRepository.ts` | [Application](../GLOSSARY.md#application-layer)-owned persistence contract | Repository design pattern; contract placement follows its owner |
+| `InMemoryTicketRepository.ts` | memory implementation of `TicketRepository` | mechanism prefix, our naming convention |
+| `PrismaTicketRepository.ts` | Prisma/database implementation of `TicketRepository` | technology name plus contract role |
 | `TicketsController.ts` | group of [HTTP route](../GLOSSARY.md#http-route) handlers | Nest terminology; suffix/file casing is our convention |
 | `CreateTicketPipe.ts` | handler argument parser/validator | Nest terminology |
+| `AuthenticatedGuard.ts` | access decision for the selected operation | Nest terminology; assumes previously verified identity |
 | `TicketsModule.ts` | framework registration and composition | Nest terminology, not an architectural layer |
 | `createTicketRequest.ts` | input shape and parsing functions | camelCase for function-oriented files; types inside use PascalCase |
 | `ticket.tokens.ts` | runtime dependency lookup keys | Nest injection mechanism; suffix is our convention |
 
 An exported function uses camelCase (`createTicket`), while a class uses PascalCase (`CreateTicket`). `Repository` is justified for stored business objects; use `PaymentGateway`, `Clock`, `FileStorage` or `AgendaReader` when those better express the conversation. Nest/Prisma do not require our filenames or suffixes.
+
+The names above belong to different categories; stacking them does not define an architecture. After following the [request, TypeScript and Nest mechanisms](../backend/README.md#read-in-order), use this classification to keep them distinct:
+
+| Term | Category |
+| --- | --- |
+| [Domain](../GLOSSARY.md#domain), [Application](../GLOSSARY.md#application-layer), [Infrastructure](../GLOSSARY.md#infrastructure), [Presentation](../GLOSSARY.md#presentation-layer) | architectural responsibilities; [Presentation](../GLOSSARY.md#presentation-layer) is this handbook's physical layer for HTTP/CLI delivery |
+| Composition | object assembly responsibility |
+| Repository | design pattern / persistence abstraction |
+| [Port](../GLOSSARY.md#port) / [Adapter](../GLOSSARY.md#adapter) | [Hexagonal Architecture](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters) interaction / external connection terminology |
+| [Controller](../GLOSSARY.md#controller) | framework/[Presentation](../GLOSSARY.md#presentation-layer) role; in Nest, a class grouping [route handlers](../GLOSSARY.md#route-handler) |
+| Pipe | Nest mechanism for argument parsing, validation or transformation |
+| Guard | Nest mechanism for an access decision |
+| Module | Nest composition/registration mechanism |
+| Prisma | concrete database-access technology |
+| PostgreSQL | external database technology |
+
+For example, `TicketRepository` is not a Nest primitive, and `CreateTicketPipe` does not own ticket business validity. Responsibilities and source dependencies determine the design, as [the style comparison](../backend/5-architectural-styles-with-nestjs.md) explains.
 
 ## 4. Folder naming
 
