@@ -35,9 +35,20 @@ HTTP definitions: [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110.html), espec
 
 The server exposes other operations too. It needs a rule that associates the method `POST` plus the path `/tickets` with the function that accepts ticket submissions. Such a matching rule is a **[route](../GLOSSARY.md#http-route)**; selecting the function is **[routing](../GLOSSARY.md#http-routing)**; the code that performs the selection is a **[router](../GLOSSARY.md#http-routing)**. A pattern such as `/tickets/:id` may match many concrete paths. A path alone cannot distinguish `GET /tickets` from `POST /tickets`.
 
-The externally callable HTTP operation is an **[endpoint](../GLOSSARY.md#http-endpoint)**. In this track, `POST /tickets` names an endpoint and its route names the matching rule. Teams often use “route” and “endpoint” interchangeably, or use endpoint to mean just a URL; clarify whether they mean the public operation, its path or the routing configuration.
+The externally callable HTTP operation is an **[endpoint](../GLOSSARY.md#http-endpoint)**: a method, path and request/response contract. Here `POST /tickets` accepts subject/description and returns the created ticket or a documented failure. An endpoint is not normally a separate file. Its implementation can live beside other endpoint implementations in one class.
 
-The selected function is the **[route handler](../GLOSSARY.md#route-handler)**. NestJS is the server framework we will use to register and run these handlers. `TicketsController.create()` will be our handler in Nest. `TicketsController` is a **[controller](../GLOSSARY.md#controller)** class grouping related handlers; it is not itself an endpoint. A later `find()` handler in the same class could serve `GET /tickets/:id`. Nest reads annotations beside the class and method, called **decorators**, to combine the controller path prefix with the handler's path and HTTP method. The name `create` does not determine the HTTP method. See [Nest controllers](https://docs.nestjs.com/controllers).
+The selected function is the **[route handler](../GLOSSARY.md#route-handler)**. NestJS is the server framework we will use to register and run these handlers. `TicketsController.create()` will be our handler in Nest. `TicketsController` is a **[controller](../GLOSSARY.md#controller)** class grouping related handlers. A later `findOne()` handler in the same class could serve `GET /tickets/:id`.
+
+| Name | What it means here |
+| --- | --- |
+| `POST /tickets` | endpoint: the public HTTP operation and its input/output contract |
+| matching `POST` and `/tickets` to `TicketsController.create()` | route: the server's selection rule |
+| `TicketsController` | [Controller](../GLOSSARY.md#controller): the class grouping related [route handler](../GLOSSARY.md#route-handler) methods |
+| `create()` | [route handler](../GLOSSARY.md#route-handler): the selected method that invokes `CreateTicket` and maps its result to HTTP |
+| `CreateTicket` | [Application](../GLOSSARY.md#application-layer) [use case](../GLOSSARY.md#use-case): coordinates creation and persistence, independent of routing |
+| `Ticket` | [Domain entity](../GLOSSARY.md#domain-entity): owns valid ticket state, independent of HTTP |
+
+Nest reads annotations beside the class and method, called **decorators**. `@Controller('tickets')` contributes the `/tickets` prefix; `@Post()` contributes the POST method without another path segment. Together they register the endpoint's route to `create()`. The name `create` does not determine the HTTP method. [Chapter 2 shows manual Node routing](2-typescript-first-boundaries.md#register-the-route-with-nodejs); [chapter 3 shows two endpoints in one Controller](3-nestjs-building-blocks.md#1-register-the-functions-we-already-understand). See [Nest controllers](https://docs.nestjs.com/controllers). Teams sometimes use route and endpoint loosely; this track keeps operation and matching rule distinct.
 
 ## 3. Follow the ticket, not just the network
 
@@ -45,7 +56,7 @@ The submitted object crosses a **transport boundary**: data from a client outsid
 
 The handler calls an operation that creates and saves the ticket. We call this operation a **[use case](../GLOSSARY.md#use-case)**, meaning one task offered by the application. `CreateTicket` coordinates the task. `Ticket.create()` owns the business behavior, meaning decisions about a valid ticket independent of HTTP. This business model is **[Domain](../GLOSSARY.md#domain)**; the coordinating workflow is **[Application](../GLOSSARY.md#application-layer)**.
 
-Saving requires an object with an `insert(ticket)` method. `TicketRepository` describes that capability in [Application](../GLOSSARY.md#application-layer)'s language; such a required contract is an outbound **[port](../GLOSSARY.md#port)**. The concrete object that implements the method using a database is a persistence **[adapter](../GLOSSARY.md#adapter)**. Its database calls and translation belong to **[Infrastructure](../GLOSSARY.md#infrastructure)**. The HTTP controller is an inbound [adapter](../GLOSSARY.md#adapter): it accepts an external request and invokes the application. Neither [adapter](../GLOSSARY.md#adapter) becomes the owner of initial ticket status.
+Saving requires an object with an `insert(ticket)` method. `TicketRepository` is the [Application](../GLOSSARY.md#application-layer)-owned persistence contract: it states what `CreateTicket` requires. `InMemoryTicketRepository` implements it using process memory; `PrismaTicketRepository` implements it using Prisma/database access. These implementations belong to **[Infrastructure](../GLOSSARY.md#infrastructure)**. `TicketsController` belongs to **[Presentation](../GLOSSARY.md#presentation-layer)**, where it translates HTTP input/output. Each has a different job; ticket subject and initial state stay owned by `Ticket`. [Chapter 5 gives the explicit Hexagonal mapping](5-architectural-styles-with-nestjs.md#where-are-the-ports-and-adapters-in-this-example) after these responsibilities are clear.
 
 All solid arrows in this diagram are **runtime messages/calls or returns**. The repository contract is stated in prose rather than drawn as an extra running process.
 
@@ -102,10 +113,10 @@ flowchart LR
 
 The [official Nest lifecycle](https://docs.nestjs.com/faq/request-lifecycle) orders guards and inbound interceptors from global to controller to handler. Outbound interceptors unwind in reverse. Pipes also have parameter bindings; for multiple parameters, processing starts at the last parameter. Filters are selected from handler to controller to global, and a filter that handles an exception does not forward it to another filter. Caught errors do not enter this exception path. [Middleware](../GLOSSARY.md#middleware) failures use the global exception handling scope.
 
-The framework does not insert `Ticket.create()` or `insert()` into its lifecycle. Those calls occur **inside our handler's application invocation**. Adding a guard does not add an architectural layer; introducing a persistence [port](../GLOSSARY.md#port) does not add a Nest hook.
+The framework does not insert `Ticket.create()` or `insert()` into its lifecycle. Those calls occur **inside our handler's use-case invocation**. Adding a guard does not add an architectural layer; introducing a persistence contract does not add a Nest hook.
 
 ## 5. Trace it yourself
 
-If a request changes to `GET /tickets`, routing selects a different handler (or no match). If the subject is blank, the same creation operation rejects it whichever client invoked it. If storage fails, the HTTP [adapter](../GLOSSARY.md#adapter) selects an error response. If a command-line tool creates tickets, [HTTP routing](../GLOSSARY.md#http-routing) and Nest HTTP hooks are bypassed while the same application operation can run.
+If a request changes to `GET /tickets`, routing selects a different handler (or no match). If the subject is blank, the same creation [use case](../GLOSSARY.md#use-case) rejects it whichever client invoked it. If storage fails, [Presentation](../GLOSSARY.md#presentation-layer) selects an HTTP error response. If a command-line tool creates tickets, [HTTP routing](../GLOSSARY.md#http-routing) and Nest HTTP hooks are bypassed while the same [Application](../GLOSSARY.md#application-layer) [use case](../GLOSSARY.md#use-case) can run.
 
 Next: [Implement these boundaries in plain TypeScript](2-typescript-first-boundaries.md). Supporting architectural sources: [Cockburn](https://alistair.cockburn.us/hexagonal-architecture/) and [Martin](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html).

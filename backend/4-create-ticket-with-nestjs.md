@@ -15,19 +15,19 @@ All arrows in this structure diagram mean **file ownership/containment**, not ca
 ```mermaid
 flowchart TD
     S["src/"] -->|"contains"| D["domain/tickets/ / Ticket.ts"]
-    S -->|"contains"| A["application/tickets/ / operation, ports, index.ts"]
+    S -->|"contains"| A["application/tickets/ / use case, contracts, index.ts"]
     S -->|"contains"| H["presentation/http/tickets/ / parser, pipe, controller"]
-    S -->|"contains"| I["infrastructure/persistence/tickets/ / storage adapters"]
+    S -->|"contains"| I["infrastructure/persistence/tickets/ / persistence implementations"]
     S -->|"contains"| C["composition/ / modules, tokens, main.ts"]
 ```
 
-The [landing-page placement table and naming guide](README.md#place-your-first-feature) explain each file. The canonical hierarchy puts layers first and capabilities inside them. HTTP/CLI delivery belongs to `presentation/`; it does not introduce another top-level layer named `interface/`. Clean's conceptual [Interface Adapters](../GLOSSARY.md#interface-adapter), a TypeScript `interface` declaration and an HTTP delivery folder describe different things. [Domain](../GLOSSARY.md#domain) cannot import Nest, Prisma, HTTP [DTOs](../GLOSSARY.md#data-transfer-object-dto) or database records. [Application](../GLOSSARY.md#application-layer) imports [Domain](../GLOSSARY.md#domain) and its own contracts, never concrete persistence. [Infrastructure](../GLOSSARY.md#infrastructure) implements inward-owned contracts. [Presentation](../GLOSSARY.md#presentation-layer) translates and invokes [Application](../GLOSSARY.md#application-layer); Composition can import the concrete pieces it assembles.
+The [landing-page placement table and naming guide](README.md#place-your-first-feature) explain each file. The canonical hierarchy puts layers first and capabilities inside them. [Presentation](../GLOSSARY.md#presentation-layer) handles HTTP/CLI in `presentation/`; it does not introduce another top-level layer named `interface/`. Clean's conceptual [Interface Adapters](../GLOSSARY.md#interface-adapter) circle, a TypeScript `interface` declaration and the physical [Presentation layer](../GLOSSARY.md#presentation-layer) describe different things. [Domain](../GLOSSARY.md#domain) cannot import Nest, Prisma, HTTP [DTOs](../GLOSSARY.md#data-transfer-object-dto) or database records. [Application](../GLOSSARY.md#application-layer) imports [Domain](../GLOSSARY.md#domain) and its own contracts, never concrete persistence. [Infrastructure](../GLOSSARY.md#infrastructure) implements inward-owned contracts. [Presentation](../GLOSSARY.md#presentation-layer) translates and invokes [Application](../GLOSSARY.md#application-layer); Composition can import the concrete pieces it assembles.
 
-These dependency constraints define the protected inner policy in this example. Exact folder names and PascalCase filenames are [repository conventions](../conventions/naming-and-file-placement.md). Nest's decorators/registration metadata are framework requirements. Choosing a [port](../GLOSSARY.md#port) for volatile persistence is a recommended design here, not a requirement to create an interface for every class.
+These dependency constraints define the protected inner policy in this example. Exact folder names and PascalCase filenames are [repository conventions](../conventions/naming-and-file-placement.md). Nest's decorators/registration metadata are framework requirements. Using `TicketRepository` to separate [Application](../GLOSSARY.md#application-layer)'s persistence requirement from replaceable storage is a recommended design here, not a requirement to create an interface for every class.
 
 ## 3. Finish the HTTP boundary
 
-Use the [canonical `CreateTicketPipe`](3-nestjs-building-blocks.md#pipe-parse-a-handler-argument), placed beside the chapter 2 parser as `src/presentation/http/tickets/CreateTicketPipe.ts`. The parser rejects malformed shape; the operation invokes the domain factory for actual ticket validity.
+Use the [canonical `CreateTicketPipe`](3-nestjs-building-blocks.md#pipe-parse-a-handler-argument), placed beside the chapter 2 parser as `src/presentation/http/tickets/CreateTicketPipe.ts`. The parser rejects malformed shape; the [use case](../GLOSSARY.md#use-case) invokes the [Domain](../GLOSSARY.md#domain) factory for actual ticket validity. The optional `AuthenticatedGuard` in chapter 3 would decide access before the Pipe, but is not registered in this creation-only module.
 
 `src/presentation/http/tickets/TicketsController.ts`:
 
@@ -65,7 +65,7 @@ export class TicketsController {
 
 This [DTO](../GLOSSARY.md#data-transfer-object-dto) type is useful after the pipe; the annotation does not validate the original JSON. `ticket_id` is chosen by the HTTP contract, not by [Domain](../GLOSSARY.md#domain). The handler returns a plain response object, never a raw [ORM](../GLOSSARY.md#orm) row. Nest serializes it through standard response handling. The explicit `@HttpCode(201)` documents our API decision even though POST already defaults to `201`.
 
-The pipe and controller throw Nest HTTP exceptions; Nest's built-in exception handling maps them to status responses. Its default error envelope differs from the plain handler's illustrative `{ error }` envelope in chapter 2. Here successful fields, status codes and short failure identifiers are our documented contract; standard Nest error envelopes are accepted. If clients need an exact uniform envelope, add and test a delivery-owned filter. Unknown defects propagate to safe `500` handling and need internal logging. [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer) errors never import an HTTP status.
+The Pipe and [Controller](../GLOSSARY.md#controller) throw Nest HTTP exceptions; Nest's built-in exception handling maps them to status responses. Its default error envelope differs from the plain handler's illustrative `{ error }` envelope in chapter 2. Here successful fields, status codes and short failure identifiers are our documented contract; standard Nest error envelopes are accepted. If clients need an exact uniform envelope, add and test a [Presentation](../GLOSSARY.md#presentation-layer)-owned filter. Unknown defects propagate to safe `500` handling and need internal logging. [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer) errors never import an HTTP status.
 
 ## 4. Wire memory first
 
@@ -140,7 +140,7 @@ For example, another composition module imports `TicketsModule` from `compositio
 
 ## 5. Replace memory when the ticket must survive restart
 
-Memory loses tickets on process exit and is not shared across replicas. That concrete limitation motivates a durable [adapter](../GLOSSARY.md#adapter). We illustrate **Prisma [ORM](../GLOSSARY.md#orm) 7 with PostgreSQL**: a generated typed client for relational persistence, supplied with a PostgreSQL driver [adapter](../GLOSSARY.md#adapter). Version-specific setup is kept explicit because current unversioned Prisma documentation describes other APIs too. This is an illustrative integration, not a mandate to use an [ORM](../GLOSSARY.md#orm).
+Memory loses tickets on process exit and is not shared across replicas. That concrete limitation motivates the database implementation `PrismaTicketRepository`. We illustrate **Prisma [ORM](../GLOSSARY.md#orm) 7 with PostgreSQL**: a generated typed client for relational persistence, supplied with a PostgreSQL driver [adapter](../GLOSSARY.md#adapter). Here “driver [adapter](../GLOSSARY.md#adapter)” is Prisma's technology term for its connection to the database driver, not a new name for `TicketRepository`. Version-specific setup is kept explicit because current unversioned Prisma documentation describes other APIs too. This is an illustrative integration, not a mandate to use an [ORM](../GLOSSARY.md#orm).
 
 Prisma schema excerpt for `prisma/schema.prisma` in the example application:
 
@@ -162,9 +162,9 @@ model Ticket {
 }
 ```
 
-The `state` column intentionally shows a different storage field name. There is no database default owning initial state and no second enum allowlist; the [adapter](../GLOSSARY.md#adapter) writes the factory's chosen status. Database constraints can defend stored data, but deriving/checking them against [Domain](../GLOSSARY.md#domain) requires migration discipline, not another manually maintained business vocabulary. A database primary key prevents overwrite on duplicate identity.
+The `state` column intentionally shows a different storage field name. There is no database default owning initial state and no second enum allowlist; `PrismaTicketRepository` writes the factory's chosen status. Database constraints can defend stored data, but deriving/checking them against [Domain](../GLOSSARY.md#domain) requires migration discipline, not another manually maintained business vocabulary. A database primary key prevents overwrite on duplicate identity.
 
-`src/infrastructure/persistence/tickets/PrismaTicketRepository.ts` (version-specific [adapter](../GLOSSARY.md#adapter)):
+`src/infrastructure/persistence/tickets/PrismaTicketRepository.ts` (Prisma implementation of `TicketRepository`):
 
 ```ts
 import { Prisma, type PrismaClient } from '../generated/prisma/client'
@@ -210,9 +210,9 @@ export class PrismaTicketRepository implements TicketRepository {
 }
 ```
 
-Field mapping is explicit and confined to this [adapter](../GLOSSARY.md#adapter). `create()` resolves after the database operation; its returned database record is unnecessary and never becomes a Ticket automatically. An application-owned repository is not Prisma's generated query API or TypeORM's [ORM](../GLOSSARY.md#orm)-specific repository abstraction. It expresses the capability required by our policy; the technology API implements it.
+Field mapping is explicit and confined to `PrismaTicketRepository`. Prisma's `this.db.ticket.create()` resolves after the database operation; its returned database record is unnecessary and never becomes a Ticket automatically. This method is distinct from `TicketsController.create()`, the [route handler](../GLOSSARY.md#route-handler). `TicketRepository` is the [Application](../GLOSSARY.md#application-layer)-owned persistence contract; it is not Prisma's generated query API or TypeORM's [ORM](../GLOSSARY.md#orm)-specific repository abstraction. `PrismaTicketRepository` uses the technology API to fulfill that contract.
 
-The classifier maps recognized connection/time/pool failures to the application failure. The small `recordFailure(code)` function records the technical code before translation; it receives no ticket content or raw error message. The central separation is still contract, [adapter](../GLOSSARY.md#adapter) and database: neither callback nor Prisma enters [Application](../GLOSSARY.md#application-layer).
+The classifier maps recognized connection/time/pool failures to the [Application](../GLOSSARY.md#application-layer) failure. The small `recordFailure(code)` function records the technical code before translation; it receives no ticket content or raw error message. The central separation is still persistence contract, implementation and external database: neither callback nor Prisma enters [Application](../GLOSSARY.md#application-layer).
 
 Unique-key violations such as `P2002`, invalid queries, schema drift and unrecognized driver errors propagate for internal diagnosis, rather than pretending every defect is a temporary outage. This is an intentionally limited **Prisma 7 error policy**; integration tests must verify errors produced by the selected driver [adapter](../GLOSSARY.md#adapter) and deployment, and extend classification deliberately. A `503` is not proof that retrying creates no duplicate ticket.
 
@@ -263,11 +263,11 @@ To switch `composition/modules/TicketsModule.ts`, import `DatabaseModule` and `D
 }
 ```
 
-Keep the operation factory, controller and inner modules unchanged. This is the actual [adapter](../GLOSSARY.md#adapter) binding, not a container lookup inside `CreateTicket`. In a separate example application, install matching Prisma 7 client/CLI and PostgreSQL [adapter](../GLOSSARY.md#adapter) dependencies, configure the migration URL in `prisma.config.ts`, generate the client and apply reviewed migrations before starting. Follow the [official Prisma 7 setup](https://www.prisma.io/docs/orm/v7/prisma-client/setup-and-configuration/introduction) rather than treating this boundary walkthrough as a deployment tutorial. [Nest lifecycle hooks](https://docs.nestjs.com/fundamentals/lifecycle-events) document shutdown handling.
+Keep the use-case factory, [Controller](../GLOSSARY.md#controller) and inner modules unchanged. This binding selects the persistence implementation at startup; `CreateTicket` does not look it up in a container. In a separate example application, install matching Prisma 7 client/CLI and PostgreSQL driver [adapter](../GLOSSARY.md#adapter) dependencies, configure the migration URL in `prisma.config.ts`, generate the client and apply reviewed migrations before starting. Follow the [official Prisma 7 setup](https://www.prisma.io/docs/orm/v7/prisma-client/setup-and-configuration/introduction) rather than treating this boundary walkthrough as a deployment tutorial. [Nest lifecycle hooks](https://docs.nestjs.com/fundamentals/lifecycle-events) document shutdown handling.
 
 ### Optional deeper reading: observability and failure translation
 
-The [adapter](../GLOSSARY.md#adapter) records an outage before `CreateTicket` turns it into `{ ok: false, reason: 'unavailable' }`. Logging only in the controller would lose the original Prisma code. The translated error retains its `cause` while the error exists, but that cause does not survive the plain result; the recorded operation/code does. [Node.js error causes](https://nodejs.org/api/errors.html#errorcause) explain the ES2022 mechanism.
+`PrismaTicketRepository` records an outage before `CreateTicket` turns it into `{ ok: false, reason: 'unavailable' }`. Logging only in the [Controller](../GLOSSARY.md#controller) would lose the original Prisma code. The translated error retains its `cause` while the error exists, but that cause does not survive the plain result; the recorded operation/code does. [Node.js error causes](https://nodejs.org/api/errors.html#errorcause) explain the ES2022 mechanism.
 
 The callback above is an illustrative recorder and must not throw. Keep raw error messages, ticket bodies and connection strings out of it. A deployed recorder needs deliberate correlation, access and retention decisions; add those when designing observability, rather than making a domain logger or generic logging framework part of this persistence contract. The two safe fields locate a failure, but do not promise a complete diagnosis.
 
@@ -277,9 +277,9 @@ Trace solid arrows for **runtime calls**, light dashed arrows for **source depen
 
 ```mermaid
 flowchart LR
-    C["TicketsController / inbound adapter"] -->|"runtime execute"| U["CreateTicket / operation"]
+    C["TicketsController / HTTP Controller"] -->|"runtime execute"| U["CreateTicket / use case"]
     U -->|"runtime create"| D["Ticket / rules"]
-    U -->|"runtime insert on injected object"| I["PrismaTicketRepository / persistence adapter"]
+    U -->|"runtime insert on injected object"| I["PrismaTicketRepository / persistence implementation"]
     I -->|"runtime database insert"| DB["PostgreSQL / external system"]
     U -. "source requires" .-> P["TicketRepository / application contract"]
     I -. "source implements" .-> P
@@ -297,15 +297,15 @@ flowchart LR
     linkStyle 9,10,11 stroke:#a5a096,stroke-width:1px,stroke-dasharray:2 4
 ```
 
-Returns/data translations are shown in [chapter 1's sequence](1-http-request-to-business-operation.md#3-follow-the-ticket-not-just-the-network): the [adapter](../GLOSSARY.md#adapter) maps ticket data to storage; the controller maps the application result to JSON fields. Startup does not rerun for every request. Default singleton providers are suitable because the operation stores no per-request mutable fields; do not put the current user/body on the singleton.
+Returns/data translations are shown in [chapter 1's sequence](1-http-request-to-business-operation.md#3-follow-the-ticket-not-just-the-network): `PrismaTicketRepository` maps ticket data to storage; `TicketsController.create()` maps the [Application](../GLOSSARY.md#application-layer) result to JSON fields. Startup does not rerun for every request. Default singleton providers are suitable because the [use case](../GLOSSARY.md#use-case) stores no per-request mutable fields; do not put the current user/body on the singleton.
 
 ## 7. Review changes and failures before calling it maintainable
 
 | Pressure | Change owner | Stays stable | Detect accidental coupling with |
 | --- | --- | --- | --- |
-| New status or subject/creation rule | [Domain](../GLOSSARY.md#domain)'s vocabulary/factory; any newly required behavior and outward exhaustive display mappings | HTTP parser and [adapter](../GLOSSARY.md#adapter) contain no second allowlist | domain tests; compile/check outward mappings; API compatibility tests |
-| Schema renames `state`, or Prisma/PostgreSQL is replaced | persistence [adapter](../GLOSSARY.md#adapter), migrations/generated types and composition | `Ticket`, `CreateTicket`, HTTP contract | [adapter](../GLOSSARY.md#adapter) integration tests; import boundary checks |
-| CLI or message consumer creates tickets | a new inbound [adapter](../GLOSSARY.md#adapter) parses that input, establishes permissions and calls `execute`; its process assembles the operation | domain rules and application workflow | application tests with either caller; delivery [contract tests](../GLOSSARY.md#contract-test) |
+| New status or subject/creation rule | [Domain](../GLOSSARY.md#domain)'s vocabulary/factory; any newly required behavior and outward exhaustive display mappings | HTTP parser and persistence implementations contain no second allowlist | domain tests; compile/check outward mappings; API compatibility tests |
+| Schema renames `state`, or Prisma/PostgreSQL is replaced | persistence implementation, migrations/generated types and Composition | `Ticket`, `CreateTicket`, HTTP contract | persistence integration tests; import boundary checks |
+| CLI or message consumer creates tickets | [Presentation](../GLOSSARY.md#presentation-layer) parses that input, establishes permissions and calls `execute`; its process assembles the [use case](../GLOSSARY.md#use-case) | domain rules and [Application](../GLOSSARY.md#application-layer) workflow | [Application](../GLOSSARY.md#application-layer) tests with either caller; [Presentation](../GLOSSARY.md#presentation-layer) [contract tests](../GLOSSARY.md#contract-test) |
 | Tickets, Billing, Users and Notifications grow | each capability owns its model and narrow operations; [Nest modules](../GLOSSARY.md#nestjs-module) expose intentional providers | unrelated feature internals remain private | import rules disallow deep imports; module integration tests |
 
 Adding a new status changes the vocabulary once; API consumers may still require coordinated evolution. A changed creation rule may require a new command field, so legitimate outward changes are not evidence of broken architecture. Persistence replacement protects policy, not every migration/deployment file. [Nest module](../GLOSSARY.md#nestjs-module) boundaries can align with business ownership but do not enforce it by themselves; avoid a global `SharedServices` bucket and cross-feature repository access.

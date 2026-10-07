@@ -6,6 +6,8 @@ Official framework/library pages were reviewed on **2026-10-03**. Nest's supplie
 
 The layer-first and naming revision was reviewed on **2026-10-07** against the official Nest controller/provider/module/custom-provider and request-hook documentation, TypeScript narrowing/assertion/module guidance, Prisma 7 generation/insert/error documentation, and the original Clean/Onion and Repository sources. Those sources explain mechanisms and responsibilities; the physical hierarchy and filename conventions remain this handbook's choices. Source review does not establish that Nest/Prisma integrations execute correctly.
 
+The terminology follow-up on **2026-10-07** checks Node's standard [HTTP routing](../GLOSSARY.md#http-routing)/response mechanisms, TypeScript `implements`, Nest route registration and Guard-before-Pipe ordering, and Cockburn's interaction/device distinction. The plain access wrapper compiles and runs with the canonical ticket modules; the incomplete Node routing excerpt illustrates platform plumbing and is source-reviewed, not an executed server integration.
+
 ## HTTP and TypeScript mechanisms
 
 - [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110.html): request/response, methods, representations, status codes and retry semantics.
@@ -13,6 +15,8 @@ The layer-first and naming revision was reviewed on **2026-10-07** against the o
 - [TypeScript — Everyday Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions): assertions do not validate values at runtime.
 - [TypeScript — More on Functions](https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown): unknown input requires checks before use.
 - [TypeScript — Modules](https://www.typescriptlang.org/docs/handbook/2/modules.html): source imports/exports and type-only names; an exported entry point is not automatic privacy for other source files.
+- [TypeScript — Implements clauses](https://www.typescriptlang.org/docs/handbook/2/classes.html#implements-clauses): compile-time conformance to an interface, not supplied behavior or runtime guarantees.
+- [Node.js — HTTP](https://nodejs.org/api/http.html): `createServer`, request method/URL and response `writeHead`/`end`; the example compares paths and serializes JSON without a router library.
 - [Node.js — `crypto.randomUUID`](https://nodejs.org/api/crypto.html#cryptorandomuuidoptions): established ID generation at composition.
 - [Node.js — Error causes](https://nodejs.org/api/errors.html#errorcause): preserve a technical cause inside an error without exposing it through a plain application result; reviewed 2026-10-04.
 - [MDN — JavaScript execution model](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model): synchronous run-to-completion within one execution agent, the quota simulation's scope; reviewed 2026-10-04.

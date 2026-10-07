@@ -4,7 +4,7 @@
 
 ## 1. Register the functions we already understand
 
-Our plain handler can parse and invoke creation, but someone still has to register it with an HTTP platform and assemble its objects. Nest provides those mechanisms. A **decorator** such as `@Post()` attaches metadata that Nest reads to register framework behavior; it does not create ticket policy.
+Our plain handler can parse and invoke creation. Chapter 2's Node example manually matches the method/path, invokes a [route handler](../GLOSSARY.md#route-handler) and serializes its response. Nest registers that relationship and supplies the repeated HTTP plumbing. A **decorator** such as `@Post()` attaches metadata that Nest reads to register framework behavior; it does not create ticket policy.
 
 This routing excerpt assumes the creation operation, a hypothetical read function and the parser have been supplied. Imports, dependency registration and result/error mapping are omitted; chapter 4 provides the complete creation controller. Retrieval is **not implemented** in the canonical feature:
 
@@ -28,11 +28,11 @@ export class TicketsController {
 }
 ```
 
-`@Controller('tickets')` groups handlers under a path prefix. `@Post()` adds no further path, giving `POST /tickets`; `@Get(':id')` registers `GET /tickets/:id`. Each selected method is a **[route handler](../GLOSSARY.md#route-handler)**; the controller class groups them and is not itself an endpoint, [use case](../GLOSSARY.md#use-case) or domain object. `CreateTicket` remains the separate application operation. `@Body()` supplies decoded body data; it does not prove the shape. Nest serializes returned objects, and successful POST defaults to `201`. The raw application result above is explanatory, not the final API representation. [Controller source](https://docs.nestjs.com/controllers).
+`@Controller('tickets')` contributes the `/tickets` path prefix. `@Post()` contributes POST with no further path, registering the route that selects `create()` for `POST /tickets`; `@Get(':id')` registers a different route to `findOne()`. Thus one [Controller](../GLOSSARY.md#controller) class groups two [route handlers](../GLOSSARY.md#route-handler) exposing two endpoints. The endpoint is the public method/path operation and its request/response contract, not a separate file. `CreateTicket` remains the separate [Application](../GLOSSARY.md#application-layer) [use case](../GLOSSARY.md#use-case), and `Ticket` the [Domain entity](../GLOSSARY.md#domain-entity). `@Body()` supplies decoded body data; it does not prove the shape. Nest serializes returned objects, and successful POST defaults to `201`. The raw application result above is explanatory, not the final API representation. [Controller source](https://docs.nestjs.com/controllers).
 
 ## 2. Replace repetitive construction, not business ownership
 
-Previously we wrote `new CreateTicket(repository, makeId)`. When many objects need collaborators, Nest can assemble registered objects and manage their lifetimes. This assembler is its **[dependency injection container](../GLOSSARY.md#di-container)**. A registered dependency is a **[NestJS provider](../GLOSSARY.md#nestjs-provider)**: a class, value or factory result managed by that container. An application operation, storage [adapter](../GLOSSARY.md#adapter) and technical helper can all be providers without becoming one architectural layer. [Provider source](https://docs.nestjs.com/providers).
+Previously we wrote `new CreateTicket(repository, makeId)`. When many objects need collaborators, Nest can assemble registered objects and manage their lifetimes. This assembler is its **[dependency injection container](../GLOSSARY.md#di-container)**. A registered dependency is a **[NestJS provider](../GLOSSARY.md#nestjs-provider)**: a class, value or factory result managed by that container. An [Application](../GLOSSARY.md#application-layer) [use case](../GLOSSARY.md#use-case), persistence implementation and technical helper can all be providers without becoming one architectural layer. [Provider source](https://docs.nestjs.com/providers).
 
 An interface is erased by TypeScript, so Nest cannot look up a runtime value called `TicketRepository`. Give the binding an actual runtime key, an **injection token**. We use a Symbol:
 
@@ -92,6 +92,45 @@ The linked registrations form a **module graph**. Module encapsulation controls 
 ## 5. Put each repeated request concern at its actual hook
 
 Start with the problem, then use the smallest function, then bind it to Nest. These are optional **independent excerpts**, not additional requirements of the first create-ticket implementation. Imports and binding examples are provided where necessary; they are not a complete authentication or logging subsystem.
+
+### Guard and Pipe answer different questions
+
+Suppose ticket creation now requires an authenticated caller. Consider this one request; a Bearer header contains a credential that established authentication code must verify before supplying a trusted `user`:
+
+```http
+POST /tickets HTTP/1.1
+Authorization: Bearer ...
+Content-Type: application/json
+
+{"subject":"Invoice download fails","description":"PDF download returns an error for INV-42."}
+```
+
+The [plain TypeScript access wrapper](2-typescript-first-boundaries.md#check-access-before-processing-the-argument) already shows the mechanism: `if (!context.user)` stops the call; otherwise the existing handler parses the argument, invokes the [use case](../GLOSSARY.md#use-case) and maps the result. Nest gives access and argument processing separate hooks:
+
+| Code | Question / decision | Owner |
+| --- | --- | --- |
+| `AuthenticatedGuard` | **May this caller invoke this selected operation?** Here, require an already verified user. A different policy could check permissions or tenant membership. | [Presentation](../GLOSSARY.md#presentation-layer) access decision; verified identity comes from authentication integration |
+| `CreateTicketPipe` / `parseCreateTicketRequest` | **Can this handler argument be parsed, validated or transformed into the expected transport input?** Here, require an object with subject/description strings. Other Pipes can convert route arguments. | [Presentation](../GLOSSARY.md#presentation-layer) argument processing |
+| `TicketsController.create()` | Invoke `CreateTicket` with the parsed command and map its result to HTTP. | [Presentation](../GLOSSARY.md#presentation-layer) [route handler](../GLOSSARY.md#route-handler) |
+| `CreateTicket.execute()` | Coordinate ticket creation, await persistence and return a plain result. | [Application](../GLOSSARY.md#application-layer) [use case](../GLOSSARY.md#use-case) |
+| `Ticket.create()` | **Is this valid business state?** Normalize/check the subject and assign the authoritative initial status. Future transition rules would also belong here, but are not implemented. | [Domain entity](../GLOSSARY.md#domain-entity) |
+
+A body with valid strings does not establish identity. An authenticated caller can submit `{ subject: 17 }` and fail the Pipe, or a blank subject string and fail [Domain](../GLOSSARY.md#domain) after the Pipe accepts its shape. Guard and Pipe are therefore separate decisions. Neither becomes the owner of ticket rules.
+
+Solid arrows below show **simplified execution order**, not imports or claims that one hook directly calls the next. The server has already selected the route. This view omits [middleware](../GLOSSARY.md#middleware), interceptors, filters, persistence and the return path to focus on access, arguments and business validity:
+
+```mermaid
+flowchart LR
+    R["POST /tickets / selected request"] -->|"check access"| G["AuthenticatedGuard / Guard"]
+    G -->|"allowed"| P["CreateTicketPipe / Pipe"]
+    P -->|"parsed argument"| H["TicketsController.create / handler"]
+    H -->|"execute command"| A["CreateTicket.execute / use case"]
+    A -->|"create valid state"| D["Ticket.create / entity"]
+    classDef step fill:#25313b,stroke:#82909e,color:#e2e8ef
+    class R,G,P,H,A,D step
+```
+
+Nest runs Guards before Pipes and calls the handler only after those checks permit it. The [official lifecycle](https://docs.nestjs.com/faq/request-lifecycle), [Guard](https://docs.nestjs.com/guards) and [Pipe](https://docs.nestjs.com/pipes) documentation explain the hooks; [chapter 1 shows the wider request lifecycle](1-http-request-to-business-operation.md#4-framework-lifecycle-is-a-different-view). The examples below bind these responsibilities to Nest without adding authentication protocol code.
 
 ### Middleware: attach request context early
 
@@ -203,6 +242,6 @@ Bind with `@UseFilters(new TicketStorageFilter())`. This alternative is Express-
 
 ## 6. Framework hooks versus architecture
 
-Every hook above is framework/delivery integration. `Ticket` still owns business validity, `CreateTicket` still orchestrates, the repository implementation still talks to storage, and composition still selects that implementation. Global/controller/handler bindings describe where a hook applies, not the layer it belongs to. Revisit [chapter 1's lifecycle](1-http-request-to-business-operation.md#4-framework-lifecycle-is-a-different-view) to trace ordering separately from application calls.
+The request hooks above belong to [Presentation](../GLOSSARY.md#presentation-layer). `Ticket` still owns business validity, `CreateTicket` still coordinates the [use case](../GLOSSARY.md#use-case), the persistence implementation still talks to storage, and Composition still selects that implementation. Global/controller/handler bindings describe where a hook applies, not the layer it belongs to. Revisit [chapter 1's lifecycle](1-http-request-to-business-operation.md#4-framework-lifecycle-is-a-different-view) to trace ordering separately from application calls.
 
 Next: [Wire these pieces into one ticket capability](4-create-ticket-with-nestjs.md). All official sources are also collected in [References](references.md).
