@@ -32,10 +32,13 @@ Runtime flow may call an external system in the opposite direction through an in
 
 [Application](../GLOSSARY.md#application-layer) needs to insert a valid ticket. Its canonical `TicketRepository` describes that capability. The operation names that contract; `PrismaTicketRepository` names the contract too and supplies its technical implementation. [Application](../GLOSSARY.md#application-layer) does not import Prisma. This reversal of the implementation's source dependency is **dependency inversion**.
 
-The [canonical plain modules](../backend/2-typescript-first-boundaries.md) define the policy/contract, and [the Nest chapter](../backend/4-create-ticket-with-nestjs.md) shows the complete reviewed database [adapter](../GLOSSARY.md#adapter). The assembly excerpt below assumes the database client and identity generator are already supplied:
+The [canonical plain modules](../backend/2-typescript-first-boundaries.md) define the policy/contract, and [the Nest chapter](../backend/4-create-ticket-with-nestjs.md) shows the complete reviewed database [adapter](../GLOSSARY.md#adapter). This `composition/` excerpt imports those modules and assumes the database client and identity generator are already supplied:
 
 ```ts
-const repository = new PrismaTicketRepository(db, diagnostic => console.error(diagnostic))
+import { CreateTicket } from '../application/tickets'
+import { PrismaTicketRepository } from '../infrastructure/persistence/tickets/PrismaTicketRepository'
+
+const repository = new PrismaTicketRepository(db, code => console.error({ operation: 'ticket.insert', code }))
 const createTicket = new CreateTicket(repository, makeId)
 ```
 
@@ -110,8 +113,8 @@ export type { ApiTicketDto } from '@/infrastructure'
 Now consider a deliberately supported inward type. The Tickets application result includes the domain-owned `TicketData` snapshot. An application public entry may expose that type when consumers need to name it:
 
 ```ts
-// Alternative tickets/public.ts excerpt, if consumers need the snapshot type.
-export type { TicketData } from './domain/Ticket'
+// Alternative application/tickets/index.ts excerpt, if consumers need the snapshot type.
+export type { TicketData } from '../../domain/tickets/Ticket'
 ```
 
 The source dependency points inward and the type still belongs to [Domain](../GLOSSARY.md#domain). This is valid when the public contract intentionally supports that representation; it couples consumers to that supported shape. It does not give callers entity mutation methods or permit exporting an [ORM](../GLOSSARY.md#orm) row. A stricter application-specific result can instead map selected fields. The [canonical ticket API](../backend/2-typescript-first-boundaries.md#3-save-without-naming-a-database-in-the-operation) exposes the operation and command/result without adding this optional export.

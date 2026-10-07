@@ -6,7 +6,7 @@ This guide answers the question a beginner encounters first:
 
 For example, suppose an analyst creates a support ticket. The code that draws the form belongs with the UI; the operation that checks the submitted subject belongs with the application workflow; the code that sends an HTTP request belongs with the external integration; and the startup code connects these pieces. If a rule says which ticket statuses are valid regardless of screen or server, that rule belongs with the business concepts. We name these responsibilities below.
 
-The default layered structure used throughout this repository is:
+The canonical physical convention is **layer first, capability second**. This diagram shows the top-level folders; arrows mean containment, not runtime calls:
 
 ```mermaid
 flowchart TD
@@ -19,8 +19,8 @@ flowchart TD
 
     D --> D1["business concepts + invariants"]
     A --> A1["use cases + required ports"]
-    I --> I1["HTTP / DB / storage / SDK adapters"]
-    P --> P1["UI + view state + UI adapters"]
+    I --> I1["outbound HTTP / DB / storage / SDK adapters"]
+    P --> P1["UI / inbound HTTP / CLI delivery"]
     C --> C1["construct and wire concrete dependencies"]
 ```
 
@@ -32,8 +32,8 @@ flowchart TD
 
     START -->|"Enforces a business concept or invariant"| DOMAIN["Domain"]
     START -->|"Coordinates an application operation"| APP["Application"]
-    START -->|"Talks to DB / HTTP / SDK / browser storage"| INFRA["Infrastructure"]
-    START -->|"Exists because a user interface exists"| PRES["Presentation"]
+    START -->|"Calls DB / external HTTP / SDK / storage"| INFRA["Infrastructure"]
+    START -->|"Accepts UI / HTTP / CLI input and presents results"| PRES["Presentation"]
     START -->|"Constructs concrete objects / starts the app"| COMP["Composition"]
 
     DOMAIN --> DQ{"Would the rule still exist with no UI or database?"}
@@ -174,7 +174,9 @@ Typical [Infrastructure](../GLOSSARY.md#infrastructure) files:
 
 ## 6. Presentation
 
-Put code in `presentation/` when it exists because the current UI exists.
+Put code in `presentation/` when it exists because of the way callers interact with the application: a UI, incoming HTTP or a CLI. In the backend, `presentation/http/tickets/` owns the request parser, [Nest pipe](../GLOSSARY.md#nestjs-pipe) and controller; `presentation/cli/tickets/` owns arguments, messages and exit codes. An outbound HTTP client that calls another system instead belongs to [Infrastructure](../GLOSSARY.md#infrastructure). The same protocol can serve different responsibilities.
+
+The following structure is the frontend-specific part of [Presentation](../GLOSSARY.md#presentation-layer):
 
 ```mermaid
 flowchart TD
@@ -223,8 +225,8 @@ flowchart TD
     T{"What does the type describe?"}
     T -->|"business concept"| D["domain/"]
     T -->|"use-case input/output or port"| A["application/"]
-    T -->|"wire/storage/SDK representation"| I["infrastructure/"]
-    T -->|"form/view/component state"| P["presentation/"]
+    T -->|"external API / storage / SDK representation"| I["infrastructure/"]
+    T -->|"incoming HTTP / CLI input or form/view state"| P["presentation/"]
 ```
 
 Examples:
@@ -286,3 +288,22 @@ flowchart LR
 Before creating the file, apply [Naming and File Placement Conventions](../conventions/naming-and-file-placement.md).
 
 The folder answers **who owns it**. The filename answers **what role it plays**.
+
+## 12. Grow capabilities inside each layer
+
+Suppose Tickets gains a neighboring Scheduling capability for appointments, availability and calendars. A flat `application/` with hundreds of unrelated files would make ownership hard to find. Keep architectural responsibility as the first directory and group business capability inside it: `application/tickets/`, `application/scheduling/`, `application/patients/` and `application/billing/`. [Domain](../GLOSSARY.md#domain) and the outer layers use their corresponding owners; [Infrastructure](../GLOSSARY.md#infrastructure) can group persistence/integrations, and [Presentation](../GLOSSARY.md#presentation-layer) can group HTTP/CLI delivery before the capability.
+
+When Scheduling becomes large, subdivide it **within its layer**. Arrows below mean containment:
+
+```mermaid
+flowchart TD
+    A["application/"] -->|"contains"| S["scheduling/"]
+    S -->|"contains"| AP["appointments/"]
+    S -->|"contains"| AV["availability/"]
+    S -->|"contains"| AG["agenda/"]
+    S -->|"contains"| CA["calendars/"]
+```
+
+These folders represent cohesive responsibilities, not automatically every entity or table. Do not create a complete architectural stack for each appointment or doctor just because both have database records. A Scheduling team owns its supported operations across layers; another capability uses its narrow [public API](../GLOSSARY.md#public-api) instead of internal files. A new scheduling rule changes its inward owner, a new calendar integration changes its outer [adapter](../GLOSSARY.md#adapter) and wiring, and additional teams require explicit contracts rather than a global shared bucket.
+
+This convention keeps layer responsibilities visible while capabilities prevent flat dumping grounds. It does not itself enforce imports, guarantee easy changes or prove scalability. Dependency direction and ownership are architectural rules; this physical layout is the handbook's choice, not a filesystem prescription from Martin, Palermo or Cockburn. Capability-first packaging can be valid in another project. See [module boundaries and supported APIs](module-boundaries-and-public-apis.md) for the separate ownership constraint.

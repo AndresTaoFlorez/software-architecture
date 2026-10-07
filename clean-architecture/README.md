@@ -122,7 +122,7 @@ Putting all four reasons in one file couples unrelated changes and makes replace
 
 ## 7. Recommended physical structure
 
-This repository uses a pragmatic mapping that is easier to operate in TypeScript projects:
+This repository uses layer-first folders, with capabilities inside each layer. Diagram arrows mean containment:
 
 ```mermaid
 flowchart TD
@@ -147,10 +147,10 @@ flowchart TD
 | `domain/` | business meaning and [invariants](../GLOSSARY.md#invariant) | policy should survive UI/DB replacement | framework state, HTTP clients, [DTOs](../GLOSSARY.md#data-transfer-object-dto), [ORM](../GLOSSARY.md#orm) records |
 | `application/` | application operations and required capabilities | orchestration stays independent from concrete mechanisms | React components, SQL/[ORM](../GLOSSARY.md#orm) clients, concrete HTTP [adapters](../GLOSSARY.md#adapter) |
 | `infrastructure/` | concrete I/O [adapters](../GLOSSARY.md#adapter) and external representations | volatile technology is translated at the boundary | presentation components or authoritative domain policy |
-| `presentation/` | rendering, interaction and view-oriented state | UI concerns need their own owner | database/HTTP implementations when the strict boundary is used |
+| `presentation/` | UI interaction/view state and incoming HTTP/CLI delivery | caller input/output needs its own owner | database clients and outbound integration implementations |
 | `composition/` | concrete assembly/bootstrap | one outer place selects implementations | business decisions and use-case branching |
 
-These folder names are a **documentation convention**, not part of Martin's canonical four-circle definition.
+These folder names and layer-first hierarchy are a **documentation convention**, not part of Martin's canonical four-circle definition. Grow cohesive capabilities inside each layer, following [the Scheduling example](../foundations/code-placement.md#12-grow-capabilities-inside-each-layer). The frontend structure shown here and the [backend HTTP/CLI paths](../backend/README.md#place-your-first-feature) apply the same convention to different delivery mechanisms.
 
 For exact placement rules, use **[Code Placement](../foundations/code-placement.md)**.
 
@@ -163,8 +163,8 @@ flowchart TD
     START{"Why does this code exist?"}
     START -->|"Enforces business truth"| D["domain/"]
     START -->|"Coordinates an application operation"| A["application/"]
-    START -->|"Calls DB / HTTP / storage / SDK"| I["infrastructure/"]
-    START -->|"Renders / formats / manages UI interaction"| P["presentation/"]
+    START -->|"Calls DB / external HTTP / storage / SDK"| I["infrastructure/"]
+    START -->|"Accepts UI / HTTP / CLI input and presents results"| P["presentation/"]
     START -->|"Constructs concrete dependencies"| C["composition/"]
 ```
 

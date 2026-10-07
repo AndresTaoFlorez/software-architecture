@@ -31,7 +31,7 @@ The operation needs an object with `insert(ticket): Promise<void>`. That promise
 
 Here the **[Application](../GLOSSARY.md#application-layer) owner** needs persistence, so its contract lives there. Palermo describes repository interfaces in a layer immediately around the domain model. Other Onion implementations can put a business-owned repository abstraction in a domain-services area. Decide by who requires and owns the conversation; do not relocate every interface to `domain/` merely to match a picture. In both placements, the concrete database implementation stays outside and depends toward the contract.
 
-Exact file paths, naming and the split into `domain/`, `application/`, `interface/`, `infrastructure/` and `composition/` are handbook conventions. The [placement table](../backend/README.md#place-your-first-feature) and [public entry points](../backend/4-create-ticket-with-nestjs.md#4-wire-memory-first) make the first feature usable without learning another folder taxonomy.
+The canonical physical hierarchy is layer first: `domain/`, `application/`, `infrastructure/`, `presentation/` and `composition/`, with capabilities inside each layer. HTTP/CLI delivery belongs to [Presentation](../GLOSSARY.md#presentation-layer). These are handbook conventions, not Palermo's filesystem prescription. The [placement and naming guide](../backend/README.md#place-your-first-feature), [Scaling example](../foundations/code-placement.md#12-grow-capabilities-inside-each-layer) and [public entry points](../backend/4-create-ticket-with-nestjs.md#4-wire-memory-first) explain the choices without adding another folder taxonomy.
 
 ## 3. Trace source, startup and runtime separately
 

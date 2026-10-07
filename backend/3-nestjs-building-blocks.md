@@ -6,21 +6,29 @@
 
 Our plain handler can parse and invoke creation, but someone still has to register it with an HTTP platform and assemble its objects. Nest provides those mechanisms. A **decorator** such as `@Post()` attaches metadata that Nest reads to register framework behavior; it does not create ticket policy.
 
-This routing excerpt assumes `createTicket` has been injected and `parseCreateTicketRequest` imported; chapter 4 provides the complete controller with failure and response mapping:
+This routing excerpt assumes the creation operation, a hypothetical read function and the parser have been supplied. Imports, dependency registration and result/error mapping are omitted; chapter 4 provides the complete creation controller. Retrieval is **not implemented** in the canonical feature:
 
 ```ts
 @Controller('tickets')
 export class TicketsController {
-  constructor(@Inject(CreateTicket) private readonly createTicket: CreateTicket) {}
+  constructor(
+    private readonly createTicket: CreateTicket,
+    private readonly readTicket: (id: string) => Promise<unknown>,
+  ) {}
 
   @Post()
   create(@Body() body: unknown) {
     return this.createTicket.execute(parseCreateTicketRequest(body))
   }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.readTicket(id)
+  }
 }
 ```
 
-`@Controller('tickets')` groups handlers under a path prefix. `@Post()` registers the HTTP method and adds no further path, giving `POST /tickets`. `create()` is the **[route handler](../GLOSSARY.md#route-handler)**. The class is the **controller**, not the endpoint. Another method decorated with `@Get(':id')` could expose another endpoint from the same controller. `@Body()` supplies decoded body data; it does not prove the shape. Nest's standard response handling serializes returned objects; successful POST defaults to `201`. Returning our raw application result here is an explanatory excerpt, not the final API representation. [Controller source](https://docs.nestjs.com/controllers).
+`@Controller('tickets')` groups handlers under a path prefix. `@Post()` adds no further path, giving `POST /tickets`; `@Get(':id')` registers `GET /tickets/:id`. Each selected method is a **[route handler](../GLOSSARY.md#route-handler)**; the controller class groups them and is not itself an endpoint, [use case](../GLOSSARY.md#use-case) or domain object. `CreateTicket` remains the separate application operation. `@Body()` supplies decoded body data; it does not prove the shape. Nest serializes returned objects, and successful POST defaults to `201`. The raw application result above is explanatory, not the final API representation. [Controller source](https://docs.nestjs.com/controllers).
 
 ## 2. Replace repetitive construction, not business ownership
 
@@ -29,7 +37,7 @@ Previously we wrote `new CreateTicket(repository, makeId)`. When many objects ne
 An interface is erased by TypeScript, so Nest cannot look up a runtime value called `TicketRepository`. Give the binding an actual runtime key, an **injection token**. We use a Symbol:
 
 ```ts
-// composition/ticket.tokens.ts
+// composition/tokens/ticket.tokens.ts
 export const TICKET_REPOSITORY = Symbol('TICKET_REPOSITORY')
 ```
 
@@ -128,6 +136,8 @@ Bind with `@UseGuards(AuthenticatedGuard)` on the controller/handler and registe
 
 We already have a function that rejects wrong body shapes. A **[Pipe](../GLOSSARY.md#nestjs-pipe)** integrates that parsing/validation/transformation into Nest's handler arguments:
 
+`src/presentation/http/tickets/CreateTicketPipe.ts`:
+
 ```ts
 import { BadRequestException } from '@nestjs/common'
 import type { PipeTransform } from '@nestjs/common'
@@ -178,7 +188,7 @@ An exception is not intrinsically an HTTP response. A CLI could display it diffe
 import { Catch } from '@nestjs/common'
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
 import type { Response } from 'express'
-import { TicketPersistenceUnavailable } from '../../application/TicketRepository'
+import { TicketPersistenceUnavailable } from '../../../application/tickets/ports/TicketRepository'
 
 @Catch(TicketPersistenceUnavailable)
 export class TicketStorageFilter implements ExceptionFilter {

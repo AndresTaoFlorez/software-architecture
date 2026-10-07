@@ -11,7 +11,7 @@ Two projects can both have a folder named `domain/`. In one, the rule “shipped
 
 ## 3.1 The folder layout
 
-A practical TypeScript mapping is:
+The canonical handbook mapping puts layers first, with capabilities inside them:
 
 ```mermaid
 flowchart TD
@@ -51,13 +51,15 @@ flowchart LR
 
 Whether [Presentation](../GLOSSARY.md#presentation-layer) may import [Domain](../GLOSSARY.md#domain) types directly is a project decision. A stricter application-contract boundary may forbid it to reduce coupling between UI and domain representation.
 
+The [canonical backend](../backend/README.md#place-your-first-feature) chooses that stricter boundary: HTTP/CLI [Presentation](../GLOSSARY.md#presentation-layer) imports the supported [Application](../GLOSSARY.md#application-layer) API, not [Domain](../GLOSSARY.md#domain) files directly.
+
 Long dashes show imports; short dots show startup wiring. [Domain](../GLOSSARY.md#domain) may import other domain code and no outer area. Folder-tree arrows elsewhere on this page mean containment, not imports or calls.
 
 ---
 
 ## 3.2 Structure by capability inside a layer
 
-Layer-first top-level folders are compatible with feature/capability ownership below them.
+Layer-first top-level folders are compatible with feature/capability ownership below them. Grow sub-capabilities inside their layer, following [the centralized Scheduling example](../foundations/code-placement.md#12-grow-capabilities-inside-each-layer); do not build a full architectural stack per entity or table.
 
 Example:
 
@@ -117,7 +119,7 @@ The canonical repository guidance is therefore centralized in:
 - **[Presentation Architecture](../frontend/presentation-architecture.md)**
 - **[State Management](../frontend/state-management.md)**
 
-Recommended default:
+Frontend default; backend HTTP/CLI delivery uses `presentation/http/` and `presentation/cli/`:
 
 ```mermaid
 flowchart TD

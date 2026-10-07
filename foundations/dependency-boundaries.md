@@ -35,9 +35,11 @@ For application code, a useful default is:
 | [Domain](../GLOSSARY.md#domain) | business concepts, [invariants](../GLOSSARY.md#invariant), [value objects](../GLOSSARY.md#value-object), [domain errors](../GLOSSARY.md#domain-error) | domain only |
 | [Application](../GLOSSARY.md#application-layer) | use-case policy, application contracts, required [ports](../GLOSSARY.md#port) | application + domain |
 | [Infrastructure](../GLOSSARY.md#infrastructure) | HTTP/database/storage/SDK [adapters](../GLOSSARY.md#adapter), external [DTOs](../GLOSSARY.md#data-transfer-object-dto) and [mappers](../GLOSSARY.md#mapper) | infrastructure + application + domain |
-| [Presentation](../GLOSSARY.md#presentation-layer) | UI composition, view state, [view models](../GLOSSARY.md#viewmodel)/hooks, UI framework state | presentation + application; domain only when deliberately exposed as an application contract |
+| [Presentation](../GLOSSARY.md#presentation-layer) | UI/view state and incoming HTTP/CLI delivery, parsing and result mapping | presentation + application; domain only when deliberately exposed as an application contract |
 
 This table is a **recommended project policy**, not a quotation from [Clean Architecture](../GLOSSARY.md#clean-architecture). Projects may split or merge outer areas while preserving inward dependency direction.
+
+The canonical backend uses the stricter [Application](../GLOSSARY.md#application-layer) entry-point boundary: [Presentation](../GLOSSARY.md#presentation-layer) imports `application/tickets` instead of [Domain](../GLOSSARY.md#domain) files directly, even for types. [Infrastructure](../GLOSSARY.md#infrastructure) can import inward data/contracts; Composition imports all pieces needed for assembly. [Its fixture check](../scripts/backend-ticket-example.test.mjs) enforces that complete layer matrix. Capability privacy is a separate rule. Physical paths follow the [layer-first handbook convention](code-placement.md#12-grow-capabilities-inside-each-layer), which those architecture sources do not prescribe.
 
 ## 3. Do not confuse runtime flow with source dependency
 

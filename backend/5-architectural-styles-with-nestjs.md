@@ -20,7 +20,7 @@ Nest's introduction describes an **“out-of-the-box application architecture”
 
 Our **architectural interpretation** is narrower: these mechanisms do not specify the owner of ticket [invariants](../GLOSSARY.md#invariant), require an application-owned persistence interface, prevent [ORM](../GLOSSARY.md#orm) types entering [Domain](../GLOSSARY.md#domain), or enforce Clean's inward source rule. The same provider can be a domain policy, application operation or database client. A module may group a feature, a technical integration or badly mixed responsibilities. Nest has framework structure, but that structure alone does not establish Clean, Onion, Hexagonal or a complete coherent Layered design.
 
-The illustrative paths in chapter 4 are our conventions. The source imports, public contracts and ownership decisions determine which architectural principles are satisfied. Nest registration determines whether the graph can be instantiated.
+The layer-first paths in chapter 4 are our handbook conventions: capabilities grow inside each layer, as [Scheduling illustrates](../foundations/code-placement.md#12-grow-capabilities-inside-each-layer). HTTP/CLI belongs to [Presentation](../GLOSSARY.md#presentation-layer); the conceptual [Interface Adapters](../GLOSSARY.md#interface-adapter) circle does not require another top-level `interface/` folder. Source imports, public contracts and ownership determine which architectural principles are satisfied. Nest registration determines whether the graph can be instantiated.
 
 ## 4. Layered: separate kinds of work
 

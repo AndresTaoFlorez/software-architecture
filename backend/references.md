@@ -4,12 +4,15 @@
 
 Official framework/library pages were reviewed on **2026-10-03**. Nest's supplied framework organization and our architectural interpretations are distinguished in [chapter 5](5-architectural-styles-with-nestjs.md#3-does-nestjs-impose-an-architecture). Prisma code deliberately targets the versioned **[ORM](../GLOSSARY.md#orm) 7** API; a different major version needs its own setup/error review.
 
+The layer-first and naming revision was reviewed on **2026-10-07** against the official Nest controller/provider/module/custom-provider and request-hook documentation, TypeScript narrowing/assertion/module guidance, Prisma 7 generation/insert/error documentation, and the original Clean/Onion and Repository sources. Those sources explain mechanisms and responsibilities; the physical hierarchy and filename conventions remain this handbook's choices. Source review does not establish that Nest/Prisma integrations execute correctly.
+
 ## HTTP and TypeScript mechanisms
 
 - [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110.html): request/response, methods, representations, status codes and retry semantics.
 - [TypeScript — Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html): runtime checks refine static types.
 - [TypeScript — Everyday Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions): assertions do not validate values at runtime.
 - [TypeScript — More on Functions](https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown): unknown input requires checks before use.
+- [TypeScript — Modules](https://www.typescriptlang.org/docs/handbook/2/modules.html): source imports/exports and type-only names; an exported entry point is not automatic privacy for other source files.
 - [Node.js — `crypto.randomUUID`](https://nodejs.org/api/crypto.html#cryptorandomuuidoptions): established ID generation at composition.
 - [Node.js — Error causes](https://nodejs.org/api/errors.html#errorcause): preserve a technical cause inside an error without exposing it through a plain application result; reviewed 2026-10-04.
 - [MDN — JavaScript execution model](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model): synchronous run-to-completion within one execution agent, the quota simulation's scope; reviewed 2026-10-04.
