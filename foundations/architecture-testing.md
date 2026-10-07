@@ -61,6 +61,8 @@ Parse the language syntax tree rather than relying only on regular expressions. 
 
 [Type-only imports](../GLOSSARY.md#type-only-import) still represent design-time coupling.
 
+The [backend repository fixture check](../scripts/backend-ticket-example.test.mjs) applies this matrix to the documented Ticket modules, including reexports, import types, `require` and import-equals. It recognizes their relative paths and `@/` alias; it is not a production module resolver. For example, Billing importing a private Tickets helper can pass because both belong to [Application](../GLOSSARY.md#application-layer), while importing Tickets' Prisma implementation fails because it crosses outward into [Infrastructure](../GLOSSARY.md#infrastructure). Enforcing the supported Tickets entry point is a separate capability rule, as section 4 explains.
+
 ## 3. Dependency graph tools
 
 For JavaScript/TypeScript, dependency-cruiser can enforce `forbidden`, `allowed` and `required` dependency rules. Cross-feature rules that need to compare source and target feature identities may require a more specific tool/configuration or a custom [AST](../GLOSSARY.md#abstract-syntax-tree-ast) check; do not assume a single regular expression compares capture groups across both sides.

@@ -7,7 +7,7 @@ npm ci --ignore-scripts
 npm run check
 ```
 
-After editing prose, run `node scripts/glossary-links.mjs --write`, inspect the diff, then run the check again.
+After editing prose, run `node scripts/glossary-links.mjs --write`, inspect the diff, then run the check again. The shared Markdown scanner skips `.codex-remote-attachments/`: working review inputs are neither handbook pages nor targets for glossary rewriting.
 
 ## What the local validation commands check
 
@@ -25,7 +25,7 @@ The parser uses CommonMark syntax and preserves source offsets. The linker does 
 
 The ticket dependency test checks both layer-first relative references and the canonical `@/ = src/` alias in [Domain](../GLOSSARY.md#domain), [Application](../GLOSSARY.md#application-layer), [Infrastructure](../GLOSSARY.md#infrastructure), [Presentation](../GLOSSARY.md#presentation-layer) and Composition. It distinguishes `@/domain/...` from external scoped packages such as `@nestjs/common` and `@prisma/client`. Inner layers reject package imports; outer fixtures may import framework/platform packages. Computed imports that cannot be resolved are rejected, and negative cases cover outward dependencies through both path forms.
 
-The checker supports this one documented alias, not arbitrary project aliases or third-party transitive dependencies. Capability [public APIs](../GLOSSARY.md#public-api) need separate enforcement. Plain examples first typecheck their original imports with TypeScript path mappings; only then does `scripts/example-imports.mjs` adapt temporary execution copies for Node. This is not a production alias loader. See [source imports and runtime resolution](../conventions/naming-and-file-placement.md#9-source-imports-and-runtime-resolution).
+This is a **repository fixture check**: it inspects the documented modules and classifies source references by layer. It does not resolve a production project's module graph or check that every referenced file exists. Original TypeScript compilation checks resolution for the complete plain modules; Nest/Prisma snippets receive source inspection only. The checker supports this one documented alias, not arbitrary project aliases or third-party transitive dependencies. A Billing import into a private Tickets file can pass the layer check because both are in [Application](../GLOSSARY.md#application-layer); capability [public APIs](../GLOSSARY.md#public-api) need separate enforcement. Plain examples first typecheck their original imports with TypeScript path mappings; only then does `scripts/example-imports.mjs` adapt temporary execution copies for Node. This is not a production alias loader. See [source imports and runtime resolution](../conventions/naming-and-file-placement.md#9-source-imports-and-runtime-resolution).
 
 [Presentation](../GLOSSARY.md#presentation-layer) imports [Application](../GLOSSARY.md#application-layer) rather than [Domain](../GLOSSARY.md#domain) directly in this backend example. The quota exercise checks one JavaScript execution agent and does not establish database isolation, rollback, durability or behavior across server processes.
 

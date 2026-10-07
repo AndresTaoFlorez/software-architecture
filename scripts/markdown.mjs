@@ -5,7 +5,7 @@ import GithubSlugger from 'github-slugger'
 
 export function markdownFiles(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
-    if (['.git', 'node_modules', 'dist', 'build'].includes(entry.name)) return []
+    if (['.git', '.codex-remote-attachments', 'node_modules', 'dist', 'build'].includes(entry.name)) return []
     const full = path.join(dir, entry.name)
     return entry.isDirectory() ? markdownFiles(full) : entry.isFile() && entry.name.endsWith('.md') ? [full] : []
   })

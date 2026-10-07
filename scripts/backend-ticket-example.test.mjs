@@ -32,8 +32,9 @@ const exerciseNames = [
   'composition/compareQuotaStores.ts',
 ]
 
-// Test-only: resolve the documented @/ alias and relative source paths.
-// Capability API checks and third-party transitive dependencies are separate concerns.
+// Repository fixture check: inspect documented @/ and relative paths by layer.
+// This is not a production module resolver: no file-existence, arbitrary alias,
+// capability API or third-party transitive-dependency checks.
 const allowedLayers = {
   domain: ['domain'],
   application: ['application', 'domain'],
@@ -42,7 +43,7 @@ const allowedLayers = {
   composition: ['composition', 'presentation', 'infrastructure', 'application', 'domain'],
 }
 
-function checkLayerDependencies(name, code) {
+function checkFixtureLayerDependencies(name, code) {
   const layer = name.split('/')[0]
   assert.ok(allowedLayers[layer], 'Unknown fixture layer: ' + name)
   const tree = ts.createSourceFile(name, code, ts.ScriptTarget.Latest, true)
@@ -89,11 +90,11 @@ test('layer inspection rejects forbidden imports, reexports and indirect module 
       `import X = require('${outward}')`,
     ]
     for (const code of forms) {
-      assert.throws(() => checkLayerDependencies('application/tickets/Test.ts', code), /Forbidden layer dependency/)
+      assert.throws(() => checkFixtureLayerDependencies('application/tickets/Test.ts', code), /Forbidden layer dependency/)
     }
   }
   for (const code of ['import(target)', 'import(`../${target}`)', 'require(target)']) {
-    assert.throws(() => checkLayerDependencies('application/tickets/Test.ts', code), /Unresolved fixture dependency/)
+    assert.throws(() => checkFixtureLayerDependencies('application/tickets/Test.ts', code), /Unresolved fixture dependency/)
   }
   // Expectations are independent of allowedLayers so changing enforcement cannot change the test oracle.
   const forbidden = [
@@ -103,9 +104,9 @@ test('layer inspection rejects forbidden imports, reexports and indirect module 
     ['presentation', 'domain'], ['presentation', 'infrastructure'], ['presentation', 'composition'],
   ]
   for (const [layer, target] of forbidden) {
-    assert.throws(() => checkLayerDependencies(layer + '/tickets/Test.ts',
+    assert.throws(() => checkFixtureLayerDependencies(layer + '/tickets/Test.ts',
       `import type { X } from '../../${target}/tickets/X'`), /Forbidden layer dependency/)
-    assert.throws(() => checkLayerDependencies(layer + '/tickets/Test.ts',
+    assert.throws(() => checkFixtureLayerDependencies(layer + '/tickets/Test.ts',
       `import type { X } from '@/${target}/tickets/X'`), /Forbidden layer dependency/)
   }
   const permitted = [
@@ -116,25 +117,27 @@ test('layer inspection rejects forbidden imports, reexports and indirect module 
     ['composition', 'application'], ['composition', 'domain'],
   ]
   for (const [layer, target] of permitted) {
-    checkLayerDependencies(layer + '/tickets/Test.ts', `import type { X } from '../../${target}/tickets/X'`)
-    checkLayerDependencies(layer + '/tickets/Test.ts', `import type { X } from '@/${target}/tickets/X'`)
+    checkFixtureLayerDependencies(layer + '/tickets/Test.ts', `import type { X } from '../../${target}/tickets/X'`)
+    checkFixtureLayerDependencies(layer + '/tickets/Test.ts', `import type { X } from '@/${target}/tickets/X'`)
   }
   for (const layer of ['domain', 'application', 'infrastructure', 'presentation', 'composition']) {
     for (const external of ["import { X } from '@nestjs/common'", "import { X } from '@prisma/client'"]) {
       if (layer === 'domain' || layer === 'application') {
-        assert.throws(() => checkLayerDependencies(layer + '/tickets/Test.ts', external), /External dependency/)
-      } else checkLayerDependencies(layer + '/tickets/Test.ts', external)
+        assert.throws(() => checkFixtureLayerDependencies(layer + '/tickets/Test.ts', external), /External dependency/)
+      } else checkFixtureLayerDependencies(layer + '/tickets/Test.ts', external)
     }
   }
-  checkLayerDependencies('application/tickets/Test.ts', "export type { TicketData } from '../../domain/tickets/Ticket'")
-  checkLayerDependencies('application/tickets/Test.ts', "async function load() { return import('../../domain/tickets/Ticket') }")
-  checkLayerDependencies('domain/tickets/Test.ts', "import type { TicketData } from './Ticket'")
-  checkLayerDependencies('application/tickets/Test.ts', "// import('prisma')\nconst text = \"require('prisma')\"")
-  assert.throws(() => checkLayerDependencies('application/tickets/Test.ts', "export * from '../../../outside'"), /Forbidden/)
-  assert.throws(() => checkLayerDependencies('application/tickets/Test.ts', "export * from '@/outside'"), /Forbidden/)
-  assert.throws(() => checkLayerDependencies('domain/tickets/Test.ts', "export * from '@/domain/../../outside'"), /Forbidden/)
+  checkFixtureLayerDependencies('application/tickets/Test.ts', "export type { TicketData } from '../../domain/tickets/Ticket'")
+  checkFixtureLayerDependencies('application/tickets/Test.ts', "async function load() { return import('../../domain/tickets/Ticket') }")
+  checkFixtureLayerDependencies('domain/tickets/Test.ts', "import type { TicketData } from './Ticket'")
+  checkFixtureLayerDependencies('application/tickets/Test.ts', "// import('prisma')\nconst text = \"require('prisma')\"")
+  assert.throws(() => checkFixtureLayerDependencies('application/tickets/Test.ts', "export * from '../../../outside'"), /Forbidden/)
+  assert.throws(() => checkFixtureLayerDependencies('application/tickets/Test.ts', "export * from '@/outside'"), /Forbidden/)
+  assert.throws(() => checkFixtureLayerDependencies('domain/tickets/Test.ts', "export * from '@/domain/../../outside'"), /Forbidden/)
   // Same-layer imports are valid here; supported capability APIs require another policy.
-  checkLayerDependencies('application/billing/Test.ts', "import { CreateTicket } from '../tickets'")
+  checkFixtureLayerDependencies('application/billing/Test.ts', "import { CreateTicket } from '../tickets'")
+  // A private same-layer import also passes: this fixture enforces layers only.
+  checkFixtureLayerDependencies('application/billing/Test.ts', "import { X } from '@/application/tickets/private/X'")
 })
 
 function compile(root, files, output = 'out') {
@@ -191,7 +194,7 @@ test('documented Nest and Prisma modules follow the layer policy without executi
   }
   for (const [file, modules] of Object.entries(blocks)) {
     const document = fs.readFileSync(file, 'utf8').replaceAll('\r\n', '\n')
-    for (const name of modules) checkLayerDependencies(name, extract(document, name))
+    for (const name of modules) checkFixtureLayerDependencies(name, extract(document, name))
   }
 })
 
@@ -206,7 +209,7 @@ test('backend ticket modules compile and preserve validation, persistence and de
       const file = path.join(root, 'src', name)
       fs.mkdirSync(path.dirname(file), { recursive: true })
       fs.writeFileSync(file, code)
-      checkLayerDependencies(name, code)
+      checkFixtureLayerDependencies(name, code)
       return file
     })
     compile(root, files)

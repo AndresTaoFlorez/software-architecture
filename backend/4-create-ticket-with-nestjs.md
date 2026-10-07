@@ -247,11 +247,9 @@ export class PrismaTicketRepository implements TicketRepository {
 }
 ```
 
-Field mapping is explicit and confined to `PrismaTicketRepository`. Prisma's `this.db.ticket.create()` resolves after the database operation; its returned database record is unnecessary and never becomes a Ticket automatically. This method is distinct from `TicketsController.create()`, the [route handler](../GLOSSARY.md#route-handler). `TicketRepository` is the [Application](../GLOSSARY.md#application-layer)-owned persistence contract; it is not Prisma's generated query API or TypeORM's [ORM](../GLOSSARY.md#orm)-specific repository abstraction. `PrismaTicketRepository` uses the technology API to fulfill that contract.
+`PrismaTicketRepository` implements the inward `TicketRepository` contract using Prisma's database API. It maps `status` to `state`, awaits the write and discards the returned storage record. Replacing Prisma changes this outer implementation and its setup, while `CreateTicket` still requires the same insert behavior.
 
-The classifier maps recognized connection/time/pool failures to the [Application](../GLOSSARY.md#application-layer) failure. The small `recordFailure(code)` function records the technical code before translation; it receives no ticket content or raw error message. The central separation is still persistence contract, implementation and external database: neither callback nor Prisma enters [Application](../GLOSSARY.md#application-layer).
-
-Unique-key violations such as `P2002`, invalid queries, schema drift and unrecognized driver errors propagate for internal diagnosis, rather than pretending every defect is a temporary outage. This is an intentionally limited **Prisma 7 error policy**; integration tests must verify errors produced by the selected driver [adapter](../GLOSSARY.md#adapter) and deployment, and extend classification deliberately. A `503` is not proof that retrying creates no duplicate ticket.
+Recognized outages are recorded as an operation/code before translation into `TicketPersistenceUnavailable`. Unknown errors propagate; the callback receives neither ticket content nor raw error text. Both the database code and its recorder stay outside [Application](../GLOSSARY.md#application-layer). The [optional failure-policy discussion](#optional-deeper-reading-observability-and-failure-translation) explains classification and diagnostic limits.
 
 Sources: [Prisma 7 generation](https://www.prisma.io/docs/orm/v7/prisma-client/setup-and-configuration/generating-prisma-client), [CRUD](https://www.prisma.io/docs/orm/v7/prisma-client/queries/crud), [error reference](https://www.prisma.io/docs/orm/v7/reference/error-reference).
 
@@ -303,6 +301,8 @@ To switch `composition/modules/TicketsModule.ts`, import `DatabaseModule` and `D
 Keep the use-case factory, [Controller](../GLOSSARY.md#controller) and inner modules unchanged. This binding selects the persistence implementation at startup; `CreateTicket` does not look it up in a container. In a separate example application, install matching Prisma 7 client/CLI and PostgreSQL driver [adapter](../GLOSSARY.md#adapter) dependencies, configure the migration URL in `prisma.config.ts`, generate the client and apply reviewed migrations before starting. Follow the [official Prisma 7 setup](https://www.prisma.io/docs/orm/v7/prisma-client/setup-and-configuration/introduction) rather than treating this boundary walkthrough as a deployment tutorial. [Nest lifecycle hooks](https://docs.nestjs.com/fundamentals/lifecycle-events) document shutdown handling.
 
 ### Optional deeper reading: observability and failure translation
+
+The classifier above recognizes selected connection/time/pool failures. Unique-key violations such as `P2002`, invalid queries, schema drift and unrecognized driver errors propagate rather than becoming temporary outages. This limited **Prisma 7 error policy** needs integration tests against the selected driver and deployment before extending it. A `503` does not prove that retrying will create no duplicate ticket.
 
 `PrismaTicketRepository` records an outage before `CreateTicket` turns it into `{ ok: false, reason: 'unavailable' }`. Logging only in the [Controller](../GLOSSARY.md#controller) would lose the original Prisma code. The translated error retains its `cause` while the error exists, but that cause does not survive the plain result; the recorded operation/code does. [Node.js error causes](https://nodejs.org/api/errors.html#errorcause) explain the ES2022 mechanism.
 
