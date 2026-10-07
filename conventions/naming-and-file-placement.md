@@ -80,7 +80,28 @@ This documentation project uses names that reveal architectural role.
 
 The exact suffixes are conventions. Their purpose is to make ownership discoverable and architecture-testable.
 
+### Backend names
+
+When an operation needs to save tickets, name its abstraction after that required capability. When several implementations exist, prefix a concrete [adapter](../GLOSSARY.md#adapter) with its technology or mechanism. The [backend walkthrough](../backend/README.md#how-to-read-backend-file-names) explains the actual behavior behind these names.
+
+| Name | Meaning | Where the terminology comes from |
+| --- | --- | --- |
+| `Ticket.ts` | business concept | domain modeling |
+| `CreateTicket.ts` | application operation, implemented as a class | use-case responsibility; PascalCase is our class/file convention |
+| `TicketRepository.ts` | required persistence capability | Repository design pattern; contract placement follows its owner |
+| `InMemoryTicketRepository.ts` | storage in process memory | mechanism prefix, our naming convention |
+| `PrismaTicketRepository.ts` | database [adapter](../GLOSSARY.md#adapter) using Prisma | technology name plus contract role |
+| `TicketsController.ts` | group of [HTTP route](../GLOSSARY.md#http-route) handlers | Nest terminology; suffix/file casing is our convention |
+| `CreateTicketPipe.ts` | handler argument parser/validator | Nest terminology |
+| `TicketsModule.ts` | framework registration and composition | Nest terminology, not an architectural layer |
+| `createTicketRequest.ts` | input shape and parsing functions | camelCase for function-oriented files; types inside use PascalCase |
+| `ticket.tokens.ts` | runtime dependency lookup keys | Nest injection mechanism; suffix is our convention |
+
+An exported function uses camelCase (`createTicket`), while a class uses PascalCase (`CreateTicket`). `Repository` is justified for stored business objects; use `PaymentGateway`, `Clock`, `FileStorage` or `AgendaReader` when those better express the conversation. Nest/Prisma do not require our filenames or suffixes.
+
 ## 4. Folder naming
+
+The canonical hierarchy is **layer first**, then capability: `domain/tickets/`, `application/tickets/`, `infrastructure/persistence/tickets/`, `presentation/http/tickets/` and outer `composition/`. This is a handbook convention, independent of the architectural [dependency rule](../GLOSSARY.md#dependency-rule). Grow sub-capabilities inside their layer, as [Scheduling illustrates](../foundations/code-placement.md#12-grow-capabilities-inside-each-layer).
 
 Use capability names for business/feature ownership:
 

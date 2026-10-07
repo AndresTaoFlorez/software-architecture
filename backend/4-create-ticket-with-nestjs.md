@@ -14,29 +14,29 @@ All arrows in this structure diagram mean **file ownership/containment**, not ca
 
 ```mermaid
 flowchart TD
-    T["src/tickets/"] -->|"contains"| D["domain/ / Ticket.ts"]
-    T -->|"contains"| A["application/ / CreateTicket.ts, TicketRepository.ts"]
-    T -->|"contains"| H["interface/http/ / parser, pipe, controller"]
-    T -->|"contains"| I["infrastructure/ / persistence adapters"]
-    T -->|"contains"| C["composition/ / TicketsModule.ts, tokens"]
+    S["src/"] -->|"contains"| D["domain/tickets/ / Ticket.ts"]
+    S -->|"contains"| A["application/tickets/ / operation, ports, index.ts"]
+    S -->|"contains"| H["presentation/http/tickets/ / parser, pipe, controller"]
+    S -->|"contains"| I["infrastructure/persistence/tickets/ / storage adapters"]
+    S -->|"contains"| C["composition/ / modules, tokens, main.ts"]
 ```
 
-The [landing-page placement table](README.md#place-your-first-feature) explains each file's owner and permitted imports. `interface/http/` is our delivery convention; `presentation/http/` would also be reasonable. [Domain](../GLOSSARY.md#domain) cannot import `@nestjs/*`, Prisma, HTTP types, [DTOs](../GLOSSARY.md#data-transfer-object-dto) or database records. [Application](../GLOSSARY.md#application-layer) imports domain and its own contracts, never concrete persistence. [Infrastructure](../GLOSSARY.md#infrastructure) implements those inward-owned contracts. Delivery translates and invokes application; composition can import concrete pieces because it assembles them.
+The [landing-page placement table and naming guide](README.md#place-your-first-feature) explain each file. The canonical hierarchy puts layers first and capabilities inside them. HTTP/CLI delivery belongs to `presentation/`; it does not introduce another top-level layer named `interface/`. Clean's conceptual [Interface Adapters](../GLOSSARY.md#interface-adapter), a TypeScript `interface` declaration and an HTTP delivery folder describe different things. [Domain](../GLOSSARY.md#domain) cannot import Nest, Prisma, HTTP [DTOs](../GLOSSARY.md#data-transfer-object-dto) or database records. [Application](../GLOSSARY.md#application-layer) imports [Domain](../GLOSSARY.md#domain) and its own contracts, never concrete persistence. [Infrastructure](../GLOSSARY.md#infrastructure) implements inward-owned contracts. [Presentation](../GLOSSARY.md#presentation-layer) translates and invokes [Application](../GLOSSARY.md#application-layer); Composition can import the concrete pieces it assembles.
 
 These dependency constraints define the protected inner policy in this example. Exact folder names and PascalCase filenames are [repository conventions](../conventions/naming-and-file-placement.md). Nest's decorators/registration metadata are framework requirements. Choosing a [port](../GLOSSARY.md#port) for volatile persistence is a recommended design here, not a requirement to create an interface for every class.
 
 ## 3. Finish the HTTP boundary
 
-Use the [canonical `CreateTicketPipe`](3-nestjs-building-blocks.md#pipe-parse-a-handler-argument), placed beside the chapter 2 parser as `src/tickets/interface/http/CreateTicketPipe.ts`. The parser rejects malformed shape; the operation invokes the domain factory for actual ticket validity.
+Use the [canonical `CreateTicketPipe`](3-nestjs-building-blocks.md#pipe-parse-a-handler-argument), placed beside the chapter 2 parser as `src/presentation/http/tickets/CreateTicketPipe.ts`. The parser rejects malformed shape; the operation invokes the domain factory for actual ticket validity.
 
-`src/tickets/interface/http/TicketsController.ts`:
+`src/presentation/http/tickets/TicketsController.ts`:
 
 ```ts
 import {
   Body, Controller, HttpCode, Inject, Post,
   BadRequestException, ServiceUnavailableException,
 } from '@nestjs/common'
-import { CreateTicket } from '../../application/CreateTicket'
+import { CreateTicket } from '../../../application/tickets'
 import { CreateTicketPipe } from './CreateTicketPipe'
 import type { CreateTicketRequest } from './createTicketRequest'
 
@@ -71,22 +71,22 @@ The pipe and controller throw Nest HTTP exceptions; Nest's built-in exception ha
 
 At startup we need a real storage object, not an interface. Put the shared Symbol in a single module:
 
-`src/tickets/composition/ticket.tokens.ts`:
+`src/composition/tokens/ticket.tokens.ts`:
 
 ```ts
 export const TICKET_REPOSITORY = Symbol('TICKET_REPOSITORY')
 ```
 
-`src/tickets/composition/TicketsModule.ts`:
+`src/composition/modules/TicketsModule.ts`:
 
 ```ts
 import { Module } from '@nestjs/common'
 import { randomUUID } from 'node:crypto'
-import { CreateTicket } from '../application/CreateTicket'
-import type { TicketRepository } from '../application/TicketRepository'
-import { InMemoryTicketRepository } from '../infrastructure/InMemoryTicketRepository'
-import { TicketsController } from '../interface/http/TicketsController'
-import { TICKET_REPOSITORY } from './ticket.tokens'
+import { CreateTicket } from '../../application/tickets'
+import type { TicketRepository } from '../../application/tickets/ports/TicketRepository'
+import { InMemoryTicketRepository } from '../../infrastructure/persistence/tickets/InMemoryTicketRepository'
+import { TicketsController } from '../../presentation/http/tickets/TicketsController'
+import { TICKET_REPOSITORY } from '../tokens/ticket.tokens'
 
 @Module({
   controllers: [TicketsController],
@@ -108,7 +108,7 @@ export class TicketsModule {}
 ```ts
 import { Module } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
-import { TicketsModule } from '../tickets/nest'
+import { TicketsModule } from './modules'
 
 @Module({ imports: [TicketsModule] })
 class AppModule {}
@@ -123,20 +123,20 @@ void bootstrap()
 
 Expose the framework assembly through its own entry point:
 
-`src/tickets/nest.ts`:
+`src/composition/modules/index.ts`:
 
 ```ts
-export { TicketsModule } from './composition/TicketsModule'
+export { TicketsModule } from './TicketsModule'
 ```
 
 In an actual Nest project, these modules use Nest's supported TypeScript decorator configuration and the usual platform/runtime dependencies. This repository does not install them. The two public entry points answer different questions:
 
 | Consumer needs | Supported source import | What it guarantees |
 | --- | --- | --- |
-| creation operation, command and result | `tickets/public` from chapter 2 | a plain TypeScript API; no Nest/database dependency |
-| Nest registration of the capability | `tickets/nest` | outer executable assembly exporting `TicketsModule` |
+| creation operation, command and result | `application/tickets` via its `index.ts` | a plain TypeScript API; no Nest/database dependency |
+| Nest registration of the capability | `composition/modules` via its `index.ts` | outer executable assembly exporting `TicketsModule` |
 
-For example, another [Nest module](../GLOSSARY.md#nestjs-module) imports `TicketsModule` from `tickets/nest` in its metadata and its consumer imports the `CreateTicket` class token from `tickets/public`. Nest's `exports: [CreateTicket]` makes the registered provider visible to that importing module; it does not export TypeScript names or prohibit deep imports. Source checks enforce those supported entry points separately. The consumer must not register a second `CreateTicket`/memory store merely to make injection succeed. Tickets' own controller/composition can use internal paths because they belong to the same capability. [Nest module visibility](https://docs.nestjs.com/modules), [public source contracts](../foundations/module-boundaries-and-public-apis.md).
+For example, another composition module imports `TicketsModule` from `composition/modules`; its application-facing consumer imports `CreateTicket` from `application/tickets`. Nest's `exports: [CreateTicket]` exposes the registered provider to importing [Nest modules](../GLOSSARY.md#nestjs-module). TypeScript exports expose source names; the architectural [public API](../GLOSSARY.md#public-api) is the deliberately supported subset. Neither mechanism prevents deep source imports. The fixture tests check layer boundaries; a real project's capability checks must separately enforce the public entry points. Do not re-register `CreateTicket` with another local memory store merely to make injection succeed. [Nest module visibility](https://docs.nestjs.com/modules), [public source contracts](../foundations/module-boundaries-and-public-apis.md).
 
 ## 5. Replace memory when the ticket must survive restart
 
@@ -147,7 +147,7 @@ Prisma schema excerpt for `prisma/schema.prisma` in the example application:
 ```prisma
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  output   = "../src/infrastructure/persistence/generated/prisma"
 }
 
 datasource db {
@@ -164,14 +164,14 @@ model Ticket {
 
 The `state` column intentionally shows a different storage field name. There is no database default owning initial state and no second enum allowlist; the [adapter](../GLOSSARY.md#adapter) writes the factory's chosen status. Database constraints can defend stored data, but deriving/checking them against [Domain](../GLOSSARY.md#domain) requires migration discipline, not another manually maintained business vocabulary. A database primary key prevents overwrite on duplicate identity.
 
-`src/tickets/infrastructure/PrismaTicketRepository.ts` (version-specific [adapter](../GLOSSARY.md#adapter)):
+`src/infrastructure/persistence/tickets/PrismaTicketRepository.ts` (version-specific [adapter](../GLOSSARY.md#adapter)):
 
 ```ts
-import { Prisma, type PrismaClient } from '../../generated/prisma/client'
-import type { Ticket } from '../domain/Ticket'
+import { Prisma, type PrismaClient } from '../generated/prisma/client'
+import type { Ticket } from '../../../domain/tickets/Ticket'
 import {
   TicketPersistenceUnavailable, type TicketRepository,
-} from '../application/TicketRepository'
+} from '../../../application/tickets/ports/TicketRepository'
 
 function isStorageUnavailable(error: unknown): error is
   Prisma.PrismaClientInitializationError | Prisma.PrismaClientKnownRequestError {
@@ -185,11 +185,7 @@ function isStorageUnavailable(error: unknown): error is
 export class PrismaTicketRepository implements TicketRepository {
   constructor(
     private readonly db: PrismaClient,
-    private readonly recordFailure: (diagnostic: {
-      operation: 'ticket.insert'
-      category: 'storage-unavailable'
-      code: string
-    }) => void,
+    private readonly recordFailure: (code: string) => void,
   ) {}
 
   async insert(ticket: Ticket): Promise<void> {
@@ -201,11 +197,11 @@ export class PrismaTicketRepository implements TicketRepository {
       } })
     } catch (error) {
       if (isStorageUnavailable(error)) {
-        // Record safe technical context before Application turns this into a result.
+        // Record the recognized code before Application consumes this error.
         const code = error instanceof Prisma.PrismaClientInitializationError
           ? error.errorCode ?? 'unknown'
           : error.code
-        this.recordFailure({ operation: 'ticket.insert', category: 'storage-unavailable', code })
+        this.recordFailure(code)
         throw new TicketPersistenceUnavailable('Ticket storage unavailable', { cause: error })
       }
       throw error
@@ -216,7 +212,7 @@ export class PrismaTicketRepository implements TicketRepository {
 
 Field mapping is explicit and confined to this [adapter](../GLOSSARY.md#adapter). `create()` resolves after the database operation; its returned database record is unnecessary and never becomes a Ticket automatically. An application-owned repository is not Prisma's generated query API or TypeORM's [ORM](../GLOSSARY.md#orm)-specific repository abstraction. It expresses the capability required by our policy; the technology API implements it.
 
-The example classifier maps recognized connection/time/pool failures to the application failure. Before translating, the [adapter](../GLOSSARY.md#adapter) records an operation/category and the recognized Prisma code; it deliberately omits ticket content, connection strings and raw error messages. The translated error retains its original `cause` while that error exists, but [Application](../GLOSSARY.md#application-layer) consumes the recognized error and returns plain data: only the recorded safe diagnostic survives that path. Logging only in the HTTP controller would be too late. This small diagnostic identifies the failed operation and technical category/code; fuller investigation needs deliberate redaction and correlation at this same boundary, before translation. The supplied sink must not throw or block translation; production needs access-controlled collection/retention. A function is sufficient for this narrow technical dependency; no domain logger hierarchy is needed. [Node.js error causes](https://nodejs.org/api/errors.html#errorcause) document the ES2022 mechanism used here.
+The classifier maps recognized connection/time/pool failures to the application failure. The small `recordFailure(code)` function records the technical code before translation; it receives no ticket content or raw error message. The central separation is still contract, [adapter](../GLOSSARY.md#adapter) and database: neither callback nor Prisma enters [Application](../GLOSSARY.md#application-layer).
 
 Unique-key violations such as `P2002`, invalid queries, schema drift and unrecognized driver errors propagate for internal diagnosis, rather than pretending every defect is a temporary outage. This is an intentionally limited **Prisma 7 error policy**; integration tests must verify errors produced by the selected driver [adapter](../GLOSSARY.md#adapter) and deployment, and extend classification deliberately. A `503` is not proof that retrying creates no duplicate ticket.
 
@@ -226,13 +222,13 @@ Sources: [Prisma 7 generation](https://www.prisma.io/docs/orm/v7/prisma-client/s
 
 This resource owns the configured client and closes it on Nest shutdown. The application's database URL, migration configuration and generated code are technical concerns. They do not belong in `Ticket`.
 
-`src/composition/DatabaseModule.ts` (Prisma 7/PostgreSQL alternative):
+`src/composition/modules/DatabaseModule.ts` (Prisma 7/PostgreSQL alternative):
 
 ```ts
 import { Module } from '@nestjs/common'
 import type { OnModuleDestroy } from '@nestjs/common'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '../generated/prisma/client'
+import { PrismaClient } from '../../infrastructure/persistence/generated/prisma/client'
 
 export class DatabaseResource implements OnModuleDestroy {
   constructor(readonly client: PrismaClient) {}
@@ -254,7 +250,7 @@ export class DatabaseResource implements OnModuleDestroy {
 export class DatabaseModule {}
 ```
 
-To switch the earlier `TicketsModule`, import `DatabaseModule` and `DatabaseResource` from `../../composition/DatabaseModule`, import `PrismaTicketRepository` from `../infrastructure/PrismaTicketRepository`, add `imports: [DatabaseModule]`, and **replace** its memory binding with:
+To switch `composition/modules/TicketsModule.ts`, import `DatabaseModule` and `DatabaseResource` from `./DatabaseModule`, import `PrismaTicketRepository` from `../../infrastructure/persistence/tickets/PrismaTicketRepository`, add `imports: [DatabaseModule]`, and **replace** its memory binding with:
 
 ```ts
 {
@@ -262,12 +258,18 @@ To switch the earlier `TicketsModule`, import `DatabaseModule` and `DatabaseReso
   inject: [DatabaseResource],
   useFactory: (database: DatabaseResource) => new PrismaTicketRepository(
     database.client,
-    diagnostic => console.error(diagnostic), // safe structured fields only; illustrative sink
+    code => console.error({ operation: 'ticket.insert', code }),
   ),
 }
 ```
 
 Keep the operation factory, controller and inner modules unchanged. This is the actual [adapter](../GLOSSARY.md#adapter) binding, not a container lookup inside `CreateTicket`. In a separate example application, install matching Prisma 7 client/CLI and PostgreSQL [adapter](../GLOSSARY.md#adapter) dependencies, configure the migration URL in `prisma.config.ts`, generate the client and apply reviewed migrations before starting. Follow the [official Prisma 7 setup](https://www.prisma.io/docs/orm/v7/prisma-client/setup-and-configuration/introduction) rather than treating this boundary walkthrough as a deployment tutorial. [Nest lifecycle hooks](https://docs.nestjs.com/fundamentals/lifecycle-events) document shutdown handling.
+
+### Optional deeper reading: observability and failure translation
+
+The [adapter](../GLOSSARY.md#adapter) records an outage before `CreateTicket` turns it into `{ ok: false, reason: 'unavailable' }`. Logging only in the controller would lose the original Prisma code. The translated error retains its `cause` while the error exists, but that cause does not survive the plain result; the recorded operation/code does. [Node.js error causes](https://nodejs.org/api/errors.html#errorcause) explain the ES2022 mechanism.
+
+The callback above is an illustrative recorder and must not throw. Keep raw error messages, ticket bodies and connection strings out of it. A deployed recorder needs deliberate correlation, access and retention decisions; add those when designing observability, rather than making a domain logger or generic logging framework part of this persistence contract. The two safe fields locate a failure, but do not promise a complete diagnosis.
 
 ## 6. Three relationships in one system view
 
@@ -320,6 +322,6 @@ Authentication, tenant authorization, request-size limits, rate limiting, attach
 | [Application](../GLOSSARY.md#application-layer) tests with memory/failure substitutes | save-before-success, no insert on invalid input, recognized outage result, unexpected defect propagation |
 | HTTP/Nest integration tests in an actual Nest app | `POST /tickets` selection, pipe rejection prevents execution, JSON field/status mapping, built-in error handling and any access guard |
 | Prisma/database integration tests | migration compatibility, mapped `state`, restart durability, duplicate key and connection failures, resource shutdown |
-| Source dependency checks | [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer) cannot import Nest, Prisma, delivery or composition; other capabilities use the supported API |
+| Source dependency checks | all layers follow the landing-page matrix; [Domain](../GLOSSARY.md#domain)/[Application](../GLOSSARY.md#application-layer) exclude framework dependencies; capability API restrictions require separate checks |
 
 This repository runs the plain example's [compilation and behavior checks](../scripts/backend-ticket-example.test.mjs) through `npm run check`. Nest/Prisma snippets are reviewed version-specific integrations, **not runtime-tested here**; mocked library declarations would not prove their behavior. No root dependency or hosted workflow is added. A complete runnable deployment can be isolated later when framework/database exercises warrant its dependency cost.

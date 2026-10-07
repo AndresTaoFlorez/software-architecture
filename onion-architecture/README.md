@@ -146,10 +146,10 @@ flowchart TD
 | `domain/` | domain meaning/[invariants](../GLOSSARY.md#invariant) | center should survive technical replacement | HTTP/DB/UI/framework details |
 | `application/` | use-case orchestration + [ports](../GLOSSARY.md#port) | policy declares what capabilities it needs | concrete [adapters](../GLOSSARY.md#adapter) |
 | `infrastructure/` | concrete technologies | translates external mechanisms to inner contracts | presentation behavior |
-| `presentation/` | user interaction/view state | isolates UI-specific change | persistence/transport implementations in strict mode |
+| `presentation/` | UI interaction/view state and incoming HTTP/CLI delivery | isolates caller-specific change | database clients and outbound integration implementations |
 | `composition/` | object graph/bootstrap | selects implementations without [service location](../GLOSSARY.md#service-locator) | domain/application branching |
 
-The folder names are documentation conventions. The inward dependency direction is the architecture.
+The folder names and layer-first hierarchy are documentation conventions; the inward dependency direction is the architecture. Capabilities and sub-capabilities grow inside their layer, as [Scheduling illustrates](../foundations/code-placement.md#12-grow-capabilities-inside-each-layer). The browser example here and the [backend delivery paths](../backend/README.md#place-your-first-feature) use that same convention; Palermo did not prescribe this filesystem layout.
 
 
 <a id="7-type-placement-in-onion-architecture"></a>
@@ -168,7 +168,7 @@ flowchart TD
     Q -->|"Business truth"| D["Domain"]
     Q -->|"Application operation"| A["Application"]
     Q -->|"Technology / I/O"| I["Infrastructure"]
-    Q -->|"View / interaction"| P["Presentation"]
+    Q -->|"UI / incoming HTTP / CLI delivery"| P["Presentation"]
     Q -->|"Construction / wiring"| C["Composition"]
 ```
 

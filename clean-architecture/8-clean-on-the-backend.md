@@ -14,8 +14,8 @@ First follow the [backend learning path](../backend/README.md) for request, rout
 
 | Clean circle | Ticket responsibility | Physical mapping in this handbook |
 | --- | --- | --- |
-| [Entities](../GLOSSARY.md#clean-entities-circle) / general business policy | valid subject, owned status vocabulary and initial state | `tickets/domain/Ticket.ts` |
-| [Use Cases](../GLOSSARY.md#use-case) / application policy | create and persist; required repository capability | `tickets/application/` |
+| [Entities](../GLOSSARY.md#clean-entities-circle) / general business policy | valid subject, owned status vocabulary and initial state | `domain/tickets/Ticket.ts` |
+| [Use Cases](../GLOSSARY.md#use-case) / application policy | create and persist; required repository capability | `application/tickets/` |
 | [Interface Adapters](../GLOSSARY.md#interface-adapter) | request/result and ticket/record translation | plain parser/mapping functions in outer delivery/persistence areas |
 | [Frameworks & Drivers](../GLOSSARY.md#frameworks-and-drivers) | Nest runtime/decorators, Prisma client, driver and assembly | technical glue in those outer areas and composition |
 

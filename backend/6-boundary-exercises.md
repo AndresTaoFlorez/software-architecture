@@ -24,10 +24,10 @@ Use the [canonical chapter 2 modules](2-typescript-first-boundaries.md). Complet
 
 **Smallest mechanism.** Accept exactly two positional strings, build the application command, call the public operation and map its result to text and an exit code. A **CLI**, command-line interface, is simply another external way of invoking creation. Its [adapter](../GLOSSARY.md#adapter) owns argument shape, not ticket validity.
 
-`src/tickets/interface/cli/createTicketCli.ts`:
+`src/presentation/cli/tickets/createTicketCli.ts`:
 
 ```ts
-import type { CreateTicket } from '../../public'
+import type { CreateTicket } from '../../../application/tickets'
 
 export async function createTicketCli(
   args: readonly unknown[], createTicket: CreateTicket,
@@ -47,7 +47,7 @@ export async function createTicketCli(
 
 These codes/messages are our CLI contract, not HTTP statuses or domain rules. An actual executable supplies `process.argv.slice(2)`, assembles the operation with a real repository and established UUID generator, prints the returned message and sets `process.exitCode`. Unexpected defects propagate to that executable's safe logging/exit handling; they are not disguised as invalid subjects.
 
-**Who changes?** Only CLI delivery and its executable assembly are new. Creation, the status vocabulary and storage contract stay the same. Another caller must use `tickets/public`, not the HTTP parser or Prisma internals.
+**Who changes?** Only CLI delivery under `presentation/cli/tickets/` and its executable assembly are new. Creation, the status vocabulary and storage contract stay the same. Another caller uses `application/tickets`, not the HTTP parser or Prisma internals.
 
 **Trust and tests.** Treat arguments as external input. Test wrong argument count/types, blank subject, valid creation, unavailable persistence and unexpected defects. The CLI needs its own verified identity/access policy in a deployed support platform; running in a terminal is not authorization. This shape/behavior exercise does not implement authentication, shell parsing or access to another tenant's tickets.
 
@@ -61,7 +61,7 @@ The support capability is authoritative for the capacity policy. Callers cannot 
 
 The first mechanism is a pure capacity decision. [Domain](../GLOSSARY.md#domain) owns it; both simulated storage implementations call it rather than repeat its number:
 
-`src/tickets/domain/ticketQuota.ts`:
+`src/domain/tickets/ticketQuota.ts`:
 
 ```ts
 export const TICKET_CREATION_LIMIT = 2
@@ -72,11 +72,12 @@ export function canAddTicket(storedCount: number): boolean {
 
 A valid decision on an old count is insufficient. [Application](../GLOSSARY.md#application-layer) therefore requires one operation that checks the **current** capacity and inserts together. **Atomic** means the required change completes as a whole or leaves no partial change. This quota contract also requires protection from competing callers: none may invalidate the capacity decision before its insert. Databases distinguish that concurrency protection, called **isolation**, from atomicity. The implementation must either insert within the limit or report full capacity without writing. The contract expresses both requirements without exposing a SQL transaction object.
 
-`src/tickets/application/createTicketWithinQuota.ts`:
+Keep the guarantee and its expected rejection in an application-owned [port](../GLOSSARY.md#port) module, beside the original persistence contract. The [adapter](../GLOSSARY.md#adapter) can implement this contract without importing the operation that uses it:
+
+`src/application/tickets/ports/TicketQuotaStore.ts`:
 
 ```ts
-import type { Ticket } from '../domain/Ticket'
-import { CreateTicket, type CreateTicketCommand, type CreateTicketResult } from './CreateTicket'
+import type { Ticket } from '../../../domain/tickets/Ticket'
 
 export class TicketQuotaExceeded extends Error {}
 export interface TicketQuotaStore {
@@ -84,6 +85,14 @@ export interface TicketQuotaStore {
   // Other storage failures follow TicketRepository's semantics, including uncertain outcomes.
   insertWithinQuota(ticket: Ticket): Promise<void>
 }
+```
+
+`src/application/tickets/createTicketWithinQuota.ts`:
+
+```ts
+import { CreateTicket, type CreateTicketCommand, type CreateTicketResult } from './CreateTicket'
+import { TicketQuotaExceeded, type TicketQuotaStore } from './ports/TicketQuotaStore'
+
 export type QuotaCreationResult = CreateTicketResult | { ok: false; reason: 'quota-full' }
 
 export function makeCreateTicketWithinQuota(store: TicketQuotaStore, makeId: () => string) {
@@ -106,12 +115,12 @@ This is a deliberate extension, not a generic [Unit of Work](../GLOSSARY.md#unit
 
 The first class below **intentionally violates** the contract. `afterRead` pauses both callers after they read the count, making the race repeatable. The second performs the check and write without an `await` between them. In one JavaScript execution agent, another call cannot interleave in that synchronous segment. That is enough for this memory simulation, not for multiple processes or a database.
 
-`src/tickets/infrastructure/InMemoryQuotaStores.ts`:
+`src/infrastructure/persistence/tickets/InMemoryQuotaStores.ts`:
 
 ```ts
-import type { Ticket, TicketData } from '../domain/Ticket'
-import { canAddTicket } from '../domain/ticketQuota'
-import { TicketQuotaExceeded, type TicketQuotaStore } from '../application/createTicketWithinQuota'
+import type { Ticket, TicketData } from '../../../domain/tickets/Ticket'
+import { canAddTicket } from '../../../domain/tickets/ticketQuota'
+import { TicketQuotaExceeded, type TicketQuotaStore } from '../../../application/tickets/ports/TicketQuotaStore'
 
 // Counterexample only: do not deploy this read-then-write implementation.
 export class ReadThenWriteTicketStore implements TicketQuotaStore {
@@ -127,7 +136,7 @@ export class ReadThenWriteTicketStore implements TicketQuotaStore {
   }
 }
 
-// ponytail: one JS execution agent; use tested database isolation across processes.
+// Simulation limit: one JS execution agent; use tested database isolation across processes.
 export class AtomicMemoryTicketStore implements TicketQuotaStore {
   readonly records = new Map<string, TicketData>()
   async insertWithinQuota(ticket: Ticket): Promise<void> {
@@ -143,12 +152,13 @@ The public maps are fixture/observation access for this teaching simulation. Pro
 
 Now assemble both versions with the same policy and inputs. The promise below releases only when **both** reads have happened; no timeout or lucky scheduling is involved:
 
-`src/tickets/composition/compareQuotaStores.ts`:
+`src/composition/compareQuotaStores.ts`:
 
 ```ts
-import { Ticket } from '../domain/Ticket'
-import { makeCreateTicketWithinQuota, type TicketQuotaStore } from '../application/createTicketWithinQuota'
-import { AtomicMemoryTicketStore, ReadThenWriteTicketStore } from '../infrastructure/InMemoryQuotaStores'
+import { Ticket } from '../domain/tickets/Ticket'
+import { makeCreateTicketWithinQuota } from '../application/tickets/createTicketWithinQuota'
+import type { TicketQuotaStore } from '../application/tickets/ports/TicketQuotaStore'
+import { AtomicMemoryTicketStore, ReadThenWriteTicketStore } from '../infrastructure/persistence/tickets/InMemoryQuotaStores'
 
 export async function compareQuotaStores() {
   let reads = 0

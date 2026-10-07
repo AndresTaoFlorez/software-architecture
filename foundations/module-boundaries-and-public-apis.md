@@ -22,7 +22,7 @@ flowchart TD
 
 Every file belongs to the same capability, but changing that capability requires jumping across the entire [Presentation](../GLOSSARY.md#presentation-layer) tree.
 
-Prefer a feature-owned module:
+Within `presentation/`, prefer a feature-owned UI module:
 
 ```mermaid
 flowchart TD
@@ -183,6 +183,14 @@ over:
 - `service.ts`
 
 Role suffixes are useful when they add information: `*.mapper.ts`, `*.selector.ts`, `*.adapter.ts`, `*.recipe.ts`.
+
+## 9. Backend APIs across layer-first capabilities
+
+Suppose Billing needs to create a support ticket. It needs the supported creation operation, not Tickets' HTTP parser or database [adapter](../GLOSSARY.md#adapter). In the canonical backend, `application/tickets/index.ts` exports `CreateTicket`, its command and result. A consumer imports that source entry; outer startup imports `TicketsModule` through `composition/modules/index.ts` when Nest registration is needed. [The complete backend wiring](../backend/4-create-ticket-with-nestjs.md#4-wire-memory-first) shows both entries.
+
+TypeScript `export` exposes source names. [Nest module](../GLOSSARY.md#nestjs-module) `exports` makes selected providers available to importing [Nest modules](../GLOSSARY.md#nestjs-module). An **architectural [public API](../GLOSSARY.md#public-api)** is the supported conversation the capability owner commits to preserving; neither mechanism alone blocks deep imports. Review/enforce those imports separately. A Tickets capability can own related code across layers without putting a complete stack under a top-level `tickets/` folder.
+
+Layer checks and capability checks answer different questions. [Application](../GLOSSARY.md#application-layer) importing Tickets' database [adapter](../GLOSSARY.md#adapter) violates a layer boundary. Billing importing a private Tickets helper can violate capability ownership even if both files are in [Application](../GLOSSARY.md#application-layer). Our [backend fixture test](../scripts/backend-ticket-example.test.mjs) checks layer direction; it does not claim to enforce every capability's [public API](../GLOSSARY.md#public-api).
 
 ## Sources
 

@@ -8,36 +8,46 @@ import ts from 'typescript'
 
 const guide = 'backend/2-typescript-first-boundaries.md'
 const names = [
-  'tickets/domain/Ticket.ts',
-  'tickets/application/TicketRepository.ts',
-  'tickets/application/CreateTicket.ts',
-  'tickets/infrastructure/InMemoryTicketRepository.ts',
-  'tickets/interface/http/createTicketRequest.ts',
-  'tickets/interface/http/TicketHttpHandler.ts',
-  'tickets/public.ts',
+  'domain/tickets/Ticket.ts',
+  'application/tickets/ports/TicketRepository.ts',
+  'application/tickets/CreateTicket.ts',
+  'infrastructure/persistence/tickets/InMemoryTicketRepository.ts',
+  'presentation/http/tickets/createTicketRequest.ts',
+  'presentation/http/tickets/TicketHttpHandler.ts',
+  'application/tickets/index.ts',
 ]
 const exerciseNames = [
-  'tickets/interface/cli/createTicketCli.ts',
-  'tickets/domain/ticketQuota.ts',
-  'tickets/application/createTicketWithinQuota.ts',
-  'tickets/infrastructure/InMemoryQuotaStores.ts',
-  'tickets/composition/compareQuotaStores.ts',
+  'presentation/cli/tickets/createTicketCli.ts',
+  'domain/tickets/ticketQuota.ts',
+  'application/tickets/ports/TicketQuotaStore.ts',
+  'application/tickets/createTicketWithinQuota.ts',
+  'infrastructure/persistence/tickets/InMemoryQuotaStores.ts',
+  'composition/compareQuotaStores.ts',
 ]
 
-// ponytail: relative fixture graph only; production needs its configured module resolver.
-// Fail closed on computed imports or aliases;
-// production enforcement must resolve its own module graph and compiler configuration.
-function checkInnerDependencies(name, code) {
-  const domain = name.startsWith('tickets/domain/')
-  if (!domain && !name.startsWith('tickets/application/')) return
+// Test-only: these fixtures use relative source paths, not a production module resolver.
+// Capability API checks, aliases and third-party transitive dependencies are separate concerns.
+const allowedLayers = {
+  domain: ['domain'],
+  application: ['application', 'domain'],
+  infrastructure: ['infrastructure', 'application', 'domain'],
+  presentation: ['presentation', 'application'],
+  composition: ['composition', 'presentation', 'infrastructure', 'application', 'domain'],
+}
+
+function checkLayerDependencies(name, code) {
+  const layer = name.split('/')[0]
+  assert.ok(allowedLayers[layer], 'Unknown fixture layer: ' + name)
   const tree = ts.createSourceFile(name, code, ts.ScriptTarget.Latest, true)
   function check(specifier) {
-    assert.ok(specifier && ts.isStringLiteralLike(specifier), 'Unresolved inner dependency in ' + name)
+    assert.ok(specifier && ts.isStringLiteralLike(specifier), 'Unresolved fixture dependency in ' + name)
     const imported = specifier.text
+    if (!imported.startsWith('.')) {
+      assert.ok(layer !== 'domain' && layer !== 'application', 'External dependency in ' + name + ': ' + imported)
+      return // Outer fixtures can import framework/platform packages; no alias resolution here.
+    }
     const target = path.posix.normalize(path.posix.join(path.posix.dirname(name), imported))
-    const allowed = target.startsWith('tickets/domain/')
-      || (!domain && target.startsWith('tickets/application/'))
-    assert.ok(imported.startsWith('.') && allowed, 'Outward inner dependency in ' + name + ': ' + imported)
+    assert.ok(allowedLayers[layer].includes(target.split('/')[0]), 'Forbidden layer dependency in ' + name + ': ' + imported)
   }
   function visit(node) {
     if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
@@ -56,8 +66,8 @@ function checkInnerDependencies(name, code) {
   visit(tree)
 }
 
-test('inner boundary inspection rejects outward imports, reexports and indirect module syntax', () => {
-  const outward = '../infrastructure/PrismaTicketRepository'
+test('layer inspection rejects forbidden imports, reexports and indirect module syntax', () => {
+  const outward = '../../infrastructure/persistence/tickets/PrismaTicketRepository'
   const forms = [
     `import { X } from '${outward}'`,
     `import type { X } from '${outward}'`,
@@ -68,19 +78,47 @@ test('inner boundary inspection rejects outward imports, reexports and indirect 
     `type X = import('${outward}').X`,
     `function load() { return require('${outward}') }`,
     `import X = require('${outward}')`,
-    "import { X } from '@nestjs/common'",
   ]
   for (const code of forms) {
-    assert.throws(() => checkInnerDependencies('tickets/application/Test.ts', code), /Outward inner dependency/)
+    assert.throws(() => checkLayerDependencies('application/tickets/Test.ts', code), /Forbidden layer dependency/)
   }
   for (const code of ['import(target)', 'import(`../${target}`)', 'require(target)']) {
-    assert.throws(() => checkInnerDependencies('tickets/application/Test.ts', code), /Unresolved inner dependency/)
+    assert.throws(() => checkLayerDependencies('application/tickets/Test.ts', code), /Unresolved fixture dependency/)
   }
-  assert.throws(() => checkInnerDependencies('tickets/domain/Test.ts', "export * from '../application/CreateTicket'"), /Outward/)
-  checkInnerDependencies('tickets/application/Test.ts', "export type { TicketData } from '../domain/Ticket'")
-  checkInnerDependencies('tickets/application/Test.ts', "async function load() { return import('../domain/Ticket') }")
-  checkInnerDependencies('tickets/domain/Test.ts', "import type { TicketData } from './Ticket'")
-  checkInnerDependencies('tickets/application/Test.ts', "// import('prisma')\nconst text = \"require('prisma')\"")
+  // Expectations are independent of allowedLayers so changing enforcement cannot change the test oracle.
+  const forbidden = [
+    ['domain', 'application'], ['domain', 'infrastructure'], ['domain', 'presentation'], ['domain', 'composition'],
+    ['application', 'infrastructure'], ['application', 'presentation'], ['application', 'composition'],
+    ['infrastructure', 'presentation'], ['infrastructure', 'composition'],
+    ['presentation', 'domain'], ['presentation', 'infrastructure'], ['presentation', 'composition'],
+  ]
+  for (const [layer, target] of forbidden) {
+    assert.throws(() => checkLayerDependencies(layer + '/tickets/Test.ts',
+      `import type { X } from '../../${target}/tickets/X'`), /Forbidden layer dependency/)
+  }
+  const permitted = [
+    ['domain', 'domain'], ['application', 'application'], ['application', 'domain'],
+    ['infrastructure', 'infrastructure'], ['infrastructure', 'application'], ['infrastructure', 'domain'],
+    ['presentation', 'presentation'], ['presentation', 'application'],
+    ['composition', 'composition'], ['composition', 'presentation'], ['composition', 'infrastructure'],
+    ['composition', 'application'], ['composition', 'domain'],
+  ]
+  for (const [layer, target] of permitted) {
+    checkLayerDependencies(layer + '/tickets/Test.ts', `import type { X } from '../../${target}/tickets/X'`)
+  }
+  for (const layer of ['domain', 'application', 'infrastructure', 'presentation', 'composition']) {
+    const external = "import { X } from '@nestjs/common'"
+    if (layer === 'domain' || layer === 'application') {
+      assert.throws(() => checkLayerDependencies(layer + '/tickets/Test.ts', external), /External dependency/)
+    } else checkLayerDependencies(layer + '/tickets/Test.ts', external)
+  }
+  checkLayerDependencies('application/tickets/Test.ts', "export type { TicketData } from '../../domain/tickets/Ticket'")
+  checkLayerDependencies('application/tickets/Test.ts', "async function load() { return import('../../domain/tickets/Ticket') }")
+  checkLayerDependencies('domain/tickets/Test.ts', "import type { TicketData } from './Ticket'")
+  checkLayerDependencies('application/tickets/Test.ts', "// import('prisma')\nconst text = \"require('prisma')\"")
+  assert.throws(() => checkLayerDependencies('application/tickets/Test.ts', "export * from '../../../outside'"), /Forbidden/)
+  // Same-layer imports are valid here; supported capability APIs require another policy.
+  checkLayerDependencies('application/billing/Test.ts', "import { CreateTicket } from '../tickets'")
 })
 
 function compile(root, files, output = 'out') {
@@ -104,7 +142,7 @@ function compile(root, files, output = 'out') {
 }
 
 function extract(document, name) {
-  const marker = '`src/' + name + '`:'
+  const marker = '`src/' + name + '`'
   const start = document.indexOf(marker)
   assert.ok(start >= 0, 'Missing canonical module: ' + name)
   const opener = document.indexOf('```ts\n', start)
@@ -112,6 +150,25 @@ function extract(document, name) {
   assert.ok(opener > start && end > opener, 'Missing complete fence: ' + name)
   return document.slice(opener + 6, end) + '\n'
 }
+
+test('documented Nest and Prisma modules follow the layer policy without executing frameworks', () => {
+  const blocks = {
+    'backend/3-nestjs-building-blocks.md': ['presentation/http/tickets/CreateTicketPipe.ts'],
+    'backend/4-create-ticket-with-nestjs.md': [
+      'presentation/http/tickets/TicketsController.ts',
+      'composition/tokens/ticket.tokens.ts',
+      'composition/modules/TicketsModule.ts',
+      'composition/main.ts',
+      'composition/modules/index.ts',
+      'infrastructure/persistence/tickets/PrismaTicketRepository.ts',
+      'composition/modules/DatabaseModule.ts',
+    ],
+  }
+  for (const [file, modules] of Object.entries(blocks)) {
+    const document = fs.readFileSync(file, 'utf8').replaceAll('\r\n', '\n')
+    for (const name of modules) checkLayerDependencies(name, extract(document, name))
+  }
+})
 
 test('backend ticket modules compile and preserve validation, persistence and delivery boundaries', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'backend-ticket-guide-'))
@@ -124,18 +181,18 @@ test('backend ticket modules compile and preserve validation, persistence and de
       const file = path.join(root, 'src', name)
       fs.mkdirSync(path.dirname(file), { recursive: true })
       fs.writeFileSync(file, code)
-      checkInnerDependencies(name, code)
+      checkLayerDependencies(name, code)
       return file
     })
     compile(root, files)
     const require = createRequire(path.join(root, 'package.json'))
     const load = name => require(path.join(root, 'out', name))
-    const domain = load('tickets/domain/Ticket.js')
-    const { CreateTicket } = load('tickets/application/CreateTicket.js')
-    const { TicketPersistenceUnavailable } = load('tickets/application/TicketRepository.js')
-    const { InMemoryTicketRepository } = load('tickets/infrastructure/InMemoryTicketRepository.js')
-    const { TicketHttpHandler } = load('tickets/interface/http/TicketHttpHandler.js')
-    const { parseCreateTicketRequest, InvalidTicketRequest } = load('tickets/interface/http/createTicketRequest.js')
+    const domain = load('domain/tickets/Ticket.js')
+    const { CreateTicket } = load('application/tickets/CreateTicket.js')
+    const { TicketPersistenceUnavailable } = load('application/tickets/ports/TicketRepository.js')
+    const { InMemoryTicketRepository } = load('infrastructure/persistence/tickets/InMemoryTicketRepository.js')
+    const { TicketHttpHandler } = load('presentation/http/tickets/TicketHttpHandler.js')
+    const { parseCreateTicketRequest, InvalidTicketRequest } = load('presentation/http/tickets/createTicketRequest.js')
     const input = { subject: '  Invoice download fails  ', description: 'PDF download fails for INV-42.' }
 
     for (const status of domain.TICKET_STATUSES) assert.equal(domain.isTicketStatus(status), true)
@@ -192,8 +249,8 @@ test('backend ticket modules compile and preserve validation, persistence and de
     await assert.rejects(new TicketHttpHandler(broken).handle(input), error => error === defect)
     await assert.rejects(repository.insert(domain.Ticket.create('T-1', 'Valid', '')), /Duplicate/)
 
-    const { createTicketCli } = load('tickets/interface/cli/createTicketCli.js')
-    assert.equal(load('tickets/public.js').CreateTicket, CreateTicket, 'Public API must expose the same runtime token')
+    const { createTicketCli } = load('presentation/cli/tickets/createTicketCli.js')
+    assert.equal(load('application/tickets/index.js').CreateTicket, CreateTicket, 'Public API must expose the same runtime token')
     const cliRecords = new InMemoryTicketRepository()
     let cliId = 0
     const cliOperation = new CreateTicket(cliRecords, () => 'CLI-' + ++cliId)
@@ -212,7 +269,7 @@ test('backend ticket modules compile and preserve validation, persistence and de
     })
     await assert.rejects(createTicketCli(['Valid', ''], broken), error => error === defect)
 
-    const { compareQuotaStores } = load('tickets/composition/compareQuotaStores.js')
+    const { compareQuotaStores } = load('composition/compareQuotaStores.js')
     const comparison = await compareQuotaStores()
     assert.equal(comparison.unsafe.count, 3, 'Both stale reads accept the last free place')
     assert.ok(comparison.unsafe.results.every(result => result.ok))
@@ -220,8 +277,8 @@ test('backend ticket modules compile and preserve validation, persistence and de
     assert.equal(comparison.atomic.results.filter(result => result.ok).length, 1)
     assert.deepEqual(comparison.atomic.results.filter(result => !result.ok), [{ ok: false, reason: 'quota-full' }])
 
-    const { AtomicMemoryTicketStore } = load('tickets/infrastructure/InMemoryQuotaStores.js')
-    const { makeCreateTicketWithinQuota } = load('tickets/application/createTicketWithinQuota.js')
+    const { AtomicMemoryTicketStore } = load('infrastructure/persistence/tickets/InMemoryQuotaStores.js')
+    const { makeCreateTicketWithinQuota } = load('application/tickets/createTicketWithinQuota.js')
     const quotaStore = new AtomicMemoryTicketStore()
     let quotaId = 0
     const quotaCreate = makeCreateTicketWithinQuota(quotaStore, () => 'quota-' + ++quotaId)
@@ -241,7 +298,7 @@ test('backend ticket modules compile and preserve validation, persistence and de
     await assert.rejects(quotaDefect(input), error => error === defect)
 
     // Compile the exercise's changed policy independently, with unchanged callers.
-    const domainFile = path.join(root, 'src/tickets/domain/Ticket.ts')
+    const domainFile = path.join(root, 'src/domain/tickets/Ticket.ts')
     const originalDomain = fs.readFileSync(domainFile, 'utf8')
     assert.ok(originalDomain.includes("['open', 'in_progress', 'resolved'] as const"))
     assert.ok(originalDomain.includes('subject.length > 160'))
@@ -250,9 +307,9 @@ test('backend ticket modules compile and preserve validation, persistence and de
       .replace('subject.length > 160', 'subject.length > 80'))
     compile(root, files, 'out-evolved')
     const evolvedLoad = name => require(path.join(root, 'out-evolved', name))
-    const evolvedDomain = evolvedLoad('tickets/domain/Ticket.js')
-    const EvolvedCreateTicket = evolvedLoad('tickets/application/CreateTicket.js').CreateTicket
-    const evolvedRecords = new (evolvedLoad('tickets/infrastructure/InMemoryTicketRepository.js').InMemoryTicketRepository)()
+    const evolvedDomain = evolvedLoad('domain/tickets/Ticket.js')
+    const EvolvedCreateTicket = evolvedLoad('application/tickets/CreateTicket.js').CreateTicket
+    const evolvedRecords = new (evolvedLoad('infrastructure/persistence/tickets/InMemoryTicketRepository.js').InMemoryTicketRepository)()
     const evolved = new EvolvedCreateTicket(evolvedRecords, () => 'evolved')
     assert.equal(evolvedDomain.isTicketStatus('reopened'), true)
     assert.equal(evolvedDomain.TICKET_STATUSES[0], 'reopened')

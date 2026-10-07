@@ -39,7 +39,7 @@ Typical contents:
 - [domain errors](../GLOSSARY.md#domain-error);
 - policies/[invariants](../GLOSSARY.md#invariant).
 
-The following expression uses the canonical `Ticket` module; import it from `domain/Ticket`. Its status vocabulary recognizes values but does not automatically define transitions or pick an initial state by list order.
+The following expression uses the canonical `domain/tickets/Ticket.ts` module. Its status vocabulary recognizes values but does not automatically define transitions or pick an initial state by list order.
 
 Example:
 

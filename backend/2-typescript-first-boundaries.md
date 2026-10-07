@@ -10,10 +10,10 @@ The request's transfer representation is a **[DTO](../GLOSSARY.md#data-transfer-
 
 This canonical HTTP module returns the application's input shape. File paths below are relative to an illustrative application's `src/`; these complete plain modules are extracted and tested by this repository, not installed as a backend application.
 
-`src/tickets/interface/http/createTicketRequest.ts`:
+`src/presentation/http/tickets/createTicketRequest.ts`:
 
 ```ts
-import type { CreateTicketCommand } from '../../application/CreateTicket'
+import type { CreateTicketCommand } from '../../../application/tickets'
 
 export class InvalidTicketRequest extends Error {}
 export type CreateTicketRequest = CreateTicketCommand
@@ -41,7 +41,7 @@ The support team requires a nonblank subject of at most 160 JavaScript string un
 
 These conditions must hold when tickets are created through HTTP, a CLI or a worker. A condition required for valid business state is an **[invariant](../GLOSSARY.md#invariant)**. The owning **[domain entity](../GLOSSARY.md#domain-entity)**, `Ticket`, has a continuing identity and enforces creation rules. Its finite status vocabulary has one source: `TICKET_STATUSES` supplies both the type and the runtime guard. The list records allowed states, not valid transitions; adding `reopened` alone would not implement reopening.
 
-`src/tickets/domain/Ticket.ts`:
+`src/domain/tickets/Ticket.ts`:
 
 ```ts
 export const TICKET_STATUSES = ['open', 'in_progress', 'resolved'] as const
@@ -98,10 +98,10 @@ This first entity supports creation only. Loading existing tickets would need a 
 
 Creation must not report success before saving. Hard-coding a database client inside that operation would make its tests and policy depend on a database installation. Instead the operation asks for just `insert(ticket)`. The required persistence capability is an application-owned **[port](../GLOSSARY.md#port)**. Because it adds business objects to stored collection-like state, it is a narrow write side of the **[Repository Pattern](../GLOSSARY.md#repository)**; retrieval methods can follow real requirements.
 
-`src/tickets/application/TicketRepository.ts`:
+`src/application/tickets/ports/TicketRepository.ts`:
 
 ```ts
-import type { Ticket } from '../domain/Ticket'
+import type { Ticket } from '../../../domain/tickets/Ticket'
 
 export class TicketPersistenceUnavailable extends Error {}
 
@@ -114,11 +114,11 @@ export interface TicketRepository {
 
 The operation creates, awaits the insert and returns plain data. That coordination is a **[use case](../GLOSSARY.md#use-case)**, also a small **[application service](../GLOSSARY.md#application-service)**. It delegates validity to [Domain](../GLOSSARY.md#domain) and translates a recognized storage failure into a result that callers can interpret without knowing SQL or HTTP.
 
-`src/tickets/application/CreateTicket.ts`:
+`src/application/tickets/CreateTicket.ts`:
 
 ```ts
-import { Ticket, InvalidTicketSubject, type TicketData } from '../domain/Ticket'
-import { TicketPersistenceUnavailable, type TicketRepository } from './TicketRepository'
+import { Ticket, InvalidTicketSubject, type TicketData } from '../../domain/tickets/Ticket'
+import { TicketPersistenceUnavailable, type TicketRepository } from './ports/TicketRepository'
 
 export interface CreateTicketCommand {
   subject: string
@@ -154,24 +154,24 @@ The [port](../GLOSSARY.md#port) has a real replacement pressure: memory in tests
 
 Another capability needs a supported entry point rather than an import into ticket internals. A **[public API](../GLOSSARY.md#public-api)** states which operations and types the Tickets owner promises to maintain. This plain entry point deliberately exposes creation and its input/result; storage and HTTP parsing remain private:
 
-`src/tickets/public.ts`:
+`src/application/tickets/index.ts`:
 
 ```ts
-export { CreateTicket } from './application/CreateTicket'
-export type { CreateTicketCommand, CreateTicketResult } from './application/CreateTicket'
+export { CreateTicket } from './CreateTicket'
+export type { CreateTicketCommand, CreateTicketResult } from './CreateTicket'
 ```
 
-An external application consumer imports from `tickets/public`; code inside Tickets can use its local modules. The result intentionally includes a plain domain snapshot through its application contract. Exposing that type does not change its owner, and it does not expose entity methods or database rows. Chapter 4 provides a separate Nest entry point for executable assembly. Source import checks must enforce these supported paths; a TypeScript export alone cannot prevent deep imports.
+An external consumer imports from `application/tickets`, resolved through its `index.ts`; code implementing Tickets can use local modules within the permitted layers. The result intentionally includes a plain domain snapshot through its application contract. Exposing that type does not change its owner or expose entity methods/database rows. Chapter 4 provides the separate outer entry `composition/modules` for Nest assembly. A TypeScript export makes names available, not private: capability import rules must enforce supported paths separately from layer rules.
 
 ## 4. Start with memory and explicit construction
 
 An object can satisfy `insert` by keeping a map. This **in-memory repository** provides a working teaching/test implementation without a database. It is still outer storage code and loses all data when the process ends.
 
-`src/tickets/infrastructure/InMemoryTicketRepository.ts`:
+`src/infrastructure/persistence/tickets/InMemoryTicketRepository.ts`:
 
 ```ts
-import type { Ticket, TicketData } from '../domain/Ticket'
-import type { TicketRepository } from '../application/TicketRepository'
+import type { Ticket, TicketData } from '../../../domain/tickets/Ticket'
+import type { TicketRepository } from '../../../application/tickets/ports/TicketRepository'
 
 export class InMemoryTicketRepository implements TicketRepository {
   readonly records = new Map<string, TicketData>()
@@ -185,10 +185,10 @@ export class InMemoryTicketRepository implements TicketRepository {
 
 Now the caller needs a plain handler that parses input, invokes the operation and maps the result into an HTTP-shaped reply. This [adapter](../GLOSSARY.md#adapter) does not implement routing or a protocol stack; a server platform would bind it to `POST /tickets`.
 
-`src/tickets/interface/http/TicketHttpHandler.ts`:
+`src/presentation/http/tickets/TicketHttpHandler.ts`:
 
 ```ts
-import type { CreateTicket } from '../../application/CreateTicket'
+import type { CreateTicket } from '../../../application/tickets'
 import { InvalidTicketRequest, parseCreateTicketRequest } from './createTicketRequest'
 
 export class TicketHttpHandler {

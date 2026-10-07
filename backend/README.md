@@ -24,20 +24,43 @@ For a closer reading of the same backend, continue with [Clean on the backend](.
 
 ## Place your first feature
 
-The code that decides a ticket's subject and initial state is **[Domain](../GLOSSARY.md#domain)**: business meaning independent of the screen or database. The code that asks for that decision and saves the ticket is **[Application](../GLOSSARY.md#application-layer)**: the operation's workflow. **Delivery** accepts an external invocation such as HTTP and translates its data. **[Infrastructure](../GLOSSARY.md#infrastructure)** implements technical storage. **Composition** creates the objects and supplies their collaborators at startup.
+The code that decides a ticket's subject and initial state is **[Domain](../GLOSSARY.md#domain)**: business meaning independent of the screen or database. The code that asks for that decision and saves the ticket is **[Application](../GLOSSARY.md#application-layer)**: the operation's workflow. **[Presentation](../GLOSSARY.md#presentation-layer)** accepts an external invocation such as HTTP or CLI and translates its input and output; we also call this delivery. **[Infrastructure](../GLOSSARY.md#infrastructure)** implements technical storage. **Composition** creates the objects and supplies their collaborators at startup.
 
-| Example file under `src/tickets/` | Owns | May import | Keep out |
+To save a ticket, the operation needs an object offering `insert(ticket)`, independent of the database used. A **Repository** is an abstraction that treats stored business objects like a collection. Our deliberately small `TicketRepository` exposes only the insertion needed today. Application owns that requirement; Infrastructure supplies an implementation. Repository is a design-pattern term, not a Nest primitive, Prisma's generated API or automatically TypeORM's `Repository<T>`. [Fowler's definition](https://martinfowler.com/eaaCatalog/repository.html) describes the pattern.
+
+| Example file under `src/` | Owns | May import | Keep out |
 | --- | --- | --- | --- |
-| `domain/Ticket.ts` | valid ticket data and creation rules | domain code | Nest, HTTP [DTOs](../GLOSSARY.md#data-transfer-object-dto), database rows |
-| `application/CreateTicket.ts` | create-and-persist workflow and plain result | application, domain | Prisma, controllers |
-| `application/TicketRepository.ts` | required insert capability and persistence failure | application, domain | database API types |
-| `interface/http/createTicketRequest.ts` | unknown HTTP body parsing | application input types | a second subject/status rule |
-| `interface/http/TicketsController.ts` | HTTP invocation and response mapping | application, local HTTP code, Nest | SQL and creation policy |
-| `infrastructure/InMemoryTicketRepository.ts` | teaching storage substitute | application, domain | HTTP response behavior |
-| `infrastructure/PrismaTicketRepository.ts` | durable database insert and field mapping | application, domain, Prisma | ownership of initial status |
-| `composition/TicketsModule.ts` | bindings between concrete objects | all objects it assembles, Nest | business decisions |
+| `domain/tickets/Ticket.ts` | valid ticket data and creation rules | domain | Nest, HTTP [DTOs](../GLOSSARY.md#data-transfer-object-dto), database rows |
+| `application/tickets/CreateTicket.ts` | create-and-persist workflow and plain result | application, domain | Prisma, controllers |
+| `application/tickets/ports/TicketRepository.ts` | required insert capability and persistence failure | application, domain | database API types |
+| `presentation/http/tickets/createTicketRequest.ts` | unknown HTTP body parsing | application, local presentation | a second subject/status rule |
+| `presentation/http/tickets/TicketsController.ts` | HTTP invocation and response mapping | application, presentation, Nest | SQL and creation policy |
+| `presentation/cli/tickets/createTicketCli.ts` | CLI arguments, messages and exit codes | application, presentation | HTTP parsing |
+| `infrastructure/persistence/tickets/InMemoryTicketRepository.ts` | teaching storage substitute | infrastructure, application, domain | HTTP response behavior |
+| `infrastructure/persistence/tickets/PrismaTicketRepository.ts` | durable database insert and field mapping | infrastructure, application, domain, Prisma | ownership of initial status |
+| `composition/modules/TicketsModule.ts` | bindings between concrete objects | all objects it assembles, Nest | business decisions |
 
-These paths are **documentation conventions**, not architecture laws. Choose placement by why the code exists: a ticket rule goes in domain; coordinating its save goes in application; reading HTTP goes in delivery; talking to storage goes in infrastructure; choosing the storage object goes in composition. A helper follows that same owner, rather than defaulting to `shared/`. Classes use PascalCase; parsing functions use camelCase under the [naming conventions](../conventions/naming-and-file-placement.md). A class-based operation uses `CreateTicket.ts` here.
+The architectural rule concerns responsibility and dependency direction. The **repository convention** puts layers first, then capabilities within them; Martin, Palermo and Cockburn do not prescribe these exact paths. Choose placement by why the code exists, and let helpers follow that owner. As the product grows, group cohesive capabilities and sub-capabilities inside each layer; see [the Scheduling example](../foundations/code-placement.md#12-grow-capabilities-inside-each-layer). Other projects can use capability-first packaging without violating inward dependencies.
+
+## How to read backend file names
+
+The path tells us **who owns the responsibility**. The filename tells us **what role or implementation it is**. For example, `infrastructure/persistence/tickets/PrismaTicketRepository.ts` is outer technical code, concerned with storage, owned by Tickets, using Prisma to implement the inward persistence contract.
+
+| Name | Why it is named that way |
+| --- | --- |
+| `Ticket.ts` | The business entity, under `domain/tickets/`. Calling it `TicketModel` because an [ORM](../GLOSSARY.md#orm) also has models would obscure its independent business meaning. |
+| `CreateTicket.ts` | A verb names the application operation. This class uses PascalCase; an exported function would use camelCase. `TicketsService` would hide which operation it performs. |
+| `TicketRepository.ts` | The required persistence of Ticket objects. Other capabilities deserve names such as `PaymentGateway` (send payments), `Clock` (read time), `FileStorage` (store files) or `AgendaReader` (read an agenda), rather than naming every dependency Repository. |
+| `InMemoryTicketRepository.ts` | `InMemory` identifies process-memory storage. It implements the same contract for learning/tests but loses data on exit and is not shared between replicas. The prefix identifies a mechanism, not a layer rule. |
+| `PrismaTicketRepository.ts` | `Prisma` identifies the technology. Replacing it can replace this [adapter](../GLOSSARY.md#adapter) while [Application](../GLOSSARY.md#application-layer) still requires `TicketRepository`. |
+| `TicketsController.ts` | Nest's controller groups related [route handlers](../GLOSSARY.md#route-handler). A method handles one selected route; the class is not an endpoint, [use case](../GLOSSARY.md#use-case) or domain object. `@Controller('tickets')` supplies a prefix; `@Post()` or `@Get(':id')` registers a method/path. See [two handlers in one controller](3-nestjs-building-blocks.md#1-register-the-functions-we-already-understand). |
+| `CreateTicketPipe.ts` | A [Nest pipe](../GLOSSARY.md#nestjs-pipe) processes a handler argument: parsing, validation or transformation. Here it asks whether incoming data can be accepted for the handler. `Ticket.create()` separately asks whether it is a valid business ticket. Both the pipe and controller belong to HTTP [Presentation](../GLOSSARY.md#presentation-layer). |
+| `createTicketRequest.ts` | Contains the incoming shape and its parsing function, not routing, workflow or entity behavior. We use camelCase for this function-oriented file; `CreateTicketRequest` is the PascalCase type inside it. A type annotation cannot check JSON. |
+| `TicketsModule.ts` | Nest registration/composition: it tells the container what to construct and expose. It is not an architectural layer, automatically a [bounded context](../GLOSSARY.md#bounded-context) or automatically a business capability. It can align with Tickets by design. |
+| `ticket.tokens.ts` | Nest needs a runtime key because TypeScript interfaces disappear. The exported Symbol identifies the repository binding in its [dependency injection container](../GLOSSARY.md#di-container). This is composition glue, not ticket policy. |
+| `index.ts` | An explicit source entry point. `application/tickets/index.ts` exposes supported operations/types; `composition/modules/index.ts` exposes Nest assembly. TypeScript exports select source names; [Nest module](../GLOSSARY.md#nestjs-module) `exports` selects providers visible to importing modules. The architectural [public API](../GLOSSARY.md#public-api) is the supported contract we deliberately choose and enforce. Neither export mechanism alone prevents deep imports. |
+
+These suffixes and casing choices follow [repository naming conventions](../conventions/naming-and-file-placement.md#backend-names); the linked chapters show the mechanisms before adding framework conveniences.
 
 Arrows below are permitted **source dependencies**, not network calls. Composition is the outer assembly and can import every piece it constructs.
 

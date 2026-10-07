@@ -915,11 +915,11 @@ A description of an interaction that the application needs from other code, or o
 
 ## Presentation Layer
 
-The part of the software that handles what a user sees and does. In a ticket screen, it draws the form, tracks whether the submit button is busy, and displays errors. It can contain substantial screen logic, but it should not become the authoritative owner of rules such as whether a resolved ticket may be reassigned.
+The part of the software that handles how callers interact with the application. In a ticket screen, it draws the form, tracks whether the submit button is busy, and displays errors. In this handbook's backend mapping, it also parses incoming HTTP/CLI data and translates application results into responses, messages and exit codes. These delivery decisions do not make it the authoritative owner of ticket validity.
 
-**Purpose.** Own interaction and view state while delegating authoritative policy inward.
+**Purpose.** Own interaction, delivery representation and view state while delegating authoritative policy inward.
 
-**Example.** A feature hook derives loading and display state, then delegates business operations to Application.
+**Example.** A feature hook delegates creation to Application; a backend controller invokes `CreateTicket` and maps its result to HTTP fields/statuses without owning the initial ticket state.
 
 **Sources.** [Fowler — Presentation Model](https://martinfowler.com/eaaDev/PresentationModel.html) · [Martin — The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 
