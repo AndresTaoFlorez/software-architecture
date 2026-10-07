@@ -24,16 +24,15 @@ A [ViewModel](../GLOSSARY.md#viewmodel) can be distributed across a small set of
 
 ```mermaid
 flowchart TD
-    N0["features/closures/model/"]
-    N1["closures.selectors.ts"]
-    N2["closures.bindings.ts"]
-    N3["useClosureQuery.ts"]
-    N4["useClosures.ts"]
-    N0 --> N1
-    N0 --> N2
-    N0 --> N3
-    N0 --> N4
+    C["presentation/closures/"] --> S["state/"]
+    C --> H["hooks/"]
+    S --> SEL["closures.selectors.ts"]
+    S --> B["closures.bindings.ts"]
+    H --> Q["useClosureQuery.ts"]
+    H --> F["useClosures.ts"]
 ```
+
+Arrows mean containment. State owns derivation/bindings; hooks compose view-facing operations. The [canonical frontend structure](../frontend/README.md) supplies the other capability folders from the start.
 
 The public [facade](../GLOSSARY.md#facade-pattern) is what the [View](../GLOSSARY.md#view) depends on.
 

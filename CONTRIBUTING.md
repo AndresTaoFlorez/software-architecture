@@ -191,7 +191,7 @@ When a naming rule comes from a framework, cite that framework. When it is our c
 
 Examples:
 
-- React component names start with a capital letter: framework requirement.
+- [React component](./GLOSSARY.md#react-component) names start with a capital letter: framework requirement.
 - React [custom hooks](./GLOSSARY.md#custom-hook) start with `use`: framework requirement.
 - `closures.selectors.ts`: documentation convention.
 - descriptive TypeScript identifiers and PascalCase/camelCase choices: style convention backed by TypeScript ecosystem guidance.

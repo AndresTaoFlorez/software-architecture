@@ -8,37 +8,78 @@ A support-platform user submits a subject and description. The backend validates
 
 Start with the [complete plain modules in chapter 2](2-typescript-first-boundaries.md): `Ticket`, `TicketRepository`, `CreateTicket`, the request parser and memory repository. Their code stays canonical there. We add Nest routing and assembly; we do not replace those rules with decorators.
 
+<a id="physical-structure"></a>
+
 ## 2. Physical structure and dependency decisions
 
-All arrows in this structure diagram mean **file ownership/containment**, not calls:
+Keep `src/{domain,application,infrastructure,presentation,composition}/`, then place Tickets inside each layer. All arrows below mean **directory containment**, not imports or calls:
 
 ```mermaid
 flowchart TD
-    S["src/"] -->|"contains"| D["domain/tickets/ / Ticket.ts"]
-    S -->|"contains"| A["application/tickets/ / use case, contracts, index.ts"]
-    S -->|"contains"| H["presentation/http/tickets/ / parser, pipe, controller"]
-    S -->|"contains"| I["infrastructure/persistence/tickets/ / persistence implementations"]
-    S -->|"contains"| C["composition/ / modules, tokens, main.ts"]
+    S["src/"] --> D["domain/tickets/<br/>Ticket.ts"]
+    S --> A["application/tickets/"]
+    S --> I["infrastructure/persistence/tickets/"]
+    S --> P["presentation/"]
+    S --> C["composition/"]
+    A --> U["use-cases/<br/>CreateTicket.ts"]
+    A --> AP["ports/<br/>TicketRepository.ts"]
+    A --> AC["contracts/<br/>CreateTicketCommand.ts · CreateTicketResult.ts"]
+    I --> IA["adapters/<br/>InMemoryTicketRepository.ts · PrismaTicketRepository.ts"]
+    I --> IM["mappers/ · when retrieval needs one"]
+    P --> H["http/tickets/<br/>controllers · guards · pipes · parsers · dto · mappers · handlers"]
+    P --> CLI["cli/tickets/handlers/<br/>createTicketCli.ts"]
+    C --> CM["modules/<br/>TicketsModule.ts"]
+    C --> CT["tokens/<br/>ticket.tokens.ts"]
+    C --> MAIN["main.ts"]
 ```
 
-The [landing-page placement table and naming guide](README.md#place-your-first-feature) explain each file. The canonical hierarchy puts layers first and capabilities inside them. [Presentation](../GLOSSARY.md#presentation-layer) handles HTTP/CLI in `presentation/`; it does not introduce another top-level layer named `interface/`. Clean's conceptual [Interface Adapters](../GLOSSARY.md#interface-adapter) circle, a TypeScript `interface` declaration and the physical [Presentation layer](../GLOSSARY.md#presentation-layer) describe different things. [Domain](../GLOSSARY.md#domain) cannot import Nest, Prisma, HTTP [DTOs](../GLOSSARY.md#data-transfer-object-dto) or database records. [Application](../GLOSSARY.md#application-layer) imports [Domain](../GLOSSARY.md#domain) and its own contracts, never concrete persistence. [Infrastructure](../GLOSSARY.md#infrastructure) implements inward-owned contracts. [Presentation](../GLOSSARY.md#presentation-layer) translates and invokes [Application](../GLOSSARY.md#application-layer); Composition can import the concrete pieces it assembles.
+Prefix every file below with `src/`. This map covers responsibilities demonstrated across the backend path; it does not imply that optional access, CLI and retrieval concerns are registered in this chapter's creation-only module.
 
-These dependency constraints define the protected inner policy in this example. Exact folder names and PascalCase filenames are [repository conventions](../conventions/naming-and-file-placement.md). Nest's decorators/registration metadata are framework requirements. Using `TicketRepository` to separate [Application](../GLOSSARY.md#application-layer)'s persistence requirement from replaceable storage is a recommended design here, not a requirement to create an interface for every class.
+| Responsibility | Exact file | What it owns |
+| --- | --- | --- |
+| [Domain entity](../GLOSSARY.md#domain-entity) | `domain/tickets/Ticket.ts` | Subject validity and initial `open` status |
+| [Use case](../GLOSSARY.md#use-case) | `application/tickets/use-cases/CreateTicket.ts` | Creates and persists through the required contract |
+| Persistence [port](../GLOSSARY.md#port) | `application/tickets/ports/TicketRepository.ts` | Required persistence behavior and recognized storage failure |
+| Input contract | `application/tickets/contracts/CreateTicketCommand.ts` | Operation input, independent of HTTP |
+| Output contract | `application/tickets/contracts/CreateTicketResult.ts` | Operation outcome, independent of status codes |
+| Memory implementation | `infrastructure/persistence/tickets/adapters/InMemoryTicketRepository.ts` | Creation-only process-local storage |
+| Prisma implementation | `infrastructure/persistence/tickets/adapters/PrismaTicketRepository.ts` | Database write, safe diagnostics and failure translation |
+| Persistence [mapper](../GLOSSARY.md#mapper), **only if retrieval is added** | `infrastructure/persistence/tickets/mappers/mapTicketPersistenceRecord.ts` | Restores stored identity/status through a supported [Domain](../GLOSSARY.md#domain) restoration mechanism; do not reset resolved records through `Ticket.create` |
+| Nest [Controller](../GLOSSARY.md#controller) | `presentation/http/tickets/controllers/TicketsController.ts` | Groups [route handlers](../GLOSSARY.md#route-handler) and translates operation outcomes |
+| Access Guard, **optional example** | `presentation/http/tickets/guards/AuthenticatedGuard.ts` | Uses a previously verified principal to decide access |
+| [Nest Pipe](../GLOSSARY.md#nestjs-pipe) | `presentation/http/tickets/pipes/CreateTicketPipe.ts` | Applies the plain [Parser](../GLOSSARY.md#parser) to an argument and maps parsing failure |
+| Plain [Parser](../GLOSSARY.md#parser) | `presentation/http/tickets/parsers/parseCreateTicketRequest.ts` | Checks unknown request shape |
+| Request [DTO](../GLOSSARY.md#data-transfer-object-dto) | `presentation/http/tickets/dto/CreateTicketRequestDto.ts` | Accepted HTTP input representation |
+| Response [DTO](../GLOSSARY.md#data-transfer-object-dto) | `presentation/http/tickets/dto/TicketResponseDto.ts` | Selected HTTP output fields |
+| Response [mapper](../GLOSSARY.md#mapper) | `presentation/http/tickets/mappers/mapCreateTicketResponse.ts` | Renames/selects successful ticket fields, shared by the plain handler and Nest |
+| Plain HTTP handler | `presentation/http/tickets/handlers/TicketHttpHandler.ts` | Executes the same operation without Nest |
+| Plain access wrapper, **optional example** | `presentation/http/tickets/handlers/handleAuthenticatedCreateTicket.ts` | Checks verified identity before invoking that handler |
+| CLI handler, **exercise** | `presentation/cli/tickets/handlers/createTicketCli.ts` | Arguments, terminal messages and exit codes |
+| Nest assembly | `composition/modules/TicketsModule.ts` | Registers concrete dependencies |
+| Runtime injection key | `composition/tokens/ticket.tokens.ts` | Names the persistence provider |
+| Startup | `composition/main.ts` | Starts Nest |
+
+No custom persistence record or separate CLI [DTO](../GLOSSARY.md#data-transfer-object-dto) is needed by the current snippets. If either gains a useful independent contract, its location is `infrastructure/persistence/tickets/dto/TicketPersistenceRecord.ts` or `presentation/cli/tickets/dto/CreateTicketCliInput.ts` respectively. Do not add placeholder files to fill the map.
+
+[Domain](../GLOSSARY.md#domain) imports no Nest, Prisma, HTTP [DTO](../GLOSSARY.md#data-transfer-object-dto) or database record. [Application](../GLOSSARY.md#application-layer) imports [Domain](../GLOSSARY.md#domain) and its own contracts, never concrete persistence. [Infrastructure](../GLOSSARY.md#infrastructure) implements inward-owned contracts. [Presentation](../GLOSSARY.md#presentation-layer) translates and invokes the supported [Application](../GLOSSARY.md#application-layer) API, not [Domain](../GLOSSARY.md#domain) files. Composition imports the concrete pieces it assembles. The [alias convention](../conventions/naming-and-file-placement.md#9-source-imports-and-runtime-resolution) makes cross-layer imports visible as `@/` without changing these rules.
+
+Clean's conceptual [Interface Adapters](../GLOSSARY.md#interface-adapter) circle, a TypeScript `interface` declaration and this physical [Presentation](../GLOSSARY.md#presentation-layer) area describe different things. Exact paths are handbook conventions, while Nest decorators/registration are framework mechanisms. `TicketRepository` expresses the needed persistence capability; it is not a requirement to create an interface for every class.
 
 ## 3. Finish the HTTP boundary
 
-Use the [canonical `CreateTicketPipe`](3-nestjs-building-blocks.md#pipe-parse-a-handler-argument), placed beside the chapter 2 parser as `src/presentation/http/tickets/CreateTicketPipe.ts`. The parser rejects malformed shape; the [use case](../GLOSSARY.md#use-case) invokes the [Domain](../GLOSSARY.md#domain) factory for actual ticket validity. The optional `AuthenticatedGuard` in chapter 3 would decide access before the Pipe, but is not registered in this creation-only module.
+Use the [canonical `CreateTicketPipe`](3-nestjs-building-blocks.md#pipe-parse-a-handler-argument), placed beside the chapter 2 parser as `src/presentation/http/tickets/pipes/CreateTicketPipe.ts`. The parser rejects malformed shape; the [use case](../GLOSSARY.md#use-case) invokes the [Domain](../GLOSSARY.md#domain) factory for actual ticket validity. The optional `AuthenticatedGuard` in chapter 3 would decide access before the Pipe, but is not registered in this creation-only module.
 
-`src/presentation/http/tickets/TicketsController.ts`:
+`src/presentation/http/tickets/controllers/TicketsController.ts`:
 
 ```ts
 import {
   Body, Controller, HttpCode, Inject, Post,
   BadRequestException, ServiceUnavailableException,
 } from '@nestjs/common'
-import { CreateTicket } from '../../../application/tickets'
-import { CreateTicketPipe } from './CreateTicketPipe'
-import type { CreateTicketRequest } from './createTicketRequest'
+import { CreateTicket } from '@/application/tickets'
+import { CreateTicketPipe } from '../pipes/CreateTicketPipe'
+import type { CreateTicketRequestDto } from '../dto/CreateTicketRequestDto'
+import { mapCreateTicketResponse } from '../mappers/mapCreateTicketResponse'
 
 @Controller('tickets')
 export class TicketsController {
@@ -46,7 +87,7 @@ export class TicketsController {
 
   @Post()
   @HttpCode(201)
-  async create(@Body(new CreateTicketPipe()) command: CreateTicketRequest) {
+  async create(@Body(new CreateTicketPipe()) command: CreateTicketRequestDto) {
     const result = await this.createTicket.execute(command)
     if (!result.ok) {
       if (result.reason === 'invalid-subject') {
@@ -54,11 +95,7 @@ export class TicketsController {
       }
       throw new ServiceUnavailableException('unavailable')
     }
-    const ticket = result.ticket
-    return {
-      ticket_id: ticket.id, subject: ticket.subject,
-      description: ticket.description, status: ticket.status,
-    }
+    return mapCreateTicketResponse(result.ticket)
   }
 }
 ```
@@ -82,10 +119,10 @@ export const TICKET_REPOSITORY = Symbol('TICKET_REPOSITORY')
 ```ts
 import { Module } from '@nestjs/common'
 import { randomUUID } from 'node:crypto'
-import { CreateTicket } from '../../application/tickets'
-import type { TicketRepository } from '../../application/tickets/ports/TicketRepository'
-import { InMemoryTicketRepository } from '../../infrastructure/persistence/tickets/InMemoryTicketRepository'
-import { TicketsController } from '../../presentation/http/tickets/TicketsController'
+import { CreateTicket } from '@/application/tickets'
+import type { TicketRepository } from '@/application/tickets/ports/TicketRepository'
+import { InMemoryTicketRepository } from '@/infrastructure/persistence/tickets/adapters/InMemoryTicketRepository'
+import { TicketsController } from '@/presentation/http/tickets/controllers/TicketsController'
 import { TICKET_REPOSITORY } from '../tokens/ticket.tokens'
 
 @Module({
@@ -164,14 +201,14 @@ model Ticket {
 
 The `state` column intentionally shows a different storage field name. There is no database default owning initial state and no second enum allowlist; `PrismaTicketRepository` writes the factory's chosen status. Database constraints can defend stored data, but deriving/checking them against [Domain](../GLOSSARY.md#domain) requires migration discipline, not another manually maintained business vocabulary. A database primary key prevents overwrite on duplicate identity.
 
-`src/infrastructure/persistence/tickets/PrismaTicketRepository.ts` (Prisma implementation of `TicketRepository`):
+`src/infrastructure/persistence/tickets/adapters/PrismaTicketRepository.ts` (Prisma implementation of `TicketRepository`):
 
 ```ts
-import { Prisma, type PrismaClient } from '../generated/prisma/client'
-import type { Ticket } from '../../../domain/tickets/Ticket'
+import { Prisma, type PrismaClient } from '@/infrastructure/persistence/generated/prisma/client'
+import type { Ticket } from '@/domain/tickets/Ticket'
 import {
   TicketPersistenceUnavailable, type TicketRepository,
-} from '../../../application/tickets/ports/TicketRepository'
+} from '@/application/tickets/ports/TicketRepository'
 
 function isStorageUnavailable(error: unknown): error is
   Prisma.PrismaClientInitializationError | Prisma.PrismaClientKnownRequestError {
@@ -228,7 +265,7 @@ This resource owns the configured client and closes it on Nest shutdown. The app
 import { Module } from '@nestjs/common'
 import type { OnModuleDestroy } from '@nestjs/common'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '../../infrastructure/persistence/generated/prisma/client'
+import { PrismaClient } from '@/infrastructure/persistence/generated/prisma/client'
 
 export class DatabaseResource implements OnModuleDestroy {
   constructor(readonly client: PrismaClient) {}
@@ -250,7 +287,7 @@ export class DatabaseResource implements OnModuleDestroy {
 export class DatabaseModule {}
 ```
 
-To switch `composition/modules/TicketsModule.ts`, import `DatabaseModule` and `DatabaseResource` from `./DatabaseModule`, import `PrismaTicketRepository` from `../../infrastructure/persistence/tickets/PrismaTicketRepository`, add `imports: [DatabaseModule]`, and **replace** its memory binding with:
+To switch `composition/modules/TicketsModule.ts`, import `DatabaseModule` and `DatabaseResource` from `./DatabaseModule`, import `PrismaTicketRepository` from `@/infrastructure/persistence/tickets/adapters/PrismaTicketRepository`, add `imports: [DatabaseModule]`, and **replace** its memory binding with:
 
 ```ts
 {

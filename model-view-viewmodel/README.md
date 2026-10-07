@@ -112,7 +112,7 @@ flowchart TD
 
 Why isolate it?
 
-- React components can change without rewriting application policy;
+- [React components](../GLOSSARY.md#react-component) can change without rewriting application policy;
 - Redux/Zustand/other [store](../GLOSSARY.md#store) mechanics can stay behind a semantic feature API;
 - UI-specific derived state can be tested without DOM rendering;
 - [Application](../GLOSSARY.md#application-layer)/[Domain](../GLOSSARY.md#domain) never need to know React.
@@ -121,47 +121,29 @@ A hook is a [ViewModel](../GLOSSARY.md#viewmodel) only when it intentionally exp
 
 ## 7. Physical structure
 
-A feature-oriented [Presentation](../GLOSSARY.md#presentation-layer) structure:
+Keep the five canonical layers. A hook can expose a [ViewModel](../GLOSSARY.md#viewmodel) while the state it composes stays in the same [Presentation](../GLOSSARY.md#presentation-layer) capability:
 
-```mermaid
-flowchart TD
-    P["presentation/"]
-    P --> PAGES["pages/orders/"]
-    P --> FEATURES["features/orders/"]
-    FEATURES --> UI["ui/"]
-    FEATURES --> MODEL["model/"]
-    FEATURES --> LIB["lib/"]
-    FEATURES --> API["index.ts"]
+| Exact file under `src/` | Responsibility | Keep out |
+| --- | --- | --- |
+| `presentation/orders/pages/OrdersPage.tsx` | Screen composition | Business policy |
+| `presentation/orders/components/OrderList/OrderList.tsx` | [View](../GLOSSARY.md#view) rendering | HTTP clients |
+| `presentation/orders/hooks/useOrders.ts` | [ViewModel](../GLOSSARY.md#viewmodel) contract and view-facing operations | Concrete [Infrastructure](../GLOSSARY.md#infrastructure) |
+| `presentation/orders/state/orders.selectors.ts` | Derived display state | Authoritative domain decisions |
+| `presentation/orders/state/orders.bindings.ts` | State-library result translation, when needed | Concrete HTTP implementation |
+| `presentation/orders/formatters/formatOrderTotal.ts` | Display formatting | Unrelated helper code |
+| `presentation/orders/index.ts` | Intentional [public API](../GLOSSARY.md#public-api) | Automatic export of all internals |
+| `application/orders/use-cases/cancelOrder.ts` | Workflow | React/Redux |
+| `domain/orders/Order.ts` | Business meaning | [View](../GLOSSARY.md#view) state |
 
-    UI --> VIEW["OrderList.tsx"]
-    MODEL --> VM["useOrders.ts"]
-    MODEL --> SEL["orders.selectors.ts"]
-    MODEL --> BIND["orders.bindings.ts"]
-    LIB --> FORMAT["order-display.ts"]
-
-    APP["application/orders/"] --> UC["use-cases/cancelOrder.ts"]
-    DOMAIN["domain/orders/"] --> ENTITY["Order.ts"]
-```
-
-| Path | Owns | Why | Must not contain |
-| --- | --- | --- | --- |
-| `features/orders/ui/` | [Views](../GLOSSARY.md#view)/components | rendering belongs to feature | business [invariants](../GLOSSARY.md#invariant), HTTP clients |
-| `features/orders/model/` | [ViewModel](../GLOSSARY.md#viewmodel)/state/[selectors](../GLOSSARY.md#selector)/bindings | view-oriented behavior stays together | concrete [Infrastructure](../GLOSSARY.md#infrastructure) |
-| `features/orders/lib/` | helpers still owned by Orders [Presentation](../GLOSSARY.md#presentation-layer) | prevents generic util dumping | unrelated cross-feature code |
-| `features/orders/index.ts` | public feature API | hides internal state implementation | automatic `export *` of every internal |
-| `application/orders/` | application operations | [ViewModel](../GLOSSARY.md#viewmodel) delegates policy-bearing work inward | React/Redux mechanisms |
-| `domain/orders/` | business meaning | survives UI redesign | view state |
-
-Not every feature needs all of these files. Split only when each responsibility becomes meaningful.
-
+The [frontend guide](../frontend/README.md) owns the complete pages/components/hooks/state convention, used from the first capability. Files are added only when needed. [MVVM](../GLOSSARY.md#model-view-viewmodel-mvvm) does not prescribe their spelling; a `use` prefix does not by itself make a hook a [ViewModel](../GLOSSARY.md#viewmodel).
 
 ## 8. Where does a new function go?
 
 ```mermaid
 flowchart TD
     Q{"Why does this function exist?"}
-    Q -->|"Renders / handles local visual gesture"| V["View / ui/"]
-    Q -->|"Creates display state or view command"| VM["ViewModel / model/"]
+    Q -->|"Renders / handles local visual gesture"| V["View / components/"]
+    Q -->|"Creates display state or view command"| VM["ViewModel / hooks/"]
     Q -->|"Business/application workflow"| APP["Application / Domain"]
     Q -->|"Calls HTTP / DB / SDK"| I["Infrastructure"]
 ```
@@ -221,12 +203,12 @@ Requirement:
 
 | Artifact | File | Owner | Why |
 | --- | --- | --- | --- |
-| button/row rendering | `presentation/features/orders/ui/OrderRow.tsx` | [View](../GLOSSARY.md#view) | renders and forwards intent |
-| `busy`, error and `cancel()` command | `presentation/features/orders/model/useOrders.ts` | [ViewModel](../GLOSSARY.md#viewmodel) | state/behavior exists for the [View](../GLOSSARY.md#view) |
-| shared [store](../GLOSSARY.md#store) [selector](../GLOSSARY.md#selector) if needed | `presentation/features/orders/model/orders.selectors.ts` | [Presentation](../GLOSSARY.md#presentation-layer) | derives client view state |
+| button/row rendering | `presentation/orders/components/OrderRow/OrderRow.tsx` | [View](../GLOSSARY.md#view) | renders and forwards intent |
+| `busy`, error and `cancel()` command | `presentation/orders/hooks/useOrders.ts` | [ViewModel](../GLOSSARY.md#viewmodel) | state/behavior exists for the [View](../GLOSSARY.md#view) |
+| shared [store](../GLOSSARY.md#store) [selector](../GLOSSARY.md#selector) if needed | `presentation/orders/state/orders.selectors.ts` | [Presentation](../GLOSSARY.md#presentation-layer) | derives client view state |
 | cancellation workflow | `application/orders/use-cases/cancelOrder.ts` | [Application](../GLOSSARY.md#application-layer) | policy-bearing operation |
 | cancellation [invariant](../GLOSSARY.md#invariant) | `domain/orders/Order.ts` | [Domain](../GLOSSARY.md#domain) | business truth |
-| HTTP persistence | `infrastructure/orders/HttpOrderRepository.ts` | [Infrastructure](../GLOSSARY.md#infrastructure) | technical I/O |
+| HTTP persistence | `infrastructure/http/orders/adapters/HttpOrderRepository.ts` | [Infrastructure](../GLOSSARY.md#infrastructure) | technical I/O |
 
 ```mermaid
 sequenceDiagram
@@ -259,7 +241,7 @@ The table above gives a possible React adaptation. The implementation below uses
 
 This framework-neutral example uses a class plus an explicit DOM binding, so no React Hook is implied. React equivalents can expose the same contract through an intentionally designed hook.
 
-The business rule belongs in `domain/orders/Order.ts`; the operation, result, persistence failure and [port](../GLOSSARY.md#port) belong in `application/orders/cancelOrder.ts`. [DTO](../GLOSSARY.md#data-transfer-object-dto) validation/mapping and the concrete repository belong in `infrastructure/orders/HttpOrderRepository.ts`. [Presentation](../GLOSSARY.md#presentation-layer) owns gestures and feedback; `composition/bootstrap.ts` selects implementations. These are documentation conventions. A small file may contain cohesive contracts and functions; split them when ownership or change pressure requires it.
+The business rule belongs in `domain/orders/Order.ts`; the operation, result, persistence failure and [port](../GLOSSARY.md#port) belong in `application/orders/use-cases/cancelOrder.ts`. [DTO](../GLOSSARY.md#data-transfer-object-dto) validation/mapping and the concrete repository belong in `infrastructure/http/orders/adapters/HttpOrderRepository.ts`. [Presentation](../GLOSSARY.md#presentation-layer) owns gestures and feedback; `composition/bootstrap.ts` selects implementations. These are documentation conventions. A small file may contain cohesive contracts and functions; split them when ownership or change pressure requires it.
 
 ```ts
 // domain/orders/Order.ts
@@ -284,8 +266,8 @@ export class Order {
 ```
 
 ```ts
-// application/orders/cancelOrder.ts
-import { Order, ShippedOrderCannotBeCancelled } from '../../domain/orders/Order'
+// application/orders/use-cases/cancelOrder.ts
+import { Order, ShippedOrderCannotBeCancelled } from '@/domain/orders/Order'
 
 export interface OrderRepository {
   findById(id: string): Promise<{ order: Order; version: string } | null>
@@ -317,9 +299,9 @@ export function makeCancelOrder(orders: OrderRepository): CancelOrder {
 ```
 
 ```ts
-// infrastructure/orders/HttpOrderRepository.ts
-import { Order, isOrderStatus, type OrderStatus } from '../../domain/orders/Order'
-import { PersistenceFailure, type OrderRepository } from '../../application/orders/cancelOrder'
+// infrastructure/http/orders/adapters/HttpOrderRepository.ts
+import { Order, isOrderStatus, type OrderStatus } from '@/domain/orders/Order'
+import { PersistenceFailure, type OrderRepository } from '@/application/orders/use-cases/cancelOrder'
 
 // Adapter-owned transport contract. A concrete fetch driver implements it.
 export interface OrderTransport {
@@ -356,8 +338,8 @@ export class HttpOrderRepository implements OrderRepository {
 The external response is treated as `unknown` until its fields are checked. The [adapter](../GLOSSARY.md#adapter) owns the transport shape (`id` and response parsing), but reuses `isOrderStatus` from [Domain](../GLOSSARY.md#domain) for valid business values. `OrderStatus` and its runtime checker are derived from the same `ORDER_STATUSES` definition; this HTTP implementation must not maintain another status list.
 
 ```ts
-// presentation/orders/CancelOrderViewModel.ts
-import type { CancelOrder } from '../../application/orders/cancelOrder'
+// presentation/orders/state/CancelOrderViewModel.ts
+import type { CancelOrder } from '@/application/orders/use-cases/cancelOrder'
 export class CancelOrderViewModel {
   busy = false
   message = ''
@@ -382,8 +364,8 @@ export class CancelOrderViewModel {
 ```
 
 ```ts
-// presentation/orders/OrderView.ts
-import type { CancelOrderViewModel } from './CancelOrderViewModel'
+// presentation/orders/components/OrderView/OrderView.ts
+import type { CancelOrderViewModel } from '@/presentation/orders/state/CancelOrderViewModel'
 export function mountOrderView(root: HTMLElement, id: string, vm: CancelOrderViewModel) {
   const button = document.createElement('button')
   button.textContent = 'Cancel order'
@@ -407,10 +389,10 @@ export function mountOrderView(root: HTMLElement, id: string, vm: CancelOrderVie
 
 ```ts
 // composition/bootstrap.ts
-import { makeCancelOrder, PersistenceFailure } from '../application/orders/cancelOrder'
-import { HttpOrderRepository, type OrderTransport } from '../infrastructure/orders/HttpOrderRepository'
-import { CancelOrderViewModel } from '../presentation/orders/CancelOrderViewModel'
-import { mountOrderView } from '../presentation/orders/OrderView'
+import { makeCancelOrder, PersistenceFailure } from '@/application/orders/use-cases/cancelOrder'
+import { HttpOrderRepository, type OrderTransport } from '@/infrastructure/http/orders/adapters/HttpOrderRepository'
+import { CancelOrderViewModel } from '@/presentation/orders/state/CancelOrderViewModel'
+import { mountOrderView } from '@/presentation/orders/components/OrderView/OrderView'
 
 async function request(path: string, init?: RequestInit): Promise<Response> {
   try { return await fetch(path, init) }

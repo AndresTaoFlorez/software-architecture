@@ -20,6 +20,8 @@ This section separates primary architectural sources from framework/tool documen
 
 ## React
 
+- Describing the UI — components and composition.\
+  https://react.dev/learn/describing-the-ui
 - Reusing Logic with [Custom Hooks](../GLOSSARY.md#custom-hook).
   https://react.dev/learn/reusing-logic-with-custom-hooks
 - Choosing the State Structure.\
@@ -65,9 +67,8 @@ This section separates primary architectural sources from framework/tool documen
 
 - Redux Style Guide — official feature-folder recommendation.\
   https://redux.js.org/style-guide/
-- Feature-Sliced Design — slices/segments and [public API](../GLOSSARY.md#public-api) concepts. Used here as a secondary organizational reference, **not** as a mandatory architecture for this repository.\
-  https://feature-sliced.design/docs/reference/slices-segments\
-  https://feature-sliced.design/docs/reference/public-api
+- Feature-Sliced Design — alternative methodology with its own layers, slices and dependency rules; not the canonical structure or a partial taxonomy borrowed here.\
+  https://feature-sliced.design/docs/get-started/overview
 - Kent C. Dodds, "[Colocation](../GLOSSARY.md#colocation)" (2019).\
   https://kentcdodds.com/blog/colocation
 
@@ -78,5 +79,12 @@ This section separates primary architectural sources from framework/tool documen
 
 ## Platform boundaries
 
+- TypeScript Modules Reference — `paths` changes compiler resolution, not emitted imports.\
+  https://www.typescriptlang.org/docs/handbook/modules/reference.html#paths
+- Bun Runtime / Module Resolution — default execution, explicit checking and path mappings.\
+  https://bun.com/docs/runtime#check\
+  https://bun.com/docs/runtime/module-resolution#path-re-mapping
+- Node native TypeScript — path-alias limits.\
+  https://nodejs.org/docs/latest-v24.x/api/typescript.html#paths-aliases
 - MDN, File API. Browser `File` / `FileList` APIs.\
   https://developer.mozilla.org/en-US/docs/Web/API/File_API

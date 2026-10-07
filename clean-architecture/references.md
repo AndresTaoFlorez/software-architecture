@@ -36,8 +36,7 @@ The sources most central to [Clean Architecture](../GLOSSARY.md#clean-architectu
 - **Turborepo.** [Boundaries](https://turborepo.dev/docs/reference/boundaries). Experimental workspace and tag constraints, rather than automatic enforcement of Clean circles.
 - **Dodds, K. C.** (2019). *[Colocation](../GLOSSARY.md#colocation).* (Place code as close as possible to where it is relevant; the basis
   for [feature folders](../GLOSSARY.md#feature-folder) and colocated styles.) https://kentcdodds.com/blog/colocation
-- **Feature-Sliced Design.** *Architectural methodology for frontend projects.* (Feature-first slicing of the
-  [Presentation layer](../GLOSSARY.md#presentation-layer).) https://feature-sliced.design/
+- **Feature-Sliced Design.** Alternative frontend architectural methodology with its own layers, slices and dependency rules. It is not the canonical five-layer structure used here. https://feature-sliced.design/docs/get-started/overview
 - **Vue.js.** *SFC CSS Features.* (`<style scoped>` and `<style module>` for intrinsic component styles.)
   https://vuejs.org/api/sfc-css-features.html
 

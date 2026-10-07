@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url'
 import { test } from 'node:test'
 import ts from 'typescript'
 import { parseMarkdown, visit } from './markdown.mjs'
+import { rewriteExampleImports } from './example-imports.mjs'
 
 const documents = [
   'clean-architecture/4-building-a-feature.md',
@@ -20,14 +21,12 @@ for (const document of documents) test(document + ': complete feature compiles a
     const feature = document.endsWith('/README.md') ? content.slice(content.indexOf('### Complete')) : content
     visit(parseMarkdown(feature), node => {
       if (node.type !== 'code' || node.lang !== 'ts') return
-      const filename = node.value.match(/^\/\/ ((?:domain|application|infrastructure|presentation|composition)\/[\w/]+\.ts)\n/)?.[1]
+      const filename = node.value.match(/^\/\/ ((?:domain|application|infrastructure|presentation|composition)\/[\w/-]+\.ts)\n/)?.[1]
       if (!filename) return
       const target = path.join(root, filename)
       assert.ok(target.startsWith(root + path.sep))
-      // Node's native TS loader needs explicit extensions; source docs target a bundler.
-      const source = node.value.replace(/(from\s+['"])(\.[^'"]+)(['"])/g, '$1$2.ts$3')
       fs.mkdirSync(path.dirname(target), { recursive: true })
-      fs.writeFileSync(target, source)
+      fs.writeFileSync(target, node.value)
       files.push(target)
     })
     assert.ok(files.length >= 5, 'feature must include policy, port/operation, adapter, UI and wiring')
@@ -36,6 +35,7 @@ for (const document of documents) test(document + ': complete feature compiles a
     const program = ts.createProgram(files, {
       target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext,
       moduleResolution: ts.ModuleResolutionKind.Bundler,
+      paths: { '@/*': [path.join(root, '*')] },
       strict: true, noEmit: true, allowImportingTsExtensions: true,
       types: [], skipLibCheck: true,
     })
@@ -43,6 +43,12 @@ for (const document of documents) test(document + ': complete feature compiles a
     assert.equal(diagnostics.length, 0, ts.formatDiagnostics(diagnostics, {
       getCanonicalFileName: f => f, getCurrentDirectory: () => root, getNewLine: () => '\n',
     }))
+    // Node's native TS loader needs resolved paths/extensions. Check the actual
+    // documented aliases first, then adapt only the temporary execution copy.
+    for (const file of files) {
+      fs.writeFileSync(file, rewriteExampleImports(fs.readFileSync(file, 'utf8'),
+        path.relative(root, file).replaceAll('\\', '/'), root, '.ts'))
+    }
     const load = name => import(pathToFileURL(path.join(root, name)).href)
     const { Order, ShippedOrderCannotBeCancelled, ORDER_STATUSES, isOrderStatus } = await load('domain/orders/Order.ts')
     assert.deepEqual([...ORDER_STATUSES], ['pending', 'shipped', 'cancelled'])
@@ -50,8 +56,8 @@ for (const document of documents) test(document + ': complete feature compiles a
     for (const invalid of [null, 9, {}, 'unknown', { toString: () => 'pending' }]) {
       assert.equal(isOrderStatus(invalid), false, 'Domain must not coerce unknown values')
     }
-    const { makeCancelOrder, PersistenceFailure } = await load('application/orders/cancelOrder.ts')
-    const { HttpOrderRepository } = await load('infrastructure/orders/HttpOrderRepository.ts')
+    const { makeCancelOrder, PersistenceFailure } = await load('application/orders/use-cases/cancelOrder.ts')
+    const { HttpOrderRepository } = await load('infrastructure/http/orders/adapters/HttpOrderRepository.ts')
     const shipped = new Order('1', 'shipped')
     assert.throws(() => shipped.cancel(), ShippedOrderCannotBeCancelled)
     assert.equal(shipped.status, 'shipped')

@@ -3,7 +3,7 @@
 
 # 1. The Dependency Rule
 
-Suppose an order cannot be cancelled after shipping. That rule should not import a React component, a database client, or the API's raw response shape. Otherwise a change to those tools can require editing the cancellation rule. The code that receives a click or saves an order may know about that rule; the rule does not need to know about those callers.
+Suppose an order cannot be cancelled after shipping. That rule should not import a [React component](../GLOSSARY.md#react-component), a database client, or the API's raw response shape. Otherwise a change to those tools can require editing the cancellation rule. The code that receives a click or saves an order may know about that rule; the rule does not need to know about those callers.
 
 This is a question about **source-code dependencies**: which modules refer to or import which other modules. It is not the order in which functions call each other when a user clicks a button.
 
@@ -142,7 +142,7 @@ It does not say:
 
 That last point matters.
 
-Martin places views alongside controllers and [presenters](../GLOSSARY.md#presenter) in [Interface Adapters](../GLOSSARY.md#interface-adapter). See [the combined outer-module explanation](../foundations/dependency-boundaries.md#combined-outer-modules) for how a practical React component or HTTP repository can also contain framework glue. The stricter project policy here forbids [Presentation](../GLOSSARY.md#presentation-layer) from importing [Infrastructure](../GLOSSARY.md#infrastructure), even when both contain outer mechanisms.
+Martin places views alongside controllers and [presenters](../GLOSSARY.md#presenter) in [Interface Adapters](../GLOSSARY.md#interface-adapter). See [the combined outer-module explanation](../foundations/dependency-boundaries.md#combined-outer-modules) for how a practical [React component](../GLOSSARY.md#react-component) or HTTP repository can also contain framework glue. The stricter project policy here forbids [Presentation](../GLOSSARY.md#presentation-layer) from importing [Infrastructure](../GLOSSARY.md#infrastructure), even when both contain outer mechanisms.
 
 Document those stricter rules as project architecture, not as quotations from [Clean Architecture](../GLOSSARY.md#clean-architecture).
 

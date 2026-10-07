@@ -32,7 +32,7 @@ https://typescript-eslint.io/rules/naming-convention/
 
 ## 2. React requirements
 
-React component names must start with a capital letter.
+[React component](../GLOSSARY.md#react-component) names must start with a capital letter.
 
 ```tsx
 function QueryFilters() {
@@ -65,9 +65,9 @@ This documentation project uses names that reveal architectural role.
 | application [use case](../GLOSSARY.md#use-case) | `cancelOrder.ts` |
 | application [port](../GLOSSARY.md#port) | `OrderRepository.ts`, `PaymentGateway.ts` |
 | concrete [adapter](../GLOSSARY.md#adapter) | `HttpOrderRepository.ts`, `StripePaymentGateway.ts` |
-| [mapper](../GLOSSARY.md#mapper) | `orderApi.mapper.ts` |
-| [DTO](../GLOSSARY.md#data-transfer-object-dto) | `orderApi.dto.ts` |
-| React component | `QueryFilters.tsx` |
+| [mapper](../GLOSSARY.md#mapper) | `mapOrderApiDto.ts` |
+| [DTO](../GLOSSARY.md#data-transfer-object-dto) | `OrderApiDto.ts` |
+| [React component](../GLOSSARY.md#react-component) | `QueryFilters.tsx` |
 | component styles | `QueryFilters.styles.ts` |
 | component types | `QueryFilters.types.ts` |
 | feature hook/[facade](../GLOSSARY.md#facade-pattern) | `useClosures.ts` |
@@ -92,10 +92,10 @@ When a [use case](../GLOSSARY.md#use-case) needs to save tickets, name its persi
 | `InMemoryTicketRepository.ts` | memory implementation of `TicketRepository` | mechanism prefix, our naming convention |
 | `PrismaTicketRepository.ts` | Prisma/database implementation of `TicketRepository` | technology name plus contract role |
 | `TicketsController.ts` | group of [HTTP route](../GLOSSARY.md#http-route) handlers | Nest terminology; suffix/file casing is our convention |
-| `CreateTicketPipe.ts` | handler argument parser/validator | Nest terminology |
+| `CreateTicketPipe.ts` | Nest hook that applies a [Parser](../GLOSSARY.md#parser) to a handler argument and translates failure | Nest terminology |
 | `AuthenticatedGuard.ts` | access decision for the selected operation | Nest terminology; assumes previously verified identity |
 | `TicketsModule.ts` | framework registration and composition | Nest terminology, not an architectural layer |
-| `createTicketRequest.ts` | input shape and parsing functions | camelCase for function-oriented files; types inside use PascalCase |
+| `parseCreateTicketRequest.ts` | plain unknown-input parsing, returning the separately owned request [DTO](../GLOSSARY.md#data-transfer-object-dto) | camelCase for function-oriented files; types inside use PascalCase |
 | `ticket.tokens.ts` | runtime dependency lookup keys | Nest injection mechanism; suffix is our convention |
 
 An exported function uses camelCase (`createTicket`), while a class uses PascalCase (`CreateTicket`). `Repository` is justified for stored business objects; use `PaymentGateway`, `Clock`, `FileStorage` or `AgendaReader` when those better express the conversation. Nest/Prisma do not require our filenames or suffixes.
@@ -109,7 +109,8 @@ The names above belong to different categories; stacking them does not define an
 | Repository | design pattern / persistence abstraction |
 | [Port](../GLOSSARY.md#port) / [Adapter](../GLOSSARY.md#adapter) | [Hexagonal Architecture](../GLOSSARY.md#hexagonal-architecture-ports-and-adapters) interaction / external connection terminology |
 | [Controller](../GLOSSARY.md#controller) | framework/[Presentation](../GLOSSARY.md#presentation-layer) role; in Nest, a class grouping [route handlers](../GLOSSARY.md#route-handler) |
-| Pipe | Nest mechanism for argument parsing, validation or transformation |
+| [Parser](../GLOSSARY.md#parser) | ordinary parsing logic; its owner follows the boundary it interprets |
+| Pipe | Nest hook applying parsing, validation or transformation to a handler argument |
 | Guard | Nest mechanism for an access decision |
 | Module | Nest composition/registration mechanism |
 | Prisma | concrete database-access technology |
@@ -197,3 +198,61 @@ A correctly named file in the wrong layer is still architecturally wrong.
 `HttpOrderRepository.ts` does not belong in `domain/` merely because its name is descriptive.
 
 Use the [Code Placement Guide](../foundations/code-placement.md) before creating a new file.
+
+### Exact owned paths
+
+Prefix each path with `src/`. These are placement conventions; optional artifacts are created only when their responsibility is needed.
+
+| Artifact | Exact path |
+| --- | --- |
+| Nest [Controller](../GLOSSARY.md#controller) | `presentation/http/tickets/controllers/TicketsController.ts` |
+| [Nest Guard](../GLOSSARY.md#nestjs-guard) | `presentation/http/tickets/guards/AuthenticatedGuard.ts` |
+| [Nest Pipe](../GLOSSARY.md#nestjs-pipe) | `presentation/http/tickets/pipes/CreateTicketPipe.ts` |
+| Plain HTTP [Parser](../GLOSSARY.md#parser) | `presentation/http/tickets/parsers/parseCreateTicketRequest.ts` |
+| HTTP request [DTO](../GLOSSARY.md#data-transfer-object-dto) | `presentation/http/tickets/dto/CreateTicketRequestDto.ts` |
+| HTTP response [DTO](../GLOSSARY.md#data-transfer-object-dto) | `presentation/http/tickets/dto/TicketResponseDto.ts` |
+| HTTP response [mapper](../GLOSSARY.md#mapper) | `presentation/http/tickets/mappers/mapCreateTicketResponse.ts` |
+| CLI handler | `presentation/cli/tickets/handlers/createTicketCli.ts` |
+| CLI input type, if separately useful | `presentation/cli/tickets/dto/CreateTicketCliInput.ts` |
+| [Use case](../GLOSSARY.md#use-case) | `application/tickets/use-cases/CreateTicket.ts` |
+| Operation contracts | `application/tickets/contracts/CreateTicketCommand.ts` and `CreateTicketResult.ts` beside it |
+| Persistence contract | `application/tickets/ports/TicketRepository.ts` |
+| Prisma [adapter](../GLOSSARY.md#adapter) | `infrastructure/persistence/tickets/adapters/PrismaTicketRepository.ts` |
+| Persistence [mapper](../GLOSSARY.md#mapper), if retrieval needs one | `infrastructure/persistence/tickets/mappers/mapTicketPersistenceRecord.ts` |
+| Frontend Page | `presentation/scheduling/pages/AgendaPage.tsx` |
+| Frontend Component | `presentation/scheduling/components/AppointmentCard/AppointmentCard.tsx` |
+| Frontend Hook | `presentation/scheduling/hooks/useAgenda.ts` |
+| Frontend State | `presentation/scheduling/state/agenda.state.ts` |
+| Frontend API [Parser](../GLOSSARY.md#parser) | `infrastructure/http/scheduling/parsers/parseAgendaApiResponse.ts` |
+| Frontend API [DTO](../GLOSSARY.md#data-transfer-object-dto) | `infrastructure/http/scheduling/dto/AgendaApiDto.ts` |
+| Display formatter | `presentation/scheduling/formatters/formatAppointmentTime.ts` |
+
+The [placement guide](../foundations/code-placement.md#8-where-does-a-type-belong) explains why [DTOs](../GLOSSARY.md#data-transfer-object-dto), [Parsers](../GLOSSARY.md#parser) and [mappers](../GLOSSARY.md#mapper) follow their boundary. A short function does not become a “helper” with no owner, and a complex business function does not leave [Domain](../GLOSSARY.md#domain) because it is long.
+
+## 9. Source imports and runtime resolution
+
+A moved [Controller](../GLOSSARY.md#controller) should still make its [Application](../GLOSSARY.md#application-layer) dependency easy to see. The canonical alias is **`@/ = src/`**. Use it across layers or distant owners; nearby files with the same owner can use `../pipes/CreateTicketPipe` or `../parsers/parseCreateTicketRequest`.
+
+```ts
+import { Ticket } from '@/domain/tickets/Ticket'
+import { CreateTicket } from '@/application/tickets/use-cases/CreateTicket'
+import type { TicketRepository } from '@/application/tickets/ports/TicketRepository'
+```
+
+These imports illustrate separate consumers; HTTP [Presentation](../GLOSSARY.md#presentation-layer) does not directly import [Domain](../GLOSSARY.md#domain) in our stricter backend boundary. An alias changes how a path is found, not which dependencies are allowed.
+
+For a `tsconfig.json` at the application root, the relevant compiler fragment is:
+
+```json
+{
+  "compilerOptions": {
+    "paths": { "@/*": ["./src/*"] }
+  }
+}
+```
+
+This fragment is not a complete build configuration. [TypeScript `paths`](https://www.typescriptlang.org/docs/handbook/modules/reference.html#paths) tells the compiler where to find modules; it does **not** rewrite emitted import strings. Configure the chosen runtime or bundler to resolve the same alias. Otherwise a typechecked build can fail when it starts.
+
+[Bun's module resolver](https://bun.com/docs/runtime/module-resolution#path-re-mapping) supports `tsconfig.json` path mappings. By default Bun executes TypeScript without checking types; use a project typecheck or Bun's supported `--check` mode before execution, as described in [its runtime documentation](https://bun.com/docs/runtime#check). [Node's native TypeScript support](https://nodejs.org/docs/latest-v24.x/api/typescript.html#paths-aliases) does not read `tsconfig.json` path aliases. A Node application needs an explicitly configured build/loader strategy that resolves them; simply running `tsc` is insufficient.
+
+The documentation tests first typecheck the original snippets with `@/` mappings and inspect their source dependencies. Only then do they adapt imports in temporary execution copies for Node. That bridge is test infrastructure, not evidence that Node resolves these aliases itself. Scoped packages such as `@nestjs/common` and `@prisma/client` remain external packages.

@@ -24,10 +24,10 @@ Use the [canonical chapter 2 modules](2-typescript-first-boundaries.md). Complet
 
 **Smallest mechanism.** Accept exactly two positional strings, build the application command, call the public operation and map its result to text and an exit code. A **CLI**, command-line interface, is simply another external way of invoking creation. Its [adapter](../GLOSSARY.md#adapter) owns argument shape, not ticket validity.
 
-`src/presentation/cli/tickets/createTicketCli.ts`:
+`src/presentation/cli/tickets/handlers/createTicketCli.ts`:
 
 ```ts
-import type { CreateTicket } from '../../../application/tickets'
+import type { CreateTicket } from '@/application/tickets'
 
 export async function createTicketCli(
   args: readonly unknown[], createTicket: CreateTicket,
@@ -77,7 +77,7 @@ Keep the guarantee and its expected rejection in an application-owned [port](../
 `src/application/tickets/ports/TicketQuotaStore.ts`:
 
 ```ts
-import type { Ticket } from '../../../domain/tickets/Ticket'
+import type { Ticket } from '@/domain/tickets/Ticket'
 
 export class TicketQuotaExceeded extends Error {}
 export interface TicketQuotaStore {
@@ -87,11 +87,13 @@ export interface TicketQuotaStore {
 }
 ```
 
-`src/application/tickets/createTicketWithinQuota.ts`:
+`src/application/tickets/use-cases/createTicketWithinQuota.ts`:
 
 ```ts
-import { CreateTicket, type CreateTicketCommand, type CreateTicketResult } from './CreateTicket'
-import { TicketQuotaExceeded, type TicketQuotaStore } from './ports/TicketQuotaStore'
+import { CreateTicket } from './CreateTicket'
+import type { CreateTicketCommand } from '../contracts/CreateTicketCommand'
+import type { CreateTicketResult } from '../contracts/CreateTicketResult'
+import { TicketQuotaExceeded, type TicketQuotaStore } from '../ports/TicketQuotaStore'
 
 export type QuotaCreationResult = CreateTicketResult | { ok: false; reason: 'quota-full' }
 
@@ -115,12 +117,12 @@ This is a deliberate extension, not a generic [Unit of Work](../GLOSSARY.md#unit
 
 The first class below **intentionally violates** the contract. `afterRead` pauses both callers after they read the count, making the race repeatable. The second performs the check and write without an `await` between them. In one JavaScript execution agent, another call cannot interleave in that synchronous segment. That is enough for this memory simulation, not for multiple processes or a database.
 
-`src/infrastructure/persistence/tickets/InMemoryQuotaStores.ts`:
+`src/infrastructure/persistence/tickets/adapters/InMemoryQuotaStores.ts`:
 
 ```ts
-import type { Ticket, TicketData } from '../../../domain/tickets/Ticket'
-import { canAddTicket } from '../../../domain/tickets/ticketQuota'
-import { TicketQuotaExceeded, type TicketQuotaStore } from '../../../application/tickets/ports/TicketQuotaStore'
+import type { Ticket, TicketData } from '@/domain/tickets/Ticket'
+import { canAddTicket } from '@/domain/tickets/ticketQuota'
+import { TicketQuotaExceeded, type TicketQuotaStore } from '@/application/tickets/ports/TicketQuotaStore'
 
 // Counterexample only: do not deploy this read-then-write implementation.
 export class ReadThenWriteTicketStore implements TicketQuotaStore {
@@ -155,10 +157,10 @@ Now assemble both versions with the same policy and inputs. The promise below re
 `src/composition/compareQuotaStores.ts`:
 
 ```ts
-import { Ticket } from '../domain/tickets/Ticket'
-import { makeCreateTicketWithinQuota } from '../application/tickets/createTicketWithinQuota'
-import type { TicketQuotaStore } from '../application/tickets/ports/TicketQuotaStore'
-import { AtomicMemoryTicketStore, ReadThenWriteTicketStore } from '../infrastructure/persistence/tickets/InMemoryQuotaStores'
+import { Ticket } from '@/domain/tickets/Ticket'
+import { makeCreateTicketWithinQuota } from '@/application/tickets/use-cases/createTicketWithinQuota'
+import type { TicketQuotaStore } from '@/application/tickets/ports/TicketQuotaStore'
+import { AtomicMemoryTicketStore, ReadThenWriteTicketStore } from '@/infrastructure/persistence/tickets/adapters/InMemoryQuotaStores'
 
 export async function compareQuotaStores() {
   let reads = 0

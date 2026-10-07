@@ -109,13 +109,14 @@ The [plain TypeScript access wrapper](2-typescript-first-boundaries.md#check-acc
 
 | Code | Question / decision | Owner |
 | --- | --- | --- |
-| `AuthenticatedGuard` | **May this caller invoke this selected operation?** Here, require an already verified user. A different policy could check permissions or tenant membership. | [Presentation](../GLOSSARY.md#presentation-layer) access decision; verified identity comes from authentication integration |
-| `CreateTicketPipe` / `parseCreateTicketRequest` | **Can this handler argument be parsed, validated or transformed into the expected transport input?** Here, require an object with subject/description strings. Other Pipes can convert route arguments. | [Presentation](../GLOSSARY.md#presentation-layer) argument processing |
+| `AuthenticatedGuard` | **May this caller invoke this selected operation?** Here, require an already verified user. A different policy could check permissions or tenant membership. | `presentation/http/tickets/guards/AuthenticatedGuard.ts`; verified identity comes from authentication integration |
+| `parseCreateTicketRequest` | **Can this unknown transport value become `CreateTicketRequestDto`?** Check object/string fields and select accepted data with ordinary TypeScript. | `presentation/http/tickets/parsers/parseCreateTicketRequest.ts` |
+| `CreateTicketPipe` | **How does Nest apply parsing/validation/transformation to this argument?** Invoke the [Parser](../GLOSSARY.md#parser) and translate its known failure to a Nest `400` exception. | `presentation/http/tickets/pipes/CreateTicketPipe.ts` |
 | `TicketsController.create()` | Invoke `CreateTicket` with the parsed command and map its result to HTTP. | [Presentation](../GLOSSARY.md#presentation-layer) [route handler](../GLOSSARY.md#route-handler) |
 | `CreateTicket.execute()` | Coordinate ticket creation, await persistence and return a plain result. | [Application](../GLOSSARY.md#application-layer) [use case](../GLOSSARY.md#use-case) |
-| `Ticket.create()` | **Is this valid business state?** Normalize/check the subject and assign the authoritative initial status. Future transition rules would also belong here, but are not implemented. | [Domain entity](../GLOSSARY.md#domain-entity) |
+| `Ticket.create()` | **Is this valid business state?** Normalize/check the subject and assign the authoritative initial status. Future transition rules would also belong here, but are not implemented. | `domain/tickets/Ticket.ts` |
 
-A body with valid strings does not establish identity. An authenticated caller can submit `{ subject: 17 }` and fail the Pipe, or a blank subject string and fail [Domain](../GLOSSARY.md#domain) after the Pipe accepts its shape. Guard and Pipe are therefore separate decisions. Neither becomes the owner of ticket rules.
+A body with valid strings does not establish identity. An authenticated caller can submit `{ subject: 17 }`: the [Parser](../GLOSSARY.md#parser) rejects it, and the Pipe maps that failure to HTTP. A blank subject string passes the [Parser](../GLOSSARY.md#parser)'s shape check but fails [Domain](../GLOSSARY.md#domain). The [Parser](../GLOSSARY.md#parser) owns plain parsing logic; the Pipe integrates it with Nest; the Guard decides access. None owns ticket business rules.
 
 Solid arrows below show **simplified execution order**, not imports or claims that one hook directly calls the next. The server has already selected the route. This view omits [middleware](../GLOSSARY.md#middleware), interceptors, filters, persistence and the return path to focus on access, arguments and business validity:
 
@@ -123,11 +124,12 @@ Solid arrows below show **simplified execution order**, not imports or claims th
 flowchart LR
     R["POST /tickets / selected request"] -->|"check access"| G["AuthenticatedGuard / Guard"]
     G -->|"allowed"| P["CreateTicketPipe / Pipe"]
-    P -->|"parsed argument"| H["TicketsController.create / handler"]
+    P -->|"calls Parser"| V["parseCreateTicketRequest / Parser"]
+    V -->|"parsed argument via Pipe"| H["TicketsController.create / handler"]
     H -->|"execute command"| A["CreateTicket.execute / use case"]
     A -->|"create valid state"| D["Ticket.create / entity"]
     classDef step fill:#25313b,stroke:#82909e,color:#e2e8ef
-    class R,G,P,H,A,D step
+    class R,G,P,V,H,A,D step
 ```
 
 Nest runs Guards before Pipes and calls the handler only after those checks permit it. The [official lifecycle](https://docs.nestjs.com/faq/request-lifecycle), [Guard](https://docs.nestjs.com/guards) and [Pipe](https://docs.nestjs.com/pipes) documentation explain the hooks; [chapter 1 shows the wider request lifecycle](1-http-request-to-business-operation.md#4-framework-lifecycle-is-a-different-view). The examples below bind these responsibilities to Nest without adding authentication protocol code.
@@ -155,6 +157,8 @@ Composition can bind this Express-specific function using `app.use(requestId)` b
 
 An unauthenticated caller should not invoke creation. Authentication establishes who the caller is; authorization decides what that caller may do. A small decision could test whether an established authentication mechanism attached a verified identity, called a **principal**. A **[Guard](../GLOSSARY.md#nestjs-guard)** makes such an access decision with Nest's execution context, which identifies the target handler. Do not parse or sign tokens yourself.
 
+`src/presentation/http/tickets/guards/AuthenticatedGuard.ts`:
+
 ```ts
 import { Injectable, UnauthorizedException } from '@nestjs/common'
 import type { CanActivate, ExecutionContext } from '@nestjs/common'
@@ -173,17 +177,18 @@ Bind with `@UseGuards(AuthenticatedGuard)` on the controller/handler and registe
 
 ### Pipe: parse a handler argument
 
-We already have a function that rejects wrong body shapes. A **[Pipe](../GLOSSARY.md#nestjs-pipe)** integrates that parsing/validation/transformation into Nest's handler arguments:
+We already have a [Parser](../GLOSSARY.md#parser) that rejects wrong body shapes. A **Pipe** is the Nest integration hook that runs parsing/validation/transformation on a handler argument. `CreateTicketPipe` delegates the parsing logic to `parsers/parseCreateTicketRequest.ts`; it owns the Nest-specific invocation and failure translation, not a second parser implementation:
 
-`src/presentation/http/tickets/CreateTicketPipe.ts`:
+`src/presentation/http/tickets/pipes/CreateTicketPipe.ts`:
 
 ```ts
 import { BadRequestException } from '@nestjs/common'
 import type { PipeTransform } from '@nestjs/common'
-import { InvalidTicketRequest, parseCreateTicketRequest } from './createTicketRequest'
+import { InvalidTicketRequest, parseCreateTicketRequest } from '../parsers/parseCreateTicketRequest'
+import type { CreateTicketRequestDto } from '../dto/CreateTicketRequestDto'
 
 export class CreateTicketPipe implements PipeTransform {
-  transform(value: unknown) {
+  transform(value: unknown): CreateTicketRequestDto {
     try { return parseCreateTicketRequest(value) }
     catch (error) {
       if (error instanceof InvalidTicketRequest) throw new BadRequestException('invalid-request')
@@ -227,7 +232,7 @@ An exception is not intrinsically an HTTP response. A CLI could display it diffe
 import { Catch } from '@nestjs/common'
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
 import type { Response } from 'express'
-import { TicketPersistenceUnavailable } from '../../../application/tickets/ports/TicketRepository'
+import { TicketPersistenceUnavailable } from '@/application/tickets/ports/TicketRepository'
 
 @Catch(TicketPersistenceUnavailable)
 export class TicketStorageFilter implements ExceptionFilter {

@@ -73,7 +73,7 @@ These arrows organize topics and examples; they do not show source imports or ru
 - A **[Repository](./GLOSSARY.md#repository)** is a design pattern.
 - Redux is a [state-management](./GLOSSARY.md#state-management) mechanism.
 - `closures.slice.ts` is a naming convention.
-- `features/closures/` is an organization strategy.
+- `presentation/closures/` is our capability organization convention.
 
 Treating all of those as the same kind of rule produces cargo-cult architecture.
 

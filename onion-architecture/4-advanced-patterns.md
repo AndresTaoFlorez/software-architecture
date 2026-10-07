@@ -83,19 +83,7 @@ The canonical guide is:
 
 **[Frontend Presentation Architecture](../frontend/presentation-architecture.md)**
 
-Recommended direction:
-
-```mermaid
-flowchart TD
-    P["presentation/"] --> A["app/"]
-    P --> PG["pages/"]
-    P --> F["features/"]
-    P --> S["shared/"]
-    F --> AU["auth/"]
-    F --> O["orders/"]
-```
-
-Do not duplicate the full frontend folder specification inside the Onion guide.
+Keep the generic Onion structure at the `presentation/` boundary. The [frontend guide](../frontend/README.md) places capability-owned screen code; the [backend guide](../backend/README.md) places incoming HTTP and CLI code. Neither structure introduces another Onion ring.
 
 ---
 

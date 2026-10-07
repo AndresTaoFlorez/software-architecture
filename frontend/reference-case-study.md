@@ -106,18 +106,7 @@ Both component categories exist. Either document distinct contracts or consolida
 
 ## 3. Normalized target
 
-```mermaid
-flowchart TD
-    SRC["src/"] --> D["domain/ — business meaning"]
-    SRC --> A["application/ — operations and contracts"]
-    SRC --> I["infrastructure/ — technical adapters"]
-    SRC --> C["composition/ — assembly"]
-    SRC --> P["presentation/"]
-    P --> APP["app/ — providers and routes"]
-    P --> PAGES["pages/ — screen composition"]
-    P --> F["features/ — capability UI, model and lib"]
-    P --> S["shared/ — independent visual primitives and helpers"]
-```
+Keep the five `src/` layers. The recommended [Presentation](../GLOSSARY.md#presentation-layer) target is capability-owned `presentation/closures/{pages,components,hooks,state}/`, with local `formatters/` when needed and established `presentation/shared/components/` for independent visual primitives. Follow the [canonical frontend layout](README.md) rather than copying historical paths from the snapshot.
 
 This is a conceptual target for future projects. It is not a migration command for the referenced snapshot.
 

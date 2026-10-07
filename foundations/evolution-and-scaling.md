@@ -91,7 +91,7 @@ or within a [Presentation layer](../GLOSSARY.md#presentation-layer):
 
 ```mermaid
 flowchart TD
-    P["presentation/features/"] --> O["orders/"]
+    P["presentation/"] --> O["orders/"]
     P --> B["billing/"]
     P --> I["identity/"]
 ```

@@ -5,29 +5,35 @@ import path from 'node:path'
 import { createRequire } from 'node:module'
 import { test } from 'node:test'
 import ts from 'typescript'
+import { rewriteExampleImports } from './example-imports.mjs'
 
 const guide = 'backend/2-typescript-first-boundaries.md'
 const names = [
+  'application/tickets/contracts/CreateTicketCommand.ts',
+  'application/tickets/contracts/CreateTicketResult.ts',
+  'presentation/http/tickets/dto/CreateTicketRequestDto.ts',
+  'presentation/http/tickets/dto/TicketResponseDto.ts',
+  'presentation/http/tickets/mappers/mapCreateTicketResponse.ts',
   'domain/tickets/Ticket.ts',
   'application/tickets/ports/TicketRepository.ts',
-  'application/tickets/CreateTicket.ts',
-  'infrastructure/persistence/tickets/InMemoryTicketRepository.ts',
-  'presentation/http/tickets/createTicketRequest.ts',
-  'presentation/http/tickets/TicketHttpHandler.ts',
-  'presentation/http/tickets/handleAuthenticatedCreateTicket.ts',
+  'application/tickets/use-cases/CreateTicket.ts',
+  'infrastructure/persistence/tickets/adapters/InMemoryTicketRepository.ts',
+  'presentation/http/tickets/parsers/parseCreateTicketRequest.ts',
+  'presentation/http/tickets/handlers/TicketHttpHandler.ts',
+  'presentation/http/tickets/handlers/handleAuthenticatedCreateTicket.ts',
   'application/tickets/index.ts',
 ]
 const exerciseNames = [
-  'presentation/cli/tickets/createTicketCli.ts',
+  'presentation/cli/tickets/handlers/createTicketCli.ts',
   'domain/tickets/ticketQuota.ts',
   'application/tickets/ports/TicketQuotaStore.ts',
-  'application/tickets/createTicketWithinQuota.ts',
-  'infrastructure/persistence/tickets/InMemoryQuotaStores.ts',
+  'application/tickets/use-cases/createTicketWithinQuota.ts',
+  'infrastructure/persistence/tickets/adapters/InMemoryQuotaStores.ts',
   'composition/compareQuotaStores.ts',
 ]
 
-// Test-only: these fixtures use relative source paths, not a production module resolver.
-// Capability API checks, aliases and third-party transitive dependencies are separate concerns.
+// Test-only: resolve the documented @/ alias and relative source paths.
+// Capability API checks and third-party transitive dependencies are separate concerns.
 const allowedLayers = {
   domain: ['domain'],
   application: ['application', 'domain'],
@@ -43,11 +49,12 @@ function checkLayerDependencies(name, code) {
   function check(specifier) {
     assert.ok(specifier && ts.isStringLiteralLike(specifier), 'Unresolved fixture dependency in ' + name)
     const imported = specifier.text
-    if (!imported.startsWith('.')) {
+    if (!imported.startsWith('.') && !imported.startsWith('@/')) {
       assert.ok(layer !== 'domain' && layer !== 'application', 'External dependency in ' + name + ': ' + imported)
-      return // Outer fixtures can import framework/platform packages; no alias resolution here.
+      return // Outer fixtures may import external framework/platform packages.
     }
-    const target = path.posix.normalize(path.posix.join(path.posix.dirname(name), imported))
+    const target = path.posix.normalize(imported.startsWith('@/')
+      ? imported.slice(2) : path.posix.join(path.posix.dirname(name), imported))
     assert.ok(allowedLayers[layer].includes(target.split('/')[0]), 'Forbidden layer dependency in ' + name + ': ' + imported)
   }
   function visit(node) {
@@ -68,20 +75,22 @@ function checkLayerDependencies(name, code) {
 }
 
 test('layer inspection rejects forbidden imports, reexports and indirect module syntax', () => {
-  const outward = '../../infrastructure/persistence/tickets/PrismaTicketRepository'
-  const forms = [
-    `import { X } from '${outward}'`,
-    `import type { X } from '${outward}'`,
-    `export { X } from '${outward}'`,
-    `export type { X } from '${outward}'`,
-    `export * from '${outward}'`,
-    `async function load() { return import('${outward}') }`,
-    `type X = import('${outward}').X`,
-    `function load() { return require('${outward}') }`,
-    `import X = require('${outward}')`,
-  ]
-  for (const code of forms) {
-    assert.throws(() => checkLayerDependencies('application/tickets/Test.ts', code), /Forbidden layer dependency/)
+  for (const outward of ['../../infrastructure/persistence/tickets/adapters/PrismaTicketRepository',
+    '@/infrastructure/persistence/tickets/adapters/PrismaTicketRepository']) {
+    const forms = [
+      `import { X } from '${outward}'`,
+      `import type { X } from '${outward}'`,
+      `export { X } from '${outward}'`,
+      `export type { X } from '${outward}'`,
+      `export * from '${outward}'`,
+      `async function load() { return import('${outward}') }`,
+      `type X = import('${outward}').X`,
+      `function load() { return require('${outward}') }`,
+      `import X = require('${outward}')`,
+    ]
+    for (const code of forms) {
+      assert.throws(() => checkLayerDependencies('application/tickets/Test.ts', code), /Forbidden layer dependency/)
+    }
   }
   for (const code of ['import(target)', 'import(`../${target}`)', 'require(target)']) {
     assert.throws(() => checkLayerDependencies('application/tickets/Test.ts', code), /Unresolved fixture dependency/)
@@ -96,6 +105,8 @@ test('layer inspection rejects forbidden imports, reexports and indirect module 
   for (const [layer, target] of forbidden) {
     assert.throws(() => checkLayerDependencies(layer + '/tickets/Test.ts',
       `import type { X } from '../../${target}/tickets/X'`), /Forbidden layer dependency/)
+    assert.throws(() => checkLayerDependencies(layer + '/tickets/Test.ts',
+      `import type { X } from '@/${target}/tickets/X'`), /Forbidden layer dependency/)
   }
   const permitted = [
     ['domain', 'domain'], ['application', 'application'], ['application', 'domain'],
@@ -106,18 +117,22 @@ test('layer inspection rejects forbidden imports, reexports and indirect module 
   ]
   for (const [layer, target] of permitted) {
     checkLayerDependencies(layer + '/tickets/Test.ts', `import type { X } from '../../${target}/tickets/X'`)
+    checkLayerDependencies(layer + '/tickets/Test.ts', `import type { X } from '@/${target}/tickets/X'`)
   }
   for (const layer of ['domain', 'application', 'infrastructure', 'presentation', 'composition']) {
-    const external = "import { X } from '@nestjs/common'"
-    if (layer === 'domain' || layer === 'application') {
-      assert.throws(() => checkLayerDependencies(layer + '/tickets/Test.ts', external), /External dependency/)
-    } else checkLayerDependencies(layer + '/tickets/Test.ts', external)
+    for (const external of ["import { X } from '@nestjs/common'", "import { X } from '@prisma/client'"]) {
+      if (layer === 'domain' || layer === 'application') {
+        assert.throws(() => checkLayerDependencies(layer + '/tickets/Test.ts', external), /External dependency/)
+      } else checkLayerDependencies(layer + '/tickets/Test.ts', external)
+    }
   }
   checkLayerDependencies('application/tickets/Test.ts', "export type { TicketData } from '../../domain/tickets/Ticket'")
   checkLayerDependencies('application/tickets/Test.ts', "async function load() { return import('../../domain/tickets/Ticket') }")
   checkLayerDependencies('domain/tickets/Test.ts', "import type { TicketData } from './Ticket'")
   checkLayerDependencies('application/tickets/Test.ts', "// import('prisma')\nconst text = \"require('prisma')\"")
   assert.throws(() => checkLayerDependencies('application/tickets/Test.ts', "export * from '../../../outside'"), /Forbidden/)
+  assert.throws(() => checkLayerDependencies('application/tickets/Test.ts', "export * from '@/outside'"), /Forbidden/)
+  assert.throws(() => checkLayerDependencies('domain/tickets/Test.ts', "export * from '@/domain/../../outside'"), /Forbidden/)
   // Same-layer imports are valid here; supported capability APIs require another policy.
   checkLayerDependencies('application/billing/Test.ts', "import { CreateTicket } from '../tickets'")
 })
@@ -127,6 +142,7 @@ function compile(root, files, output = 'out') {
     target: ts.ScriptTarget.ES2022,
     module: ts.ModuleKind.NodeNext,
     moduleResolution: ts.ModuleResolutionKind.NodeNext,
+    paths: { '@/*': [path.join(root, 'src', '*')] },
     strict: true,
     types: [],
     rootDir: path.join(root, 'src'),
@@ -139,7 +155,12 @@ function compile(root, files, output = 'out') {
     getCurrentDirectory: () => root,
     getNewLine: () => '\n',
   }))
-  assert.equal(program.emit().emitSkipped, false)
+  const emitted = program.emit(undefined, (filename, code) => {
+    fs.mkdirSync(path.dirname(filename), { recursive: true })
+    const relative = path.relative(path.join(root, output), filename).replaceAll('\\', '/')
+    fs.writeFileSync(filename, rewriteExampleImports(code, relative, path.join(root, 'src'), '.js'))
+  })
+  assert.equal(emitted.emitSkipped, false)
 }
 
 function extract(document, name) {
@@ -154,14 +175,17 @@ function extract(document, name) {
 
 test('documented Nest and Prisma modules follow the layer policy without executing frameworks', () => {
   const blocks = {
-    'backend/3-nestjs-building-blocks.md': ['presentation/http/tickets/CreateTicketPipe.ts'],
+    'backend/3-nestjs-building-blocks.md': [
+      'presentation/http/tickets/pipes/CreateTicketPipe.ts',
+      'presentation/http/tickets/guards/AuthenticatedGuard.ts',
+    ],
     'backend/4-create-ticket-with-nestjs.md': [
-      'presentation/http/tickets/TicketsController.ts',
+      'presentation/http/tickets/controllers/TicketsController.ts',
       'composition/tokens/ticket.tokens.ts',
       'composition/modules/TicketsModule.ts',
       'composition/main.ts',
       'composition/modules/index.ts',
-      'infrastructure/persistence/tickets/PrismaTicketRepository.ts',
+      'infrastructure/persistence/tickets/adapters/PrismaTicketRepository.ts',
       'composition/modules/DatabaseModule.ts',
     ],
   }
@@ -189,12 +213,12 @@ test('backend ticket modules compile and preserve validation, persistence and de
     const require = createRequire(path.join(root, 'package.json'))
     const load = name => require(path.join(root, 'out', name))
     const domain = load('domain/tickets/Ticket.js')
-    const { CreateTicket } = load('application/tickets/CreateTicket.js')
+    const { CreateTicket } = load('application/tickets/use-cases/CreateTicket.js')
     const { TicketPersistenceUnavailable } = load('application/tickets/ports/TicketRepository.js')
-    const { InMemoryTicketRepository } = load('infrastructure/persistence/tickets/InMemoryTicketRepository.js')
-    const { TicketHttpHandler } = load('presentation/http/tickets/TicketHttpHandler.js')
-    const { parseCreateTicketRequest, InvalidTicketRequest } = load('presentation/http/tickets/createTicketRequest.js')
-    const { handleAuthenticatedCreateTicket } = load('presentation/http/tickets/handleAuthenticatedCreateTicket.js')
+    const { InMemoryTicketRepository } = load('infrastructure/persistence/tickets/adapters/InMemoryTicketRepository.js')
+    const { TicketHttpHandler } = load('presentation/http/tickets/handlers/TicketHttpHandler.js')
+    const { parseCreateTicketRequest, InvalidTicketRequest } = load('presentation/http/tickets/parsers/parseCreateTicketRequest.js')
+    const { handleAuthenticatedCreateTicket } = load('presentation/http/tickets/handlers/handleAuthenticatedCreateTicket.js')
     const input = { subject: '  Invoice download fails  ', description: 'PDF download fails for INV-42.' }
 
     for (const status of domain.TICKET_STATUSES) assert.equal(domain.isTicketStatus(status), true)
@@ -280,7 +304,7 @@ test('backend ticket modules compile and preserve validation, persistence and de
     await assert.rejects(new TicketHttpHandler(broken).handle(input), error => error === defect)
     await assert.rejects(repository.insert(domain.Ticket.create('T-1', 'Valid', '')), /Duplicate/)
 
-    const { createTicketCli } = load('presentation/cli/tickets/createTicketCli.js')
+    const { createTicketCli } = load('presentation/cli/tickets/handlers/createTicketCli.js')
     assert.equal(load('application/tickets/index.js').CreateTicket, CreateTicket, 'Public API must expose the same runtime token')
     const cliRecords = new InMemoryTicketRepository()
     let cliId = 0
@@ -308,8 +332,8 @@ test('backend ticket modules compile and preserve validation, persistence and de
     assert.equal(comparison.atomic.results.filter(result => result.ok).length, 1)
     assert.deepEqual(comparison.atomic.results.filter(result => !result.ok), [{ ok: false, reason: 'quota-full' }])
 
-    const { AtomicMemoryTicketStore } = load('infrastructure/persistence/tickets/InMemoryQuotaStores.js')
-    const { makeCreateTicketWithinQuota } = load('application/tickets/createTicketWithinQuota.js')
+    const { AtomicMemoryTicketStore } = load('infrastructure/persistence/tickets/adapters/InMemoryQuotaStores.js')
+    const { makeCreateTicketWithinQuota } = load('application/tickets/use-cases/createTicketWithinQuota.js')
     const quotaStore = new AtomicMemoryTicketStore()
     let quotaId = 0
     const quotaCreate = makeCreateTicketWithinQuota(quotaStore, () => 'quota-' + ++quotaId)
@@ -339,8 +363,8 @@ test('backend ticket modules compile and preserve validation, persistence and de
     compile(root, files, 'out-evolved')
     const evolvedLoad = name => require(path.join(root, 'out-evolved', name))
     const evolvedDomain = evolvedLoad('domain/tickets/Ticket.js')
-    const EvolvedCreateTicket = evolvedLoad('application/tickets/CreateTicket.js').CreateTicket
-    const evolvedRecords = new (evolvedLoad('infrastructure/persistence/tickets/InMemoryTicketRepository.js').InMemoryTicketRepository)()
+    const EvolvedCreateTicket = evolvedLoad('application/tickets/use-cases/CreateTicket.js').CreateTicket
+    const evolvedRecords = new (evolvedLoad('infrastructure/persistence/tickets/adapters/InMemoryTicketRepository.js').InMemoryTicketRepository)()
     const evolved = new EvolvedCreateTicket(evolvedRecords, () => 'evolved')
     assert.equal(evolvedDomain.isTicketStatus('reopened'), true)
     assert.equal(evolvedDomain.TICKET_STATUSES[0], 'reopened')

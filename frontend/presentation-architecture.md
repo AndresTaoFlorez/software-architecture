@@ -31,125 +31,90 @@ If yes, inspect whether it belongs in [Application](../GLOSSARY.md#application-l
 
 ## 2. Organize by ownership, not only by technical type
 
-A small project can start with:
+A receptionist needs an agenda, selected appointments and visible feedback when loading fails. Keep that screen capability in `presentation/scheduling/`. Tickets and Patients get sibling capability folders, each with `pages/`, `components/`, `hooks/` and `state/` from the start. Add `formatters/` when there is display formatting; do not wait for growth to make ownership explicit.
 
 ```mermaid
 flowchart TD
-    N0["presentation/"]
-    N1["components/"]
-    N2["hooks/"]
-    N3["pages/"]
-    N4["state/"]
-    N0 --> N1
-    N0 --> N2
-    N0 --> N3
-    N0 --> N4
+    P["src/presentation/"] --> S["scheduling/"]
+    P --> T["tickets/ · same four folders"]
+    P --> PAT["patients/ · same four folders"]
+    S --> PG["pages/<br/>AgendaPage.tsx"]
+    S --> CO["components/"]
+    S --> H["hooks/<br/>useAgenda.ts · useAppointmentSelection.ts"]
+    S --> ST["state/<br/>agenda.state.ts · agenda.selectors.ts"]
+    S --> F["formatters/<br/>formatAppointmentTime.ts"]
+    CO --> AC["AgendaCalendar/<br/>AgendaCalendar.tsx · .types.ts · .test.tsx"]
+    CO --> AP["AppointmentCard/<br/>AppointmentCard.tsx · .types.ts"]
+    CO --> AT["AgendaToolbar/<br/>AgendaToolbar.tsx"]
 ```
 
-At scale, this becomes a horizontal "folder by type" architecture. A single change to `closures` may require editing six distant directories.
+These connectors mean directory containment, not imports or runtime calls. Component-local types/tests share the full component name, for example `AgendaCalendar.types.ts` and `AgendaCalendar.test.tsx`. Folders describe available places; no empty placeholder file is required.
 
-Prefer feature ownership:
+### Complete Scheduling capability map
 
-```mermaid
-flowchart TD
-    N0["presentation/"]
-    N1["app/"]
-    N2["providers/"]
-    N3["routes/"]
-    N4["store/"]
-    N5["pages/"]
-    N6["closures/"]
-    N7["ClosuresPage.tsx"]
-    N8["ClosuresPage.styles.ts"]
-    N9["index.ts"]
-    N10["features/"]
-    N11["closures/"]
-    N12["ui/"]
-    N13["QueryFilters/"]
-    N14["QueryFilters.tsx"]
-    N15["QueryFilters.styles.ts"]
-    N16["QueryFilters.types.ts"]
-    N17["index.ts"]
-    N18["ResultsTable/"]
-    N19["model/"]
-    N20["closures.slice.ts"]
-    N21["closures.selectors.ts"]
-    N22["closures.thunks.ts"]
-    N23["closures.bindings.ts"]
-    N24["useClosures.ts"]
-    N25["lib/"]
-    N26["closure-validation.ts"]
-    N27["index.ts"]
-    N28["shared/"]
-    N29["ui/"]
-    N30["lib/"]
-    N0 --> N1
-    N1 --> N2
-    N1 --> N3
-    N1 --> N4
-    N0 --> N5
-    N5 --> N6
-    N6 --> N7
-    N6 --> N8
-    N6 --> N9
-    N0 --> N10
-    N10 --> N11
-    N11 --> N12
-    N12 --> N13
-    N13 --> N14
-    N13 --> N15
-    N13 --> N16
-    N13 --> N17
-    N12 --> N18
-    N11 --> N19
-    N19 --> N20
-    N19 --> N21
-    N19 --> N22
-    N19 --> N23
-    N19 --> N24
-    N11 --> N25
-    N25 --> N26
-    N11 --> N27
-    N0 --> N28
-    N28 --> N29
-    N28 --> N30
-```
+The agenda also crosses other layers. The browser asks a backend API for appointments; the API response is untrusted, and the server owns authoritative booking decisions. A browser availability calculation can provide a preview without proving that an appointment is still available when the server commits it.
 
-Not every feature needs every segment or file. Start small and split only when responsibilities become independently meaningful.
+This is a **placement map**, not a claim that the following Scheduling implementation has been built or executed. Prefix every path with `src/`:
+
+| Branch and exact file | What belongs here and why |
+| --- | --- |
+| `domain/scheduling/Appointment.ts` | Valid business values used by the client, independent of React and HTTP |
+| `domain/scheduling/availability/calculateAvailableSlots.ts` | Working hours, overlaps, breaks and closure-date policy for a preview; final availability must be checked by the authoritative backend |
+| `application/scheduling/use-cases/GetAgenda.ts` | Coordinates loading an agenda using the required reader contract |
+| `application/scheduling/ports/AgendaReader.ts` | Describes the reading capability, without choosing HTTP |
+| `application/scheduling/contracts/AgendaResult.ts` | Defines the operation's output, without wire-field or rendering assumptions |
+| `infrastructure/http/scheduling/adapters/HttpAgendaReader.ts` | Sends the HTTP call and translates integration failures |
+| `infrastructure/http/scheduling/dto/AgendaApiDto.ts` | Describes the backend API's external fields |
+| `infrastructure/http/scheduling/parsers/parseAgendaApiResponse.ts` | Checks unknown API data before accepting that [DTO](../GLOSSARY.md#data-transfer-object-dto) |
+| `infrastructure/http/scheduling/mappers/mapAgendaApiDto.ts` | Translates checked [DTO](../GLOSSARY.md#data-transfer-object-dto) fields into the representation the internal contract needs |
+| `presentation/scheduling/pages/AgendaPage.tsx` | Composes the routed agenda screen |
+| `presentation/scheduling/components/AgendaCalendar/AgendaCalendar.tsx` | Renders the calendar; its props and tests live beside it |
+| `presentation/scheduling/components/AppointmentCard/AppointmentCard.tsx` | Renders one appointment; its props live beside it |
+| `presentation/scheduling/components/AgendaToolbar/AgendaToolbar.tsx` | Renders day/navigation controls |
+| `presentation/scheduling/hooks/useAgenda.ts` | Connects the screen to the injected operation, loading state and feedback |
+| `presentation/scheduling/hooks/useAppointmentSelection.ts` | Reuses appointment-selection interaction |
+| `presentation/scheduling/state/agenda.state.ts` | Owns the selected day, selection and visible loading/error state |
+| `presentation/scheduling/state/agenda.selectors.ts` | Reads/derives display data from that state |
+| `presentation/scheduling/formatters/formatAppointmentTime.ts` | Chooses the visible time string, locale and display convention |
+| `composition/scheduling/createSchedulingDependencies.ts` | Creates the chosen reader and operation and makes them available to [Presentation](../GLOSSARY.md#presentation-layer) |
+
+The contract is named for **what** is needed (`AgendaReader`); the implementation names **how** it works (`HttpAgendaReader`). An API [DTO](../GLOSSARY.md#data-transfer-object-dto) stays with the integration even when several screens consume its translated result.
+
+| Change pressure | Expected change and limit |
+| --- | --- |
+| Clinic changes minimum appointment duration | Change the domain rule and its tests; coordinate with the authoritative server policy. A client preview cannot enforce a concurrent booking guarantee. |
+| Backend changes its wire field names | Change the [Infrastructure](../GLOSSARY.md#infrastructure) [DTO](../GLOSSARY.md#data-transfer-object-dto)/[Parser](../GLOSSARY.md#parser)/[mapper](../GLOSSARY.md#mapper) and [contract tests](../GLOSSARY.md#contract-test); keep the internal result when its meaning is unchanged. |
+| Many capabilities and teams appear | Give each capability a narrow [public API](../GLOSSARY.md#public-api) and owner. Folder count alone does not prevent deep imports or conflicting contracts. |
 
 ---
 
 ## 3. Pages compose; features own behavior
 
-A route-level Page should primarily compose capabilities:
+A React **Page** is a component responsible for composing a route or whole screen; “Page” is our responsibility name, not a JavaScript language primitive. A narrower **Component** renders an interaction unit such as a calendar or toolbar. A **Hook** is a React function that reuses interaction/composition logic. **State** here means data for rendering and interaction, such as the selected day and whether loading is visible; it does not own authoritative booking rules.
+
+In `presentation/scheduling/pages/AgendaPage.tsx`:
 
 ```tsx
-export function ClosuresPage() {
-  const closure = useClosures()
+// Composition excerpt: useAgenda and the two components are supplied by
+// their owned modules. Their implementations/prop declarations are omitted.
+import { useAgenda } from '../hooks/useAgenda'
+import { AgendaToolbar } from '../components/AgendaToolbar/AgendaToolbar'
+import { AgendaCalendar } from '../components/AgendaCalendar/AgendaCalendar'
 
+export function AgendaPage() {
+  const agenda = useAgenda()
   return (
-    <PageLayout>
-      <QueryFilters
-        input={closure.input}
-        onSubmit={closure.query}
-      />
-      <ResultsTable
-        rows={closure.rows}
-        selection={closure.selection}
-        onSelectionChange={closure.changeSelection}
-      />
-    </PageLayout>
+    <main>
+      <AgendaToolbar selectedDay={agenda.selectedDay} onDayChange={agenda.selectDay} />
+      <AgendaCalendar appointments={agenda.appointments} busy={agenda.busy} />
+    </main>
   )
 }
 ```
 
-A Page may own ephemeral state that has no meaning outside that page:
+The hook receives the [Application](../GLOSSARY.md#application-layer) operation through the configured provider or composition boundary; it does not instantiate an HTTP reader. The [executable Ticket hook](./ports-and-adapters.md#presentation-and-composition-using-the-operation) shows explicit operation injection.
 
-```ts
-const [isHistoryOpen, setHistoryOpen] = useState(false)
-```
-
-It should not become the place where HTTP orchestration, domain validation, persistence and [store](../GLOSSARY.md#store) implementation details accumulate.
+A Page may keep a local `isHistoryOpen` state when only that screen uses it. Shared agenda selection belongs to `state/agenda.state.ts` and its interaction hook. Neither place becomes the home for business validation or HTTP response parsing. React documents components and their composition in [Describing the UI](https://react.dev/learn/describing-the-ui).
 
 ---
 
@@ -159,7 +124,7 @@ For a non-trivial component, colocate what belongs only to that component:
 
 ```mermaid
 flowchart TD
-    Q["QueryFilters/"] --> C["QueryFilters.tsx"]
+    Q["presentation/closures/components/QueryFilters/"] --> C["QueryFilters.tsx"]
     Q --> S["QueryFilters.styles.ts"]
     Q --> T["QueryFilters.types.ts"]
     Q --> TEST["QueryFilters.test.tsx"]
@@ -245,7 +210,7 @@ If one hook owns query orchestration, draft persistence, file uploads, history, 
 
 ```mermaid
 flowchart TD
-    M["model/"] --> Q["useClosureQuery.ts"]
+    M["presentation/closures/hooks/"] --> Q["useClosureQuery.ts"]
     M --> D["useClosureDraft.ts"]
     M --> U["useClosureUploads.ts"]
     M --> E["useClosureExecution.ts"]
@@ -263,19 +228,19 @@ The goal is not a file-size threshold. Split when concerns have different reason
 
 A component starts close to its feature.
 
-Promote it to `shared/ui` when it has a stable, feature-independent contract and multiple consumers.
+Promote it to `presentation/shared/components` when it has a stable, feature-independent contract and multiple consumers.
 
 Good candidates:
 
-- `shared/ui/Button`
-- `shared/ui/TextField`
-- `shared/ui/Dialog`
-- `shared/ui/DataTable`
+- `presentation/shared/components/Button`
+- `presentation/shared/components/TextField`
+- `presentation/shared/components/Dialog`
+- `presentation/shared/components/DataTable`
 
 Poor candidates:
 
-- `shared/ui/ClosureHeader`
-- `shared/ui/JusticeOfficePicker`
+- `presentation/shared/components/ClosureHeader`
+- `presentation/shared/components/JusticeOfficePicker`
 
 if they still encode one feature's vocabulary.
 
@@ -283,21 +248,22 @@ Avoid parallel generic buckets such as both `common` and `shared` unless their d
 
 ---
 
-## 8. Feature-local libraries before global utils
+<a id="8-feature-local-libraries-before-global-utils"></a>
 
-Prefer:
+## 8. Helpers follow their responsibility
 
-- `features/closures/lib/date-range-overlap.ts`
-- `features/closures/lib/format-jxxi-message.ts`
+A message formatter and an availability calculation can both be reused, but they change for different reasons. Name the folder for the responsibility that owns the meaning:
 
-when they are UI-only helpers. A date-overlap rule that determines whether an operation is legally valid belongs inward, even if the first caller is a form. The UI may preview the result, but must not become its authoritative owner. Promote a helper only when its meaning proves it has a broader owner.
+| Code does this | Exact owner |
+| --- | --- |
+| Formats a message on the Closures screen | `presentation/closures/formatters/formatClosureMessage.ts` |
+| Formats an appointment date for display | `presentation/scheduling/formatters/formatAppointmentDate.ts` |
+| Decides which scheduling slots business policy permits | `domain/scheduling/availability/calculateAvailableSlots.ts` |
+| Translates the backend API's agenda fields | `infrastructure/http/scheduling/mappers/mapAgendaApiDto.ts` |
+| Coordinates reading the agenda | `application/scheduling/use-cases/GetAgenda.ts` |
+| Formats byte sizes for several unrelated screens | `presentation/shared/formatters/formatBytes.ts`, after reuse establishes that owner |
 
-Only then promote focused utilities:
-
-- `shared/lib/date/`
-- `shared/lib/format-bytes/`
-
-Avoid `helpers.ts`, `misc.ts`, `utils2.ts` and large generic utility [barrels](../GLOSSARY.md#barrel-file).
+Do not create `src/utils/`, `src/helpers/`, `src/common/` or `src/lib/` just because code is reusable. Even a complex availability calculation stays in [Domain](../GLOSSARY.md#domain); a five-line API [mapper](../GLOSSARY.md#mapper) stays in [Infrastructure](../GLOSSARY.md#infrastructure). Meaning and reason to change determine placement, not file size. Split a large function within its owner when that improves understanding.
 
 ---
 
@@ -309,13 +275,13 @@ Feature consumers should normally import:
 import {
   QueryFilters,
   useClosures,
-} from '@/presentation/features/closures'
+} from '@/presentation/closures'
 ```
 
 rather than:
 
 ```ts
-import { closureSlice } from '@/presentation/features/closures/model/closures.slice'
+import { closureSlice } from '@/presentation/closures/state/closures.slice'
 ```
 
 The feature's `index.ts` is an intentional contract, not an automatic export of every internal symbol.
@@ -331,10 +297,10 @@ Types should follow meaning:
 ```mermaid
 flowchart LR
     CP["Component-only props"] --> CT["colocated Component.types.ts"]
-    FS["Feature view state / ViewModel"] --> FT["feature/model/*.types.ts"]
-    CV["Cross-feature visual primitive type"] --> SH["shared/ui or shared/lib"]
-    AR["Application command / result"] --> AC["application capability"]
-    DTO["External DTO"] --> IA["infrastructure adapter"]
+    FS["Feature view state / ViewModel"] --> FT["presentation/closures/state/closures.types.ts"]
+    CV["Cross-feature visual primitive type"] --> SH["presentation/shared/components/ · colocated props"]
+    AR["Application command / result"] --> AC["application/tickets/contracts/"]
+    DTO["External DTO"] --> IA["infrastructure/http/tickets/dto/"]
 ```
 
 Do not move a type into [Domain](../GLOSSARY.md#domain) merely because several UI files use it.
@@ -354,5 +320,5 @@ See **[Executable Architecture](../foundations/architecture-testing.md)**.
 - React, "Reusing Logic with [Custom Hooks](../GLOSSARY.md#custom-hook)": https://react.dev/learn/reusing-logic-with-custom-hooks
 - Redux Style Guide: https://redux.js.org/style-guide/
 - Martin Fowler, "[Presentation Model](../GLOSSARY.md#presentation-model)": https://martinfowler.com/eaaDev/PresentationModel.html
-- Feature-Sliced Design, slices/segments: https://feature-sliced.design/docs/reference/slices-segments
-- Feature-Sliced Design, [public API](../GLOSSARY.md#public-api): https://feature-sliced.design/docs/reference/public-api
+- React, “Describing the UI”: https://react.dev/learn/describing-the-ui
+- Redux Code Structure FAQ: https://redux.js.org/faq/code-structure/

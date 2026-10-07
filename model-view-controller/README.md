@@ -113,39 +113,20 @@ The [View](../GLOSSARY.md#view) should not call an HTTP client simply because th
 
 ## 7. Physical structure
 
-This repository uses [MVC](../GLOSSARY.md#model-view-controller-mvc) vocabulary **inside** the [Presentation](../GLOSSARY.md#presentation-layer) area of a layered application:
+Keep the canonical `domain/`, `application/`, `infrastructure/`, `presentation/` and `composition/` layers. [MVC](../GLOSSARY.md#model-view-controller-mvc) roles describe how [Presentation](../GLOSSARY.md#presentation-layer) interprets gestures and renders the represented data; they do not introduce another top-level architecture.
 
-```mermaid
-flowchart TD
-    SRC["src/"]
-    SRC --> P["presentation/"]
-    SRC --> A["application/"]
-    SRC --> D["domain/"]
-    SRC --> I["infrastructure/"]
+| Exact file under `src/` | Responsibility | Keep out |
+| --- | --- | --- |
+| `presentation/orders/pages/OrdersPage.tsx` | Screen composition | Business rules and HTTP implementations |
+| `presentation/orders/components/OrderRow/OrderRow.tsx` | [View](../GLOSSARY.md#view) rendering/gesture capture | Persistence details |
+| `presentation/orders/hooks/useOrderActions.ts` | [Controller](../GLOSSARY.md#controller)-like action that interprets UI intent | Authoritative cancellation validity |
+| `presentation/orders/state/orders.state.ts` | [View](../GLOSSARY.md#view)/interaction state, when shared | [Domain](../GLOSSARY.md#domain) [invariants](../GLOSSARY.md#invariant) |
+| `application/orders/use-cases/cancelOrder.ts` | Operation orchestration | React |
+| `domain/orders/Order.ts` | Business rule | [View](../GLOSSARY.md#view) controls |
+| `infrastructure/http/orders/adapters/HttpOrderRepository.ts` | Outbound HTTP implementation | Rendering |
+| `composition/bootstrap.ts` | Dependency assembly | Business decisions |
 
-    P --> PAGES["pages/orders/"]
-    P --> F["features/orders/"]
-    F --> UI["ui/"]
-    F --> MODEL["model/"]
-    UI --> VIEWFILE["OrdersPage / OrderRow"]
-    MODEL --> ACTIONS["useOrderActions.ts"]
-
-    A --> UC["orders/use-cases/cancelOrder.ts"]
-    D --> ENTITY["orders/Order.ts"]
-    I --> HTTP["orders/HttpOrderRepository.ts"]
-```
-
-| Path | Owns | Why | Must not contain |
-| --- | --- | --- | --- |
-| `presentation/pages/` | route/screen composition | [Views](../GLOSSARY.md#view) need an outer composition point | domain [invariants](../GLOSSARY.md#invariant), HTTP [adapters](../GLOSSARY.md#adapter) |
-| `presentation/features/<feature>/ui/` | feature rendering | colocates [View](../GLOSSARY.md#view) concerns with feature | application/domain policy |
-| `presentation/features/<feature>/model/` | controller-like actions or presentation state | interprets UI intent without rendering | concrete DB/HTTP details |
-| `application/` | policy-bearing operations | [MVC](../GLOSSARY.md#model-view-controller-mvc) should delegate non-presentation workflows inward | React/DOM/controller rendering |
-| `domain/` | business truth | [Model](../GLOSSARY.md#model)-side business meaning stays framework independent | UI/controller framework mechanics |
-| `infrastructure/` | technical I/O | external mechanisms remain replaceable | [View](../GLOSSARY.md#view) code |
-
-This is one practical mapping, not a claim that classic [MVC](../GLOSSARY.md#model-view-controller-mvc) defined these folders.
-
+[Presentation](../GLOSSARY.md#presentation-layer) begins with the same capability-owned pages/components/hooks/state convention as the [canonical frontend guide](../frontend/README.md). These paths are handbook conventions, not a filesystem prescribed by classic [MVC](../GLOSSARY.md#model-view-controller-mvc). The [backend guide](../backend/README.md) separately places incoming HTTP/CLI code.
 
 ## 8. Where does a new function go?
 
@@ -207,11 +188,11 @@ Requirement:
 
 | Artifact | File | Role/owner | Why here |
 | --- | --- | --- | --- |
-| cancel button + display | `presentation/features/orders/ui/CancelOrderButton.tsx` | [View](../GLOSSARY.md#view) | rendering + gesture capture |
-| gesture interpretation | `presentation/features/orders/model/useOrderActions.ts` | [Controller](../GLOSSARY.md#controller)-like [Presentation](../GLOSSARY.md#presentation-layer) | translates click into semantic operation |
+| cancel button + display | `presentation/orders/components/CancelOrderButton/CancelOrderButton.tsx` | [View](../GLOSSARY.md#view) | rendering + gesture capture |
+| gesture interpretation | `presentation/orders/hooks/useOrderActions.ts` | [Controller](../GLOSSARY.md#controller)-like [Presentation](../GLOSSARY.md#presentation-layer) | translates click into semantic operation |
 | cancellation operation | `application/orders/use-cases/cancelOrder.ts` | [Application](../GLOSSARY.md#application-layer) | workflow policy |
 | cancellation [invariant](../GLOSSARY.md#invariant) | `domain/orders/Order.ts` | [Domain](../GLOSSARY.md#domain) | business truth |
-| persistence implementation | `infrastructure/orders/HttpOrderRepository.ts` | [Infrastructure](../GLOSSARY.md#infrastructure) | technical I/O |
+| persistence implementation | `infrastructure/http/orders/adapters/HttpOrderRepository.ts` | [Infrastructure](../GLOSSARY.md#infrastructure) | technical I/O |
 
 ```mermaid
 sequenceDiagram
@@ -247,7 +228,7 @@ The table above gives a possible React adaptation. The implementation below uses
 
 This example chooses an observing [View](../GLOSSARY.md#view): it reads represented state, the [Controller](../GLOSSARY.md#controller) interprets input, and the [Model](../GLOSSARY.md#model) delegates cancellation to [Application](../GLOSSARY.md#application-layer). The small wrapper contains represented operation state; it is not the whole [Domain](../GLOSSARY.md#domain) layer.
 
-The business rule belongs in `domain/orders/Order.ts`; the operation, result, persistence failure and [port](../GLOSSARY.md#port) belong in `application/orders/cancelOrder.ts`. [DTO](../GLOSSARY.md#data-transfer-object-dto) validation/mapping and the concrete repository belong in `infrastructure/orders/HttpOrderRepository.ts`. [Presentation](../GLOSSARY.md#presentation-layer) owns gestures and feedback; `composition/bootstrap.ts` selects implementations. These are documentation conventions. A small file may contain cohesive contracts and functions; split them when ownership or change pressure requires it.
+The business rule belongs in `domain/orders/Order.ts`; the operation, result, persistence failure and [port](../GLOSSARY.md#port) belong in `application/orders/use-cases/cancelOrder.ts`. [DTO](../GLOSSARY.md#data-transfer-object-dto) validation/mapping and the concrete repository belong in `infrastructure/http/orders/adapters/HttpOrderRepository.ts`. [Presentation](../GLOSSARY.md#presentation-layer) owns gestures and feedback; `composition/bootstrap.ts` selects implementations. These are documentation conventions. A small file may contain cohesive contracts and functions; split them when ownership or change pressure requires it.
 
 ```ts
 // domain/orders/Order.ts
@@ -272,8 +253,8 @@ export class Order {
 ```
 
 ```ts
-// application/orders/cancelOrder.ts
-import { Order, ShippedOrderCannotBeCancelled } from '../../domain/orders/Order'
+// application/orders/use-cases/cancelOrder.ts
+import { Order, ShippedOrderCannotBeCancelled } from '@/domain/orders/Order'
 
 export interface OrderRepository {
   findById(id: string): Promise<{ order: Order; version: string } | null>
@@ -305,9 +286,9 @@ export function makeCancelOrder(orders: OrderRepository): CancelOrder {
 ```
 
 ```ts
-// infrastructure/orders/HttpOrderRepository.ts
-import { Order, isOrderStatus, type OrderStatus } from '../../domain/orders/Order'
-import { PersistenceFailure, type OrderRepository } from '../../application/orders/cancelOrder'
+// infrastructure/http/orders/adapters/HttpOrderRepository.ts
+import { Order, isOrderStatus, type OrderStatus } from '@/domain/orders/Order'
+import { PersistenceFailure, type OrderRepository } from '@/application/orders/use-cases/cancelOrder'
 
 // Adapter-owned transport contract. A concrete fetch driver implements it.
 export interface OrderTransport {
@@ -344,8 +325,8 @@ export class HttpOrderRepository implements OrderRepository {
 The external response is treated as `unknown` until its fields are checked. The [adapter](../GLOSSARY.md#adapter) owns the transport shape (`id` and response parsing), but reuses `isOrderStatus` from [Domain](../GLOSSARY.md#domain) for valid business values. `OrderStatus` and its runtime checker are derived from the same `ORDER_STATUSES` definition; this HTTP implementation must not maintain another status list.
 
 ```ts
-// presentation/orders/CancellationModel.ts
-import type { CancelOrder } from '../../application/orders/cancelOrder'
+// presentation/orders/state/CancellationModel.ts
+import type { CancelOrder } from '@/application/orders/use-cases/cancelOrder'
 export class CancellationModel {
   busy = false
   message = ''
@@ -370,16 +351,16 @@ export class CancellationModel {
 ```
 
 ```ts
-// presentation/orders/OrderController.ts
-import type { CancellationModel } from './CancellationModel'
+// presentation/orders/components/OrderView/OrderController.ts
+import type { CancellationModel } from '@/presentation/orders/state/CancellationModel'
 export function makeOrderController(model: CancellationModel) {
   return { onCancel: (id: string) => model.cancel(id) }
 }
 ```
 
 ```ts
-// presentation/orders/OrderView.ts
-import type { CancellationModel } from './CancellationModel'
+// presentation/orders/components/OrderView/OrderView.ts
+import type { CancellationModel } from '@/presentation/orders/state/CancellationModel'
 export function mountOrderView(root: HTMLElement, id: string, model: CancellationModel, controller: { onCancel(id: string): Promise<void> }) {
   const button = document.createElement('button')
   button.textContent = 'Cancel order'
@@ -403,11 +384,11 @@ export function mountOrderView(root: HTMLElement, id: string, model: Cancellatio
 
 ```ts
 // composition/bootstrap.ts
-import { makeCancelOrder, PersistenceFailure } from '../application/orders/cancelOrder'
-import { HttpOrderRepository, type OrderTransport } from '../infrastructure/orders/HttpOrderRepository'
-import { CancellationModel } from '../presentation/orders/CancellationModel'
-import { makeOrderController } from '../presentation/orders/OrderController'
-import { mountOrderView } from '../presentation/orders/OrderView'
+import { makeCancelOrder, PersistenceFailure } from '@/application/orders/use-cases/cancelOrder'
+import { HttpOrderRepository, type OrderTransport } from '@/infrastructure/http/orders/adapters/HttpOrderRepository'
+import { CancellationModel } from '@/presentation/orders/state/CancellationModel'
+import { makeOrderController } from '@/presentation/orders/components/OrderView/OrderController'
+import { mountOrderView } from '@/presentation/orders/components/OrderView/OrderView'
 
 async function request(path: string, init?: RequestInit): Promise<Response> {
   try { return await fetch(path, init) }

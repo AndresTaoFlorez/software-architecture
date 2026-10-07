@@ -25,7 +25,7 @@ The [ViewModel](../GLOSSARY.md#viewmodel) owns display-ready state, derived valu
 This complete framework-neutral core receives an application capability; a separate binding observes it:
 
 ```js
-// presentation/orders/CancelOrderViewModel.js
+// presentation/orders/state/CancelOrderViewModel.js
 export class CancelOrderViewModel {
   busy = false
   message = ''

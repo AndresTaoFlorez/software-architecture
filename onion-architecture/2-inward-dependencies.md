@@ -35,8 +35,8 @@ Runtime flow may call an external system in the opposite direction through an in
 The [canonical plain modules](../backend/2-typescript-first-boundaries.md) define the policy/contract, and [the Nest chapter](../backend/4-create-ticket-with-nestjs.md) shows the complete reviewed database [adapter](../GLOSSARY.md#adapter). This `composition/` excerpt imports those modules and assumes the database client and identity generator are already supplied:
 
 ```ts
-import { CreateTicket } from '../application/tickets'
-import { PrismaTicketRepository } from '../infrastructure/persistence/tickets/PrismaTicketRepository'
+import { CreateTicket } from '@/application/tickets'
+import { PrismaTicketRepository } from '@/infrastructure/persistence/tickets/adapters/PrismaTicketRepository'
 
 const repository = new PrismaTicketRepository(db, code => console.error({ operation: 'ticket.insert', code }))
 const createTicket = new CreateTicket(repository, makeId)
@@ -114,7 +114,7 @@ Now consider a deliberately supported inward type. The Tickets application resul
 
 ```ts
 // Alternative application/tickets/index.ts excerpt, if consumers need the snapshot type.
-export type { TicketData } from '../../domain/tickets/Ticket'
+export type { TicketData } from '@/domain/tickets/Ticket'
 ```
 
 The source dependency points inward and the type still belongs to [Domain](../GLOSSARY.md#domain). This is valid when the public contract intentionally supports that representation; it couples consumers to that supported shape. It does not give callers entity mutation methods or permit exporting an [ORM](../GLOSSARY.md#orm) row. A stricter application-specific result can instead map selected fields. The [canonical ticket API](../backend/2-typescript-first-boundaries.md#3-save-without-naming-a-database-in-the-operation) exposes the operation and command/result without adding this optional export.

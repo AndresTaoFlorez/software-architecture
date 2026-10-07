@@ -87,6 +87,7 @@ Each entry contains a concise definition, a purpose, a repository-oriented examp
 - [Optimistic Concurrency](#optimistic-concurrency)
 - [Optimistic Update](#optimistic-update)
 - [Output Port](#output-port)
+- [Parser](#parser)
 - [Passive View](#passive-view)
 - [Pipe (NestJS)](#nestjs-pipe)
 - [Port](#port)
@@ -94,6 +95,8 @@ Each entry contains a concise definition, a purpose, a repository-oriented examp
 - [Presentation Model](#presentation-model)
 - [Presenter](#presenter)
 - [Public API](#public-api)
+- [React Component](#react-component)
+- [React Page](#react-page)
 - [Recipe](#recipe)
 - [Reducer](#reducer)
 - [Repository Pattern](#repository)
@@ -327,7 +330,7 @@ A responsibility that appears in many otherwise separate operations. Logging a t
 
 ## Data Transfer Object (DTO)
 
-Data shaped for sending between systems or program parts, not necessarily for expressing business rules. For example, an API may send `{ ticket_id: 'T-1', status: 'open' }`; the frontend can translate that transfer shape into its own ticket shape with an `id` field. The DTO is the boundary representation, not automatically the domain model.
+Data shaped for sending between systems or program parts, not necessarily for expressing business rules. For example, an API may send `{ ticket_id: 'T-1', status: 'open' }`; the frontend can translate that transfer shape into its own ticket shape with an `id` field. The DTO is the boundary representation, not automatically the domain model. Ownership follows that boundary: incoming backend HTTP DTOs belong to Presentation, while API responses consumed by the frontend belong to Infrastructure. An Application command/result describes an operation and is not automatically an HTTP DTO; not every plain object is a DTO.
 
 **Purpose.** Define boundary data without exposing a mechanism’s internal object model.
 
@@ -345,7 +348,7 @@ A picture or model of which pieces of code refer to which other pieces. If modul
 
 **Purpose.** Reveal permitted coupling, cycles and the impact of a change.
 
-**Example.** A graph tool can reveal a cycle between `features/auth` and `features/profile`.
+**Example.** A graph tool can reveal a cycle between `presentation/auth/` and `presentation/profile/`.
 
 **Sources.** [dependency-cruiser — Rules Reference](https://github.com/sverweij/dependency-cruiser/blob/main/doc/rules-reference.md)
 
@@ -537,11 +540,11 @@ A stand-in used in a test that performs simplified real work. For example, an `I
 
 ## Feature Folder
 
-A way of organizing code by what users can do rather than by file type alone. For example, `features/tickets/` keeps the ticket UI, state and feature-specific helpers together instead of spreading each kind across unrelated top-level directories. Folder names alone do not enforce architectural dependencies.
+A way of organizing code by what users can do rather than by file type alone. For example, `presentation/tickets/` keeps ticket pages, components, hooks and state together instead of spreading each kind across unrelated top-level directories. Folder names alone do not enforce architectural dependencies.
 
 **Purpose.** Keep a capability’s code together so changes have an obvious owner.
 
-**Example.** `features/closures/` owns its UI, model bindings and feature-local helpers.
+**Example.** `presentation/closures/` owns its pages, components, hooks, state bindings and display formatters.
 
 **Sources.** [Redux — Style Guide](https://redux.js.org/style-guide/) · [Feature-Sliced Design — Slices and segments](https://feature-sliced.design/docs/reference/slices-segments)
 
@@ -551,11 +554,11 @@ A way of organizing code by what users can do rather than by file type alone. Fo
 
 ## Feature Slice
 
-A module that owns one recognizable feature and exposes a limited way for the rest of the UI to use it. For example, the Tickets slice keeps its components and state helpers private and exports selected operations from `features/tickets/index.ts`. This idea does not require adopting the full Feature-Sliced Design taxonomy.
+In Feature-Sliced Design, code belonging to a product/business responsibility is grouped into a slice inside one of its slice-bearing layers. A slice exposes supported names and keeps its implementation private; for example, `features/tickets/index.ts` can be an entry point in an FSD project. FSD has its own layer/dependency rules. It is an alternative methodology here, not the canonical handbook folder taxonomy. A Redux state slice is a different, library-specific concept.
 
 **Purpose.** Organize frontend responsibilities around a bounded user-facing capability.
 
-**Example.** The closures slice exposes `useClosures` and `ClosuresPanel` while hiding its internal selectors.
+**Example.** In an FSD project, a feature slice exports its supported interaction API instead of requiring consumers to import private files.
 
 **Sources.** [Feature-Sliced Design — Slices and segments](https://feature-sliced.design/docs/reference/slices-segments) · [Feature-Sliced Design — Public API](https://feature-sliced.design/docs/reference/public-api)
 
@@ -947,13 +950,41 @@ A representation of what a particular screen needs to show and do without referr
 
 ## Public API
 
-The small, intentionally supported set of operations or types that other code may use from a module. For example, other features import `useTickets` from `features/tickets/index.ts` instead of reaching into its internal state files. This lets the feature reorganize its implementation without forcing every consumer to change.
+The small, intentionally supported set of operations or types that other code may use from a module. For example, other features import `useTickets` from `presentation/tickets/index.ts` instead of reaching into its internal state files. This lets the feature reorganize its implementation without forcing every consumer to change.
 
 **Purpose.** Expose an intentional module contract and hide implementation details.
 
-**Example.** Other features import from `features/auth/index.ts`, not from `features/auth/model/auth.slice.ts`.
+**Example.** Other features import from `presentation/auth/index.ts`, not from `presentation/auth/state/auth.slice.ts`.
 
 **Sources.** [Feature-Sliced Design — Public API](https://feature-sliced.design/docs/reference/public-api)
+
+---
+
+<a id="react-component"></a>
+
+## React Component
+
+An appointment card renders data and receives callbacks when a user acts. React lets that unit be expressed as a function returning UI markup; this is a React component. Components compose other components, from a small button to a whole screen.
+
+**Purpose.** Package a focused rendering/interaction responsibility behind props.
+
+**Example.** `presentation/scheduling/components/AppointmentCard/AppointmentCard.tsx` renders one appointment. The adjacent `AppointmentCard.types.ts` owns component-only props. A component is not automatically an Application use case or owner of business validity.
+
+**Sources.** [React — Describing the UI](https://react.dev/learn/describing-the-ui) · [React — Your first component](https://react.dev/learn/your-first-component)
+
+---
+
+<a id="react-page"></a>
+
+## React Page
+
+The receptionist's agenda screen combines a toolbar, calendar and screen-facing hook. In this handbook, a React Page is the component responsible for composing that route or whole screen. “Page” names its responsibility; it is not a separate React or JavaScript language primitive.
+
+**Purpose.** Give a screen an explicit composition owner.
+
+**Example.** `presentation/scheduling/pages/AgendaPage.tsx` calls `useAgenda` and composes `AgendaToolbar` with `AgendaCalendar`. A router's required entry file can delegate to this Page. HTTP parsing and authoritative appointment rules retain their other owners.
+
+**Sources.** [React — Describing the UI](https://react.dev/learn/describing-the-ui) · [Handbook — Pages compose](./frontend/presentation-architecture.md#3-pages-compose-features-own-behavior)
 
 ---
 
@@ -1269,11 +1300,11 @@ The part of an MVVM-style screen that prepares values and operations for renderi
 
 ## Barrel File
 
-A file that exports selected names from neighboring modules so other code can import from one deliberate entry point. For example, `features/tickets/index.ts` exposes `useTickets` without exposing every internal helper. An unrestricted list of `export *` statements may hide which names the module actually supports.
+A file that exports selected names from neighboring modules so other code can import from one deliberate entry point. For example, `presentation/tickets/index.ts` exposes `useTickets` without exposing every internal helper. An unrestricted list of `export *` statements may hide which names the module actually supports.
 
 **Purpose.** Expose an intentional entry point without exporting every implementation symbol.
 
-**Example.** `features/orders/index.ts` exports `useOrders` and `OrdersPage` while keeping `orders.slice.ts` internal.
+**Example.** `presentation/orders/index.ts` exports `useOrders` and `OrdersPage` while keeping `orders.slice.ts` internal.
 
 **Sources.** [TypeScript — Re-exporting](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-1-5.html) · [Feature-Sliced Design — Public API](https://feature-sliced.design/docs/reference/public-api)
 
@@ -1615,11 +1646,25 @@ The framework needs to know which controllers and dependencies belong together a
 
 ---
 
+<a id="parser"></a>
+
+## Parser
+
+An HTTP body arrives as unknown data. Before using its fields, a plain function can check the expected object/string shape and either return accepted data or report a parsing failure. That function is a Parser. It interprets a representation; it does not become an access decision or a framework lifecycle hook.
+
+**Purpose.** Turn an unknown representation into a checked value at its owning boundary.
+
+**Example.** `presentation/http/tickets/parsers/parseCreateTicketRequest.ts` returns `CreateTicketRequestDto`. A Nest Pipe invokes that same function and maps its failure to HTTP. In a frontend, `infrastructure/http/scheduling/parsers/parseAgendaApiResponse.ts` parses an external API response. A Money factory can instead parse business value semantics in Domain. Shape acceptance alone proves neither caller identity nor all business validity.
+
+**Sources.** [Handbook — exact parsing ownership](./foundations/code-placement.md#8-where-does-a-type-belong) · [Nest — Pipes](https://docs.nestjs.com/pipes) · [TypeScript — Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)
+
+---
+
 <a id="nestjs-pipe"></a>
 
 ## Pipe (NestJS)
 
-Before the ticket handler receives its body argument, code can check or transform that value. A Nest Pipe answers “can this handler argument be parsed, validated or transformed into the expected transport input?” It performs this work through `transform(value, metadata)` before handler execution, returning the accepted value or rejecting it with an exception. It does not decide whether the caller has access.
+Before the ticket handler receives its body argument, code can check or transform that value. A Nest Pipe provides the framework hook applying parsing, validation or transformation to a handler argument. Ordinary parsing logic can live in a separate Parser function that the Pipe calls. The Pipe integrates this work through `transform(value, metadata)` before handler execution, returning the accepted value or rejecting it with an exception. It does not decide whether the caller has access.
 
 **Purpose.** Integrate argument parsing, validation or transformation into Nest's request processing.
 

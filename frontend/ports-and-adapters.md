@@ -108,8 +108,11 @@ On the response path, `HttpTicketGateway` validates external data and translates
 | `domain/tickets/Ticket.ts` | Ticket shape, valid status vocabulary/check and subject rule | Business meaning has one owner, independent of server field names and React |
 | `application/tickets/ports/TicketGateway.ts` | **Outbound [port](../GLOSSARY.md#port)** and command | The [use case](../GLOSSARY.md#use-case) defines what capability it needs |
 | `application/tickets/use-cases/createTicket.ts` | Use-case orchestration | No HTTP or React imports |
-| `infrastructure/tickets/HttpTicketGateway.ts` | **Outbound [adapter](../GLOSSARY.md#adapter)**, structural [DTO](../GLOSSARY.md#data-transfer-object-dto) validation and mapping | Only this boundary knows `fetch`/`ticket_id`; it reuses [Domain](../GLOSSARY.md#domain) for valid ticket values |
-| `presentation/features/tickets/model/useTickets.ts` | React-facing state/operations | Loading/error feedback belongs to the UI |
+| `infrastructure/http/tickets/adapters/HttpTicketGateway.ts` | **Outbound [adapter](../GLOSSARY.md#adapter)**: HTTP execution and integration failure translation | Calls another system through `fetch` |
+| `infrastructure/http/tickets/dto/TicketApiDto.ts` | Runtime wire schema and inferred [DTO](../GLOSSARY.md#data-transfer-object-dto) type | External shape belongs to the API integration; domain vocabulary/checks are reused |
+| `infrastructure/http/tickets/parsers/parseTicketApiResponse.ts` | Unknown response checking | Uses the schema before allowing mapping |
+| `infrastructure/http/tickets/mappers/mapTicketApiDto.ts` | Accepted [DTO](../GLOSSARY.md#data-transfer-object-dto) to internal Ticket representation | Renames `ticket_id` and reuses subject normalization |
+| `presentation/tickets/hooks/useTickets.ts` | React-facing state/operations | Loading/error feedback belongs to the UI |
 | `composition/bootstrap.tsx` | Dependency construction and injection | Chooses the concrete [adapter](../GLOSSARY.md#adapter) without becoming a [Service Locator](../GLOSSARY.md#service-locator) |
 
 These names are **repository conventions**, not universal requirements of Cockburn's architecture. `Gateway` expresses interaction with an external service. Use `Repository` when the abstraction genuinely models retrieval/persistence of domain objects as a collection, not simply because an [HTTP endpoint](../GLOSSARY.md#http-endpoint) exists.
@@ -150,7 +153,7 @@ The list of valid ticket statuses is declared **once** and drives both the TypeS
 `src/application/tickets/ports/TicketGateway.ts`:
 
 ```ts
-import type { Ticket } from '../../../domain/tickets/Ticket'
+import type { Ticket } from '@/domain/tickets/Ticket'
 
 export interface CreateTicketInput {
   subject: string
@@ -169,7 +172,7 @@ Notice what is *absent*: HTTP verbs, endpoint paths, `Response`, Axios, React an
 `src/application/tickets/use-cases/createTicket.ts`:
 
 ```ts
-import { normalizeTicketSubject } from '../../../domain/tickets/Ticket'
+import { normalizeTicketSubject } from '@/domain/tickets/Ticket'
 import type {
   CreateTicketInput,
   TicketGateway,
@@ -189,44 +192,15 @@ The [use case](../GLOSSARY.md#use-case) coordinates the operation and delegates 
 
 ### Adapter: how the Application reaches the backend
 
-`src/infrastructure/tickets/HttpTicketGateway.ts`:
+The frontend calls another system. Its HTTP implementation, response [DTO](../GLOSSARY.md#data-transfer-object-dto), [Parser](../GLOSSARY.md#parser) and [mapper](../GLOSSARY.md#mapper) therefore belong to [Infrastructure](../GLOSSARY.md#infrastructure), not to the backend's incoming HTTP [Presentation](../GLOSSARY.md#presentation-layer). Start with exact responsibility folders inside the Tickets integration:
+
+`src/infrastructure/http/tickets/adapters/HttpTicketGateway.ts`:
 
 ```ts
-import { z } from 'zod'
-import {
-  TICKET_STATUSES,
-  isTicketSubject,
-  normalizeTicketSubject,
-  type Ticket,
-} from '../../domain/tickets/Ticket'
-import type {
-  CreateTicketInput,
-  TicketGateway,
-} from '../../application/tickets/ports/TicketGateway'
-
-// This schema owns the *external wire shape*, not ticket business rules.
-// Status values and the subject rule come from Domain.
-const TicketResponseSchema = z.object({
-  ticket_id: z.string().min(1),
-  subject: z.string().refine(isTicketSubject, 'Subject is required'),
-  status: z.enum(TICKET_STATUSES),
-})
-
-type TicketDto = z.infer<typeof TicketResponseSchema>
-
-function toTicket(dto: TicketDto): Ticket {
-  return {
-    id: dto.ticket_id,
-    subject: normalizeTicketSubject(dto.subject),
-    status: dto.status,
-  }
-}
-
-function parseTicketDto(value: unknown): Ticket {
-  const parsed = TicketResponseSchema.safeParse(value)
-  if (!parsed.success) throw new Error('Invalid ticket response')
-  return toTicket(parsed.data)
-}
+import type { Ticket } from '@/domain/tickets/Ticket'
+import type { CreateTicketInput, TicketGateway } from '@/application/tickets/ports/TicketGateway'
+import { parseTicketApiResponse } from '../parsers/parseTicketApiResponse'
+import { mapTicketApiDto } from '../mappers/mapTicketApiDto'
 
 export class HttpTicketGateway implements TicketGateway {
   constructor(private readonly request: typeof fetch = fetch) {}
@@ -237,31 +211,71 @@ export class HttpTicketGateway implements TicketGateway {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     })
-
     if (!response.ok) throw new Error('Ticket creation unavailable')
-
     let payload: unknown
-    try {
-      payload = await response.json()
-    } catch {
-      throw new Error('Invalid ticket response')
-    }
-    return parseTicketDto(payload)
+    try { payload = await response.json() }
+    catch { throw new Error('Invalid ticket response') }
+    return mapTicketApiDto(parseTicketApiResponse(payload))
   }
 }
 ```
 
-This example uses **[Zod](https://zod.dev/basics)** (a runtime schema-validation library) rather than an unchecked type assertion and a hand-written object parser. `TicketResponseSchema.safeParse(value)` accepts `unknown`, checks the HTTP response, and returns typed data only on success; `TicketDto` is **inferred from that same schema** instead of declared separately. `status: z.enum(TICKET_STATUSES)` reads the one list owned by [Domain](../GLOSSARY.md#domain); `subject` delegates to the domain-owned `isTicketSubject`. The [adapter](../GLOSSARY.md#adapter) alone knows `ticket_id` and maps it to `Ticket.id`. A malformed JSON body and an incompatible response both become an integration error, not a fabricated domain object. Zod's `z.object` normally strips additional response fields, allowing additive protocol changes while checking all required fields.
+The [DTO](../GLOSSARY.md#data-transfer-object-dto) schema owns the external wire shape and derives its static type from that runtime check. Business values/checks still come from this frontend's [Domain](../GLOSSARY.md#domain):
 
-If another API represents statuses differently (for example, `IN_PROGRESS`), the [adapter](../GLOSSARY.md#adapter) translates that external value **into** a domain-owned status; that implementation must not quietly add new domain states. In a larger project, put a **reused external protocol schema** in the owning integration's `contracts/` area rather than copying a parser into each [gateway](../GLOSSARY.md#gateway); use generated OpenAPI/JSON Schema definitions if the API contract is already machine-readable. `TICKET_STATUSES` and protocol `ticket_id` still have **different owners**, so do not force a universal schema package across independently deployed services. The backend independently enforces its authoritative rules, and API [contract tests](../GLOSSARY.md#contract-test) should detect frontend/backend vocabulary drift. In a larger application, also translate transport failures into an application-owned error/result instead of exposing raw HTTP mechanics through the public feature API.
+`src/infrastructure/http/tickets/dto/TicketApiDto.ts`:
+
+```ts
+import { z } from 'zod'
+import { TICKET_STATUSES, isTicketSubject } from '@/domain/tickets/Ticket'
+
+export const TicketApiSchema = z.object({
+  ticket_id: z.string().min(1),
+  subject: z.string().refine(isTicketSubject, 'Subject is required'),
+  status: z.enum(TICKET_STATUSES),
+})
+export type TicketApiDto = z.infer<typeof TicketApiSchema>
+```
+
+The [Parser](../GLOSSARY.md#parser) converts unknown data into that checked [DTO](../GLOSSARY.md#data-transfer-object-dto). It is ordinary TypeScript using Zod, not a [Nest Pipe](../GLOSSARY.md#nestjs-pipe) or an access decision:
+
+`src/infrastructure/http/tickets/parsers/parseTicketApiResponse.ts`:
+
+```ts
+import { TicketApiSchema, type TicketApiDto } from '../dto/TicketApiDto'
+
+export function parseTicketApiResponse(value: unknown): TicketApiDto {
+  const parsed = TicketApiSchema.safeParse(value)
+  if (!parsed.success) throw new Error('Invalid ticket response')
+  return parsed.data
+}
+```
+
+The [mapper](../GLOSSARY.md#mapper) translates the accepted wire fields into the internal representation. It reuses subject normalization instead of inventing another rule:
+
+`src/infrastructure/http/tickets/mappers/mapTicketApiDto.ts`:
+
+```ts
+import { normalizeTicketSubject, type Ticket } from '@/domain/tickets/Ticket'
+import type { TicketApiDto } from '../dto/TicketApiDto'
+
+export function mapTicketApiDto(dto: TicketApiDto): Ticket {
+  return { id: dto.ticket_id, subject: normalizeTicketSubject(dto.subject), status: dto.status }
+}
+```
+
+These folders separate stable responsibilities from the start. Another call on this API can reuse its schema, [Parser](../GLOSSARY.md#parser) or [mapper](../GLOSSARY.md#mapper) without copying transport knowledge into a screen. No empty placeholder files are needed.
+
+This example uses **[Zod](https://zod.dev/basics)**, a runtime schema-validation library. The [Parser](../GLOSSARY.md#parser) calls `TicketApiSchema.safeParse(value)` and returns typed data only on success. `TicketApiDto` is inferred from that same schema; status values and the subject check come from [Domain](../GLOSSARY.md#domain). The [mapper](../GLOSSARY.md#mapper) alone renames `ticket_id`. Malformed JSON and incompatible responses become integration errors, not fabricated domain objects. Zod normally strips additional object fields, allowing additive protocol changes while checking required fields.
+
+If another API represents statuses differently, translate its external value into the domain-owned vocabulary here. Do not add a second business allowlist. Keep this API schema at `infrastructure/http/tickets/dto/TicketApiDto.ts`, even if several operations reuse it. Generated OpenAPI/JSON Schema definitions can replace manual protocol definitions when useful, while preserving domain validity and integration ownership. The backend independently enforces authoritative rules; API [contract tests](../GLOSSARY.md#contract-test) must detect independently released client/server vocabulary drift. Translate technical failures into an [Application](../GLOSSARY.md#application-layer)-owned error/result when that product contract is needed; this introductory client still uses the documented generic error messages.
 
 ### Presentation and Composition: using the operation
 
-`src/presentation/features/tickets/model/useTickets.ts` (React-facing excerpt):
+`src/presentation/tickets/hooks/useTickets.ts` (React-facing excerpt):
 
 ```tsx
 import { useState } from 'react'
-import type { CreateTicket } from '../../../../application/tickets/use-cases/createTicket'
+import type { CreateTicket } from '@/application/tickets/use-cases/createTicket'
 
 export function useTickets(createTicket: CreateTicket) {
   const [busy, setBusy] = useState(false)
@@ -316,7 +330,7 @@ A GraphQL or offline [adapter](../GLOSSARY.md#adapter) could also implement the 
 
 ### Inbound vs. outbound, without extra ceremony
 
-- **Inbound/driving side:** the React page (UI [adapter](../GLOSSARY.md#adapter)) invokes the [Application](../GLOSSARY.md#application-layer)'s `createTicket` operation. A plain function can be the entry contract; an extra interface is not automatically required.
+- **Inbound/driving side:** the [React page](../GLOSSARY.md#react-page) (UI [adapter](../GLOSSARY.md#adapter)) invokes the [Application](../GLOSSARY.md#application-layer)'s `createTicket` operation. A plain function can be the entry contract; an extra interface is not automatically required.
 - **Outbound/driven side:** `createTicket` requires `TicketGateway`; `HttpTicketGateway` implements it and communicates with the backend.
 
 The frontend/backend are independently bounded systems. Calling the backend's API from a browser does **not** make that API a frontend [Application layer](../GLOSSARY.md#application-layer).
@@ -328,11 +342,13 @@ The point of this example is not that each feature needs six new folders or one 
 | Real change | Intended owner and impact | Should remain unchanged |
 | --- | --- | --- |
 | Support introduces `reopened` | The ticket model owner updates `TICKET_STATUSES` and any valid transition rules; change the relevant ticket-specific display and behavior tests. Verify that the backend version and API contract support the state. | `HttpTicketGateway` does not acquire a second hard-coded status list; unrelated Billing and Notifications policies do not change. |
-| The API returns `ticketId` instead of `ticket_id` | Update the transport [DTO](../GLOSSARY.md#data-transfer-object-dto)/parser in the HTTP implementation and its [contract tests](../GLOSSARY.md#contract-test), considering client/server deployment compatibility. | `Ticket`, `TicketGateway`, `makeCreateTicket` and the component do not need that wire field name. |
+| The API returns `ticketId` instead of `ticket_id` | Update `dto/TicketApiDto.ts`, `parsers/parseTicketApiResponse.ts` and `mappers/mapTicketApiDto.ts` inside `infrastructure/http/tickets/`, and their [contract tests](../GLOSSARY.md#contract-test), considering client/server deployment compatibility. | `Ticket`, `TicketGateway`, `makeCreateTicket` and the component do not need that wire field name. |
 | Another entry point creates tickets | Compose the existing operation for that entry point (a different page, accessible interaction, or supported job). Introduce another [adapter](../GLOSSARY.md#adapter) only if a real integration requires it. | Do not fork the subject rule or create a generic `BaseTicketService` merely for a second caller. |
 | Several teams modify ticket state concurrently | The backend must authorize and validate against **current authoritative state** and define concurrency/[idempotency](../GLOSSARY.md#idempotency) behavior. Contract/integration and conflict tests must cover it. | Frontend validation is useful immediate feedback, not a guarantee about [server state](../GLOSSARY.md#server-state) or a substitute for atomic backend enforcement. |
 
 In a larger codebase, give the Tickets capability a narrow [public API](../GLOSSARY.md#public-api) so other screens do not deep-import its internal hook, HTTP parser or status constants. Do not treat frontend and backend as one shared in-process domain merely because they both mention a ticket: each independently deployed boundary can own its own model. Coordinate the external protocol through explicit versioning, schema generation when beneficial, and [contract tests](../GLOSSARY.md#contract-test).
+
+In `src/presentation/tickets/formatters/formatTicketStatusLabel.ts` (the [Application](../GLOSSARY.md#application-layer) type import is supplied by the excerpt\'s context):
 
 **Exhaustive UI translation is not a second business rule.** A ticket-facing screen can derive its display contract from the [Application](../GLOSSARY.md#application-layer) operation and let TypeScript require a label for every possible status:
 
@@ -345,6 +361,10 @@ const statusLabels = {
   in_progress: 'In progress',
   resolved: 'Resolved',
 } satisfies Record<CreatedTicket['status'], string>
+
+export function formatTicketStatusLabel(status: CreatedTicket['status']): string {
+  return statusLabels[status]
+}
 ```
 
 Adding `reopened` to the ticket model makes the UI label map fail typechecking until the appropriate presentation text is added; it does **not** create another allowlist in the transport [adapter](../GLOSSARY.md#adapter). The [Application](../GLOSSARY.md#application-layer)-facing contract is intentionally the type imported by the UI, rather than a deep import of [Domain](../GLOSSARY.md#domain) internals.

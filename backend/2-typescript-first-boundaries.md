@@ -8,17 +8,24 @@ The analyst sends `subject` and `description`. Another caller might send `null`,
 
 The request's transfer representation is a **[DTO](../GLOSSARY.md#data-transfer-object-dto)** ([data transfer object](../GLOSSARY.md#data-transfer-object-dto)). It carries information across a boundary, rather than ticket methods or authoritative state. A type assertion such as `body as CreateTicketRequest` changes what the compiler assumes and performs **no runtime validation**. The types disappear from emitted JavaScript. See [TypeScript narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html) and [type assertions](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions).
 
-This canonical HTTP module returns the application's input shape. File paths below are relative to an illustrative application's `src/`; these complete plain modules are extracted and tested by this repository, not installed as a backend application.
+First name the HTTP request shape separately from the [Application](../GLOSSARY.md#application-layer) command. They currently have matching string fields, so TypeScript permits passing the parsed request to the [use case](../GLOSSARY.md#use-case); that compatibility does not give the two contracts the same owner. An HTTP-only field would stay outside [Application](../GLOSSARY.md#application-layer). File paths below are relative to an illustrative application's `src/`; `@/` means that source root, as [the import convention explains](../conventions/naming-and-file-placement.md#9-source-imports-and-runtime-resolution). These complete plain modules are extracted and tested, not installed as a backend application.
 
-`src/presentation/http/tickets/createTicketRequest.ts`:
+`src/presentation/http/tickets/dto/CreateTicketRequestDto.ts`:
 
 ```ts
-import type { CreateTicketCommand } from '../../../application/tickets'
+export interface CreateTicketRequestDto {
+  subject: string
+  description: string
+}
+```
+
+`src/presentation/http/tickets/parsers/parseCreateTicketRequest.ts`:
+
+```ts
+import type { CreateTicketRequestDto } from '../dto/CreateTicketRequestDto'
 
 export class InvalidTicketRequest extends Error {}
-export type CreateTicketRequest = CreateTicketCommand
-
-export function parseCreateTicketRequest(body: unknown): CreateTicketRequest {
+export function parseCreateTicketRequest(body: unknown): CreateTicketRequestDto {
   if (typeof body !== 'object' || body === null || Array.isArray(body)) {
     throw new InvalidTicketRequest('Expected an object')
   }
@@ -107,7 +114,7 @@ Creation must not report success before saving. Hard-coding a database client in
 `src/application/tickets/ports/TicketRepository.ts`:
 
 ```ts
-import type { Ticket } from '../../../domain/tickets/Ticket'
+import type { Ticket } from '@/domain/tickets/Ticket'
 
 export class TicketPersistenceUnavailable extends Error {}
 
@@ -129,19 +136,34 @@ All three names contain `TicketRepository` because the two concrete classes impl
 
 `CreateTicket` creates, awaits the insert and returns plain data. That coordination is the **[Application](../GLOSSARY.md#application-layer) [use case](../GLOSSARY.md#use-case)**. It delegates validity to [Domain](../GLOSSARY.md#domain) and translates a recognized storage failure into a result that callers can interpret without knowing SQL or HTTP.
 
-`src/application/tickets/CreateTicket.ts`:
+Put the [use case](../GLOSSARY.md#use-case)'s own input and result under [Application](../GLOSSARY.md#application-layer)'s `contracts/`, not HTTP's `dto/`. A command describes what the operation accepts; a result describes what it reports. Neither describes an HTTP envelope.
+
+`src/application/tickets/contracts/CreateTicketCommand.ts`:
 
 ```ts
-import { Ticket, InvalidTicketSubject, type TicketData } from '../../domain/tickets/Ticket'
-import { TicketPersistenceUnavailable, type TicketRepository } from './ports/TicketRepository'
-
 export interface CreateTicketCommand {
   subject: string
   description: string
 }
+```
+
+`src/application/tickets/contracts/CreateTicketResult.ts`:
+
+```ts
+import type { TicketData } from '@/domain/tickets/Ticket'
+
 export type CreateTicketResult =
   | { ok: true; ticket: TicketData }
   | { ok: false; reason: 'invalid-subject' | 'unavailable' }
+```
+
+`src/application/tickets/use-cases/CreateTicket.ts`:
+
+```ts
+import { Ticket, InvalidTicketSubject } from '@/domain/tickets/Ticket'
+import { TicketPersistenceUnavailable, type TicketRepository } from '../ports/TicketRepository'
+import type { CreateTicketCommand } from '../contracts/CreateTicketCommand'
+import type { CreateTicketResult } from '../contracts/CreateTicketResult'
 
 export class CreateTicket {
   constructor(
@@ -172,8 +194,9 @@ Another capability needs a supported entry point rather than an import into tick
 `src/application/tickets/index.ts`:
 
 ```ts
-export { CreateTicket } from './CreateTicket'
-export type { CreateTicketCommand, CreateTicketResult } from './CreateTicket'
+export { CreateTicket } from './use-cases/CreateTicket'
+export type { CreateTicketCommand } from './contracts/CreateTicketCommand'
+export type { CreateTicketResult } from './contracts/CreateTicketResult'
 ```
 
 An external consumer imports from `application/tickets`, resolved through its `index.ts`; code implementing Tickets can use local modules within the permitted layers. The result intentionally includes a plain domain snapshot through its application contract. Exposing that type does not change its owner or expose entity methods/database rows. Chapter 4 provides the separate outer entry `composition/modules` for Nest assembly. A TypeScript export makes names available, not private: capability import rules must enforce supported paths separately from layer rules.
@@ -182,11 +205,11 @@ An external consumer imports from `application/tickets`, resolved through its `i
 
 An object can satisfy `insert` by keeping a map. `InMemoryTicketRepository` is the memory implementation of `TicketRepository`, providing working teaching/test storage without a database. It belongs to [Infrastructure](../GLOSSARY.md#infrastructure) and loses all data when the process ends.
 
-`src/infrastructure/persistence/tickets/InMemoryTicketRepository.ts`:
+`src/infrastructure/persistence/tickets/adapters/InMemoryTicketRepository.ts`:
 
 ```ts
-import type { Ticket, TicketData } from '../../../domain/tickets/Ticket'
-import type { TicketRepository } from '../../../application/tickets/ports/TicketRepository'
+import type { Ticket, TicketData } from '@/domain/tickets/Ticket'
+import type { TicketRepository } from '@/application/tickets/ports/TicketRepository'
 
 export class InMemoryTicketRepository implements TicketRepository {
   readonly records = new Map<string, TicketData>()
@@ -200,11 +223,46 @@ export class InMemoryTicketRepository implements TicketRepository {
 
 Now the caller needs a plain handler that parses input, invokes the [use case](../GLOSSARY.md#use-case) and maps the result into an HTTP-shaped reply. `TicketHttpHandler` belongs to [Presentation](../GLOSSARY.md#presentation-layer). It does not register a route or implement HTTP itself; a server platform binds its invocation to `POST /tickets`.
 
-`src/presentation/http/tickets/TicketHttpHandler.ts`:
+The response has its own HTTP representation. Its status type comes from the successful [Application](../GLOSSARY.md#application-layer) result, preserving the single domain-owned vocabulary. TypeScript's `Extract` selects the success member of that result union; it performs no runtime check.
+
+`src/presentation/http/tickets/dto/TicketResponseDto.ts`:
 
 ```ts
-import type { CreateTicket } from '../../../application/tickets'
-import { InvalidTicketRequest, parseCreateTicketRequest } from './createTicketRequest'
+import type { CreateTicketResult } from '@/application/tickets'
+
+type CreatedTicket = Extract<CreateTicketResult, { ok: true }>['ticket']
+export interface TicketResponseDto {
+  ticket_id: string
+  subject: string
+  description: string
+  status: CreatedTicket['status']
+}
+```
+
+The plain handler and Nest [Controller](../GLOSSARY.md#controller) both need the same successful field translation. Give that translation one owner instead of repeating it in both callers:
+
+`src/presentation/http/tickets/mappers/mapCreateTicketResponse.ts`:
+
+```ts
+import type { CreateTicketResult } from '@/application/tickets'
+import type { TicketResponseDto } from '../dto/TicketResponseDto'
+
+export function mapCreateTicketResponse(
+  ticket: Extract<CreateTicketResult, { ok: true }>['ticket'],
+): TicketResponseDto {
+  return {
+    ticket_id: ticket.id, subject: ticket.subject,
+    description: ticket.description, status: ticket.status,
+  }
+}
+```
+
+`src/presentation/http/tickets/handlers/TicketHttpHandler.ts`:
+
+```ts
+import type { CreateTicket } from '@/application/tickets'
+import { InvalidTicketRequest, parseCreateTicketRequest } from '../parsers/parseCreateTicketRequest'
+import { mapCreateTicketResponse } from '../mappers/mapCreateTicketResponse'
 
 export class TicketHttpHandler {
   constructor(private readonly createTicket: CreateTicket) {}
@@ -218,11 +276,7 @@ export class TicketHttpHandler {
           body: { error: result.reason },
         }
       }
-      const ticket = result.ticket
-      return { status: 201, body: {
-        ticket_id: ticket.id, subject: ticket.subject,
-        description: ticket.description, status: ticket.status,
-      } }
+      return { status: 201, body: mapCreateTicketResponse(result.ticket) }
     } catch (error) {
       if (error instanceof InvalidTicketRequest) {
         return { status: 400, body: { error: 'invalid-request' } }
@@ -285,7 +339,7 @@ Nest's `@Controller('tickets')` plus `@Post()` registers this same relationship 
 
 Suppose the support team now restricts HTTP creation to authenticated callers. First an established authentication integration must verify identity and supply a trusted context; an arbitrary body/header object is not that context. The following optional [Presentation](../GLOSSARY.md#presentation-layer) wrapper assumes that verification has already happened. It adds the access decision and reuses `TicketHttpHandler` for parsing, invocation and response mapping:
 
-`src/presentation/http/tickets/handleAuthenticatedCreateTicket.ts`:
+`src/presentation/http/tickets/handlers/handleAuthenticatedCreateTicket.ts`:
 
 ```ts
 import type { TicketHttpHandler } from './TicketHttpHandler'
@@ -308,7 +362,7 @@ export async function handleAuthenticatedCreateTicket(
 
 The `if` asks **may this caller invoke the selected operation?** It returns before parsing or calling the [use case](../GLOSSARY.md#use-case) when identity is absent. After permission to continue, `TicketHttpHandler.handle` calls the existing `parseCreateTicketRequest(body)` to check object/string arguments, invokes `CreateTicket.execute(command)`, then maps its result to HTTP. `Ticket.create()` alone checks the subject rule and assigns initial state.
 
-Nest provides separate hooks for the first two decisions: a **Guard** for access and a **Pipe** for argument parsing/validation/transformation. A valid body does not authenticate a caller; an authenticated caller can still send invalid input. This wrapper implements only the presence check for a previously verified user, not token verification, tenant membership or permissions beyond authentication. It is optional and not bound into the basic server excerpt or chapter 4's creation-only module. [Chapter 3 compares both hooks on one request](3-nestjs-building-blocks.md#guard-and-pipe-answer-different-questions).
+The parsing function remains a **[Parser](../GLOSSARY.md#parser)**: ordinary TypeScript logic that converts unknown transport data into `CreateTicketRequestDto`. Nest provides a **Guard** for the access decision and a **Pipe** to run argument parsing/validation/transformation in its lifecycle. The Pipe calls this [Parser](../GLOSSARY.md#parser); it is not another name for it. A valid body does not authenticate a caller; an authenticated caller can still send invalid input. This wrapper implements only the presence check for a previously verified user, not token verification, tenant membership or permissions beyond authentication. It is optional and not bound into the basic server excerpt or chapter 4's creation-only module. [Chapter 3 compares the three responsibilities](3-nestjs-building-blocks.md#guard-and-pipe-answer-different-questions).
 
 ## 5. What a library will remove
 
