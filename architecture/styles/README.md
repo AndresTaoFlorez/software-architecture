@@ -1,6 +1,6 @@
 # Architectural Styles
 
-After the [shared foundations](../foundations/README.md), follow either the [frontend example](../frontend/README.md) or the [backend example](../backend/README.md). Then compare the questions these framework-independent styles ask:
+These styles are framework-independent. Start with [Foundations](../foundations/README.md), then study any style directly. The [frontend route](../frontend/README.md) and [backend route](../backend/README.md) provide practical examples; neither is a prerequisite for understanding a style.
 
 - [Layered](layered-architecture/README.md): which kinds of work should be separated, and which layers may use others?
 - [Hexagonal / Ports & Adapters](hexagonal-architecture/README.md): which interactions connect the application to replaceable external mechanisms?
@@ -9,6 +9,6 @@ After the [shared foundations](../foundations/README.md), follow either the [fro
 
 Their constraints can overlap. They do not prescribe identical models or this handbook's exact folders.
 
-The [backend comparison](../backend/5-architectural-styles-with-nestjs.md) applies all four to one design. The [frontend integration](../frontend/ports-and-adapters.md) applies Hexagonal to a browser client. Neither route is a prerequisite for the other.
+The [backend comparison](../backend/5-architectural-styles-with-nestjs.md) applies all four to one design. The [frontend integration](../frontend/ports-and-adapters.md) applies Hexagonal to a browser client.
 
 [Architecture](../README.md)
