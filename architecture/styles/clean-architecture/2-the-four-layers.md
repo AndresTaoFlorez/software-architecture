@@ -2,7 +2,9 @@
 
 <a id="2-the-four-layers"></a>
 
-# 2. The Four Circles
+<a id="2-the-four-circles"></a>
+
+# The Four Circles
 
 Imagine a user cancelling an order: the rule “shipped orders cannot be cancelled” is different from the operation “cancel this order,” which is different again from translating an HTTP request or writing a database row. The four circles below give these responsibilities different places so a technology change does not rewrite the rule.
 
@@ -10,11 +12,27 @@ The canonical [Clean Architecture](../../../GLOSSARY.md#clean-architecture) diag
 
 ---
 
+**Contents**
+
+- [Circle responsibilities](#circle-responsibilities)
+  - [Entities](#entities)
+  - [Use Cases](#use-cases)
+  - [Interface Adapters](#interface-adapters)
+  - [Frameworks & Drivers](#frameworks--drivers)
+- [The circles are not a linear runtime stack](#the-circles-are-not-a-linear-runtime-stack)
+- [Mapping to common project folders](#mapping-to-common-project-folders)
+- [Frontend organization is a second scale](#frontend-organization-is-a-second-scale)
+- [Backend organization is similarly concrete](#backend-organization-is-similarly-concrete)
+- [Sources](#sources)
+
 <a id="21-entities-innermost"></a>
 
-## 2.1 Entities
+## Circle responsibilities
 
-### Responsibility
+<a id="21-entities"></a>
+<a id="responsibility"></a>
+
+### Entities
 
 Martin's **[Entities circle](../../../GLOSSARY.md#clean-entities-circle)** encapsulates general business rules. It is broader than a [DDD](../../../GLOSSARY.md#domain-driven-design-ddd) entity with identity: objects, [value objects](../../../GLOSSARY.md#value-object) and functions can all implement this policy.
 
@@ -52,9 +70,11 @@ They do **not** have to be classes. Functional/immutable domain models can satis
 
 ---
 
-## 2.2 Use Cases
+<a id="22-use-cases"></a>
+<a id="responsibility-1"></a>
+<a id="error-ownership"></a>
 
-### Responsibility
+### Use Cases
 
 [Use Cases](../../../GLOSSARY.md#use-case) contain application-specific business rules and orchestrate an operation.
 
@@ -92,24 +112,27 @@ export function makeCancelOrder(deps: {
 
 The use case does not import the database, HTTP client, UI framework or concrete [repository](../../../GLOSSARY.md#repository).
 
-### Error ownership
+**Error ownership.**
 
 Do not map every external failure into a [Domain error](../../../GLOSSARY.md#domain-error).
 
 Use meaning:
 
 ```mermaid
-flowchart LR
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
     BI["Business invariant violation"] --> DE["Domain error"]
-    UC["Use case cannot complete"] --> AE["Application error / result"]
-    EXT["HTTP / SQL / SDK detail"] --> MAP["Translated outer detail"]
+    UC["Use case cannot complete"] --> AE["Application error<br/>result"]
+    EXT["HTTP<br/>SQL / SDK detail"] --> MAP["Translated outer detail"]
 ```
 
 ---
 
-## 2.3 Interface Adapters
+<a id="23-interface-adapters"></a>
+<a id="responsibility-2"></a>
+<a id="repository-is-not-a-synonym-for-adapter"></a>
 
-### Responsibility
+### Interface Adapters
 
 Translate between representations convenient to inner policy and representations convenient to external mechanisms.
 
@@ -140,9 +163,9 @@ export class HttpOrderRepository implements OrderRepository {
 
 Here `HttpClient` is an adapter-owned transport interface, supplied by outer framework glue; it is not an import from a concrete HTTP driver. `mapOrderDto` and `toOrderDto` are boundary mapping functions. For a practical module containing both mapping and technical calls, see [combined outer modules](../../foundations/dependency-boundaries.md#combined-outer-modules).
 
-### Repository is not a synonym for adapter
+**Repository is not a synonym for adapter.**
 
-Use `Repository` when the abstraction is actually [repository](../../../GLOSSARY.md#repository)-like. Other [ports](../../../GLOSSARY.md#port) may be better named:
+Use `Repository` when the abstraction is actually repository-like. Other ports may be better named:
 
 Examples include `PaymentGateway`, `FileStorage`, `Clock`, `IdGenerator`, `NotificationSender`, and `ClosureExecutor`.
 
@@ -152,9 +175,10 @@ The name should expose purpose.
 
 <a id="24-frameworks--drivers-outermost"></a>
 
-## 2.4 Frameworks & Drivers
+<a id="24-frameworks--drivers"></a>
+<a id="responsibility-3"></a>
 
-### Responsibility
+### Frameworks & Drivers
 
 Hold replaceable mechanisms:
 
@@ -171,12 +195,15 @@ Hold replaceable mechanisms:
 
 ---
 
-## 2.5 The circles are not a linear runtime stack
+<a id="25-the-circles-are-not-a-linear-runtime-stack"></a>
+
+## The circles are not a linear runtime stack
 
 Do not read:
 
 ```mermaid
-flowchart LR
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
     F["Frameworks & Drivers"] -. "depends on" .-> A["Interface Adapters"] -. "depends on" .-> U["Use Cases"] -. "depends on" .-> E["Entities"]
 ```
 
@@ -188,7 +215,9 @@ A UI component can call a [Presentation](../../../GLOSSARY.md#presentation-layer
 
 ---
 
-## 2.6 Mapping to common project folders
+<a id="26-mapping-to-common-project-folders"></a>
+
+## Mapping to common project folders
 
 This repository often uses:
 
@@ -207,7 +236,9 @@ Therefore, do not insist that every project folder corresponds to exactly one ca
 
 ---
 
-## 2.7 Frontend organization is a second scale
+<a id="27-frontend-organization-is-a-second-scale"></a>
+
+## Frontend organization is a second scale
 
 A real frontend can contain hundreds of files inside the outer UI area.
 
@@ -227,7 +258,9 @@ They should preserve the cross-layer boundary but are not themselves Clean Archi
 
 ---
 
-## 2.8 Backend organization is similarly concrete
+<a id="28-backend-organization-is-similarly-concrete"></a>
+
+## Backend organization is similarly concrete
 
 Controllers, transport DTOs and persistence mappings belong to outer mechanisms. Their source references point toward protected policy. See the [backend application of these circles](8-clean-on-the-backend.md).
 

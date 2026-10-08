@@ -4,7 +4,9 @@
 <a id="96-the-scaling-decision-tree"></a>
 <a id="9-evolution-and-scaling"></a>
 
-# 6. Evolution and Scaling
+<a id="6-evolution-and-scaling"></a>
+
+# Evolution and Scaling
 
 [Onion Architecture](../../../GLOSSARY.md#onion-architecture) does not imply a fixed sequence from folders to [DI containers](../../../GLOSSARY.md#di-container) to [monorepos](../../../GLOSSARY.md#monorepo) to [microfrontends](../../../GLOSSARY.md#microfrontend).
 

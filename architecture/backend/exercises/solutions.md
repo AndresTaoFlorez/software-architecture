@@ -1,20 +1,26 @@
 # Backend Exercise Solutions
 
-Source paths below are relative to an application's `src/`. These are design answers, with alternatives judged by the stated requirement.
+Source paths below are relative to an application's `src/`. Imports reuse canonical guide modules. The intermediate and advanced answers show concrete changed code; framework bindings are identified where omitted.
+
+**Contents**
+
+- [B-E1 — Trace the request](#b-e1--trace-the-request)
+- [B-E2 — Contract and implementations](#b-e2--contract-and-implementations)
+- [B-E3 — Place HTTP files](#b-e3--place-http-files)
+- [B-I1 — Change one business rule](#b-i1--change-one-business-rule)
+- [B-I2 — Create from a CLI](#b-i2--create-from-a-cli)
+- [B-I3 — Read an agenda](#b-i3--read-an-agenda)
+- [B-A1 — Split a God Controller](#b-a1--split-a-god-controller)
+- [B-A2 — Remove a deep import](#b-a2--remove-a-deep-import)
+- [B-A3 — Assignment and escalation](#b-a3--assignment-and-escalation)
 
 ## B-E1 — Trace the request
 
-**Answer.** POST /tickets is the endpoint; its route maps to TicketsController.create(), the handler grouped by the Controller. The Guard checks access, the Pipe invokes the Parser, CreateTicket coordinates, and Ticket owns validity.
+**Answer.** POST /tickets is the endpoint; its route maps to TicketsController.create(), the handler grouped by the Controller. The Guard checks access, the Pipe invokes the [Parser](../../../GLOSSARY.md#parser), CreateTicket coordinates, and Ticket owns validity.
 
-**Why / exact owner.** HTTP invocation: Presentation. Workflow: Application. Ticket rules: Domain.
+**Why / exact owner.** HTTP invocation: [Presentation](../../../GLOSSARY.md#presentation-layer). Workflow: [Application](../../../GLOSSARY.md#application-layer). Ticket rules: [Domain](../../../GLOSSARY.md#domain).
 
 **Exact files.** presentation/http/tickets/controllers/TicketsController.ts; presentation/http/tickets/guards/AuthenticatedGuard.ts; presentation/http/tickets/pipes/CreateTicketPipe.ts; presentation/http/tickets/parsers/parseCreateTicketRequest.ts; application/tickets/use-cases/CreateTicket.ts; domain/tickets/Ticket.ts.
-
-**Dependency direction.** HTTP Presentation → Application → Domain; the Pipe calls its local Parser.
-
-**What remains unchanged.** Ticket validity when routing changes.
-
-**Why a tempting alternative is wrong.** Putting subject validity in the Controller makes another caller bypass the authoritative rule.
 
 **References.** [Relevant guide](../3-nestjs-building-blocks.md) · [Exercise](easy.md#b-e1--trace-the-request).
 
@@ -22,15 +28,9 @@ Source paths below are relative to an application's `src/`. These are design ans
 
 **Answer.** TicketRepository describes insert(ticket). The memory class stores snapshots in its process; the Prisma class maps fields and writes through its client. Composition chooses one implementation.
 
-**Why / exact owner.** Application owns the requirement, Infrastructure its fulfillment, Composition its selection.
+**Why / exact owner.** [Application](../../../GLOSSARY.md#application-layer) owns the requirement, [Infrastructure](../../../GLOSSARY.md#infrastructure) its fulfillment, Composition its selection.
 
 **Exact files.** application/tickets/ports/TicketRepository.ts; infrastructure/persistence/tickets/adapters/InMemoryTicketRepository.ts; infrastructure/persistence/tickets/adapters/PrismaTicketRepository.ts; composition/modules/TicketsModule.ts.
-
-**Dependency direction.** Both implementations → Application contract; CreateTicket → that contract.
-
-**What remains unchanged.** CreateTicket, Ticket and HTTP representation for an unchanged contract.
-
-**Why a tempting alternative is wrong.** Importing Prisma in the contract couples all callers to the selected technology.
 
 **References.** [Relevant guide](../2-typescript-first-boundaries.md) · [Exercise](easy.md#b-e2--contract-and-implementations).
 
@@ -38,110 +38,309 @@ Source paths below are relative to an application's `src/`. These are design ans
 
 **Answer.** Use controllers/, guards/, pipes/, parsers/, dto/ and mappers/ respectively; both request and response DTOs belong in dto/.
 
-**Why / exact owner.** Presentation owns incoming HTTP representations and translation.
+**Why / exact owner.** [Presentation](../../../GLOSSARY.md#presentation-layer) owns incoming HTTP representations and translation.
 
 **Exact files.** presentation/http/tickets/controllers/TicketsController.ts; presentation/http/tickets/guards/AuthenticatedGuard.ts; presentation/http/tickets/pipes/CreateTicketPipe.ts; presentation/http/tickets/parsers/parseCreateTicketRequest.ts; presentation/http/tickets/dto/CreateTicketRequestDto.ts; presentation/http/tickets/dto/TicketResponseDto.ts; presentation/http/tickets/mappers/mapCreateTicketResponse.ts.
-
-**Dependency direction.** HTTP files → supported Application API; local Pipe → Parser.
-
-**What remains unchanged.** Domain and persistence implementation.
-
-**Why a tempting alternative is wrong.** Putting every DTO under domain/types/ confuses wire fields with business meaning.
 
 **References.** [Relevant guide](../4-create-ticket-with-nestjs.md) · [Exercise](easy.md#b-e3--place-http-files).
 
 ## B-I1 — Change one business rule
 
-**Answer.** Change the bound and vocabulary in domain/tickets/Ticket.ts. Keep INITIAL_TICKET_STATUS = 'open'. Observe rejection above 100, accepted boundary input and open creation after list reordering. Adding membership does not implement a transition.
+Change only these declarations and the existing bound in `domain/tickets/Ticket.ts`; keep the canonical `Ticket` class and guards. JavaScript string length measures UTF-16 code units.
 
-**Why / exact owner.** Domain owns subject validity, vocabulary and creation state.
+```ts
+// Replacement declarations in src/domain/tickets/Ticket.ts
+export const TICKET_STATUSES = ['resolved', 'reopened', 'open', 'in_progress'] as const
+export type TicketStatus = (typeof TICKET_STATUSES)[number]
+export const INITIAL_TICKET_STATUS: TicketStatus = 'open'
 
-**Exact files.** domain/tickets/Ticket.ts; domain/tickets/Ticket.test.ts in an application project.
+// Keep the existing InvalidTicketSubject declaration.
+export function normalizeTicketSubject(value: unknown): string {
+  if (typeof value !== 'string') throw new InvalidTicketSubject()
+  const subject = value.trim()
+  if (subject.length === 0 || subject.length > 100) throw new InvalidTicketSubject()
+  return subject
+}
+```
 
-**Dependency direction.** Existing callers reuse the factory and guard inward.
+`Ticket.create` continues calling the existing normalizer and initial-state constant. Reordering demonstrates that vocabulary order owns no creation rule. HTTP/CLI retain their shape checks.
 
-**What remains unchanged.** The request Parser's string-shape check and CreateTicket's orchestration.
+Verify 100 and 101 units, blank input, `isTicketStatus('reopened')` and the literal `open` result. The exercise changes this temporary variant, not the handbook's canonical 160-unit requirement.
 
-**Why a tempting alternative is wrong.** Adding a second length decorator creates two business-rule owners.
-
-**References.** [Relevant guide](../2-typescript-first-boundaries.md) · [Exercise](intermediate.md#b-i1--change-one-business-rule).
+**Exercise.** [B-I1](intermediate.md#b-i1--change-one-business-rule)
 
 ## B-I2 — Create from a CLI
 
-**Answer.** A CLI parser accepts the two options and constructs the command. The CLI handler invokes the supplied CreateTicket and maps success/rejections into documented messages and exit codes. CLI startup supplies the operation.
+CLI syntax and feedback belong to [Presentation](../../../GLOSSARY.md#presentation-layer). The same [Application](../../../GLOSSARY.md#application-layer) operation and [Domain](../../../GLOSSARY.md#domain) rule are reused.
 
-**Why / exact owner.** CLI syntax and output: Presentation. Creation: existing Application/Domain.
+```ts
+// src/presentation/cli/tickets/createTicketCli.ts
+import { parseArgs } from 'node:util'
+import type { CreateTicket, CreateTicketCommand } from '@/application/tickets'
 
-**Exact files.** presentation/cli/tickets/parsers/parseCreateTicketArgs.ts; presentation/cli/tickets/handlers/createTicketCli.ts; composition/cli/main.ts.
+export class InvalidCliInput extends Error {}
+export function parseCreateTicketArgs(args: readonly string[]): CreateTicketCommand {
+  try {
+    const { values } = parseArgs({
+      args: [...args], strict: true, allowPositionals: false,
+      options: { subject: { type: 'string' }, description: { type: 'string' } },
+    })
+    if (typeof values.subject !== 'string' || typeof values.description !== 'string') {
+      throw new InvalidCliInput()
+    }
+    return { subject: values.subject, description: values.description }
+  } catch {
+    throw new InvalidCliInput('Use --subject <text> --description <text>')
+  }
+}
+export interface CliFeedback { code: 0 | 1 | 2; message: string }
+export async function createTicketCli(
+  args: readonly string[],
+  create: Pick<CreateTicket, 'execute'>,
+): Promise<CliFeedback> {
+  let command: CreateTicketCommand
+  try { command = parseCreateTicketArgs(args) }
+  catch (error) {
+    if (error instanceof InvalidCliInput) return { code: 2, message: error.message }
+    throw error
+  }
+  const result = await create.execute(command)
+  if (result.ok) return { code: 0, message: 'Created ' + result.ticket.id }
+  return result.reason === 'invalid-subject'
+    ? { code: 2, message: 'Invalid ticket subject' }
+    : { code: 1, message: 'Ticket creation unavailable' }
+}
+```
 
-**Dependency direction.** CLI → application/tickets; Composition → concrete dependencies.
+```ts
+// src/composition/cli/main.ts
+import { randomUUID } from 'node:crypto'
+import { CreateTicket } from '@/application/tickets'
+import { InMemoryTicketRepository } from '@/infrastructure/persistence/tickets/adapters/InMemoryTicketRepository'
+import { createTicketCli } from '@/presentation/cli/tickets/createTicketCli'
 
-**What remains unchanged.** CreateTicket, Ticket and persistence contract.
+export async function main(args: readonly string[]) {
+  const create = new CreateTicket(new InMemoryTicketRepository(), randomUUID)
+  return createTicketCli(args, create)
+}
+```
 
-**Why a tempting alternative is wrong.** Reusing the HTTP Parser imports another delivery channel's representation instead of sharing the operation.
+A Node entry invokes `main(process.argv.slice(2))`, prints its message and sets `process.exitCode`. Those process calls are omitted from this testable assembly. Memory lasts only for this process; production startup supplies durable storage when required. Unexpected operation defects propagate to the entry's error handling rather than becoming normal business rejection.
 
-**References.** [Relevant guide](../2-typescript-first-boundaries.md) · [Exercise](intermediate.md#b-i2--create-from-a-cli).
+**Exercise.** [B-I2](intermediate.md#b-i2--create-from-a-cli)
 
 ## B-I3 — Read an agenda
 
-**Answer.** The query Parser checks HTTP input, GetAgenda asks its AgendaReader for that day, PrismaAgendaReader translates persistence data, and HTTP maps the result to its response DTO.
+[Application](../../../GLOSSARY.md#application-layer) owns the requested read and its representation; [Presentation](../../../GLOSSARY.md#presentation-layer) owns query syntax and HTTP output. These modules are complete plain TypeScript.
 
-**Why / exact owner.** HTTP: Presentation. Read workflow/contract: Application. Prisma query: Infrastructure.
+```ts
+// src/application/scheduling/Agenda.ts
+export interface AgendaItem { id: string; startsAt: string }
+export class AgendaReadUnavailable extends Error {}
+export interface AgendaReader {
+  read(day: string): Promise<readonly AgendaItem[]>
+}
+export class GetAgenda {
+  constructor(private readonly reader: AgendaReader) {}
+  execute(day: string): Promise<readonly AgendaItem[]> { return this.reader.read(day) }
+}
+```
 
-**Exact files.** presentation/http/scheduling/controllers/AgendaController.ts; presentation/http/scheduling/parsers/parseAgendaQuery.ts; presentation/http/scheduling/dto/AgendaQueryDto.ts; presentation/http/scheduling/dto/AgendaResponseDto.ts; presentation/http/scheduling/mappers/mapAgendaResponse.ts; application/scheduling/use-cases/GetAgenda.ts; application/scheduling/ports/AgendaReader.ts; application/scheduling/contracts/AgendaResult.ts; infrastructure/persistence/scheduling/adapters/PrismaAgendaReader.ts; composition/modules/SchedulingModule.ts.
+```ts
+// src/presentation/http/scheduling/agendaHttp.ts
+import { AgendaReadUnavailable, type GetAgenda, type AgendaItem } from '@/application/scheduling/Agenda'
 
-**Dependency direction.** Controller → Application; Prisma reader → Application contract; Composition assembles both.
+export interface AgendaQueryDto { day: string }
+export class InvalidAgendaQuery extends Error {}
+export function parseAgendaQuery(value: unknown): AgendaQueryDto {
+  if (typeof value !== 'object' || value === null || !('day' in value) ||
+      typeof value.day !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value.day)) {
+    throw new InvalidAgendaQuery()
+  }
+  const date = new Date(value.day + 'T00:00:00Z')
+  if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value.day) {
+    throw new InvalidAgendaQuery()
+  }
+  return { day: value.day }
+}
+export interface AgendaResponseDto { appointments: readonly AgendaItem[] }
+export function mapAgendaResponse(items: readonly AgendaItem[]): AgendaResponseDto {
+  return { appointments: items.map(item => ({ id: item.id, startsAt: item.startsAt })) }
+}
+export async function agendaHttp(query: unknown, getAgenda: GetAgenda) {
+  let day: string
+  try { day = parseAgendaQuery(query).day }
+  catch (error) {
+    if (error instanceof InvalidAgendaQuery) return { status: 400, body: { error: 'invalid-day' } }
+    throw error
+  }
+  try { return { status: 200, body: mapAgendaResponse(await getAgenda.execute(day)) } }
+  catch (error) {
+    if (error instanceof AgendaReadUnavailable) return { status: 503, body: { error: 'unavailable' } }
+    throw error
+  }
+}
+```
 
-**What remains unchanged.** HTTP result shape when only database column names change.
+```ts
+// src/infrastructure/persistence/scheduling/PrismaAgendaReader.ts
+import { AgendaReadUnavailable, type AgendaReader } from '@/application/scheduling/Agenda'
 
-**Why a tempting alternative is wrong.** Returning a Prisma record from GetAgenda exposes the storage representation to all callers.
+// Driver-shaped seam for the excerpt, not a generated Prisma client type.
+export interface AgendaDatabase {
+  list(day: string): Promise<readonly { appointment_id: string; start_time: Date }[]>
+}
+export class PrismaAgendaReader implements AgendaReader {
+  constructor(private readonly db: AgendaDatabase) {}
+  async read(day: string) {
+    let rows: Awaited<ReturnType<AgendaDatabase['list']>>
+    try { rows = await this.db.list(day) }
+    catch (cause) { throw new AgendaReadUnavailable('Agenda read failed', { cause }) }
+    return rows.map(row => ({ id: row.appointment_id, startsAt: row.start_time.toISOString() }))
+  }
+}
+```
 
-**References.** [Relevant guide](../2-typescript-first-boundaries.md#next-operation-reading-an-agenda) · [Exercise](intermediate.md#b-i3--read-an-agenda).
+Startup constructs `new GetAgenda(new PrismaAgendaReader(db))` and supplies it to the handler. The driver query and Nest decorators are omitted; a real integration implements `list` and verifies its day-filter/time-zone meaning. This example's mapping assumes typed database rows. The stored cause is for internal diagnostics; HTTP returns only the stable failure code.
+
+**Exercise.** [B-I3](intermediate.md#b-i3--read-an-agenda)
 
 ## B-A1 — Split a God Controller
 
-**Answer.** Keep HTTP invocation/output in the Controller, access in the Guard, shape parsing behind the Pipe, validity in Ticket, orchestration in CreateTicket and database work in the Prisma implementation. Composition supplies ID generation and dependencies.
+Reuse the canonical [Parser](../../../GLOSSARY.md#parser), `Ticket`, `CreateTicket`, repository and `TicketHttpHandler` rather than creating another broad Service. This plain controller excerpt keeps only delivery access and invocation.
 
-**Why / exact owner.** One owner for each decision rather than one class per line of code.
+```ts
+// src/presentation/http/tickets/controllers/RefactoredTicketsController.ts
+import { TicketHttpHandler } from '../handlers/TicketHttpHandler'
 
-**Exact files.** domain/tickets/Ticket.ts; application/tickets/use-cases/CreateTicket.ts; application/tickets/ports/TicketRepository.ts; infrastructure/persistence/tickets/adapters/PrismaTicketRepository.ts; presentation/http/tickets/controllers/TicketsController.ts; presentation/http/tickets/guards/AuthenticatedGuard.ts; presentation/http/tickets/pipes/CreateTicketPipe.ts; presentation/http/tickets/parsers/parseCreateTicketRequest.ts; presentation/http/tickets/mappers/mapCreateTicketResponse.ts; composition/modules/TicketsModule.ts. Retire the broad TicketsService after moving its responsibilities.
+export interface VerifiedRequest {
+  user?: { id: string }
+  body: unknown
+}
+export class RefactoredTicketsController {
+  constructor(private readonly handler: TicketHttpHandler) {}
+  async create(request: VerifiedRequest) {
+    if (!request.user) return { status: 401, body: { error: 'unauthorized' } }
+    return this.handler.handle(request.body)
+  }
+}
+```
 
-**Dependency direction.** Presentation → Application → Domain; Infrastructure → inward contract; Composition imports selected concrete pieces.
+`user` must come from established authentication middleware; this presence check does not verify credentials. The [Nest Controller/Pipe/Guard](../3-nestjs-building-blocks.md) are the framework bindings for these delivery concerns.
 
-**What remains unchanged.** The supported creation command/result and endpoint behavior.
+```ts
+// src/composition/createTicketDelivery.ts
+import { CreateTicket } from '@/application/tickets'
+import { InMemoryTicketRepository } from '@/infrastructure/persistence/tickets/adapters/InMemoryTicketRepository'
+import { TicketHttpHandler } from '@/presentation/http/tickets/handlers/TicketHttpHandler'
+import { RefactoredTicketsController } from '@/presentation/http/tickets/controllers/RefactoredTicketsController'
 
-**Why a tempting alternative is wrong.** Renaming the God Controller to Service moves the coupling without separating responsibilities.
+export function createTicketDelivery(makeId: () => string) {
+  const operation = new CreateTicket(new InMemoryTicketRepository(), makeId)
+  return new RefactoredTicketsController(new TicketHttpHandler(operation))
+}
+```
 
-**References.** [Relevant guide](../3-nestjs-building-blocks.md#3-service-does-not-tell-you-its-responsibility) · [Exercise](advanced.md#b-a1--split-a-god-controller).
+[Domain](../../../GLOSSARY.md#domain) owns subject validity; [Application](../../../GLOSSARY.md#application-layer) awaits saving; [Infrastructure](../../../GLOSSARY.md#infrastructure) owns row mapping; HTTP owns access/result translation; Composition creates objects. Retire the redundant `TicketsService` and copied subject check. The mapper remains the existing plain function.
+
+**Exercise.** [B-A1](advanced.md#b-a1--split-a-god-controller)
 
 ## B-A2 — Remove a deep import
 
-**Answer.** Billing imports the supported application/tickets entry and invokes the supplied operation. For Nest wiring, Composition imports TicketsModule through composition/modules and makes the exported provider available.
+The [canonical application entry](../2-typescript-first-boundaries.md) already exports `CreateTicket`, its command and result. Billing consumes that entry and receives the operation:
 
-**Why / exact owner.** Tickets owns ticket creation/defaults; Billing owns when its workflow requests a ticket.
+```ts
+// src/application/billing/BillingTickets.ts
+import type { CreateTicket, CreateTicketCommand, CreateTicketResult } from '@/application/tickets'
 
-**Exact files.** application/billing/use-cases/CreateInvoiceSupportTicket.ts; application/tickets/index.ts; composition/modules/TicketsModule.ts; composition/modules/index.ts.
+export class BillingTickets {
+  constructor(private readonly createTicket: Pick<CreateTicket, 'execute'>) {}
+  requestSupport(command: CreateTicketCommand): Promise<CreateTicketResult> {
+    return this.createTicket.execute(command)
+  }
+}
+```
 
-**Dependency direction.** Billing → supported Tickets Application API; no dependency on Tickets' delivery or persistence internals.
+Composition supplies the existing operation. In Nest, `TicketsModule` exports the `CreateTicket` provider and a consumer module imports `TicketsModule` before registering its consumer. This container registration is separate from the TypeScript import above.
 
-**What remains unchanged.** Private Tickets helper organization and creation implementation.
+Do not export private helpers or all storage symbols to make the import pass. TypeScript exports define the supported source entry; Nest metadata controls provider visibility. Enforce private-import rules separately.
 
-**Why a tempting alternative is wrong.** Exporting every private helper enlarges the supported surface instead of fixing the consumer.
-
-**References.** [Relevant guide](../../foundations/module-boundaries-and-public-apis.md) · [Exercise](advanced.md#b-a2--remove-a-deep-import).
+**Exercise.** [B-A2](advanced.md#b-a2--remove-a-deep-import)
 
 ## B-A3 — Assignment and escalation
 
-**Answer.** Ticket rejects assignment in its resolved state. A Domain assignment policy evaluates skill and escalation eligibility across Ticket/Analyst facts. AssignTicket loads the facts, requests the decision, invokes entity behavior and saves.
+The assignment extension reuses Ticket's status vocabulary. It is a focused model for this exercise; it does not copy creation's subject rule. Its stored state is supplied by a reader that checks external data.
 
-**Why / exact owner.** Ticket: its valid state. Policy: cross-object business eligibility. AssignTicket: workflow.
+```ts
+// src/domain/tickets/AssignmentTicket.ts
+import { isTicketStatus, type TicketStatus } from './Ticket'
 
-**Exact files.** domain/tickets/Ticket.ts; domain/tickets/services/TicketAssignmentPolicy.ts; application/tickets/use-cases/AssignTicket.ts; application/tickets/ports/TicketAssignmentReader.ts; application/tickets/ports/TicketRepository.ts (extend only for required saving).
+export interface AssignmentTicketState {
+  readonly id: string
+  readonly status: TicketStatus
+  readonly requiredSkill: string
+  readonly assignedTo: string | null
+}
+export class AssignmentTicket {
+  #state: AssignmentTicketState
+  constructor(state: AssignmentTicketState) {
+    if (!state.id.trim() || !state.requiredSkill.trim() || !isTicketStatus(state.status)) {
+      throw new Error('Invalid assignment ticket')
+    }
+    this.#state = { ...state }
+  }
+  snapshot(): AssignmentTicketState { return { ...this.#state } }
+  assign(analystId: string): boolean {
+    if (this.#state.status === 'resolved') return false
+    if (!analystId.trim()) throw new Error('Invalid analyst identity')
+    this.#state = { ...this.#state, assignedTo: analystId }
+    return true
+  }
+}
+```
 
-**Dependency direction.** Application → Domain policy/entity and required contracts; implementations → inward contracts.
+Import `decideAssignment` and `AnalystFacts` from the [canonical policy](../../foundations/domain-modeling/README.md). [Domain](../../../GLOSSARY.md#domain) combines the supplied skill/supervisor facts; [Application](../../../GLOSSARY.md#application-layer) obtains them.
 
-**What remains unchanged.** HTTP translation and storage mechanism when eligibility alone changes.
+```ts
+// src/application/tickets/AssignTicket.ts
+import { AssignmentTicket } from '@/domain/tickets/AssignmentTicket'
+import { decideAssignment, type AnalystFacts } from '@/domain/tickets/services/TicketAssignmentPolicy'
 
-**Why a tempting alternative is wrong.** A Domain Service that queries Prisma mixes the business decision with how facts are loaded.
+export interface AssignmentFactsReader {
+  ticket(id: string): Promise<AssignmentTicket | null>
+  analyst(id: string): Promise<AnalystFacts | null>
+}
+export interface AssignmentWriter {
+  save(ticket: AssignmentTicket): Promise<void>
+}
+export type AssignResult =
+  | { ok: true }
+  | { ok: false; reason: 'not-found' | 'resolved' | 'missing-skill' | 'supervisor-required' }
 
-**References.** [Relevant guide](../3-nestjs-building-blocks.md#3-service-does-not-tell-you-its-responsibility) · [Exercise](advanced.md#b-a3--assignment-and-escalation).
+export class AssignTicket {
+  constructor(
+    private readonly facts: AssignmentFactsReader,
+    private readonly writer: AssignmentWriter,
+  ) {}
+  async execute(ticketId: string, analystId: string, escalation: boolean): Promise<AssignResult> {
+    const ticket = await this.facts.ticket(ticketId)
+    const analyst = await this.facts.analyst(analystId)
+    if (!ticket || !analyst) return { ok: false, reason: 'not-found' }
+    const decision = decideAssignment(
+      { requiredSkill: ticket.snapshot().requiredSkill, escalation }, analyst,
+    )
+    if (!decision.allowed) return { ok: false, reason: decision.reason }
+    if (!ticket.assign(analystId)) return { ok: false, reason: 'resolved' }
+    await this.writer.save(ticket)
+    return { ok: true }
+  }
+}
+```
+
+The policy and entity can independently reject assignment; if several rules fail, this workflow reports policy rejection first. HTTP parsing and database implementations are omitted. The assignment writer is purpose-specific: it does not widen creation's insert-only contract to accept a different representation.
+
+This read/decide/save example does not establish concurrent-assignment safety. A real operation requiring that guarantee must specify and implement suitable persistence control.
+
+**Exercise.** [B-A3](advanced.md#b-a3--assignment-and-escalation)
+
+[Exercise route](README.md)

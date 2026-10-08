@@ -1,10 +1,23 @@
 > **[Model-View-ViewModel](README.md)** › Testing.
 
-## 4. Testing in MVVM
+<a id="4-testing-in-mvvm"></a>
+
+# Testing in MVVM
 
 The [ViewModel](../../../../GLOSSARY.md#viewmodel) boundary lets tests exercise presentation behavior without concrete controls. Pure classes can be constructed directly; React Hooks must run inside a React harness.
 
-### 4.1 The ViewModel tests headless
+**Contents**
+
+- [The ViewModel tests headless](#the-viewmodel-tests-headless)
+- [The Model tests like a pure object](#the-model-tests-like-a-pure-object)
+- [Commands test the seam, substitutes fill it](#commands-test-the-seam-substitutes-fill-it)
+- [The View and binding need tests](#the-view-and-binding-need-tests)
+- [The pyramid, restated for MVVM](#the-pyramid-restated-for-mvvm)
+- [Sources](#sources)
+
+<a id="41-the-viewmodel-tests-headless"></a>
+
+## The ViewModel tests headless
 
 This Vitest test uses `CancelOrderViewModel` from [The Three Parts](1-the-three-parts.md). The controlled promise makes the pending state observable; a synchronous catalog lookup would not test that behavior.
 
@@ -27,13 +40,17 @@ test('shows pending state and the application outcome', async () => {
 
 Test duplicate command suppression, unexpected failure, notifications and disposal of listeners as separate requirements. There is no universal count or percentage of [ViewModel](../../../../GLOSSARY.md#viewmodel) tests.
 
-### 4.2 The Model tests like a pure object
+<a id="42-the-model-tests-like-a-pure-object"></a>
+
+## The Model tests like a pure object
 
 Test authoritative policy in its owner, independently of display text or framework rendering. See [Clean testing](../../../styles/clean-architecture/5-testing-in-clean.md) for the same cancellation rule and persistence precondition.
 
 <a id="43-commands-test-the-seam-fakes-fill-it"></a>
 
-### 4.3 Commands test the seam, substitutes fill it
+<a id="43-commands-test-the-seam-substitutes-fill-it"></a>
+
+## Commands test the seam, substitutes fill it
 
 A [stub](../../../../GLOSSARY.md#stub) supplies application outcomes; a [spy](../../../../GLOSSARY.md#spy) records command arguments; a [fake](../../../../GLOSSARY.md#fake) implements simplified application behavior. `vi.fn().mockResolvedValue(...)` is not automatically a fake.
 
@@ -41,11 +58,15 @@ For a React Hook, use `renderHook` and `act` from React Testing Library. Supply 
 
 <a id="44-the-view-is-the-part-you-test-least"></a>
 
-### 4.4 The View and binding need tests
+<a id="44-the-view-and-binding-need-tests"></a>
+
+## The View and binding need tests
 
 Framework correctness does not prove that the feature binds the right property, forwards the right id, disables during a command, releases subscriptions or exposes accessible feedback. Test those behaviors through rendered controls. Also cover async completion after unmount and critical integrated journeys where applicable.
 
-### 4.5 The pyramid, restated for MVVM
+<a id="45-the-pyramid-restated-for-mvvm"></a>
+
+## The pyramid, restated for MVVM
 
 | Scope | What it establishes |
 | --- | --- |

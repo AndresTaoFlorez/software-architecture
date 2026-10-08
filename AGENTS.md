@@ -8,6 +8,14 @@ Before editing, read:
 4. [Code Placement](architecture/foundations/code-placement.md)
 5. [Guide Template](architecture/conventions/architecture-guide-template.md)
 
+**Contents**
+
+- [Editorial rules](#editorial-rules)
+- [Heading and reading structure](#heading-and-reading-structure)
+- [Architecture and structure](#architecture-and-structure)
+- [Diagrams and review](#diagrams-and-review)
+- [Documentation-only repository](#documentation-only-repository)
+
 ## Editorial rules
 
 - Start with a familiar problem, show the mechanism, name the concept and explain its consequence.
@@ -19,6 +27,17 @@ Before editing, read:
 - Keep each guide within its subject. Adjacent disciplines require their own rigorous guide under Extras.
 - Use the TypeScript-first teaching sequence before framework conveniences. Use established infrastructure implementations.
 - Remove example details that do not affect the architectural conclusion.
+
+## Heading and reading structure
+
+- Choose heading depth by the actual relationship; do not impose a fixed number of H1 headings.
+- Group related responsibilities under a shared H2 and use H3 for their explanations.
+- Remove decorative title numbering; preserve filenames and exercise identifiers.
+- Add an H2/H3 contents list after the introduction when a document has three or more main sections. Short route maps and the glossary retain their own navigation.
+- Preserve previous anchors with explicit identifiers and link internally to current headings.
+- Keep the common reading route and previous/next navigation aligned with the repository README.
+- Intermediate/advanced exercises need starting code, an observable requirement and a concrete separate solution.
+- General concepts have canonical framework-independent explanations; frontend/backend pages apply them.
 
 ## Architecture and structure
 
@@ -38,7 +57,8 @@ Before editing, read:
 - Use compact concrete nodes, muted colors and explicit connector semantics: source dependencies dashed/light, calls solid/strong, composition distinct/secondary.
 - Preserve stable anchors and inspect every changed relative link after moves.
 - Review substantial changes in three passes: pedagogy, architectural rigor and mechanical consistency.
-- Temporary local snippet and Mermaid validation is allowed. Report its scope accurately.
+- Temporary local snippet and Mermaid validation is allowed. Report type checking, execution, framework review and visual inspection separately.
+- Inspect all diagrams in light/dark and narrow/desktop views. [Parser](GLOSSARY.md#parser) success does not establish readability; labels must be complete when opened or enlarged.
 
 ## Documentation-only repository
 

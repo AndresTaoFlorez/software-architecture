@@ -1,24 +1,44 @@
 > **[Model-View-ViewModel](README.md)** › The Three Parts. Full reference list: [References](references.md).
 
-## 1. The Three Parts
+<a id="1-the-three-parts"></a>
+
+# The Three Parts
 
 Consider an Orders screen. The user clicks **Cancel**, the button is disabled during saving, and an error message appears if saving fails. The part that draws the button does not have to decide what `isSaving` or `errorMessage` should be. A separate [ViewModel](../../../../GLOSSARY.md#viewmodel) can expose those values and a `cancel()` operation; the [View](../../../../GLOSSARY.md#view) displays them and forwards the click. The underlying [Model](../../../../GLOSSARY.md#model) supplies the order information and cancellation behavior needed by that screen.
 
 John Gossman's 2005 WPF formulation names this screen-oriented part a model of the view. Fowler's earlier [Presentation Model](../../../../GLOSSARY.md#presentation-model) describes a related approach. Both separate screen state/behavior from concrete controls; [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-mvvm) also draws on declarative binding. This relationship does not make every reactive framework an MVVM application.
 
-### 1.1 Model
+**Contents**
+
+- [Roles and responsibilities](#roles-and-responsibilities)
+  - [Model](#model)
+  - [View](#view)
+  - [ViewModel](#viewmodel)
+- [Where did the Controller go?](#where-did-the-controller-go)
+- [The one rule that holds it together](#the-one-rule-that-holds-it-together)
+- [Sources](#sources)
+
+## Roles and responsibilities
+
+<a id="11-model"></a>
+
+### Model
 
 The [Model](../../../../GLOSSARY.md#model) supplies the non-view capabilities/state the [ViewModel](../../../../GLOSSARY.md#viewmodel) works with. In a layered application, these may be [Application](../../../../GLOSSARY.md#application-layer) operations, [Domain](../../../../GLOSSARY.md#domain) objects or results. The role is broader than a folder named `domain/` or the [Clean Entities](../../../../GLOSSARY.md#clean-entities-circle) circle.
 
 The Model does not depend on concrete screens. It may expose change notifications when other actors change its state; [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-mvvm) does not forbid observability. Authoritative business rules stay here or further inward, rather than in display derivations.
 
-### 1.2 View
+<a id="12-view"></a>
+
+### View
 
 The [View](../../../../GLOSSARY.md#view) renders values and forwards user intent through the [ViewModel](../../../../GLOSSARY.md#viewmodel) contract. It owns visual details such as layout, focus, hover and animation. Local visual state is allowed; state whose meaning must survive replacing the controls belongs outside those controls.
 
 A declarative template can bind to values and commands. It still needs tests for the correct binding, event arguments and accessibility. [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-mvvm) is not synonymous with Fowler's [Passive View](../../../../GLOSSARY.md#passive-view): binding to a ViewModel is a different arrangement from an externally driven view interface.
 
-### 1.3 ViewModel
+<a id="13-viewmodel"></a>
+
+### ViewModel
 
 The [ViewModel](../../../../GLOSSARY.md#viewmodel) owns display-ready state, derived values, pending/error feedback and view commands. It does not reference concrete controls and does not implement HTTP/database clients or authoritative business [invariants](../../../../GLOSSARY.md#invariant).
 
@@ -56,11 +76,15 @@ export class CancelOrderViewModel {
 
 WPF ViewModels may use `ICommand` and notification contracts; independence from concrete controls does not mean total UI-toolkit independence. A React [custom Hook](../../../../GLOSSARY.md#custom-hook) may intentionally own the same presentation role while depending on React and needing a React test harness.
 
-### 1.4 Where did the Controller go?
+<a id="14-where-did-the-controller-go"></a>
+
+## Where did the Controller go?
 
 In the WPF formulation, controls handle device interaction and [ViewModel](../../../../GLOSSARY.md#viewmodel) commands handle semantic intent. This is a shift in responsibility, not a universal historical claim that every [Controller](../../../../GLOSSARY.md#controller) was renamed. [MVC](../../../../GLOSSARY.md#model-view-controller-mvc) variants and server MVC use different arrangements.
 
-### 1.5 The one rule that holds it together
+<a id="15-the-one-rule-that-holds-it-together"></a>
+
+## The one rule that holds it together
 
 Keep the [Model](../../../../GLOSSARY.md#model) independent of concrete [View](../../../../GLOSSARY.md#view) controls, put screen-oriented state/commands in the [ViewModel](../../../../GLOSSARY.md#viewmodel), and have the View consume that contract. Clean/Onion separately constrain where underlying application and domain policy lives.
 

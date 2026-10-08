@@ -7,7 +7,31 @@
 
 ← [Repository home](../../../../README.md) · [Glossary](../../../../GLOSSARY.md) · [Code placement](../../../foundations/code-placement.md) · [Naming](../../../conventions/naming-and-file-placement.md)
 
-## 1. History and origin
+**Contents**
+
+- [History and origin](#history-and-origin)
+- [What problem does MVC solve?](#what-problem-does-mvc-solve)
+- [Fit and cost](#fit-and-cost)
+  - [When MVC is a strong fit](#when-mvc-is-a-strong-fit)
+  - [When MVC is a weak fit or poor label](#when-mvc-is-a-weak-fit-or-poor-label)
+- [Mental model and roles](#mental-model-and-roles)
+  - [Model](#model)
+  - [View](#view)
+  - [Controller](#controller)
+  - [Important scope rule](#important-scope-rule)
+- [Practical isolation inside a layered application](#practical-isolation-inside-a-layered-application)
+- [Physical structure](#physical-structure)
+- [Where does a new function go?](#where-does-a-new-function-go)
+- [Naming](#naming)
+- [First feature end to end](#first-feature-end-to-end)
+- [Testing](#testing)
+- [Trade-offs and failure modes](#trade-offs-and-failure-modes)
+- [Learning path](#learning-path)
+- [Sources](#sources)
+
+<a id="1-history-and-origin"></a>
+
+## History and origin
 
 Trygve Reenskaug developed the original [MVC](../../../../GLOSSARY.md#model-view-controller-mvc) ideas while visiting Xerox PARC in **1978–1979**. His December 1979 note *[Models](../../../../GLOSSARY.md#model)–[Views](../../../../GLOSSARY.md#view)–[Controllers](../../../../GLOSSARY.md#controller)* defined the terms Model, View and Controller for interactive user interfaces.
 
@@ -15,7 +39,9 @@ Original report: https://doi.org/10.5281/zenodo.3676092
 
 The label later evolved across Smalltalk, desktop frameworks, server-side web frameworks and JavaScript libraries. "MVC" therefore has to be interpreted in context rather than treated as one universal folder layout.
 
-## 2. What problem does MVC solve?
+<a id="2-what-problem-does-mvc-solve"></a>
+
+## What problem does MVC solve?
 
 Consider an order screen with a **Cancel** button. The screen must show the current status, interpret the click as a cancellation request, and update the information after the operation. If all three jobs are buried in one UI handler, it becomes difficult to change the screen or test the behavior independently.
 
@@ -24,6 +50,7 @@ In classic [MVC](../../../../GLOSSARY.md#model-view-controller-mvc), the **[Mode
 In the diagram, follow the user's action through the Controller and Model. The dotted connection indicates that the View can be notified when the represented information changes; the diagram is a conceptual interaction, not a source-import policy.
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart LR
     USER["User"] --> CONTROLLER["Controller"]
     CONTROLLER --> MODEL["Model"]
@@ -34,7 +61,11 @@ flowchart LR
 
 MVC does not define database architecture, application-layer [ports](../../../../GLOSSARY.md#port), deployment topology or domain boundaries. It is primarily a presentation pattern.
 
-## 3. When MVC is a strong fit
+## Fit and cost
+
+<a id="3-when-mvc-is-a-strong-fit"></a>
+
+### When MVC is a strong fit
 
 [MVC](../../../../GLOSSARY.md#model-view-controller-mvc) is useful when:
 
@@ -44,7 +75,9 @@ MVC does not define database architecture, application-layer [ports](../../../..
 - the framework being used has a genuine MVC interaction model;
 - independent testing of Model/[Controller](../../../../GLOSSARY.md#controller) behavior has value.
 
-## 4. When MVC is a weak fit or poor label
+<a id="4-when-mvc-is-a-weak-fit-or-poor-label"></a>
+
+### When MVC is a weak fit or poor label
 
 Avoid forcing [MVC](../../../../GLOSSARY.md#model-view-controller-mvc) onto every component framework.
 
@@ -59,9 +92,12 @@ Modern React/Vue/Svelte applications can apply separated-presentation ideas with
 
 <a id="the-triad-in-one-picture"></a>
 
-## 5. Mental model and roles
+<a id="5-mental-model-and-roles"></a>
+
+## Mental model and roles
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart LR
     U["User"] --> C["Controller"]
     C --> M["Model"]
@@ -70,11 +106,17 @@ flowchart LR
     M -. "observed change" .-> V
 ```
 
-| Role | Owns | Put here | Do not put here |
-| --- | --- | --- | --- |
-| [Model](../../../../GLOSSARY.md#model) | represented information and behavior | state/rules independent from concrete UI | DOM/widget rendering, controller-specific input handling |
-| [View](../../../../GLOSSARY.md#view) | presentation of state | rendering, templates, display formatting, forwarding gestures | authoritative business/application policy |
-| [Controller](../../../../GLOSSARY.md#controller) | interpretation of input | deciding what a gesture means and invoking the relevant operation | rendering, persistent domain state, business [invariants](../../../../GLOSSARY.md#invariant) |
+### Model
+
+Hold represented state and its behavior independently of concrete screens. An observable order model announces a change; the View can read its current values.
+
+### View
+
+Render the Model's values and forward gestures. The View subscribes to change notifications in the classic variant shown here. Formatting belongs to display; the order's business rule belongs to its model or the wider application's policy.
+
+### Controller
+
+Interpret a gesture and invoke the relevant operation. Cancelling through a Controller does not make it the owner of order validity or rendering.
 
 <a id="a-warning-about-the-acronym"></a>
 
@@ -89,15 +131,18 @@ In a Clean/Onion application:
 
 MVC and Clean/Onion answer different questions.
 
-## 6. Practical isolation inside a layered application
+<a id="6-practical-isolation-inside-a-layered-application"></a>
+
+## Practical isolation inside a layered application
 
 A modern layered mapping can look like this:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     PRES["Presentation"]
-    PRES --> V["View / component"]
-    PRES --> C["Controller-like action / event adapter"]
+    PRES --> V["View<br/>component"]
+    PRES --> C["Controller-like action<br/>event adapter"]
     C --> APP["Application use case"]
     APP --> DOMAIN["Domain"]
     INFRA["Infrastructure"] --> APP
@@ -111,7 +156,9 @@ Why isolate the [Controller](../../../../GLOSSARY.md#controller)-like [Presentat
 
 The [View](../../../../GLOSSARY.md#view) should not call an HTTP client simply because the button lives nearby if the operation contains application policy that has its own boundary.
 
-## 7. Physical structure
+<a id="7-physical-structure"></a>
+
+## Physical structure
 
 Keep the canonical `domain/`, `application/`, `infrastructure/`, `presentation/` and `composition/` layers. [MVC](../../../../GLOSSARY.md#model-view-controller-mvc) roles describe how [Presentation](../../../../GLOSSARY.md#presentation-layer) interprets gestures and renders the represented data; they do not introduce another top-level architecture.
 
@@ -128,15 +175,18 @@ Keep the canonical `domain/`, `application/`, `infrastructure/`, `presentation/`
 
 Presentation begins with the same capability-owned pages/components/hooks/state convention as the [canonical frontend guide](../../../frontend/README.md). These paths are handbook conventions, not a filesystem prescribed by classic MVC. The [backend guide](../../../backend/README.md) separately places incoming HTTP/CLI code.
 
-## 8. Where does a new function go?
+<a id="8-where-does-a-new-function-go"></a>
+
+## Where does a new function go?
 
 First decide whether the function is even an [MVC](../../../../GLOSSARY.md#model-view-controller-mvc) [Presentation](../../../../GLOSSARY.md#presentation-layer) concern:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     Q{"Why does this function exist?"}
-    Q -->|"Renders / formats for screen"| V["View / presentation ui"]
-    Q -->|"Interprets UI gesture"| C["Controller-like presentation action"]
+    Q -->|"Renders / formats for screen"| V["View<br/>presentation ui"]
+    Q -->|"Interprets UI gesture"| C["Controller-like presentation<br/>action"]
     Q -->|"Business/application rule"| INNER["Application or Domain"]
     Q -->|"HTTP / DB / SDK detail"| I["Infrastructure"]
 ```
@@ -164,7 +214,9 @@ Types and helpers follow the same ownership rule:
 
 Source references may point from View/Controller or [ViewModel](../../../../GLOSSARY.md#viewmodel) to their inward model/application contract. The represented [Model](../../../../GLOSSARY.md#model) must not name concrete controls. In the strict layering convention here, Presentation cannot import Infrastructure or a container; [type-only imports](../../../../GLOSSARY.md#type-only-import) count. Runtime state notifications are distinct from these source references.
 
-## 9. Naming
+<a id="9-naming"></a>
+
+## Naming
 
 Use **[Naming and File Placement Conventions](../../../conventions/naming-and-file-placement.md)**.
 
@@ -180,9 +232,11 @@ Recommended examples:
 
 Do not name an [Application](../../../../GLOSSARY.md#application-layer) [use case](../../../../GLOSSARY.md#use-case) `OrderController` merely because the UI invokes it. Names should expose the role actually owned by the file.
 
-## 10. First feature end to end
+<a id="10-first-feature-end-to-end"></a>
 
-A clerk clicks Cancel. The Controller interprets the gesture, the Model updates screen state around an Application operation, and the View observes that Model. This is an observer-based MVC variant.
+## First feature end to end
+
+A clerk clicks Cancel. The Controller interprets the gesture, the Model updates screen state around an [Application](../../../../GLOSSARY.md#application-layer) operation, and the View observes that Model. This is an observer-based MVC variant.
 
 ```ts
 // presentation/orders/state/CancellationModel.ts
@@ -234,7 +288,9 @@ The [cancellation example](../../../styles/clean-architecture/4-building-a-featu
 
 <a id="complete-implementation"></a>
 
-## 11. Testing
+<a id="11-testing"></a>
+
+## Testing
 
 | Scope | Test | Why |
 | --- | --- | --- |
@@ -246,7 +302,9 @@ The [cancellation example](../../../styles/clean-architecture/4-building-a-featu
 
 See **[Testing in MVC](4-testing-in-mvc.md)** for the deeper treatment.
 
-## 12. Trade-offs and failure modes
+<a id="12-trade-offs-and-failure-modes"></a>
+
+## Trade-offs and failure modes
 
 Common decay modes:
 
@@ -262,7 +320,9 @@ MVC is useful only when the role separation makes ownership clearer than the fra
 
 <a id="where-to-start"></a>
 
-## 13. Learning path
+<a id="13-learning-path"></a>
+
+## Learning path
 
 1. **[The Three Parts](1-the-three-parts.md)**
 2. **[The Flow](2-the-flow.md)**

@@ -1,6 +1,6 @@
 > **[Onion Architecture](README.md)** › References.
 
-## References
+# References
 
 - **Beck, K.** (2002). *Test-Driven Development: By Example*. Addison-Wesley. (Tests as a design tool.)
 - **Cockburn, A.** (2005). *[Hexagonal Architecture](../../../GLOSSARY.md#hexagonal-architecture-ports-and-adapters) (Ports and Adapters)*.

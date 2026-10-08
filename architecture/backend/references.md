@@ -2,6 +2,13 @@
 
 The TypeScript examples teach boundary mechanisms. Nest and Prisma fragments are framework illustrations rather than a runnable backend. Use these primary references for their behavior.
 
+**Contents**
+
+- [HTTP and TypeScript mechanisms](#http-and-typescript-mechanisms)
+- [NestJS mechanisms](#nestjs-mechanisms)
+- [Persistence illustration](#persistence-illustration)
+- [Architectural ideas](#architectural-ideas)
+
 ## HTTP and TypeScript mechanisms
 
 - [MDN: HTTP messages](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Messages)
