@@ -34,10 +34,10 @@ A source dependency is a reference to another module, including an import of a t
 | [Domain](../../GLOSSARY.md#domain) | Business concepts and rules | Domain |
 | [Application](../../GLOSSARY.md#application-layer) | Workflows and their contracts | Application, Domain |
 | [Infrastructure](../../GLOSSARY.md#infrastructure) | External integrations | Infrastructure, Application, Domain |
-| [Presentation](../../GLOSSARY.md#presentation-layer) | UI or incoming HTTP/CLI translation | Presentation, Application |
+| [Presentation](../../GLOSSARY.md#presentation-layer) | UI or incoming HTTP/CLI translation | Presentation, Application, public Domain contracts |
 | Composition | Construction and startup | All areas needed for assembly |
 
-This is the handbook's recommended project policy. Architecture authors prescribe dependency direction rather than these folder names. Application may deliberately expose a domain type through its supported contract.
+This is the handbook's recommended project policy. Architecture authors prescribe dependency direction rather than these folder names. Presentation may call a public, pure Domain predicate when it needs only that decision; adding a pass-through Application use case would be ceremonial. Workflows that load facts, modify state or coordinate persistence still belong to Application. This does not allow Presentation to import Infrastructure or bypass a capability's supported public API.
 
 <a id="3-do-not-confuse-runtime-flow-with-source-dependency"></a>
 

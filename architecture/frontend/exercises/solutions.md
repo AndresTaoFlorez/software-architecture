@@ -139,58 +139,29 @@ Composition supplies `GetAgenda` with a reader and passes it to the Page; [F-I3]
 
 ## F-I2 — Move a rule out of React
 
-Reuse `isAppointmentDuration` from the [canonical Appointment module](../presentation-architecture.md#a-small-agenda-operation).
+The [canonical Appointment module](../presentation-architecture.md#a-small-agenda-operation) owns `isAppointmentDuration`: the client's minimum duration for a **new** appointment. It is not a rule for whether historical API rows may be displayed.
 
-```ts
-// src/application/scheduling/contracts/DurationResult.ts
-export type DurationResult =
-  | { ok: true; minutes: number }
-  | { ok: false; reason: 'invalid-duration' }
-```
-
-```ts
-// src/application/scheduling/use-cases/checkAppointmentDuration.ts
-import { isAppointmentDuration } from '@/domain/scheduling/Appointment'
-
-import type { DurationResult } from '../contracts/DurationResult'
-
-export function checkAppointmentDuration(value: unknown): DurationResult {
-  return isAppointmentDuration(value)
-    ? { ok: true, minutes: value }
-    : { ok: false, reason: 'invalid-duration' }
-}
-```
-
-```ts
-// src/presentation/scheduling/formatters/formatDurationResult.ts
-import type { DurationResult } from '@/application/scheduling/contracts/DurationResult'
-
-export function formatDurationResult(result: DurationResult): string {
-  return result.ok ? 'Duration accepted' : 'Choose a valid duration'
-}
-```
+Both UI consumers call the same Domain decision. No Application use case or result wrapper is needed for this pure check:
 
 ```ts
 // src/presentation/scheduling/components/AppointmentCard/durationFeedback.ts
-import { checkAppointmentDuration } from '@/application/scheduling/use-cases/checkAppointmentDuration'
-import { formatDurationResult } from '../../formatters/formatDurationResult'
+import { isAppointmentDuration } from '@/domain/scheduling/Appointment'
 
-export function appointmentCardFeedback(minutes: number) {
-  return formatDurationResult(checkAppointmentDuration(minutes))
+export function appointmentCardFeedback(minutes: number): string {
+  return isAppointmentDuration(minutes) ? 'Duration accepted' : 'Below booking minimum'
 }
 ```
 
 ```ts
 // src/presentation/scheduling/components/AppointmentForm/durationFeedback.ts
-import { checkAppointmentDuration } from '@/application/scheduling/use-cases/checkAppointmentDuration'
-import { formatDurationResult } from '../../formatters/formatDurationResult'
+import { isAppointmentDuration } from '@/domain/scheduling/Appointment'
 
-export function appointmentFormFeedback(value: unknown) {
-  return formatDurationResult(checkAppointmentDuration(value))
+export function appointmentFormFeedback(value: unknown): string {
+  return isAppointmentDuration(value) ? 'Valid duration' : 'Choose a valid duration'
 }
 ```
 
-React components render these messages rather than comparing the minimum again. [Domain](../../../GLOSSARY.md#domain) owns the client rule, [Application](../../../GLOSSARY.md#application-layer) offers the check and [Presentation](../../../GLOSSARY.md#presentation-layer) chooses words. The API server must independently enforce authoritative booking rules; client acceptance proves no booking permission.
+These are Presentation-owned messages, not additional business rules. Changing the minimum from 20 to 30 changes only the Domain predicate; neither UI consumer hardcodes it. The backend independently enforces authoritative booking policy. This direct inward dependency is permitted by the [dependency-boundary convention](../../foundations/dependency-boundaries.md#a-practical-four-area-mapping); introduce an Application operation when there is a workflow to coordinate, not just to forward one predicate.
 
 **Exercise.** [F-I2](intermediate.md#f-i2--move-a-rule-out-of-react)
 
@@ -315,7 +286,6 @@ export interface AgendaApiDto {
 
 ```ts
 // src/infrastructure/http/scheduling/parsers/parseAgendaApiResponse.ts
-import { isAppointmentDuration } from '@/domain/scheduling/Appointment'
 import type { AgendaApiDto } from '../dto/AgendaApiDto'
 
 export function parseAgendaApiResponse(value: unknown): readonly AgendaApiDto[] {
@@ -326,11 +296,9 @@ export function parseAgendaApiResponse(value: unknown): readonly AgendaApiDto[] 
         !('appointment_id' in row) || typeof row.appointment_id !== 'string' || !row.appointment_id ||
         !('start_time' in row) || typeof row.start_time !== 'string' ||
         !Number.isFinite(Date.parse(row.start_time)) ||
-        !('minutes' in row) || typeof row.minutes !== 'number') {
+        !('minutes' in row) || typeof row.minutes !== 'number' || !Number.isFinite(row.minutes)) {
       throw new Error('Invalid agenda response')
     }
-    // Reuse Domain's validity decision; do not redefine its minimum here.
-    if (!isAppointmentDuration(row.minutes)) throw new Error('Invalid appointment duration')
     return { appointment_id: row.appointment_id, start_time: row.start_time, minutes: row.minutes }
   })
 }
@@ -405,7 +373,7 @@ export function AppointmentCard({ appointment }: { appointment: Appointment }) {
 }
 ```
 
-The Parser checks unknown wire fields and reuses [Domain](../../../GLOSSARY.md#domain)'s duration guard; the Mapper renames accepted fields. Malformed rows reject the read rather than disappearing silently. The adapter retains the cause for internal diagnostics; `GetAgenda` and the Hook return safe feedback. HTTP mocks verify these translations, not agreement with a real backend.
+The Parser checks unknown wire fields, including a finite numeric duration; the Mapper renames accepted fields. A historical 15-minute appointment remains readable. The separate [Domain](../../../GLOSSARY.md#domain) minimum applies when evaluating a **new** appointment (F-I2), not when decoding existing records. Malformed representations reject the read rather than disappearing silently. The adapter retains the cause for internal diagnostics; `GetAgenda` and the Hook return safe feedback. HTTP mocks verify these translations, not agreement with a real backend.
 
 **Exercise.** [F-A2](advanced.md#f-a2--split-a-god-hook)
 

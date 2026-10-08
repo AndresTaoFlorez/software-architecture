@@ -1,6 +1,6 @@
 # Architectural Styles
 
-After tracing the [TypeScript ticket](../backend/2-typescript-first-boundaries.md), compare the questions these styles ask:
+After the [shared foundations](../foundations/README.md), follow either the [frontend example](../frontend/README.md) or the [backend example](../backend/README.md). Then compare the questions these framework-independent styles ask:
 
 - [Layered](layered-architecture/README.md): which kinds of work should be separated, and which layers may use others?
 - [Hexagonal / Ports & Adapters](hexagonal-architecture/README.md): which interactions connect the application to replaceable external mechanisms?
@@ -9,6 +9,6 @@ After tracing the [TypeScript ticket](../backend/2-typescript-first-boundaries.m
 
 Their constraints can overlap. They do not prescribe identical models or this handbook's exact folders.
 
-The [backend comparison](../backend/5-architectural-styles-with-nestjs.md) applies all four to one design. The [frontend integration](../frontend/ports-and-adapters.md) applies Hexagonal to a browser client.
+The [backend comparison](../backend/5-architectural-styles-with-nestjs.md) applies all four to one design. The [frontend integration](../frontend/ports-and-adapters.md) applies Hexagonal to a browser client. Neither route is a prerequisite for the other.
 
 [Architecture](../README.md)

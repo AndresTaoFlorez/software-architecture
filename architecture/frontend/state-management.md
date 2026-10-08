@@ -89,9 +89,9 @@ export interface AgendaDraftStorage {
 }
 ```
 
-`application/scheduling/use-cases/SaveAgendaDraft.ts` coordinates saving. `infrastructure/browser/scheduling/adapters/SessionStorageAgendaDraftStorage.ts` implements the contract with browser storage. Its parser checks stored data; Composition supplies that implementation.
+`application/scheduling/use-cases/AgendaDraftOperations.ts` coordinates both loading and saving. `infrastructure/browser/scheduling/adapters/SessionStorageAgendaDraftStorage.ts` implements the contract with browser storage; `infrastructure/browser/scheduling/parsers/parseStoredDraft.ts` checks stored data. Composition supplies the adapter. The [F-A3 solution](exercises/solutions.md#f-a3--recover-a-browser-draft) uses these exact files.
 
-This design lets the operation use a memory implementation without importing `window`. A purely visual preference used only inside a component can instead stay in [Presentation](../../GLOSSARY.md#presentation-layer). A malformed saved draft or failed write is an integration failure that delivery must present appropriately.
+This design lets the operation use a memory implementation without importing `window`. A purely visual preference used only inside a component can instead stay in [Presentation](../../GLOSSARY.md#presentation-layer). An absent draft returns `null`; malformed stored JSON and unavailable reads or writes are integration failures that delivery must present appropriately.
 
 <a id="8-bindings-isolate-the-state-library-when-the-project-needs-that-boundary"></a>
 

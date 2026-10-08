@@ -51,7 +51,7 @@ Solid edges are runtime calls, long dashes are source requirements and short dot
 
 ## Start with an existing operation
 
-Use the [canonical Ticket modules](../../backend/2-typescript-first-boundaries.md). This assembly excerpt changes the mechanism without changing creation:
+Choose the [backend Ticket operation](../../backend/2-typescript-first-boundaries.md) or the [frontend TicketGateway example](../../frontend/ports-and-adapters.md). Both illustrate the same ports-and-adapters relationships; neither requires studying the other. This backend assembly excerpt changes storage without changing creation:
 
 ```ts
 import { CreateTicket } from '@/application/tickets'
@@ -61,7 +61,7 @@ const createTicket = new CreateTicket(new InMemoryTicketRepository(), () => 'T-1
 const result = await createTicket.execute({ subject: 'Broken PDF', description: '' })
 ```
 
-The [CLI exercise](../../backend/exercises/intermediate.md#b-i2--create-from-a-cli) adds another caller. The [frontend example](../../frontend/ports-and-adapters.md) applies the same idea to an application that calls a remote backend.
+The [CLI exercise](../../backend/exercises/intermediate.md#b-i2--create-from-a-cli) adds another caller. In frontend, an HTTP gateway instead adapts a required remote interaction.
 
 ## Placement and dependency decisions
 
