@@ -54,6 +54,7 @@ import { useState } from 'react'
 import type { GetAgenda } from '@/application/scheduling'
 import type { Appointment } from '@/domain/scheduling/Appointment'
 
+// The default day is fixture data for the exercise, not a production date policy.
 export function useAgenda(getAgenda: GetAgenda, initialDay = '2026-10-07') {
   const [selectedDay, setDay] = useState(initialDay)
   const [appointments, setAppointments] = useState<readonly Appointment[]>([])
@@ -373,6 +374,8 @@ export function AppointmentCard({ appointment }: { appointment: Appointment }) {
   return <li>{appointment.id} — {formatAppointmentTime(appointment, 'en-GB', 'UTC')}</li>
 }
 ```
+
+The `en-GB` locale and `UTC` time zone in the Card are illustrative display settings; a real screen should receive the user's chosen locale and the scheduling time zone from its configuration.
 
 The Parser checks unknown wire fields, including a finite positive duration; the Mapper renames accepted fields. A historical 15-minute appointment remains readable. The separate [Domain](../../../GLOSSARY.md#domain) minimum applies when evaluating a **new** appointment (F-I2), not when decoding existing records. Malformed representations reject the read rather than disappearing silently. The adapter retains the cause for internal diagnostics; `GetAgenda` and the Hook return safe feedback. HTTP mocks verify these translations, not agreement with a real backend.
 
