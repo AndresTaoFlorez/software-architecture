@@ -324,7 +324,7 @@ A server framework registers handlers, a Pipe applies argument parsing, and a co
 
 A receptionist requests `GET /agenda?day=2026-10-07`. A **query [Parser](../../GLOSSARY.md#parser)** checks unknown HTTP query data and produces `AgendaQueryDto`. `GetAgenda` coordinates reading that day through an application-owned `AgendaReader` contract.
 
-`PrismaAgendaReader` implements the read with database queries and translates records into `AgendaResult`. `AgendaController` maps the result into `AgendaResponseDto`. The same ownership rules apply to a read; no business entity is required solely to return a list.
+`PrismaAgendaReader` implements the read and translates records into `AgendaItem` values. The HTTP handler maps them into `AgendaResponseDto`. The [B-I3 solution](exercises/solutions.md#b-i3--read-an-agenda) shows each owned file. The same ownership rules apply to a read; no business entity is required solely to return a list.
 
 A CLI instead checks command-line options in its own Parser, invokes an existing operation, and maps its result into messages and exit codes. Sharing the operation keeps delivery syntax separate.
 

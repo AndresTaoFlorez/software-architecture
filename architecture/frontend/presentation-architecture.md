@@ -147,8 +147,8 @@ export function AgendaPage({ getAgenda }: { getAgenda: GetAgenda }) {
   const agenda = useAgenda(getAgenda)
   return (
     <main>
-      <AgendaToolbar selectedDay={agenda.selectedDay} onDayChange={agenda.selectDay} />
-      <AgendaCalendar appointments={agenda.appointments} busy={agenda.busy} />
+      <AgendaToolbar selectedDay={agenda.selectedDay} busy={agenda.busy} onDayChange={agenda.selectDay} />
+      <AgendaCalendar appointments={agenda.appointments} />
     </main>
   )
 }

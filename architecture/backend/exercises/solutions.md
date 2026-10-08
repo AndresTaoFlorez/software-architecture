@@ -71,12 +71,12 @@ Verify 100 and 101 units, blank input, `isTicketStatus('reopened')` and the lite
 
 ## B-I2 — Create from a CLI
 
-CLI syntax and feedback belong to [Presentation](../../../GLOSSARY.md#presentation-layer). The same [Application](../../../GLOSSARY.md#application-layer) operation and [Domain](../../../GLOSSARY.md#domain) rule are reused.
+CLI parsing and feedback belong to [Presentation](../../../GLOSSARY.md#presentation-layer). Reuse the existing creation operation and Ticket rule; do not import the HTTP parser.
 
 ```ts
-// src/presentation/cli/tickets/createTicketCli.ts
+// src/presentation/cli/tickets/parsers/parseCreateTicketArgs.ts
 import { parseArgs } from 'node:util'
-import type { CreateTicket, CreateTicketCommand } from '@/application/tickets'
+import type { CreateTicketCommand } from '@/application/tickets'
 
 export class InvalidCliInput extends Error {}
 export function parseCreateTicketArgs(args: readonly string[]): CreateTicketCommand {
@@ -93,7 +93,19 @@ export function parseCreateTicketArgs(args: readonly string[]): CreateTicketComm
     throw new InvalidCliInput('Use --subject <text> --description <text>')
   }
 }
+```
+
+```ts
+// src/presentation/cli/tickets/dto/CliFeedback.ts
 export interface CliFeedback { code: 0 | 1 | 2; message: string }
+```
+
+```ts
+// src/presentation/cli/tickets/handlers/createTicketCli.ts
+import type { CreateTicket, CreateTicketCommand } from '@/application/tickets'
+import { InvalidCliInput, parseCreateTicketArgs } from '../parsers/parseCreateTicketArgs'
+import type { CliFeedback } from '../dto/CliFeedback'
+
 export async function createTicketCli(
   args: readonly string[],
   create: Pick<CreateTicket, 'execute'>,
@@ -117,7 +129,7 @@ export async function createTicketCli(
 import { randomUUID } from 'node:crypto'
 import { CreateTicket } from '@/application/tickets'
 import { InMemoryTicketRepository } from '@/infrastructure/persistence/tickets/adapters/InMemoryTicketRepository'
-import { createTicketCli } from '@/presentation/cli/tickets/createTicketCli'
+import { createTicketCli } from '@/presentation/cli/tickets/handlers/createTicketCli'
 
 export async function main(args: readonly string[]) {
   const create = new CreateTicket(new InMemoryTicketRepository(), randomUUID)
@@ -125,21 +137,36 @@ export async function main(args: readonly string[]) {
 }
 ```
 
-A Node entry invokes `main(process.argv.slice(2))`, prints its message and sets `process.exitCode`. Those process calls are omitted from this testable assembly. Memory lasts only for this process; production startup supplies durable storage when required. Unexpected operation defects propagate to the entry's error handling rather than becoming normal business rejection.
+A Node entry invokes `main(process.argv.slice(2))`, prints the message and sets `process.exitCode`. Those process calls are omitted from this testable assembly. Memory lasts only for the process. Unexpected defects propagate to the entry's error handling.
 
 **Exercise.** [B-I2](intermediate.md#b-i2--create-from-a-cli)
 
 ## B-I3 — Read an agenda
 
-[Application](../../../GLOSSARY.md#application-layer) owns the requested read and its representation; [Presentation](../../../GLOSSARY.md#presentation-layer) owns query syntax and HTTP output. These modules are complete plain TypeScript.
+[Application](../../../GLOSSARY.md#application-layer) owns the read contract and operation. HTTP [Presentation](../../../GLOSSARY.md#presentation-layer) owns query syntax and the response representation. Each listing below names its physical file.
 
 ```ts
-// src/application/scheduling/Agenda.ts
+// src/application/scheduling/contracts/AgendaItem.ts
 export interface AgendaItem { id: string; startsAt: string }
+```
+
+```ts
+// src/application/scheduling/ports/AgendaReader.ts
+import type { AgendaItem } from '../contracts/AgendaItem'
+
 export class AgendaReadUnavailable extends Error {}
 export interface AgendaReader {
   read(day: string): Promise<readonly AgendaItem[]>
 }
+```
+
+The known read failure belongs to `application/scheduling/ports/AgendaReader.ts`: it is part of the interaction promised by that contract, not a database-specific error.
+
+```ts
+// src/application/scheduling/use-cases/GetAgenda.ts
+import type { AgendaItem } from '../contracts/AgendaItem'
+import type { AgendaReader } from '../ports/AgendaReader'
+
 export class GetAgenda {
   constructor(private readonly reader: AgendaReader) {}
   execute(day: string): Promise<readonly AgendaItem[]> { return this.reader.read(day) }
@@ -147,13 +174,24 @@ export class GetAgenda {
 ```
 
 ```ts
-// src/presentation/http/scheduling/agendaHttp.ts
-import { AgendaReadUnavailable, type GetAgenda, type AgendaItem } from '@/application/scheduling/Agenda'
-
+// src/presentation/http/scheduling/dto/AgendaQueryDto.ts
 export interface AgendaQueryDto { day: string }
+```
+
+```ts
+// src/presentation/http/scheduling/dto/AgendaResponseDto.ts
+export interface AgendaResponseDto {
+  appointments: readonly { id: string; startsAt: string }[]
+}
+```
+
+```ts
+// src/presentation/http/scheduling/parsers/parseAgendaQuery.ts
+import type { AgendaQueryDto } from '../dto/AgendaQueryDto'
+
 export class InvalidAgendaQuery extends Error {}
 export function parseAgendaQuery(value: unknown): AgendaQueryDto {
-  if (typeof value !== 'object' || value === null || !('day' in value) ||
+  if (typeof value !== 'object' || value === null || Array.isArray(value) || !('day' in value) ||
       typeof value.day !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value.day)) {
     throw new InvalidAgendaQuery()
   }
@@ -163,10 +201,25 @@ export function parseAgendaQuery(value: unknown): AgendaQueryDto {
   }
   return { day: value.day }
 }
-export interface AgendaResponseDto { appointments: readonly AgendaItem[] }
+```
+
+```ts
+// src/presentation/http/scheduling/mappers/mapAgendaResponse.ts
+import type { AgendaItem } from '@/application/scheduling/contracts/AgendaItem'
+import type { AgendaResponseDto } from '../dto/AgendaResponseDto'
+
 export function mapAgendaResponse(items: readonly AgendaItem[]): AgendaResponseDto {
   return { appointments: items.map(item => ({ id: item.id, startsAt: item.startsAt })) }
 }
+```
+
+```ts
+// src/presentation/http/scheduling/handlers/agendaHttp.ts
+import { AgendaReadUnavailable } from '@/application/scheduling/ports/AgendaReader'
+import type { GetAgenda } from '@/application/scheduling/use-cases/GetAgenda'
+import { InvalidAgendaQuery, parseAgendaQuery } from '../parsers/parseAgendaQuery'
+import { mapAgendaResponse } from '../mappers/mapAgendaResponse'
+
 export async function agendaHttp(query: unknown, getAgenda: GetAgenda) {
   let day: string
   try { day = parseAgendaQuery(query).day }
@@ -183,10 +236,10 @@ export async function agendaHttp(query: unknown, getAgenda: GetAgenda) {
 ```
 
 ```ts
-// src/infrastructure/persistence/scheduling/PrismaAgendaReader.ts
-import { AgendaReadUnavailable, type AgendaReader } from '@/application/scheduling/Agenda'
+// src/infrastructure/persistence/scheduling/adapters/PrismaAgendaReader.ts
+import { AgendaReadUnavailable, type AgendaReader } from '@/application/scheduling/ports/AgendaReader'
 
-// Driver-shaped seam for the excerpt, not a generated Prisma client type.
+// Driver-shaped abstraction for this excerpt, not a generated Prisma client.
 export interface AgendaDatabase {
   list(day: string): Promise<readonly { appointment_id: string; start_time: Date }[]>
 }
@@ -201,7 +254,21 @@ export class PrismaAgendaReader implements AgendaReader {
 }
 ```
 
-Startup constructs `new GetAgenda(new PrismaAgendaReader(db))` and supplies it to the handler. The driver query and Nest decorators are omitted; a real integration implements `list` and verifies its day-filter/time-zone meaning. This example's mapping assumes typed database rows. The stored cause is for internal diagnostics; HTTP returns only the stable failure code.
+Composition wires the modules above with a supplied database abstraction:
+
+```ts
+// src/composition/scheduling/createAgendaHttp.ts
+import { GetAgenda } from '@/application/scheduling/use-cases/GetAgenda'
+import { PrismaAgendaReader, type AgendaDatabase } from '@/infrastructure/persistence/scheduling/adapters/PrismaAgendaReader'
+import { agendaHttp } from '@/presentation/http/scheduling/handlers/agendaHttp'
+
+export function createAgendaHttp(db: AgendaDatabase) {
+  const getAgenda = new GetAgenda(new PrismaAgendaReader(db))
+  return (query: unknown) => agendaHttp(query, getAgenda)
+}
+```
+
+The handler parses before calling the operation: invalid day returns 400 without querying; valid rows map to a 200 response; a known unavailable read becomes 503. Unknown defects propagate. The stored cause stays internal. The query implementation and Nest bindings are omitted; testing this abstraction does not establish a real Prisma integration or its day-filter meaning.
 
 **Exercise.** [B-I3](intermediate.md#b-i3--read-an-agenda)
 
@@ -250,7 +317,7 @@ export function createTicketDelivery(makeId: () => string) {
 The [canonical application entry](../2-typescript-first-boundaries.md) already exports `CreateTicket`, its command and result. Billing consumes that entry and receives the operation:
 
 ```ts
-// src/application/billing/BillingTickets.ts
+// src/application/billing/use-cases/BillingTickets.ts
 import type { CreateTicket, CreateTicketCommand, CreateTicketResult } from '@/application/tickets'
 
 export class BillingTickets {
@@ -269,53 +336,80 @@ Do not export private helpers or all storage symbols to make the import pass. Ty
 
 ## B-A3 — Assignment and escalation
 
-The assignment extension reuses Ticket's status vocabulary. It is a focused model for this exercise; it does not copy creation's subject rule. Its stored state is supplied by a reader that checks external data.
+Extend the existing `domain/tickets/Ticket.ts`, rather than introducing another Ticket entity. Replace its `TicketData` and `Ticket` declarations with the following; keep the [canonical status vocabulary, guards and subject normalizer](../2-typescript-first-boundaries.md#decide-what-a-valid-ticket-means-in-one-place) unchanged. This is the assignment exercise's extension of that module, not a second model alongside it.
 
 ```ts
-// src/domain/tickets/AssignmentTicket.ts
-import { isTicketStatus, type TicketStatus } from './Ticket'
-
-export interface AssignmentTicketState {
+// Replacement declarations in src/domain/tickets/Ticket.ts
+export interface TicketData {
   readonly id: string
+  readonly subject: string
+  readonly description: string
   readonly status: TicketStatus
-  readonly requiredSkill: string
   readonly assignedTo: string | null
 }
-export class AssignmentTicket {
-  #state: AssignmentTicketState
-  constructor(state: AssignmentTicketState) {
-    if (!state.id.trim() || !state.requiredSkill.trim() || !isTicketStatus(state.status)) {
-      throw new Error('Invalid assignment ticket')
-    }
-    this.#state = { ...state }
+
+export class Ticket {
+  #data: TicketData
+  private constructor(data: TicketData) { this.#data = Object.freeze({ ...data }) }
+
+  static create(id: string, subject: string, description: string): Ticket {
+    if (!id.trim()) throw new Error('Expected a generated identity')
+    return new Ticket({ id, subject: normalizeTicketSubject(subject), description,
+      status: INITIAL_TICKET_STATUS, assignedTo: null })
   }
-  snapshot(): AssignmentTicketState { return { ...this.#state } }
+
+  static restore(data: TicketData): Ticket {
+    if (!data.id.trim() || !isTicketStatus(data.status) ||
+        (data.assignedTo !== null && !data.assignedTo.trim())) {
+      throw new Error('Invalid stored ticket')
+    }
+    return new Ticket({ ...data, subject: normalizeTicketSubject(data.subject) })
+  }
+
   assign(analystId: string): boolean {
-    if (this.#state.status === 'resolved') return false
+    if (this.#data.status === 'resolved') return false
     if (!analystId.trim()) throw new Error('Invalid analyst identity')
-    this.#state = { ...this.#state, assignedTo: analystId }
+    this.#data = Object.freeze({ ...this.#data, assignedTo: analystId })
     return true
   }
+
+  snapshot(): TicketData { return { ...this.#data } }
 }
 ```
 
-Import `decideAssignment` and `AnalystFacts` from the [canonical policy](../../foundations/domain-modeling/README.md). [Domain](../../../GLOSSARY.md#domain) combines the supplied skill/supervisor facts; [Application](../../../GLOSSARY.md#application-layer) obtains them.
+The storage reader checks its external row shape and restores this same Ticket, preserving its saved status. The workflow also needs the required skill from Support's classification of that ticket and the analyst's facts. Those supplied facts feed the [canonical assignment policy](../../foundations/domain-modeling/README.md); they are not another entity representation.
 
 ```ts
-// src/application/tickets/AssignTicket.ts
-import { AssignmentTicket } from '@/domain/tickets/AssignmentTicket'
-import { decideAssignment, type AnalystFacts } from '@/domain/tickets/services/TicketAssignmentPolicy'
+// src/application/tickets/ports/AssignmentFactsReader.ts
+import type { Ticket } from '@/domain/tickets/Ticket'
+import type { AnalystFacts } from '@/domain/tickets/services/TicketAssignmentPolicy'
 
 export interface AssignmentFactsReader {
-  ticket(id: string): Promise<AssignmentTicket | null>
+  ticket(id: string): Promise<{ ticket: Ticket; requiredSkill: string } | null>
   analyst(id: string): Promise<AnalystFacts | null>
 }
-export interface AssignmentWriter {
-  save(ticket: AssignmentTicket): Promise<void>
-}
+```
+
+```ts
+// src/application/tickets/ports/AssignmentWriter.ts
+import type { Ticket } from '@/domain/tickets/Ticket'
+
+export interface AssignmentWriter { save(ticket: Ticket): Promise<void> }
+```
+
+```ts
+// src/application/tickets/contracts/AssignResult.ts
 export type AssignResult =
   | { ok: true }
   | { ok: false; reason: 'not-found' | 'resolved' | 'missing-skill' | 'supervisor-required' }
+```
+
+```ts
+// src/application/tickets/use-cases/AssignTicket.ts
+import { decideAssignment } from '@/domain/tickets/services/TicketAssignmentPolicy'
+import type { AssignmentFactsReader } from '../ports/AssignmentFactsReader'
+import type { AssignmentWriter } from '../ports/AssignmentWriter'
+import type { AssignResult } from '../contracts/AssignResult'
 
 export class AssignTicket {
   constructor(
@@ -323,23 +417,19 @@ export class AssignTicket {
     private readonly writer: AssignmentWriter,
   ) {}
   async execute(ticketId: string, analystId: string, escalation: boolean): Promise<AssignResult> {
-    const ticket = await this.facts.ticket(ticketId)
+    const loaded = await this.facts.ticket(ticketId)
     const analyst = await this.facts.analyst(analystId)
-    if (!ticket || !analyst) return { ok: false, reason: 'not-found' }
-    const decision = decideAssignment(
-      { requiredSkill: ticket.snapshot().requiredSkill, escalation }, analyst,
-    )
+    if (!loaded || !analyst) return { ok: false, reason: 'not-found' }
+    const decision = decideAssignment({ requiredSkill: loaded.requiredSkill, escalation }, analyst)
     if (!decision.allowed) return { ok: false, reason: decision.reason }
-    if (!ticket.assign(analystId)) return { ok: false, reason: 'resolved' }
-    await this.writer.save(ticket)
+    if (!loaded.ticket.assign(analystId)) return { ok: false, reason: 'resolved' }
+    await this.writer.save(loaded.ticket)
     return { ok: true }
   }
 }
 ```
 
-The policy and entity can independently reject assignment; if several rules fail, this workflow reports policy rejection first. HTTP parsing and database implementations are omitted. The assignment writer is purpose-specific: it does not widen creation's insert-only contract to accept a different representation.
-
-This read/decide/save example does not establish concurrent-assignment safety. A real operation requiring that guarantee must specify and implement suitable persistence control.
+Ticket rejects assignment after resolution; the [Domain](../../../GLOSSARY.md#domain) policy decides skill and supervisor eligibility; [Application](../../../GLOSSARY.md#application-layer) obtains facts and saves an accepted change. If several rules fail, this workflow reports the policy rejection first. The update writer remains separate from creation's insert-only `TicketRepository`. HTTP parsing and storage implementations are omitted.
 
 **Exercise.** [B-A3](advanced.md#b-a3--assignment-and-escalation)
 

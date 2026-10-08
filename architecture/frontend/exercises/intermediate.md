@@ -38,7 +38,7 @@ export function AgendaPage() {
 
 **Questions.** Where should selected-day behavior live? Who creates HttpAgendaReader?
 
-**Expected result.** The Page receives GetAgenda, composes controls/calendar and shows loading/error feedback. Changing day loads that day; a slower previous request cannot replace the newest selection.
+**Expected result.** The Page receives GetAgenda, composes controls/calendar and shows loading/error feedback. A day change loads that day. This exercise uses one user-triggered read at a time; overlapping-request coordination is not assessed.
 
 **Relevant handbook sections.** [Read the guide](../presentation-architecture.md#pages-compose-features-own-behavior).
 

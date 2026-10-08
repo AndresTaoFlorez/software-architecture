@@ -27,8 +27,6 @@ Before adding folders, ask what changes when the subject rule changes, when stor
 2. [Dependency Boundaries](dependency-boundaries.md): distinguish source use from runtime calls.
 3. [Composition](composition-root.md): supply concrete implementations.
 4. [Module Boundaries and Public APIs](module-boundaries-and-public-apis.md): let another capability use a supported entry.
-5. [HTTP Request to Business Operation](../backend/1-http-request-to-business-operation.md).
-6. [TypeScript-First Boundaries](../backend/2-typescript-first-boundaries.md).
 
 Then choose the [backend](../backend/README.md) or [frontend](../frontend/README.md) route.
 
