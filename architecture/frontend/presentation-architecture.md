@@ -55,7 +55,7 @@ Start with `presentation/scheduling/`, then use `pages/`, `components/`, `hooks/
 
 ### A small agenda operation
 
-These plain-TypeScript modules are the canonical core used by the frontend exercises. A read returns appointment facts; it does not book an appointment. Duration feedback is a client business rule, while the backend remains authoritative.
+These plain-TypeScript modules are the canonical core used by the frontend exercises. A read returns recorded appointment facts; it does not book an appointment. The minimum duration is a client rule for proposed new bookings, not a reason to reject or hide historical records. The backend remains authoritative for booking.
 
 `src/domain/scheduling/Appointment.ts`:
 

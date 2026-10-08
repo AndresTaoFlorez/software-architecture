@@ -46,7 +46,7 @@ export function AgendaPage() {
 
 **What you already know.** Read Code Placement's [Domain](../../../GLOSSARY.md#domain) example.
 
-**Situation.** AppointmentCard decides that appointment duration must be at least 20 minutes, and another form copies that decision.
+**Situation.** AppointmentCard labels whether a recorded duration would qualify for a new booking, and AppointmentForm checks a proposed duration. Both copy the 20-minute minimum. An existing 15-minute appointment must remain visible.
 
 **Terms you need.** Business Rule and Architectural Ownership.
 

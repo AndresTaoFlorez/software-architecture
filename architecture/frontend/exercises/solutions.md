@@ -148,7 +148,7 @@ Both UI consumers call the same Domain decision. No Application use case or resu
 import { isAppointmentDuration } from '@/domain/scheduling/Appointment'
 
 export function appointmentCardFeedback(minutes: number): string {
-  return isAppointmentDuration(minutes) ? 'Duration accepted' : 'Below booking minimum'
+  return isAppointmentDuration(minutes) ? 'Meets new-booking minimum' : 'Below new-booking minimum'
 }
 ```
 
@@ -157,11 +157,11 @@ export function appointmentCardFeedback(minutes: number): string {
 import { isAppointmentDuration } from '@/domain/scheduling/Appointment'
 
 export function appointmentFormFeedback(value: unknown): string {
-  return isAppointmentDuration(value) ? 'Valid duration' : 'Choose a valid duration'
+  return isAppointmentDuration(value) ? 'Meets new-booking minimum' : 'Choose a duration for a new booking'
 }
 ```
 
-These are Presentation-owned messages, not additional business rules. Changing the minimum from 20 to 30 changes only the Domain predicate; neither UI consumer hardcodes it. The backend independently enforces authoritative booking policy. This direct inward dependency is permitted by the [dependency-boundary convention](../../foundations/dependency-boundaries.md#a-practical-four-area-mapping); introduce an Application operation when there is a workflow to coordinate, not just to forward one predicate.
+These messages describe whether a duration would qualify for a new booking; they do not decide whether a recorded appointment is displayed. Their wording belongs to Presentation, not to another business rule. Changing the minimum from 20 to 30 changes only the Domain predicate; neither UI consumer hardcodes it. The backend independently enforces authoritative booking policy. This direct inward dependency is permitted by the [dependency-boundary convention](../../foundations/dependency-boundaries.md#a-practical-four-area-mapping); introduce an Application operation when there is a workflow to coordinate, not just to forward one predicate.
 
 **Exercise.** [F-I2](intermediate.md#f-i2--move-a-rule-out-of-react)
 
