@@ -2,6 +2,8 @@
 
 ← [Frontend Architecture](README.md) · [Dependency Boundaries](../foundations/dependency-boundaries.md) · [Glossary](../../GLOSSARY.md)
 
+A React ticket screen calls a backend whose response format can change. Keep that translation separate from the screen and ticket meaning, then trace the resulting calls and imports.
+
 **Contents**
 
 - [The problem](#the-problem)

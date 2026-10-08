@@ -4,6 +4,8 @@
 
 [TypeScript boundaries](2-typescript-first-boundaries.md) · [Backend route](README.md) · Next: [Ticket wiring](4-create-ticket-with-nestjs.md)
 
+The plain ticket functions now need to receive real web requests. See how Nest registers, checks and supplies arguments to those functions while the ticket rule keeps its existing owner.
+
 **Contents**
 
 - [Register the functions we already understand](#register-the-functions-we-already-understand)

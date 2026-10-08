@@ -7,6 +7,8 @@
 
 ← [Repository home](../../../../README.md) · [Glossary](../../../../GLOSSARY.md) · [Code placement](../../../foundations/code-placement.md) · [Naming](../../../conventions/naming-and-file-placement.md)
 
+A user edits an order on a screen. Separate displaying the current information, interpreting the gesture and changing the represented state; this guide explains that arrangement and where it belongs.
+
 **Contents**
 
 - [History and origin](#history-and-origin)
