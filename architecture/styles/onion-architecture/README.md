@@ -8,9 +8,37 @@
 
 For a server-side application, first follow [Backend Architecture](../../backend/README.md), then [Onion on the backend](7-onion-on-the-backend.md). Follow the same ticket from its domain rules through its operation, required storage capability and HTTP/database [adapters](../../../GLOSSARY.md#adapter).
 
+**Contents**
+
+- [History and origin](#history-and-origin)
+- [What problem does it solve?](#what-problem-does-it-solve)
+- [Fit and cost](#fit-and-cost)
+  - [Strong-fit scenarios](#strong-fit-scenarios)
+  - [Weak-fit scenarios](#weak-fit-scenarios)
+- [Mental model](#mental-model)
+- [Rings and responsibilities](#rings-and-responsibilities)
+  - [Domain](#domain)
+  - [Application](#application)
+  - [Infrastructure](#infrastructure)
+  - [Presentation](#presentation)
+  - [Composition](#composition)
+  - [Why isolate the rings?](#why-isolate-the-rings)
+- [Recommended physical structure](#recommended-physical-structure)
+- [Where does code go?](#where-does-code-go)
+- [Why ports belong inward](#why-ports-belong-inward)
+- [Naming](#naming)
+- [First feature end to end](#first-feature-end-to-end)
+- [Testing the rings](#testing-the-rings)
+- [Trade-offs and failure modes](#trade-offs-and-failure-modes)
+- [Progressive learning path](#progressive-learning-path)
+- [Relationship to Clean and Hexagonal](#relationship-to-clean-and-hexagonal)
+- [Sources](#sources)
+
 <a id="1-introduction--purpose"></a>
 
-## 1. History and origin
+<a id="1-history-and-origin"></a>
+
+## History and origin
 
 Jeffrey Palermo published the [Onion Architecture](../../../GLOSSARY.md#onion-architecture) series in **2008**. His goal was to keep long-lived business applications from becoming organized around databases, UI frameworks and other infrastructure.
 
@@ -18,7 +46,9 @@ Palermo's framing places the **domain model at the center** and requires depende
 
 Primary source: https://jeffreypalermo.com/2008/07/
 
-## 2. What problem does it solve?
+<a id="2-what-problem-does-it-solve"></a>
+
+## What problem does it solve?
 
 Suppose our ticket platform decides that a resolved ticket cannot be assigned to an analyst again. That decision is about tickets, not about the table in which they are stored. If the rule is written against an [ORM](../../../GLOSSARY.md#orm) row (the database library's representation of the record), replacing the database tool can force changes to ticket behavior.
 
@@ -27,7 +57,8 @@ Suppose our ticket platform decides that a resolved ticket cannot be assigned to
 A common failure is infrastructure-driven design:
 
 ```mermaid
-flowchart LR
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
     UI["UI"] --> SERVICE["Service"]
     SERVICE --> ORM["ORM model"]
     ORM --> DB["Database"]
@@ -49,7 +80,11 @@ UI composition, deployment and discovering the business model still require thei
 
 <a id="why-this-architecture"></a>
 
-## 3. Strong-fit scenarios
+## Fit and cost
+
+<a id="3-strong-fit-scenarios"></a>
+
+### Strong-fit scenarios
 
 Onion is a strong fit when:
 
@@ -59,7 +94,9 @@ Onion is a strong fit when:
 - multiple mechanisms surround the same business policy;
 - independent testing of [Domain](../../../GLOSSARY.md#domain)/[Application](../../../GLOSSARY.md#application-layer) matters.
 
-## 4. Weak-fit scenarios
+<a id="4-weak-fit-scenarios"></a>
+
+### Weak-fit scenarios
 
 It can be unnecessarily expensive for:
 
@@ -70,11 +107,14 @@ It can be unnecessarily expensive for:
 
 Palermo explicitly framed Onion for complex, long-lived business applications rather than every small site.
 
-## 5. Mental model
+<a id="5-mental-model"></a>
+
+## Mental model
 
 Read the diagram from the center outward: the ticket rule lives at the center; an operation such as “assign ticket” uses that rule; the UI and database-facing code connect the outside world to that operation. The arrows below describe which source-code areas may depend on which others, **not** the order of HTTP calls at runtime.
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart BT
     OUTER["Presentation + Infrastructure"]
     APP["Application"]
@@ -90,25 +130,37 @@ The central rule is simple:
 
 > Outer code may depend inward; inner code must not know outer mechanisms.
 
-<a id="domain"></a>
 
-<a id="application"></a>
 
-<a id="infrastructure"></a>
 
-<a id="presentation"></a>
 
-## 6. Rings and responsibilities
+<a id="6-rings-and-responsibilities"></a>
+
+## Rings and responsibilities
 
 This repository uses four practical areas plus an executable composition boundary to implement the Onion idea. These are physical ownership conventions; Palermo also describes [Domain Services](../../../GLOSSARY.md#domain-service) and [Application Services](../../../GLOSSARY.md#application-service), rather than prescribing this exact four-folder taxonomy:
 
-| Area | Owns | Put here | Do not put here | May depend on |
-| --- | --- | --- | --- | --- |
-| [Domain](../../../GLOSSARY.md#domain) | business concepts and [invariants](../../../GLOSSARY.md#invariant) | entities, [value objects](../../../GLOSSARY.md#value-object), domain policies/events | React, Redux, HTTP, [ORM](../../../GLOSSARY.md#orm), [DTOs](../../../GLOSSARY.md#data-transfer-object-dto) | Domain only |
-| [Application](../../../GLOSSARY.md#application-layer) | application operations and required capabilities | [use cases](../../../GLOSSARY.md#use-case), commands/results, [ports](../../../GLOSSARY.md#port) | concrete UI/DB/HTTP implementations | Application + Domain |
-| [Infrastructure](../../../GLOSSARY.md#infrastructure) | technical [adapters](../../../GLOSSARY.md#adapter) and external representations | HTTP/DB/storage/SDK implementations, DTOs, [mappers](../../../GLOSSARY.md#mapper) | [Presentation](../../../GLOSSARY.md#presentation-layer) and authoritative business policy | Infrastructure + Application + Domain |
-| Presentation | Interaction and incoming delivery | UI or HTTP/CLI translation | concrete Infrastructure in the strict boundary used here | Presentation + Application |
-| Composition | executable assembly | concrete construction/bootstrap | business rules | all concrete modules required for wiring |
+### Domain
+
+Ticket owns valid subject contents and initial state. Its business behavior remains independent of Nest, React and persistence; its source uses other domain concepts when needed.
+
+### Application
+
+CreateTicket coordinates creating and saving through the interaction it requires. It uses [Domain](../../../GLOSSARY.md#domain) and [Application](../../../GLOSSARY.md#application-layer) contracts.
+
+**Required contracts.** TicketRepository describes this workflow's persistence need. Palermo also places repository interfaces around the domain model; ownership here follows the policy needing the capability, with concrete storage outside it.
+
+### Infrastructure
+
+PrismaTicketRepository or an HTTP implementation fulfills an inward-owned interaction and translates external fields. It may use its integration code, [Application](../../../GLOSSARY.md#application-layer) contracts and [Domain](../../../GLOSSARY.md#domain) without making them import its technology.
+
+### Presentation
+
+HTTP/CLI handlers or screen interaction interpret the caller's input and translate the outcome. The strict boundary used here accesses [Application](../../../GLOSSARY.md#application-layer) through supported APIs and keeps concrete integrations in startup assembly.
+
+### Composition
+
+Startup constructs the chosen implementations and supplies them to operations and delivery. This is assembly outside business policy; it can reference the concrete modules required for wiring.
 
 ### Why isolate the rings?
 
@@ -121,9 +173,12 @@ Different concerns change for different reasons.
 
 The purpose of the onion is to prevent outer change from forcing inner policy to change unnecessarily.
 
-## 7. Recommended physical structure
+<a id="7-recommended-physical-structure"></a>
+
+## Recommended physical structure
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     SRC["src/"]
     SRC --> DOMAIN["domain/"]
@@ -148,7 +203,7 @@ flowchart TD
 | `presentation/` | UI interaction/view state and incoming HTTP/CLI delivery | isolates caller-specific change | database clients and outbound integration implementations |
 | `composition/` | object graph/bootstrap | selects implementations without [service location](../../../GLOSSARY.md#service-locator) | domain/application branching |
 
-The folder names and layer-first hierarchy are documentation conventions; the inward dependency direction is the architecture. Capabilities and sub-capabilities grow inside their layer, as [Scheduling illustrates](../../foundations/code-placement.md#12-grow-capabilities-inside-each-layer). The [frontend structure](../../frontend/README.md) and the [backend delivery paths](../../backend/README.md#place-your-first-feature) use that same convention; Palermo did not prescribe this filesystem layout.
+The folder names and layer-first hierarchy are documentation conventions; the inward dependency direction is the architecture. Capabilities and sub-capabilities grow inside their layer, as [Scheduling illustrates](../../foundations/code-placement.md#grow-capabilities-inside-each-layer). The [frontend structure](../../frontend/README.md) and the [backend delivery paths](../../backend/README.md#place-your-first-feature) use that same convention; Palermo did not prescribe this filesystem layout.
 
 
 <a id="7-type-placement-in-onion-architecture"></a>
@@ -159,9 +214,12 @@ The folder names and layer-first hierarchy are documentation conventions; the in
 
 <a id="quick-reference"></a>
 
-## 8. Where does code go?
+<a id="8-where-does-code-go"></a>
+
+## Where does code go?
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     Q{"Why does this code exist?"}
     Q -->|"Business truth"| D["Domain"]
@@ -186,14 +244,16 @@ For functions, types and helpers, use **[Code Placement](../../foundations/code-
 
 <a id="import-rule"></a>
 
-## 9. Why ports belong inward
+<a id="9-why-ports-belong-inward"></a>
+
+## Why ports belong inward
 
 Suppose cancellation requires persistence.
 
 [Application](../../../GLOSSARY.md#application-layer) expresses the capability it needs:
 
 ```ts
-// Signature excerpt; complete contracts follow in section 11.
+// Signature excerpt; the First feature end to end section links complete contracts.
 export interface OrderRepository {
   findById(id: OrderId): Promise<Order | null>
   save(order: Order): Promise<void>
@@ -212,8 +272,9 @@ export class HttpOrderRepository implements OrderRepository {
 The arrows here show **source-code contract relationships only**; `OrderRepository` is not an intermediary object that forwards calls at runtime.
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart LR
-    UC["cancelOrder use case"] -. "requires" .-> PORT["Application-owned OrderRepository contract"]
+    UC["cancelOrder use case"] -. "requires" .-> PORT["Application-owned<br/>OrderRepository contract"]
     HTTP["HttpOrderRepository"] -. "implements" .-> PORT
 ```
 
@@ -225,11 +286,15 @@ This is [Dependency Inversion](../../../GLOSSARY.md#dependency-inversion-princip
 
 <a id="naming--conventions"></a>
 
-## 10. Naming
+<a id="10-naming"></a>
+
+## Naming
 
 `Order` names the model, `CancelOrder` the operation and `OrderRepository` its required persistence interaction. Follow [Naming and File Placement](../../conventions/naming-and-file-placement.md).
 
-## 11. First feature end to end
+<a id="11-first-feature-end-to-end"></a>
+
+## First feature end to end
 
 A clerk cancels an order. Onion puts the cancellation rule in the independent Order model. The surrounding operation coordinates loading and saving through a required contract; the concrete storage implementation stays outside.
 
@@ -239,7 +304,9 @@ The [shared focused example](../clean-architecture/4-building-a-feature.md) supp
 
 Compare [Onion on the backend](7-onion-on-the-backend.md) for the same reading of Ticket. The [frontend](../../frontend/README.md) and [backend](../../backend/README.md) routes own delivery mechanics.
 
-## 12. Testing the rings
+<a id="12-testing-the-rings"></a>
+
+## Testing the rings
 
 | Scope | What to test | Typical dependency |
 | --- | --- | --- |
@@ -254,7 +321,9 @@ See **[Testing the Rings](3-testing-in-onion.md)**.
 
 <a id="avoid"></a>
 
-## 13. Trade-offs and failure modes
+<a id="13-trade-offs-and-failure-modes"></a>
+
+## Trade-offs and failure modes
 
 Costs:
 
@@ -275,7 +344,9 @@ Common failure modes:
 
 <a id="contents"></a>
 
-## 14. Progressive learning path
+<a id="14-progressive-learning-path"></a>
+
+## Progressive learning path
 
 Read in this order:
 
@@ -289,14 +360,17 @@ Read in this order:
 
 The first two chapters deepen placement and dependency rules already introduced here. Advanced topics come later.
 
-## 15. Relationship to Clean and Hexagonal
+<a id="15-relationship-to-clean-and-hexagonal"></a>
+
+## Relationship to Clean and Hexagonal
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
-    GOAL["Protect policy from volatile mechanisms"]
+    GOAL["Protect policy from volatile<br/>mechanisms"]
     GOAL --> ONION["Onion: domain-centered rings"]
-    GOAL --> CLEAN["Clean: entities / use cases / adapters / frameworks"]
-    GOAL --> HEX["Hexagonal: ports + adapters around the application"]
+    GOAL --> CLEAN["Clean: entities<br/>use cases / adapters / frameworks"]
+    GOAL --> HEX["Hexagonal: ports + adapters<br/>around the application"]
 ```
 
 They overlap strongly but are not identical taxonomies.

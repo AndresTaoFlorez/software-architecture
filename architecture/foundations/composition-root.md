@@ -1,6 +1,21 @@
 # Composition Root and Dependency Injection
 
-## 1. Composition is a boundary, not business policy
+A ticket operation needs storage. This guide shows how startup code gives it a chosen implementation without making storage selection a business rule.
+
+**Contents**
+
+- [Composition is a boundary, not business policy](#composition-is-a-boundary-not-business-policy)
+- [Keep composition out of inner modules](#keep-composition-out-of-inner-modules)
+- [A DI container is optional](#a-di-container-is-optional)
+- [Inject capabilities, not global bags](#inject-capabilities-not-global-bags)
+- [Framework bootstrap belongs at the edge](#framework-bootstrap-belongs-at-the-edge)
+- [Store injection is still dependency injection](#store-injection-is-still-dependency-injection)
+- [Multiple composition roots](#multiple-composition-roots)
+- [Sources](#sources)
+
+<a id="1-composition-is-a-boundary-not-business-policy"></a>
+
+## Composition is a boundary, not business policy
 
 Consider a ticket-creation operation that needs another object to save a ticket. The operation describes the method it needs but does not decide whether the object uses HTTP or memory. Something still has to create the HTTP implementation and give it to that operation when the application starts.
 
@@ -28,15 +43,22 @@ createRoot(document.getElementById('root')!).render(
 The Composition Root is allowed to know both sides:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
-    C["Composition Root"] --> A["Application contract"]
-    C --> I["Infrastructure implementation"]
-    C --> P["Presentation / store / bootstrap"]
+    C["Composition Root"] -. "imports" .-> A["Application contract"]
+    C -. "constructs" .-> I["Infrastructure implementation"]
+    C -. "supplies operation" .-> P["Presentation<br/>store / bootstrap"]
+    linkStyle 0 stroke-width:1px,stroke-dasharray:6 4
+    linkStyle 1,2 stroke-width:1px,stroke-dasharray:2 5
 ```
+
+Dashed arrows show source imports; dotted arrows show startup assembly. A TypeScript interface is not a runtime object to construct.
 
 That is not an exception to the [Dependency Rule](../../GLOSSARY.md#dependency-rule). Composition is at the outer edge of the application and exists specifically to assemble details around policy.
 
-## 2. Keep composition out of inner modules
+<a id="2-keep-composition-out-of-inner-modules"></a>
+
+## Keep composition out of inner modules
 
 Avoid [service location](../../GLOSSARY.md#service-locator):
 
@@ -61,7 +83,9 @@ export function makeExecuteClosure(deps: {
 
 The consumer declares what it needs. The edge decides what satisfies it.
 
-## 3. A DI container is optional
+<a id="3-a-di-container-is-optional"></a>
+
+## A DI container is optional
 
 [Dependency Injection](../../GLOSSARY.md#dependency-injection-di) is a design technique. A [DI container](../../GLOSSARY.md#di-container) is a tool.
 
@@ -76,7 +100,9 @@ A container becomes useful when it meaningfully improves management of a complex
 
 Do not introduce one based on an arbitrary number of dependencies.
 
-## 4. Inject capabilities, not global bags
+<a id="4-inject-capabilities-not-global-bags"></a>
+
+## Inject capabilities, not global bags
 
 Avoid:
 
@@ -101,7 +127,9 @@ class CreateOrder {
 
 This keeps dependencies visible and improves testability.
 
-## 5. Framework bootstrap belongs at the edge
+<a id="5-framework-bootstrap-belongs-at-the-edge"></a>
+
+## Framework bootstrap belongs at the edge
 
 Entry points may import:
 
@@ -114,7 +142,9 @@ Entry points may import:
 
 Inner code should never import the entry point or the container.
 
-## 6. Store injection is still dependency injection
+<a id="6-store-injection-is-still-dependency-injection"></a>
+
+## Store injection is still dependency injection
 
 For Redux Toolkit, injecting [application services](../../GLOSSARY.md#application-service) through [thunk](../../GLOSSARY.md#thunk) `extraArgument` can preserve the same boundary:
 
@@ -144,7 +174,9 @@ export const saveOrder = createAsyncThunk<
 
 Redux Toolkit explicitly supports an injected thunk `extra` argument. The architectural point is not Redux; it is that the concrete [adapter](../../GLOSSARY.md#adapter) remains wired at the edge.
 
-## 7. Multiple composition roots
+<a id="7-multiple-composition-roots"></a>
+
+## Multiple composition roots
 
 "Preferably unique" is a useful default, not dogma. Separate independently deployed processes, workers, CLIs or test harnesses naturally have separate roots.
 
@@ -155,3 +187,5 @@ Each executable owns the graph it starts.
 - Mark Seemann, "[Composition Root](../../GLOSSARY.md#composition-root)", 2011: https://blog.ploeh.dk/2011/07/28/CompositionRoot/
 - Mark Seemann interview on [Dependency Injection](../../GLOSSARY.md#dependency-injection-di), InfoQ, 2011: https://www.infoq.com/articles/DI-Mark-Seemann/
 - Redux Toolkit, `createAsyncThunk`: https://redux-toolkit.js.org/api/createAsyncThunk
+
+[Previous: Dependency Boundaries](dependency-boundaries.md) · [Next: Module Boundaries and Public APIs](module-boundaries-and-public-apis.md)

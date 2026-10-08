@@ -2,25 +2,43 @@
 
 ← [Frontend Architecture](README.md) · [Dependency Boundaries](../foundations/dependency-boundaries.md) · [Glossary](../../GLOSSARY.md)
 
-## 1. The problem
+**Contents**
 
-An analyst creates a support ticket in React. The client's subject feedback should survive an HTTP endpoint or response-format change.
+- [The problem](#the-problem)
+- [Visual model](#visual-model)
+- [Physical ownership](#physical-ownership)
+  - [Domain: ticket vocabulary and rules](#domain-ticket-vocabulary-and-rules)
+  - [Port: what the Application needs](#port-what-the-application-needs)
+  - [Use case: what the Application does](#use-case-what-the-application-does)
+  - [Adapter: how the Application reaches the backend](#adapter-how-the-application-reaches-the-backend)
+  - [Presentation and Composition: using the operation](#presentation-and-composition-using-the-operation)
+- [Why this separation matters](#why-this-separation-matters)
+- [Terminology and references](#terminology-and-references)
 
-`TicketGateway` describes the creation interaction Application requires: input and promised ticket result. This is an outbound **port**. `HttpTicketGateway` implements it using HTTP and maps `ticket_id` into `id`: an outbound **adapter**.
+<a id="1-the-problem"></a>
+
+## The problem
+
+An analyst creates a support ticket in React. The client's subject feedback should survive an HTTP endpoint or response-format change. This is a frontend application of [Hexagonal Architecture](../styles/hexagonal-architecture/README.md); that guide explains the general model.
+
+`TicketGateway` describes the creation interaction [Application](../../GLOSSARY.md#application-layer) requires: input and promised ticket result. This is an outbound **port**. `HttpTicketGateway` implements it using HTTP and maps `ticket_id` into `id`: an outbound **adapter**.
 
 Composition supplies that object to the operation. The backend is external to this frontend and remains authoritative over persisted tickets.
 
-## 2. Visual model
+<a id="2-visual-model"></a>
+
+## Visual model
 
 ```mermaid
-flowchart LR
-    H["useTickets / interaction"] -->|"invokes"| U["createTicket / operation"]
-    U -->|"applies rule"| D["Ticket / Domain"]
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
+    H["useTickets<br/>interaction"] -->|"invokes"| U["createTicket<br/>operation"]
+    U -->|"applies rule"| D["Ticket<br/>Domain"]
     U -->|"calls supplied object"| I["HttpTicketGateway"]
-    I -->|"POST"| API["Backend API · external"]
+    I -->|"POST"| API["Backend API<br/>external"]
     U -.->|"requires"| P["TicketGateway"]
     I -.->|"implements"| P
-    C["bootstrap / composition"] -.->|"constructs"| I
+    C["bootstrap<br/>composition"] -.->|"constructs"| I
     C -.->|"supplies operation"| H
     linkStyle 0,1,2,3 stroke-width:2px
     linkStyle 4,5 stroke-width:1px,stroke-dasharray:6 4
@@ -29,7 +47,9 @@ flowchart LR
 
 Solid arrows are runtime calls, long dashes source relationships and short dots startup wiring. The contract describes a required interaction; it does not forward calls.
 
-## 3. Physical ownership
+<a id="3-physical-ownership"></a>
+
+## Physical ownership
 
 | File | Owns | Why it belongs there |
 | --- | --- | --- |
@@ -227,6 +247,9 @@ export function useTickets(createTicket: CreateTicket) {
 `src/composition/bootstrap.tsx` (assembly excerpt):
 
 ```tsx
+import { HttpTicketGateway } from '@/infrastructure/http/tickets/adapters/HttpTicketGateway'
+import { makeCreateTicket } from '@/application/tickets/use-cases/createTicket'
+
 const ticketGateway = new HttpTicketGateway()
 const createTicket = makeCreateTicket(ticketGateway)
 
@@ -236,17 +259,23 @@ const createTicket = makeCreateTicket(ticketGateway)
 
 Composition imports the concrete [adapter](../../GLOSSARY.md#adapter) and application factory. The [use case](../../GLOSSARY.md#use-case) and the hook **do not import the [Composition Root](../../GLOSSARY.md#composition-root)** to locate their dependencies.
 
-## 4. Why this separation matters
+<a id="4-why-this-separation-matters"></a>
 
-A memory implementation of `TicketGateway` lets the operation run without HTTP. A subject-rule change belongs in client Domain; renamed wire fields belong in the integration.
+## Why this separation matters
 
-UI labels belong in `presentation/tickets/formatters/formatTicketStatusLabel.ts`. An exhaustive `Record<CreatedTicket['status'], string>` requires a label for each domain-supported status without defining a second validity list.
+A memory implementation of `TicketGateway` lets the operation run without HTTP. A subject-rule change belongs in client [Domain](../../GLOSSARY.md#domain); renamed wire fields belong in the integration.
+
+UI labels belong in `presentation/tickets/formatters/formatTicketStatusLabel.ts`. An exhaustive `Record<Ticket['status'], string>` requires a label for each domain-supported status without defining a second validity list.
 
 The backend independently validates creation. Actual integration checks establish agreement between systems; these snippets do not form a runnable application here.
 
-## 5. Terminology and references
+<a id="5-terminology-and-references"></a>
+
+## Terminology and references
 
 - [Cockburn: Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/)
 - [Zod: schema validation](https://zod.dev/basics)
 - [Seemann: Composition Root](https://blog.ploeh.dk/2011/07/28/CompositionRoot/)
 - [React: Custom Hooks](https://react.dev/learn/reusing-logic-with-custom-hooks)
+
+[Previous: Frontend Presentation Architecture](presentation-architecture.md) · [Next: State Management and Side Effects](state-management.md)

@@ -1,12 +1,20 @@
 # Easy backend Exercises
 
+Identify the owners and relationships in the examples you have just read. Each exercise names its prerequisite guide; compare your answer with the separate solutions afterward.
+
+**Contents**
+
+- [B-E1 — Trace the request](#b-e1--trace-the-request)
+- [B-E2 — Contract and implementations](#b-e2--contract-and-implementations)
+- [B-E3 — Place HTTP files](#b-e3--place-http-files)
+
 ## B-E1 — Trace the request
 
 **What you already know.** Read backend chapters 1–3.
 
 **Situation.** An analyst submits POST /tickets; creation succeeds.
 
-**Terms you need.** Endpoint, route, Controller, handler, Guard, Pipe, Parser, use case and entity are introduced in chapters 1–3.
+**Terms you need.** Endpoint, route, Controller, handler, Guard, Pipe, [Parser](../../../GLOSSARY.md#parser), use case and entity are introduced in chapters 1–3.
 
 **Given code/files.** POST /tickets; TicketsController.create; AuthenticatedGuard; CreateTicketPipe; parseCreateTicketRequest; CreateTicket.execute; Ticket.create.
 
@@ -42,7 +50,7 @@
 
 **Situation.** A new maintainer needs to locate HTTP translation.
 
-**Terms you need.** Controller, Guard, Pipe, Parser, DTO and Mapper.
+**Terms you need.** Controller, Guard, Pipe, [Parser](../../../GLOSSARY.md#parser), [DTO](../../../GLOSSARY.md#data-transfer-object-dto) and [Mapper](../../../GLOSSARY.md#mapper).
 
 **Given code/files.** TicketsController.ts, AuthenticatedGuard.ts, CreateTicketPipe.ts, parseCreateTicketRequest.ts, CreateTicketRequestDto.ts, TicketResponseDto.ts, mapCreateTicketResponse.ts.
 

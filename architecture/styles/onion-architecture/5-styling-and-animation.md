@@ -23,6 +23,12 @@ That guide covers:
 - runtime inline values;
 - variants vs. specificity escalation.
 
+**Contents**
+
+- [Onion-specific rule](#onion-specific-rule)
+- [Colocation](#colocation)
+- [Sources](#sources)
+
 ## Onion-specific rule
 
 [Presentation](../../../GLOSSARY.md#presentation-layer) styling may depend on UI state and [design-system](../../../GLOSSARY.md#design-system) contracts.
@@ -30,11 +36,12 @@ That guide covers:
 Inner layers must not depend on styling mechanisms:
 
 ```mermaid
-flowchart LR
-    D["Domain"] -. forbidden .-> CSS["CSS / Panda / DOM"]
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
+    D["Domain"] -. forbidden .-> CSS["CSS<br/>Panda / DOM"]
     A["Application"] -. forbidden .-> CSS
-    P["Presentation"] --> STYLE["Style system"]
-    P --> INNER["Domain / application meaning through allowed inner contracts"]
+    P["Presentation"] -. "imports" .-> STYLE["Style system"]
+    P -. "uses allowed contracts" .-> INNER["Domain<br/>application meaning through allowed inner contracts"]
 ```
 
 A domain status may be mapped to a visual tone in Presentation:
@@ -63,6 +70,7 @@ Do not put `color: 'green'` or `badgeVariant` into the [Domain](../../../GLOSSAR
 Component-local visual concerns should normally travel with the component:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     C["ClosureStatusBadge/"] --> X["ClosureStatusBadge.tsx"]
     C --> S["ClosureStatusBadge.styles.ts"]

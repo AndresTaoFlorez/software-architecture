@@ -1,6 +1,8 @@
 > **[Model-View-ViewModel](README.md)** › [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-mvvm) on the Frontend. Full reference list: [References](references.md).
 
-# 3. MVVM on the Frontend
+<a id="3-mvvm-on-the-frontend"></a>
+
+# MVVM on the Frontend
 
 In a React ticket screen, a component might display `isSaving` and call `submit()`. A deliberately designed `useTickets()` can supply those screen-specific values and operations while another part handles the ticket-creation rule. That arrangement resembles a [ViewModel](../../../../GLOSSARY.md#viewmodel) and [View](../../../../GLOSSARY.md#view) separation; a random hook that only wraps `useState` does not automatically establish it.
 
@@ -8,7 +10,19 @@ Modern component frameworks provide reactive rendering mechanisms that can help 
 
 ---
 
-## 3.1 The honest mapping
+A screen interface may also act as a Facade when it deliberately simplifies collaboration among several subsystem objects. The Hook name alone establishes neither pattern; compare the [independent Facade example](../../structural/facade/README.md).
+
+**Contents**
+
+- [The honest mapping](#the-honest-mapping)
+- [The failure mode: the fat ViewModel](#the-failure-mode-the-fat-viewmodel)
+- [How MVVM sits inside Onion and Clean](#how-mvvm-sits-inside-onion-and-clean)
+- [Related implementations in the wild](#related-implementations-in-the-wild)
+- [Sources](#sources)
+
+<a id="31-the-honest-mapping"></a>
+
+## The honest mapping
 
 A useful mapping in a layered frontend is:
 
@@ -23,6 +37,7 @@ The mapping is role-based, not class-based.
 A ViewModel can be distributed across a small set of [Presentation](../../../../GLOSSARY.md#presentation-layer) modules when ownership remains clear:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     C["presentation/closures/"] --> S["state/"]
     C --> H["hooks/"]
@@ -68,7 +83,9 @@ A React hook has not become a ViewModel merely because its name starts with `use
 
 ---
 
-## 3.2 The failure mode: the fat ViewModel
+<a id="32-the-failure-mode-the-fat-viewmodel"></a>
+
+## The failure mode: the fat ViewModel
 
 The [ViewModel](../../../../GLOSSARY.md#viewmodel) is a convenient place to put logic, which makes it a common coupling hotspot.
 
@@ -87,18 +104,21 @@ Ask:
 Examples:
 
 ```mermaid
-flowchart LR
-    A["Show spinner while request is pending"] --> P1["Presentation / ViewModel"]
-    B["Format total as localized currency"] --> P2["Presentation / ViewModel"]
-    C["Order cannot be cancelled after shipment"] --> D["Domain / Application"]
-    E["Retry 502 with exponential backoff"] --> I["Infrastructure / transport policy unless product semantics say otherwise"]
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
+    A["Show spinner while request<br/>is pending"] --> P1["Presentation<br/>ViewModel"]
+    B["Format total as localized currency"] --> P2["Presentation<br/>ViewModel"]
+    C["Order cannot be cancelled<br/>after shipment"] --> D["Domain<br/>Application"]
+    E["Retry 502 with exponential backoff"] --> I["Infrastructure<br/>transport policy unless product semantics say otherwise"]
 ```
 
 A large public [facade](../../../../GLOSSARY.md#facade-pattern) can remain useful while internal responsibilities are split into focused hooks/modules.
 
 ---
 
-## 3.3 How MVVM sits inside Onion and Clean
+<a id="33-how-mvvm-sits-inside-onion-and-clean"></a>
+
+## How MVVM sits inside Onion and Clean
 
 [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-mvvm) and Clean/Onion answer different questions.
 
@@ -113,10 +133,11 @@ Clean/Onion:
 A strict layered mapping can be:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
-    P["Presentation"] --> V["View"]
-    P --> VM["ViewModel / Presentation facade"]
-    VM --> A["Application use case"] --> D["Domain"]
+    P["Presentation"] -->|"contains"| V["View"]
+    P -->|"contains"| VM["ViewModel<br/>screen interface"]
+    VM -. "imports" .-> A["Application use case"] -. "uses rules" .-> D["Domain"]
 ```
 
 [Infrastructure](../../../../GLOSSARY.md#infrastructure) implements [ports](../../../../GLOSSARY.md#port) required inward and is wired at composition.
@@ -131,7 +152,9 @@ See **[Frontend Architecture](../../../frontend/README.md)** for the repository'
 
 <a id="34-the-pattern-in-the-wild"></a>
 
-## 3.4 Related implementations in the wild
+<a id="34-related-implementations-in-the-wild"></a>
+
+## Related implementations in the wild
 
 The following ecosystems use concepts compatible with [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-mvvm) or [Presentation Model](../../../../GLOSSARY.md#presentation-model), but they should not be used to claim all modern UI frameworks "are MVVM":
 

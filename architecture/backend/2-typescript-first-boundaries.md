@@ -1,12 +1,27 @@
-# 2. TypeScript-First Boundaries
+<a id="2-typescript-first-boundaries"></a>
+
+# TypeScript-First Boundaries
 
 [HTTP path](1-http-request-to-business-operation.md) · [Backend route](README.md) · Next: [Nest building blocks](3-nestjs-building-blocks.md)
 
-## 1. Check what arrived before trusting its type
+**Contents**
 
-Another caller can send `null`, an array or `{ subject: 17 }`. Treat decoded input as `unknown` and check it before accessing fields. A plain **Parser** returns an accepted representation or reports failure.
+- [Check what arrived before trusting its type](#check-what-arrived-before-trusting-its-type)
+- [Decide what a valid ticket means in one place](#decide-what-a-valid-ticket-means-in-one-place)
+- [Save without naming a database in the operation](#save-without-naming-a-database-in-the-operation)
+- [Start with memory and explicit construction](#start-with-memory-and-explicit-construction)
+- [What a library will remove](#what-a-library-will-remove)
+  - [Next operation: reading an agenda](#next-operation-reading-an-agenda)
+- [Check the boundary](#check-the-boundary)
+- [Sources](#sources)
 
-The HTTP representation is a **DTO**, a data transfer object. A type assertion such as `body as CreateTicketRequestDto` changes the compiler's assumption and performs no runtime validation.
+<a id="1-check-what-arrived-before-trusting-its-type"></a>
+
+## Check what arrived before trusting its type
+
+Another caller can send `null`, an array or `{ subject: 17 }`. Treat decoded input as `unknown` and check it before accessing fields. A plain **[Parser](../../GLOSSARY.md#parser)** returns an accepted representation or reports failure.
+
+The HTTP representation is a **[DTO](../../GLOSSARY.md#data-transfer-object-dto)**, a data transfer object. A type assertion such as `body as CreateTicketRequestDto` changes the compiler's assumption and performs no runtime validation.
 
 
 `src/presentation/http/tickets/dto/CreateTicketRequestDto.ts`:
@@ -40,9 +55,11 @@ export function parseCreateTicketRequest(body: unknown): CreateTicketRequestDto 
 }
 ```
 
-The checks establish the object/string shape. Returning a new object selects accepted fields; this API forbids client-controlled identity/state and ignores other extras. The parser leaves subject validity to Domain.
+The checks establish the object/string shape. Returning a new object selects accepted fields; this API forbids client-controlled identity/state and ignores other extras. The parser leaves subject validity to [Domain](../../GLOSSARY.md#domain).
 
-## 2. Decide what a valid ticket means in one place
+<a id="2-decide-what-a-valid-ticket-means-in-one-place"></a>
+
+## Decide what a valid ticket means in one place
 
 Support requires a trimmed nonblank subject of at most 160 JavaScript string units, and new tickets start `open`. These are **[business rules](../../GLOSSARY.md#business-rule)**. `Ticket` enforces them regardless of the caller.
 
@@ -98,11 +115,13 @@ export class Ticket {
 
 The private data protects the entity from changes to a returned snapshot. Future loading needs a restoration operation preserving stored status; this creation example does not implement retrieval.
 
-## 3. Save without naming a database in the operation
+<a id="3-save-without-naming-a-database-in-the-operation"></a>
+
+## Save without naming a database in the operation
 
 Creation needs `insert(ticket)` to complete before reporting success. `TicketRepository` defines that persistence requirement; the supplied implementation decides how to fulfill it.
 
-A **Repository** presents stored business objects in collection-like terms. This narrow write contract belongs to Application because creation requires it.
+A **[Repository](../patterns/persistence/repository/README.md)** presents stored business objects in collection-like terms. This narrow write contract belongs to [Application](../../GLOSSARY.md#application-layer) because creation requires it. The general guide distinguishes the pattern from a database client or another required interaction.
 
 
 `src/application/tickets/ports/TicketRepository.ts`:
@@ -185,7 +204,9 @@ export type { CreateTicketResult } from './contracts/CreateTicketResult'
 
 [Module Boundaries and Public APIs](../foundations/module-boundaries-and-public-apis.md) explains source exports and capability privacy.
 
-## 4. Start with memory and explicit construction
+<a id="4-start-with-memory-and-explicit-construction"></a>
+
+## Start with memory and explicit construction
 
 `InMemoryTicketRepository` implements the same contract using process memory. It supports learning and isolated application checks; its records disappear when the process ends.
 
@@ -290,21 +311,24 @@ Composition selects concrete objects. The fixed ID serves this one demonstration
 <a id="register-the-route-with-nodejs"></a>
 <a id="check-access-before-processing-the-argument"></a>
 
-## 5. What a library will remove
+<a id="5-what-a-library-will-remove"></a>
+
+## What a library will remove
 
 A server framework registers handlers, a Pipe applies argument parsing, and a container replaces repeated construction. [Chapter 3](3-nestjs-building-blocks.md) owns those Nest mechanisms.
 
-<a id="next-operation-reading-an-agenda"></a>
 
 ### Next operation: reading an agenda
 
-A receptionist requests `GET /agenda?day=2026-10-07`. A **query Parser** checks unknown HTTP query data and produces `AgendaQueryDto`. `GetAgenda` coordinates reading that day through an application-owned `AgendaReader` contract.
+A receptionist requests `GET /agenda?day=2026-10-07`. A **query [Parser](../../GLOSSARY.md#parser)** checks unknown HTTP query data and produces `AgendaQueryDto`. `GetAgenda` coordinates reading that day through an application-owned `AgendaReader` contract.
 
 `PrismaAgendaReader` implements the read with database queries and translates records into `AgendaResult`. `AgendaController` maps the result into `AgendaResponseDto`. The same ownership rules apply to a read; no business entity is required solely to return a list.
 
 A CLI instead checks command-line options in its own Parser, invokes an existing operation, and maps its result into messages and exit codes. Sharing the operation keeps delivery syntax separate.
 
-## 6. Check the boundary
+<a id="6-check-the-boundary"></a>
+
+## Check the boundary
 
 In an application, check invalid input, initial state, no save after business rejection, awaited persistence and result translation. Memory isolates the workflow; an actual database integration checks persistence behavior.
 
@@ -316,3 +340,5 @@ In an application, check invalid input, initial state, no save after business re
 - [TypeScript — Assertions](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions)
 - [Fowler — Repository](https://martinfowler.com/eaaCatalog/repository.html)
 - [Seemann — Composition Root](https://blog.ploeh.dk/2011/07/28/CompositionRoot/)
+
+[Previous: HTTP Request to Business Operation](1-http-request-to-business-operation.md) · [Next: Backend: From a Request to a Ticket](README.md)

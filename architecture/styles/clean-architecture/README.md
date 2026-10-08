@@ -8,7 +8,35 @@
 
 For HTTP and NestJS mechanics from first principles, start with the [Backend Architecture learning path](../../backend/README.md). [Clean on the backend](8-clean-on-the-backend.md) maps that canonical ticket capability to Clean's policy boundaries without repeating the implementation.
 
-## 1. History and origin
+**Contents**
+
+- [History and origin](#history-and-origin)
+- [What problem does it solve?](#what-problem-does-it-solve)
+- [Fit and cost](#fit-and-cost)
+  - [When Clean Architecture is a strong fit](#when-clean-architecture-is-a-strong-fit)
+  - [When it can be too much](#when-it-can-be-too-much)
+- [The fundamental model](#the-fundamental-model)
+- [What each circle owns](#what-each-circle-owns)
+  - [Entities](#entities)
+  - [Use Cases](#use-cases)
+  - [Interface Adapters](#interface-adapters)
+  - [Frameworks & Drivers](#frameworks--drivers)
+  - [Why isolate them?](#why-isolate-them)
+- [Recommended physical structure](#recommended-physical-structure)
+- [Where does a new function, type or helper go?](#where-does-a-new-function-type-or-helper-go)
+  - [A simple rule for helper functions](#a-simple-rule-for-helper-functions)
+- [Dependency isolation](#dependency-isolation)
+- [Naming before implementation](#naming-before-implementation)
+- [First feature end to end](#first-feature-end-to-end)
+- [Testing the boundaries](#testing-the-boundaries)
+- [Trade-offs and common failure modes](#trade-offs-and-common-failure-modes)
+- [Progressive learning path](#progressive-learning-path)
+- [What Clean Architecture does not require](#what-clean-architecture-does-not-require)
+- [Sources](#sources)
+
+<a id="1-history-and-origin"></a>
+
+## History and origin
 
 Robert C. Martin published **"The [Clean Architecture](../../../GLOSSARY.md#clean-architecture)"** in 2012 as a synthesis of related approaches including [Hexagonal Architecture](../../../GLOSSARY.md#hexagonal-architecture-ports-and-adapters), [Onion Architecture](../../../GLOSSARY.md#onion-architecture), Boundary-Control-[Entity](../../../GLOSSARY.md#domain-entity) and other boundary-oriented designs. He expanded the subject in the 2017 book *Clean Architecture*.
 
@@ -18,7 +46,9 @@ The recurring problem is older than the name:
 
 Primary source: https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html
 
-## 2. What problem does it solve?
+<a id="2-what-problem-does-it-solve"></a>
+
+## What problem does it solve?
 
 Imagine that cancelling an order is forbidden once it has shipped. A first implementation places the rule inside a React button and reads the status directly from the API response. Later, a second screen needs the same rule or the API renames its status field. The business decision now has to be found and corrected in UI/networking code.
 
@@ -27,7 +57,8 @@ Imagine that cancelling an order is forbidden once it has shipped. A first imple
 Without explicit boundaries, code often grows around the framework or database:
 
 ```mermaid
-flowchart LR
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
     UI["UI component"] --> HTTP["HTTP client"]
     UI --> STORE["State store"]
     HTTP --> DTO["API DTO"]
@@ -45,9 +76,13 @@ That produces predictable costs:
 
 Clean Architecture protects policy by making outer mechanisms depend toward inner policy.
 
-Domain modeling, UI composition and deployment still require their own decisions.
+[Domain](../../../GLOSSARY.md#domain) modeling, UI composition and deployment still require their own decisions.
 
-## 3. When Clean Architecture is a strong fit
+## Fit and cost
+
+<a id="3-when-clean-architecture-is-a-strong-fit"></a>
+
+### When Clean Architecture is a strong fit
 
 Good candidates include:
 
@@ -58,7 +93,9 @@ Good candidates include:
 - systems where independent testing of policy matters;
 - codebases that benefit from enforceable module boundaries.
 
-## 4. When it can be too much
+<a id="4-when-it-can-be-too-much"></a>
+
+### When it can be too much
 
 It can be excessive when:
 
@@ -72,13 +109,16 @@ It can be excessive when:
 <a id="the-four-layers-defined"></a>
 <a id="the-idea-in-one-picture"></a>
 
-## 5. The fundamental model
+<a id="5-the-fundamental-model"></a>
+
+## The fundamental model
 
 Think of the circles below as answers to four separate questions about the same cancellation: **what business rule must always hold; what operation the application performs; how external requests/data are translated; and which specific framework or database does the technical work**. They describe responsibilities, not four objects that every request must visit in order.
 
 Martin's canonical diagram uses four conceptual circles:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart BT
     F["Frameworks & Drivers"]
     IA["Interface Adapters"]
@@ -96,18 +136,29 @@ The essential rule is not "exactly four folders". It is the [Dependency Rule](..
 
 The arrow means **source dependency**, not runtime call direction.
 
-## 6. What each circle owns
+<a id="6-what-each-circle-owns"></a>
+
+## What each circle owns
 
 The canonical circles are conceptual. A real codebase can split one circle across multiple modules or place several outer mechanisms in one physical area.
 
 See [translation and framework glue in one outer module](../../foundations/dependency-boundaries.md#combined-outer-modules) for the practical mapping used here. Folder names do not replace responsibility and dependency rules.
 
-| Clean concept | Owns | Put here | Do not put here | May depend on |
-| --- | --- | --- | --- | --- |
-| [Entities](../../../GLOSSARY.md#clean-entities-circle) | enterprise/domain rules that survive delivery changes | entities, [value objects](../../../GLOSSARY.md#value-object), [invariants](../../../GLOSSARY.md#invariant), domain policies | React, Redux, HTTP, [ORM](../../../GLOSSARY.md#orm), API [DTOs](../../../GLOSSARY.md#data-transfer-object-dto), use-case orchestration | other inner domain concepts |
-| [Use Cases](../../../GLOSSARY.md#use-case) | application-specific operations | commands/results, [application services](../../../GLOSSARY.md#application-service), required [ports](../../../GLOSSARY.md#port) | concrete DB/HTTP/UI implementations | entities/domain policy |
-| [Interface Adapters](../../../GLOSSARY.md#interface-adapter) | translation across boundaries | controllers, [presenters](../../../GLOSSARY.md#presenter), [mappers](../../../GLOSSARY.md#mapper), boundary-facing [adapters](../../../GLOSSARY.md#adapter) | authoritative business rules or framework/driver dependencies that would reverse the canonical circle direction | use cases/entities and adapter-owned translation code |
-| [Frameworks & Drivers](../../../GLOSSARY.md#frameworks-and-drivers) | replaceable technology mechanisms | React, routers, HTTP servers, DB drivers, SDKs, CSS systems | inner policy that only exists because the framework made it convenient | inward abstractions/adapters as needed |
+### Entities
+
+The cancellation rule belongs to the business model: a shipped order cannot be cancelled. Code such as Order protects that decision without importing React, HTTP or a database. Martin's Entities circle also includes business functions and value objects, not only objects with identity.
+
+### Use Cases
+
+CancelOrder coordinates loading, asking the order to cancel and saving. Its required repository contract describes the interaction it needs, without selecting a database. It imports inward business policy.
+
+### Interface Adapters
+
+Delivery and storage translation convert accepted external representations to the operation's language and convert results back. A mapper or controller owns that translation rather than the cancellation rule. The canonical circle depends inward on use cases and entities.
+
+### Frameworks & Drivers
+
+A router, database client or UI framework performs the technical work. Its outer glue supplies the translation and protected operations it needs. A practical outer module can combine translation and technical calls when separating them protects no independent change.
 
 ### Why isolate them?
 
@@ -120,11 +171,14 @@ Isolation protects **reasons to change**.
 
 Putting all four reasons in one file couples unrelated changes and makes replacement/testing more expensive.
 
-## 7. Recommended physical structure
+<a id="7-recommended-physical-structure"></a>
+
+## Recommended physical structure
 
 This repository uses layer-first folders, with capabilities inside each layer. Diagram arrows mean containment:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     SRC["src/"]
     SRC --> D["domain/"]
@@ -149,15 +203,18 @@ flowchart TD
 | `presentation/` | UI interaction/view state and incoming HTTP/CLI delivery | caller input/output needs its own owner | database clients and outbound integration implementations |
 | `composition/` | concrete assembly/bootstrap | one outer place selects implementations | business decisions and use-case branching |
 
-These folder names and layer-first hierarchy are a **documentation convention**, not part of Martin's canonical four-circle definition. Grow cohesive capabilities inside each layer, following [the Scheduling example](../../foundations/code-placement.md#12-grow-capabilities-inside-each-layer). The [frontend structure](../../frontend/README.md) and the [backend HTTP/CLI paths](../../backend/README.md#place-your-first-feature) apply the same convention to different delivery mechanisms.
+These folder names and layer-first hierarchy are a **documentation convention**, not part of Martin's canonical four-circle definition. Grow cohesive capabilities inside each layer, following [the Scheduling example](../../foundations/code-placement.md#grow-capabilities-inside-each-layer). The [frontend structure](../../frontend/README.md) and the [backend HTTP/CLI paths](../../backend/README.md#place-your-first-feature) apply the same convention to different delivery mechanisms.
 
 For exact placement rules, use **[Code Placement](../../foundations/code-placement.md)**.
 
-## 8. Where does a new function, type or helper go?
+<a id="8-where-does-a-new-function-type-or-helper-go"></a>
+
+## Where does a new function, type or helper go?
 
 Start with meaning, not syntax:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     START{"Why does this code exist?"}
     START -->|"Enforces business truth"| D["domain/"]
@@ -186,12 +243,15 @@ Do **not** ask "is this a utility?". Ask "who owns its meaning?".
 
 If a helper maps an API [DTO](../../../GLOSSARY.md#data-transfer-object-dto), it is an [Infrastructure](../../../GLOSSARY.md#infrastructure) [mapper](../../../GLOSSARY.md#mapper). If it validates an [invariant](../../../GLOSSARY.md#invariant), it is [Domain](../../../GLOSSARY.md#domain). If it formats one feature's UI message, it stays with that feature. Only genuinely cross-feature, stable helpers earn a shared location.
 
-## 9. Dependency isolation
+<a id="9-dependency-isolation"></a>
+
+## Dependency isolation
 
 The recommended source [dependency graph](../../../GLOSSARY.md#dependency-graph) is:
 
 ```mermaid
-flowchart LR
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
     PRES["Presentation"] -. "imports" .-> APP["Application"]
     INFRA["Infrastructure"] -. "imports contracts" .-> APP
     APP -. "imports rules" .-> DOMAIN["Domain"]
@@ -210,7 +270,7 @@ Long dashes show imports; short dots show startup wiring. Solid sequence arrows 
 Example:
 
 ```ts
-// Signature excerpt; complete contracts follow in section 11.
+// Signature excerpt; the First feature end to end section links complete contracts.
 export interface OrderRepository {
   findById(id: OrderId): Promise<Order | null>
   save(order: Order): Promise<void>
@@ -228,21 +288,27 @@ export class HttpOrderRepository implements OrderRepository {
 
 Read **[The Dependency Rule](1-the-dependency-rule.md)** for the deeper explanation.
 
-## 10. Naming before implementation
+<a id="10-naming-before-implementation"></a>
+
+## Naming before implementation
 
 `Order` names the model, `CancelOrder` the class-based operation and `InMemoryOrderRepository` its storage implementation. Follow [Naming and File Placement](../../conventions/naming-and-file-placement.md) for the full convention.
 
-## 11. First feature end to end
+<a id="11-first-feature-end-to-end"></a>
+
+## First feature end to end
 
 A clerk cancels an order. `Order.cancel()` rejects shipped orders; `CancelOrder` loads, invokes that behavior and saves through an inward-owned `OrderRepository`.
 
-[The focused example](4-building-a-feature.md) owns that code. Changing the rule affects Domain; replacing storage affects its outer implementation and assembly. Delivery represents the result for its caller.
+[The focused example](4-building-a-feature.md) owns that code. Changing the rule affects [Domain](../../../GLOSSARY.md#domain); replacing storage affects its outer implementation and assembly. Delivery represents the result for its caller.
 
 <a id="complete-client-implementation"></a>
 
 For HTTP mechanics, use the [backend Ticket route](../../backend/README.md); for screen behavior, use [frontend Presentation](../../frontend/presentation-architecture.md).
 
-## 12. Testing the boundaries
+<a id="12-testing-the-boundaries"></a>
+
+## Testing the boundaries
 
 | Test scope | What it proves | Typical dependency strategy |
 | --- | --- | --- |
@@ -257,7 +323,9 @@ Do not use percentages as architectural quotas. Put tests where the relevant ris
 
 See **[Testing in Clean Architecture](5-testing-in-clean.md)**.
 
-## 13. Trade-offs and common failure modes
+<a id="13-trade-offs-and-common-failure-modes"></a>
+
+## Trade-offs and common failure modes
 
 The cost of stronger boundaries is more explicit code: contracts, mapping, modules and composition.
 
@@ -273,7 +341,9 @@ Common failures:
 
 <a id="learning-path"></a>
 
-## 14. Progressive learning path
+<a id="14-progressive-learning-path"></a>
+
+## Progressive learning path
 
 Read in this order:
 
@@ -288,7 +358,9 @@ Read in this order:
 
 The first three chapters deepen concepts already introduced here. Advanced mechanisms come only after placement and dependencies are clear.
 
-## 15. What Clean Architecture does not require
+<a id="15-what-clean-architecture-does-not-require"></a>
+
+## What Clean Architecture does not require
 
 Clean permits different folder layouts, function or class operations, and manual or container assembly. Choose each mechanism for the boundary it protects.
 
