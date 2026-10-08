@@ -62,11 +62,11 @@ export function formAllows(durationMinutes: number) {
 }
 ```
 
-**Task.** Give the rule one Domain owner and show how UI uses it through the relevant operation/result.
+**Task.** Give the rule one Domain owner and show both UI consumers using it without creating an operation whose only job is to forward the same check.
 
 **Questions.** Which file changes for a 30-minute rule? Does client validation establish authoritative booking?
 
-**Expected result.** 19 minutes is rejected and 20 accepted through the same domain guard. Both UI consumers receive the same result; changing the minimum to 30 requires one client rule edit.
+**Expected result.** A *new* appointment of 19 minutes is rejected and 20 accepted through the same Domain check. Both UI consumers use that decision; changing the minimum to 30 requires one client rule edit. Historic appointments are not filtered by this creation rule.
 
 **Relevant handbook sections.** [Read the guide](../../foundations/code-placement.md).
 

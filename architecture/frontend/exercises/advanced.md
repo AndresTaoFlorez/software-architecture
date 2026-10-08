@@ -36,7 +36,7 @@ export function ticketAppointments() { return selectAgendaInternal() }
 
 **What you already know.** Read [mixed Hook responsibilities](../presentation-architecture.md#avoid-the-god-viewmodel) and the HTTP integration.
 
-**Situation.** useAgenda fetches JSON, casts its [DTO](../../../GLOSSARY.md#data-transfer-object-dto), checks business eligibility, selects appointments and formats dates.
+**Situation.** useAgenda fetches JSON, casts its [DTO](../../../GLOSSARY.md#data-transfer-object-dto), filters existing appointments using a new-booking minimum, and formats dates.
 
 **Terms you need.** God Hook, [Parser](../../../GLOSSARY.md#parser), [Mapper](../../../GLOSSARY.md#mapper), [Domain](../../../GLOSSARY.md#domain) rule and Formatter.
 
@@ -60,7 +60,7 @@ export function useAgenda(day: string) {
 
 **Questions.** Which changes with the wire protocol? Which changes with locale? Which changes with business policy?
 
-**Expected result.** Unknown API data is checked before mapping. The Hook uses the supplied operation, selection stays in screen state and time formatting belongs to [Presentation](../../../GLOSSARY.md#presentation-layer). No copied duration rule or fetch call remains in the Hook.
+**Expected result.** Unknown API fields are checked before mapping; an existing 15-minute appointment remains visible even though it would fail the minimum for a new booking. The Hook uses the supplied operation, selection stays in screen state and time formatting belongs to [Presentation](../../../GLOSSARY.md#presentation-layer). No fetch call or copied booking rule remains in the Hook.
 
 **Relevant handbook sections.** [Read the guide](../presentation-architecture.md#avoid-the-god-viewmodel).
 
