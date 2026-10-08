@@ -1,10 +1,6 @@
 # Software Architecture Glossary
 
-This glossary defines the architecture, frontend and backend concepts used throughout this repository.
-
-Each entry contains a concise definition, a purpose, a repository-oriented example, and primary or authoritative references. Links from the rest of the repository point to the explicit anchors in this file.
-
-> **Linking policy.** Prose occurrences are linked to this glossary. Headings, fenced/inline code, URLs, HTML, bracketed content, reference definitions and existing Markdown links are intentionally not rewritten because doing so would break anchors, code samples or nested links.
+Compact references support the guides. Link a term on its first meaningful use in a section; repeat a link only when it resolves ambiguity.
 
 ## Index
 
@@ -13,15 +9,16 @@ Each entry contains a concise definition, a purpose, a repository-oriented examp
 - [Application Layer](#application-layer)
 - [Application Service](#application-service)
 - [Architectural Boundary](#architectural-boundary)
+- [Architectural Ownership](#architectural-ownership)
 - [Architecture Test](#architecture-test)
 - [Barrel File](#barrel-file)
 - [Bounded Context](#bounded-context)
+- [Business Rule](#business-rule)
 - [Clean Architecture](#clean-architecture)
 - [Clean Entities Circle](#clean-entities-circle)
 - [Colocation](#colocation)
 - [Command Query Responsibility Segregation (CQRS)](#cqrs)
 - [Composition Root](#composition-root)
-- [Conflict-Free Replicated Data Type (CRDT)](#crdt)
 - [Contract Test](#contract-test)
 - [Controller](#controller)
 - [Cross-Cutting Concern](#cross-cutting-concern)
@@ -57,12 +54,10 @@ Each entry contains a concise definition, a purpose, a repository-oriented examp
 - [HTTP Endpoint](#http-endpoint)
 - [HTTP Route](#http-route)
 - [HTTP Router / Routing](#http-routing)
-- [Idempotency](#idempotency)
 - [Infrastructure](#infrastructure)
 - [Interceptor (NestJS)](#nestjs-interceptor)
 - [Interface Adapter](#interface-adapter)
 - [Invariant](#invariant)
-- [Last-Write-Wins (LWW)](#last-write-wins-lww)
 - [Layered Architecture](#layered-architecture)
 - [Listener Middleware](#listener-middleware)
 - [Local State](#local-state)
@@ -84,8 +79,6 @@ Each entry contains a concise definition, a purpose, a repository-oriented examp
 - [Observer Pattern](#observer-pattern)
 - [Observer Synchronization](#observer-synchronization)
 - [Onion Architecture](#onion-architecture)
-- [Optimistic Concurrency](#optimistic-concurrency)
-- [Optimistic Update](#optimistic-update)
 - [Output Port](#output-port)
 - [Parser](#parser)
 - [Passive View](#passive-view)
@@ -118,7 +111,6 @@ Each entry contains a concise definition, a purpose, a repository-oriented examp
 - [Test Pyramid](#test-pyramid)
 - [Thunk](#thunk)
 - [Type-only Import](#type-only-import)
-- [Unit of Work](#unit-of-work)
 - [Use Case](#use-case)
 - [Value Object](#value-object)
 - [View](#view)
@@ -144,17 +136,9 @@ When a TypeScript tool reads source code, it can turn `import { save } from './t
 
 ## Adapter
 
-Code that connects the application to a specific external input or technology without making the application's own operations depend on its details. In the ticket example, `HttpTicketGateway` takes a request to create a ticket, sends it through HTTP, and changes the server's `ticket_id` field into the application's `id`. This is an outbound adapter. An inbound adapter, such as a UI handler, instead calls an operation offered by the application.
+Code connecting a specific external actor or technology to an application interaction. `TicketsController` invokes creation from HTTP; `PrismaTicketRepository` implements the required persistence interaction. The translation keeps the application's operation independent of that mechanism.
 
-**Purpose.** Translate between an external mechanism or actor and the interaction the application expects or offers. A given adapter is not necessarily an implementation of a TypeScript interface.
-
-**Example.** `HttpOrderRepository` adapts an HTTP API to the `OrderRepository` port.
-
-**Backend example.** In the Hexagonal reading of Tickets, `TicketsController` is the inbound adapter; its parser/Pipe are helpers. `InMemoryTicketRepository` and `PrismaTicketRepository` are outbound adapters implementing the Application-owned persistence contract. See [the exact file mapping](./backend/5-architectural-styles-with-nestjs.md#where-are-the-ports-and-adapters-in-this-example). Outside that style mapping, the walkthrough calls them the HTTP Controller and persistence implementations.
-
-**Frontend example.** `HttpTicketGateway` translates `POST /api/tickets` and an API `ticket_id` into the `TicketGateway` contract and an application ticket. See [the ticket-support walkthrough](./frontend/ports-and-adapters.md).
-
-**Sources.** [Cockburn — Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/) · [Martin — The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+[Full explanation](architecture/backend/5-architectural-styles-with-nestjs.md). **Sources.** [Cockburn: Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/)
 
 ---
 
@@ -288,27 +272,9 @@ A test that checks whether two pieces of software agree about what they send and
 
 ## Controller
 
-In Nest HTTP, a class that groups related route handler methods. `TicketsController` contains `create()`, the method selected for `POST /tickets`; it invokes the separate `CreateTicket` use case and maps the result to HTTP. Routing metadata selects the method; the class is not an endpoint, matching rule, use case or Domain entity. In classic MVC the word has a broader input-coordination role: clicking a ticket's **Resolve** button reaches a Controller that asks the Model to act. These contexts share a name, not identical framework behavior.
+Code coordinating input delivery to application behavior and presenting its outcome. In Nest, a Controller groups HTTP handlers: `TicketsController.create()` handles `POST /tickets`. MVC gives the role its own pattern-specific meaning.
 
-**Purpose.** Translate input into operations without owning rendering or authoritative business rules.
-
-**Example.** Nest's `TicketsController` groups handlers; its `create()` handler translates `POST /tickets` into a `CreateTicket` command. The controller class is not itself an endpoint and may expose several operations.
-
-**Sources.** [Fowler — GUI Architectures](https://martinfowler.com/eaaDev/uiArchs.html) · [Nest — Controllers](https://docs.nestjs.com/controllers)
-
----
-
-<a id="crdt"></a>
-
-## Conflict-Free Replicated Data Type (CRDT)
-
-A data structure designed so copies can be edited independently and later merged to reach the same result under specified merge rules. For example, replicas of an add-only set can each receive different items and combine their additions regardless of message arrival order. Not every offline merge algorithm or timestamp overwrite is a CRDT.
-
-**Purpose.** Make replicated updates converge under the stated merge and delivery assumptions.
-
-**Example.** A grow-only set can accept concurrent additions on multiple replicas and later merge deterministically.
-
-**Sources.** [Shapiro et al. — Conflict-Free Replicated Data Types](https://inria.hal.science/inria-00609399/document)
+[Full explanation](architecture/backend/1-http-request-to-business-operation.md). **Sources.** [Nest: Controllers](https://docs.nestjs.com/controllers) · [Fowler: GUI Architectures](https://martinfowler.com/eaaDev/uiArchs.html)
 
 ---
 
@@ -330,13 +296,9 @@ A responsibility that appears in many otherwise separate operations. Logging a t
 
 ## Data Transfer Object (DTO)
 
-Data shaped for sending between systems or program parts, not necessarily for expressing business rules. For example, an API may send `{ ticket_id: 'T-1', status: 'open' }`; the frontend can translate that transfer shape into its own ticket shape with an `id` field. The DTO is the boundary representation, not automatically the domain model. Ownership follows that boundary: incoming backend HTTP DTOs belong to Presentation, while API responses consumed by the frontend belong to Infrastructure. An Application command/result describes an operation and is not automatically an HTTP DTO; not every plain object is a DTO.
+A representation used to carry data across a boundary. `CreateTicketRequestDto` describes accepted HTTP request fields. Its owner is that HTTP boundary; received JSON requires a runtime check before being treated as the DTO.
 
-**Purpose.** Define boundary data without exposing a mechanism’s internal object model.
-
-**Example.** `ApiOrderDto` is mapped to an `Order` before Application/Domain code uses it.
-
-**Sources.** [Martin — The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) · [Fowler — Repository](https://martinfowler.com/eaaCatalog/repository.html)
+[Full explanation](architecture/foundations/code-placement.md#8-where-does-a-type-belong). **Sources.** [Fowler: Data Transfer Object](https://martinfowler.com/eaaCatalog/dataTransferObject.html)
 
 ---
 
@@ -662,20 +624,6 @@ A rule that must continue to hold for a business object to be valid. If a ticket
 
 ---
 
-<a id="last-write-wins-lww"></a>
-
-## Last-Write-Wins (LWW)
-
-A conflict rule that keeps the value considered to come from the latest of several ordered edits. If two replicas change a ticket title, LWW chooses one according to its ordering rule; it does not combine both titles or guarantee that the most useful edit survives. Timestamp ordering also needs carefully defined clock/tie behavior, and a timestamp overwrite alone is not necessarily a full CRDT.
-
-**Purpose.** Resolve competing values using an explicit ordering and tie-breaking policy.
-
-**Example.** Two edits to a preference record are resolved by the later logical timestamp.
-
-**Sources.** [Shapiro et al. — Conflict-Free Replicated Data Types](https://inria.hal.science/inria-00609399/document)
-
----
-
 <a id="listener-middleware"></a>
 
 ## Listener Middleware
@@ -872,20 +820,6 @@ A way to keep business rules at the center of an application so replacing the UI
 
 ---
 
-<a id="optimistic-update"></a>
-
-## Optimistic Update
-
-Showing a proposed result in the UI before the server has confirmed it. For example, after an analyst clicks **Resolve**, the ticket immediately appears resolved; if saving fails, the UI restores or reconciles the previous state. This improves perceived responsiveness but needs a failure/conflict strategy.
-
-**Purpose.** Provide immediate feedback before confirmation, with a defined rollback/reconciliation policy.
-
-**Example.** A todo appears checked immediately while the API request is still pending.
-
-**Sources.** [Redux Toolkit — Manual Cache Updates](https://redux-toolkit.js.org/rtk-query/usage/manual-cache-updates)
-
----
-
 <a id="output-port"></a>
 
 ## Output Port
@@ -904,17 +838,9 @@ Suppose creating a ticket must send its plain result to a formatter chosen at st
 
 ## Port
 
-A description of an interaction that the application needs from other code, or offers to code that calls it. For example, `TicketGateway.create(input)` says: "Give me a way to create a ticket and return it." It does not say whether that work uses HTTP or an in-memory implementation. More precisely, a port is an application-facing contract for one coherent interaction, not one interface per endpoint or file.
+A contract describing an interaction the application requires or offers without choosing the external mechanism. `TicketRepository` describes persistence required by `CreateTicket`; `PrismaTicketRepository` is an implementation. This protects the operation when the implementation changes.
 
-**Purpose.** State what the application requires or exposes without forcing its rules to depend on a particular external mechanism.
-
-**Example.** `Clock.now()` is a port when application policy must be independent of system time.
-
-**Backend example.** In Hexagonal Architecture, `TicketRepository` is the outbound port: the persistence contract Application requires. `CreateTicket.execute(command)` is the offered operation for inbound callers; its existing API needs no extra interface file. The concrete storage objects are implementations, not additional ports. See [the ticket file mapping](./backend/5-architectural-styles-with-nestjs.md#where-are-the-ports-and-adapters-in-this-example).
-
-**Frontend example.** `application/tickets/ports/TicketGateway.ts` defines the operation needed by the ticket-creation use case, without depending on HTTP or React. See [the ticket-support walkthrough](./frontend/ports-and-adapters.md).
-
-**Sources.** [Cockburn — Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/)
+[Full explanation](architecture/backend/5-architectural-styles-with-nestjs.md). **Sources.** [Cockburn: Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/)
 
 ---
 
@@ -922,13 +848,9 @@ A description of an interaction that the application needs from other code, or o
 
 ## Presentation Layer
 
-The part of the software that handles how callers interact with the application. In a ticket screen, it draws the form, tracks whether the submit button is busy, and displays errors. In this handbook's backend mapping, it also parses incoming HTTP/CLI data and translates application results into responses, messages and exit codes. These delivery decisions do not make it the authoritative owner of ticket validity.
+The area owning interaction and delivery representations. A frontend Page renders feedback; a backend Controller translates HTTP around an Application operation. This keeps delivery changes separate from business decisions.
 
-**Purpose.** Own interaction, delivery representation and view state while delegating authoritative policy inward.
-
-**Example.** A feature hook delegates creation to Application; a backend controller invokes `CreateTicket` and maps its result to HTTP fields/statuses without owning the initial ticket state.
-
-**Sources.** [Fowler — Presentation Model](https://martinfowler.com/eaaDev/PresentationModel.html) · [Martin — The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+[Full explanation](architecture/foundations/code-placement.md#6-presentation). **Sources.** [Fowler: Presentation Domain Data Layering](https://martinfowler.com/bliki/PresentationDomainDataLayering.html)
 
 ---
 
@@ -984,7 +906,7 @@ The receptionist's agenda screen combines a toolbar, calendar and screen-facing 
 
 **Example.** `presentation/scheduling/pages/AgendaPage.tsx` calls `useAgenda` and composes `AgendaToolbar` with `AgendaCalendar`. A router's required entry file can delegate to this Page. HTTP parsing and authoritative appointment rules retain their other owners.
 
-**Sources.** [React — Describing the UI](https://react.dev/learn/describing-the-ui) · [Handbook — Pages compose](./frontend/presentation-architecture.md#3-pages-compose-features-own-behavior)
+**Sources.** [React — Describing the UI](https://react.dev/learn/describing-the-ui) · [Handbook — Pages compose](architecture/frontend/presentation-architecture.md#3-pages-compose-features-own-behavior)
 
 ---
 
@@ -1020,13 +942,9 @@ A function that receives the previous state and an action describing what happen
 
 ## Repository Pattern
 
-A way to let Application/Domain code work with stored business objects as though accessing a collection, without depending on the storage technology. In the backend ticket example, `TicketRepository` is the Application-owned persistence contract requiring `insert(ticket)`; `InMemoryTicketRepository` and `PrismaTicketRepository` supply memory and database implementations. Their shared suffix identifies the same contract, while their prefixes identify how it is fulfilled. Not every HTTP integration is a Repository; here the term means the persistence design pattern, not a Git repository or Nest primitive.
+An abstraction presenting stored business objects in collection-like terms. `TicketRepository` describes insertion required by the creation workflow; its memory and Prisma implementations perform it. This keeps persistence interaction expressed in inward-owned terms.
 
-**Purpose.** Provide collection-like access to persisted domain objects while hiding persistence details.
-
-**Example.** `OrderRepository.findById()` and `save()` hide whether orders are stored in SQL or memory.
-
-**Sources.** [Fowler — Repository](https://martinfowler.com/eaaCatalog/repository.html)
+[Full explanation](architecture/backend/2-typescript-first-boundaries.md). **Sources.** [Fowler: Repository](https://martinfowler.com/eaaCatalog/repository.html)
 
 ---
 
@@ -1223,20 +1141,6 @@ In Redux, a function supplied to dispatch so it can run additional logic with ac
 **Example.** `saveOrderThunk` invokes an injected Application operation and dispatches lifecycle actions.
 
 **Sources.** [Redux Toolkit — createAsyncThunk](https://redux-toolkit.js.org/api/createAsyncThunk) · [Redux — Side Effects Approaches](https://redux.js.org/usage/side-effects-approaches)
-
----
-
-<a id="unit-of-work"></a>
-
-## Unit of Work
-
-A pattern that coordinates several changes so they are written as one logical business transaction. For example, transferring an order reservation might update the order and inventory together; the unit of work tracks the changes and coordinates commit. It is distinct from an arbitrary collection of unrelated API requests.
-
-**Purpose.** Coordinate persistence changes and a consistent commit boundary.
-
-**Example.** A checkout use case changes an Order and Inventory reservation, then commits both through one transaction boundary.
-
-**Sources.** [Fowler — Unit of Work](https://martinfowler.com/eaaCatalog/unitOfWork.html)
 
 ---
 
@@ -1506,34 +1410,6 @@ A CSS rule's way of choosing which page elements to style. For example, `button[
 
 ---
 
-<a id="optimistic-concurrency"></a>
-
-## Optimistic Concurrency
-
-A way to avoid silently overwriting someone else's newer change. Suppose two analysts open ticket version `v3`: when one saves, the ticket becomes `v4`; the second save must check that its expected version is still current and reject/reconcile the stale update. The server or authoritative storage must check that condition atomically.
-
-**Purpose.** Prevent a stale writer from silently overwriting newer state.
-
-**Example.** An HTTP update carries a strong ETag in `If-Match`; a changed version produces a failed precondition.
-
-**Sources.** [RFC 9110 — If-Match](https://www.rfc-editor.org/rfc/rfc9110.html#section-13.1.1)
-
----
-
-<a id="idempotency"></a>
-
-## Idempotency
-
-A property of an operation for which repeating the same request does not create an additional intended effect. For example, repeatedly setting a ticket's status to `resolved` may leave it resolved once, but sending a new notification every retry can still cause repeated side effects. HTTP method labels alone do not guarantee business idempotency.
-
-**Purpose.** Make repeated delivery or retries safe for the intended effect.
-
-**Example.** Setting status to cancelled twice can be idempotent; sending a new notification on every retry may not be.
-
-**Sources.** [RFC 9110 — Idempotent Methods](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2)
-
----
-
 <a id="custom-hook"></a>
 
 ## Custom Hook
@@ -1650,13 +1526,9 @@ The framework needs to know which controllers and dependencies belong together a
 
 ## Parser
 
-An HTTP body arrives as unknown data. Before using its fields, a plain function can check the expected object/string shape and either return accepted data or report a parsing failure. That function is a Parser. It interprets a representation; it does not become an access decision or a framework lifecycle hook.
+Code interpreting an incoming representation and returning a checked value or reporting failure. `parseCreateTicketRequest` checks unknown HTTP data and returns its request DTO. The Parser belongs to the boundary whose representation it interprets.
 
-**Purpose.** Turn an unknown representation into a checked value at its owning boundary.
-
-**Example.** `presentation/http/tickets/parsers/parseCreateTicketRequest.ts` returns `CreateTicketRequestDto`. A Nest Pipe invokes that same function and maps its failure to HTTP. In a frontend, `infrastructure/http/scheduling/parsers/parseAgendaApiResponse.ts` parses an external API response. A Money factory can instead parse business value semantics in Domain. Shape acceptance alone proves neither caller identity nor all business validity.
-
-**Sources.** [Handbook — exact parsing ownership](./foundations/code-placement.md#8-where-does-a-type-belong) · [Nest — Pipes](https://docs.nestjs.com/pipes) · [TypeScript — Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)
+[Full explanation](architecture/backend/2-typescript-first-boundaries.md#1-check-what-arrived-before-trusting-its-type). **Sources.** [TypeScript: Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)
 
 ---
 
@@ -1664,13 +1536,9 @@ An HTTP body arrives as unknown data. Before using its fields, a plain function 
 
 ## Pipe (NestJS)
 
-Before the ticket handler receives its body argument, code can check or transform that value. A Nest Pipe provides the framework hook applying parsing, validation or transformation to a handler argument. Ordinary parsing logic can live in a separate Parser function that the Pipe calls. The Pipe integrates this work through `transform(value, metadata)` before handler execution, returning the accepted value or rejecting it with an exception. It does not decide whether the caller has access.
+A Nest hook applying parsing, validation or transformation to a handler argument before invocation. `CreateTicketPipe` calls the plain request Parser and translates its recognized failure to HTTP. Domain still owns ticket validity.
 
-**Purpose.** Integrate argument parsing, validation or transformation into Nest's request processing.
-
-**Example.** `CreateTicketPipe` invokes the manual parser for an unknown body and maps bad shapes to `400`. It does not persist tickets or become the owner of subject and initial-state rules. TypeScript annotations alone are not pipes or runtime validation.
-
-**Sources.** [Nest — Pipes](https://docs.nestjs.com/pipes) · [Nest — Validation](https://docs.nestjs.com/techniques/validation)
+[Full explanation](architecture/backend/3-nestjs-building-blocks.md#guard-and-pipe-answer-different-questions). **Sources.** [Nest: Pipes](https://docs.nestjs.com/pipes)
 
 ---
 
@@ -1678,13 +1546,9 @@ Before the ticket handler receives its body argument, code can check or transfor
 
 ## Guard (NestJS)
 
-Before creation executes, the server may need to decide **may this caller invoke this selected operation?** A Nest Guard makes that access decision using an execution context identifying the selected handler. It can permit, reject or throw an appropriate failure. It runs before Pipes, which process handler arguments; valid input alone grants no access. The Guard can rely on an established authentication integration that has already verified identity, rather than implementing the whole authentication protocol.
+A Nest hook deciding whether the caller may invoke the selected handler. `AuthenticatedGuard` requires identity already verified by authentication code. Guards run before Pipes, keeping access decisions distinct from argument processing.
 
-**Purpose.** Apply access policy at a known framework invocation boundary.
-
-**Example.** A ticket guard requires a principal previously verified by established authentication code. It does not make arbitrary request data a verified identity, validate ticket subject rules or enforce permissions for non-HTTP callers automatically.
-
-**Sources.** [Nest — Guards](https://docs.nestjs.com/guards) · [Nest — Request lifecycle](https://docs.nestjs.com/faq/request-lifecycle)
+[Full explanation](architecture/backend/3-nestjs-building-blocks.md#guard-and-pipe-answer-different-questions). **Sources.** [Nest: Guards](https://docs.nestjs.com/guards)
 
 ---
 
@@ -1740,4 +1604,23 @@ Ticket input handling, business decisions and storage can be grouped by the diff
 
 **Example.** HTTP code invokes creation behavior, and persistence code stores the ticket. Naming files Controller, Service and Repository does not alone establish good layers or protect domain policy. Open versus closed layers and dependency rules must be specified; layers are not necessarily separately deployed services.
 
-**Sources.** [Fowler — Presentation Domain Data Layering](https://martinfowler.com/bliki/PresentationDomainDataLayering.html) · [Backend style comparison](./backend/5-architectural-styles-with-nestjs.md)
+**Sources.** [Fowler — Presentation Domain Data Layering](https://martinfowler.com/bliki/PresentationDomainDataLayering.html) · [Backend style comparison](architecture/backend/5-architectural-styles-with-nestjs.md)
+<a id="business-rule"></a>
+
+## Business Rule
+
+A decision or constraint from the problem domain. A Ticket subject cannot be blank, and new tickets start `open`. Requiring a JSON string is a transport rule; requiring an authenticated caller is access policy.
+
+[Full explanation](architecture/backend/2-typescript-first-boundaries.md#2-decide-what-a-valid-ticket-means-in-one-place). **Sources.** [Martin: Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+
+---
+
+<a id="architectural-ownership"></a>
+
+## Architectural Ownership
+
+The authoritative area for a decision, rule, representation or behavior. `Ticket` owns validity, `CreateTicket` the creation workflow, `TicketsController` HTTP translation, and `PrismaTicketRepository` Prisma persistence. When a decision changes, ask which area should change first.
+
+[Full explanation](architecture/foundations/code-placement.md). **Sources.** [Handbook: Code Placement](architecture/foundations/code-placement.md)
+
+---
