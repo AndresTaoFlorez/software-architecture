@@ -39,14 +39,14 @@ Use [Naming](../conventions/naming-and-file-placement.md#backend-names) for the 
 
 ## Read in order
 
-Complete the [common route](../../README.md#read-first) first. It ends with the HTTP and plain-TypeScript chapters below.
+Complete the [shared foundations](../../README.md#read-first) first. This backend route then introduces incoming HTTP and its plain-TypeScript implementation:
 
 1. [HTTP request to business operation](1-http-request-to-business-operation.md).
 2. [TypeScript-first boundaries](2-typescript-first-boundaries.md).
 3. Attempt [B-E2: contract and implementations](exercises/easy.md#b-e2--contract-and-implementations). Consult the linked Prisma excerpt for its mechanism.
-4. Attempt [intermediate exercises](exercises/intermediate.md) to change a rule, add CLI input and read an agenda.
+4. Attempt [B-I1 and B-I2](exercises/intermediate.md) to change a rule and add CLI input.
 5. [Nest building blocks](3-nestjs-building-blocks.md), then [B-E1: trace the request](exercises/easy.md#b-e1--trace-the-request).
-6. [Create Ticket with Nest](4-create-ticket-with-nestjs.md), then [B-E3: place HTTP files](exercises/easy.md#b-e3--place-http-files).
+6. [Create Ticket with Nest](4-create-ticket-with-nestjs.md), then [B-E3: place HTTP files](exercises/easy.md#b-e3--place-http-files) and [B-I3: read an agenda](exercises/intermediate.md#b-i3--read-an-agenda).
 7. [Business decisions and workflows](../foundations/domain-modeling/README.md).
 8. Attempt [advanced exercises](exercises/advanced.md).
 9. [Architectural styles with Nest](5-architectural-styles-with-nestjs.md).

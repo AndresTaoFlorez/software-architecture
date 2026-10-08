@@ -10,6 +10,7 @@ A support endpoint receives data, decides whether a ticket is valid and stores i
   - [Business behavior](#business-behavior)
   - [Data access](#data-access)
 - [Specify how layers may interact](#specify-how-layers-may-interact)
+  - [Ticket variation with Dependency Inversion](#ticket-variation-with-dependency-inversion)
 - [Apply it to a feature](#apply-it-to-a-feature)
 - [Fit, cost and change](#fit-cost-and-change)
 - [Verification and limits](#verification-and-limits)
@@ -38,9 +39,26 @@ Folders make these owners visible; permitted dependencies and calls establish th
 
 ## Specify how layers may interact
 
-In a **closed** layered arrangement, a caller reaches a lower layer through the intervening layer. An **open** arrangement deliberately permits some bypasses. State which calls are permitted rather than assuming the drawing enforces them.
+In a **closed** layered arrangement, each layer uses only the immediately lower layer. An **open** arrangement permits using lower layers without going through every intervening layer. State which calls and imports are permitted rather than assuming the drawing enforces them.
 
-A conventional presentation/business/data arrangement may allow business code to import concrete data access. Inverting that source relationship is a separate decision:
+In this closed example, [Presentation](../../../GLOSSARY.md#presentation-layer) imports and calls Business, and Business imports and calls Data Access. Presentation does not bypass Business. The concrete data-access dependency is permitted here; no inward-owned port is required.
+
+```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}}}%%
+flowchart TB
+    H["Ticket handler<br/>Presentation"] -->|calls| B["Create ticket<br/>Business"]
+    B -->|calls| D["Ticket store<br/>Data Access"]
+    H -. imports .-> B
+    B -. imports .-> D
+    linkStyle 0,1 stroke-width:2px
+    linkStyle 2,3 stroke-width:1px,stroke-dasharray:6 4
+```
+
+Solid arrows are runtime calls; dashed arrows are source imports. This arrangement separates responsibilities but still couples Business source to the chosen Data Access API.
+
+### Ticket variation with Dependency Inversion
+
+The handbook's Ticket example adds a separate decision: [Application](../../../GLOSSARY.md#application-layer) owns the storage contract, and the concrete storage code depends on that contract. Runtime calls still reach storage:
 
 ```mermaid
 %%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
@@ -64,7 +82,7 @@ Keep required contracts beside the policy needing them. This is the handbook's c
 
 ## Fit, cost and change
 
-Layering helps when presentation, business policy and integration change independently. It costs extra contracts and translation, so a disposable utility may reasonably use less separation.
+Layering helps when presentation, business policy and integration change independently. It costs additional boundaries and translation, so a disposable utility may reasonably use less separation.
 
 A subject rule changes its business owner; a schema change affects data access; a new caller affects delivery. Across capabilities, use supported APIs so another module does not bypass the chosen boundaries.
 
@@ -78,5 +96,6 @@ Check permitted source relationships and meaningful behavior separately. Three f
 
 ## Sources
 
+- [Microsoft: N-tier architecture, open and closed layers](https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/n-tier)
 - [Fowler: Presentation Domain Data Layering](https://martinfowler.com/bliki/PresentationDomainDataLayering.html)
 - [Evans: Domain-Driven Design Reference, Layered Architecture](https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf)

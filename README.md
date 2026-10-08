@@ -26,15 +26,13 @@ On a narrow screen, use the diagram controls to open, zoom and move around a lar
 3. [Dependency Boundaries](architecture/foundations/dependency-boundaries.md): understand what code uses what.
 4. [Composition](architecture/foundations/composition-root.md): supply concrete objects at startup.
 5. [Module Boundaries](architecture/foundations/module-boundaries-and-public-apis.md): expose a supported way to use a capability.
-6. [HTTP Request to Business Operation](architecture/backend/1-http-request-to-business-operation.md): follow a real incoming request.
-7. [TypeScript-First Boundaries](architecture/backend/2-typescript-first-boundaries.md): inspect the complete small ticket example.
 
 ## Choose your next route
 
-- [Backend](architecture/backend/README.md): continue with Nest, persistence and backend exercises.
+- [Backend](architecture/backend/README.md): start with incoming HTTP and plain TypeScript, then continue with Nest, persistence and backend exercises.
 - [Frontend](architecture/frontend/README.md): continue with screens, external integrations, state and frontend exercises.
 
-After the concrete example, [styles](architecture/styles/README.md) explain Layered, Hexagonal, Clean and Onion. [Presentation patterns](architecture/patterns/presentation/README.md) offer an optional MVC/MVVM continuation for frontend readers.
+After the concrete example in your chosen route, [styles](architecture/styles/README.md) explain Layered, Hexagonal, Clean and Onion. [Presentation patterns](architecture/patterns/presentation/README.md) offer an optional MVC/MVVM continuation for frontend readers.
 
 Read [architectural checks](architecture/foundations/architecture-testing.md) and [evolution](architecture/foundations/evolution-and-scaling.md) later, when you can trace the examples yourself.
 

@@ -112,4 +112,4 @@ Billing importing Tickets' private application helper violates capability owners
 - [TypeScript: modules](https://www.typescriptlang.org/docs/handbook/2/modules.html)
 - [Nest: modules](https://docs.nestjs.com/modules)
 
-[Previous: Composition Root and Dependency Injection](composition-root.md) · [Next: HTTP Request to Business Operation](../backend/1-http-request-to-business-operation.md)
+[Previous: Composition Root and Dependency Injection](composition-root.md) · [Next: choose frontend or backend](../../README.md#choose-your-next-route)

@@ -46,66 +46,86 @@ Source paths below are relative to an application's `src/`. Imports reuse canoni
 
 ## F-I1 — Compose a screen
 
-The [canonical agenda core](../presentation-architecture.md#a-small-agenda-operation) supplies `GetAgenda` and `Appointment`. This screen uses local state; a state library is unnecessary for this requirement.
+The [canonical agenda core](../presentation-architecture.md#a-small-agenda-operation) supplies `GetAgenda` and `Appointment`. Each listing is a separate owned file. The Hook keeps this screen's selected day and feedback in React state; no state library is required.
 
-```tsx
-// src/presentation/scheduling/AgendaPage.tsx
-import { useRef, useState } from 'react'
+```ts
+// src/presentation/scheduling/hooks/useAgenda.ts
+import { useState } from 'react'
 import type { GetAgenda } from '@/application/scheduling'
 import type { Appointment } from '@/domain/scheduling/Appointment'
 
-export function useAgenda(getAgenda: GetAgenda, initialDay: string) {
+export function useAgenda(getAgenda: GetAgenda, initialDay = '2026-10-07') {
   const [selectedDay, setDay] = useState(initialDay)
   const [appointments, setAppointments] = useState<readonly Appointment[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const request = useRef(0)
 
   async function selectDay(day: string) {
-    const current = ++request.current
     setDay(day)
     setAppointments([])
-    setBusy(true)
     setError(null)
-    if (!day) {
-      setError('Choose a day')
-      setBusy(false)
-      return
-    }
+    if (!day) { setError('Choose a day'); return }
+    setBusy(true)
     try {
       const result = await getAgenda.execute(day)
-      if (current !== request.current) return
       if (result.ok) setAppointments(result.appointments)
       else setError('Agenda unavailable')
     } catch {
-      if (current === request.current) setError('Agenda could not be loaded')
+      setError('Agenda could not be loaded')
     } finally {
-      if (current === request.current) setBusy(false)
+      setBusy(false)
     }
   }
   return { selectedDay, appointments, busy, error, selectDay }
 }
+```
 
+```tsx
+// src/presentation/scheduling/components/AgendaToolbar/AgendaToolbar.tsx
 export function AgendaToolbar(props: {
   selectedDay: string
+  busy: boolean
   onDayChange: (day: string) => void
 }) {
-  return <label>Day <input type="date" value={props.selectedDay}
+  return <label>Day <input type="date" value={props.selectedDay} disabled={props.busy}
     onChange={event => props.onDayChange(event.target.value)} /></label>
 }
+```
+
+```tsx
+// src/presentation/scheduling/components/AppointmentCard/AppointmentCard.tsx
+import type { Appointment } from '@/domain/scheduling/Appointment'
+
 export function AppointmentCard({ appointment }: { appointment: Appointment }) {
   return <li>{appointment.id}</li>
 }
+```
+
+```tsx
+// src/presentation/scheduling/components/AgendaCalendar/AgendaCalendar.tsx
+import type { Appointment } from '@/domain/scheduling/Appointment'
+import { AppointmentCard } from '../AppointmentCard/AppointmentCard'
+
 export function AgendaCalendar({ appointments }: { appointments: readonly Appointment[] }) {
   return <ul>{appointments.map(appointment =>
     <AppointmentCard key={appointment.id} appointment={appointment} />)}</ul>
 }
+```
+
+```tsx
+// src/presentation/scheduling/pages/AgendaPage.tsx
+import type { GetAgenda } from '@/application/scheduling'
+import { useAgenda } from '../hooks/useAgenda'
+import { AgendaToolbar } from '../components/AgendaToolbar/AgendaToolbar'
+import { AgendaCalendar } from '../components/AgendaCalendar/AgendaCalendar'
+
 export function AgendaPage({ getAgenda }: { getAgenda: GetAgenda }) {
-  const agenda = useAgenda(getAgenda, '2026-10-07')
+  const agenda = useAgenda(getAgenda)
   return <main>
-    <AgendaToolbar selectedDay={agenda.selectedDay}
+    <AgendaToolbar selectedDay={agenda.selectedDay} busy={agenda.busy}
       onDayChange={day => { void agenda.selectDay(day) }} />
-    <button onClick={() => { void agenda.selectDay(agenda.selectedDay) }}>Load</button>
+    <button disabled={agenda.busy}
+      onClick={() => { void agenda.selectDay(agenda.selectedDay) }}>Load</button>
     {agenda.busy && <p role="status">Loading</p>}
     {agenda.error && <p role="alert">{agenda.error}</p>}
     <AgendaCalendar appointments={agenda.appointments} />
@@ -113,9 +133,7 @@ export function AgendaPage({ getAgenda }: { getAgenda: GetAgenda }) {
 }
 ```
 
-The files are combined here so the excerpt is complete. In the handbook's placement convention, keep Page, Hook and each component in their corresponding Scheduling folders. The request counter belongs to screen interaction; it prevents stale feedback and is not a transport implementation.
-
-Composition supplies `GetAgenda` with a reader, then passes it to `AgendaPage`. The initial screen waits for Load or a day change. Clearing the native date control shows feedback without calling the reader. This is control-input handling; it defines no booking rule.
+Composition supplies `GetAgenda` with a reader and passes it to the Page; [F-I3](#f-i3--replace-the-reader) shows that assembly. The initial screen waits for Load or a day change. Its controls pause while loading, keeping this exercise to one user-triggered read at a time. Clearing the date shows feedback without a read. Coordinating overlapping requests is outside this composition exercise.
 
 **Exercise.** [F-I1](intermediate.md#f-i1--compose-a-screen)
 
@@ -124,12 +142,17 @@ Composition supplies `GetAgenda` with a reader, then passes it to `AgendaPage`. 
 Reuse `isAppointmentDuration` from the [canonical Appointment module](../presentation-architecture.md#a-small-agenda-operation).
 
 ```ts
-// src/application/scheduling/CheckAppointmentDuration.ts
-import { isAppointmentDuration } from '@/domain/scheduling/Appointment'
-
+// src/application/scheduling/contracts/DurationResult.ts
 export type DurationResult =
   | { ok: true; minutes: number }
   | { ok: false; reason: 'invalid-duration' }
+```
+
+```ts
+// src/application/scheduling/use-cases/checkAppointmentDuration.ts
+import { isAppointmentDuration } from '@/domain/scheduling/Appointment'
+
+import type { DurationResult } from '../contracts/DurationResult'
 
 export function checkAppointmentDuration(value: unknown): DurationResult {
   return isAppointmentDuration(value)
@@ -139,17 +162,31 @@ export function checkAppointmentDuration(value: unknown): DurationResult {
 ```
 
 ```ts
-// src/presentation/scheduling/durationFeedback.ts
-import { checkAppointmentDuration, type DurationResult } from '@/application/scheduling/CheckAppointmentDuration'
+// src/presentation/scheduling/formatters/formatDurationResult.ts
+import type { DurationResult } from '@/application/scheduling/contracts/DurationResult'
 
-function message(result: DurationResult): string {
+export function formatDurationResult(result: DurationResult): string {
   return result.ok ? 'Duration accepted' : 'Choose a valid duration'
 }
+```
+
+```ts
+// src/presentation/scheduling/components/AppointmentCard/durationFeedback.ts
+import { checkAppointmentDuration } from '@/application/scheduling/use-cases/checkAppointmentDuration'
+import { formatDurationResult } from '../../formatters/formatDurationResult'
+
 export function appointmentCardFeedback(minutes: number) {
-  return message(checkAppointmentDuration(minutes))
+  return formatDurationResult(checkAppointmentDuration(minutes))
 }
+```
+
+```ts
+// src/presentation/scheduling/components/AppointmentForm/durationFeedback.ts
+import { checkAppointmentDuration } from '@/application/scheduling/use-cases/checkAppointmentDuration'
+import { formatDurationResult } from '../../formatters/formatDurationResult'
+
 export function appointmentFormFeedback(value: unknown) {
-  return message(checkAppointmentDuration(value))
+  return formatDurationResult(checkAppointmentDuration(value))
 }
 ```
 
@@ -162,7 +199,7 @@ React components render these messages rather than comparing the minimum again. 
 Implement the [canonical AgendaReader contract](../presentation-architecture.md#a-small-agenda-operation). Its values are already accepted internal appointment facts, not unknown HTTP responses.
 
 ```ts
-// src/infrastructure/memory/scheduling/InMemoryAgendaReader.ts
+// src/infrastructure/memory/scheduling/adapters/InMemoryAgendaReader.ts
 import type { Appointment } from '@/domain/scheduling/Appointment'
 import type { AgendaReader } from '@/application/scheduling/ports/AgendaReader'
 
@@ -179,9 +216,9 @@ export class InMemoryAgendaReader implements AgendaReader {
 ```
 
 ```ts
-// src/composition/trainingAgenda.ts
+// src/composition/scheduling/trainingAgenda.ts
 import { GetAgenda } from '@/application/scheduling'
-import { InMemoryAgendaReader } from '@/infrastructure/memory/scheduling/InMemoryAgendaReader'
+import { InMemoryAgendaReader } from '@/infrastructure/memory/scheduling/adapters/InMemoryAgendaReader'
 
 export function trainingAgenda() {
   return new GetAgenda(new InMemoryAgendaReader({
@@ -199,24 +236,42 @@ Production assembly supplies its HTTP implementation of the same contract. Copie
 Expose an appointment summary, then supply its reader to the consumer. No state-library type crosses this supported entry.
 
 ```ts
-// src/presentation/scheduling/appointmentSummary.ts
-import type { GetAgenda } from '@/application/scheduling'
-
+// src/presentation/scheduling/contracts/AppointmentSummary.ts
 export interface AppointmentSummary { id: string; startsAt: string }
 export type SummaryResult =
   | { ok: true; appointments: readonly AppointmentSummary[] }
   | { ok: false; reason: 'unavailable' }
+```
+
+```ts
+// src/presentation/scheduling/ports/AppointmentSummaryReader.ts
+import type { SummaryResult } from '../contracts/AppointmentSummary'
+
 export interface AppointmentSummaryReader { read(day: string): Promise<SummaryResult> }
+```
+
+```ts
+// src/presentation/scheduling/mappers/mapAppointmentSummary.ts
+import type { Appointment } from '@/domain/scheduling/Appointment'
+import type { AppointmentSummary } from '../contracts/AppointmentSummary'
+
+export function mapAppointmentSummary(item: Appointment): AppointmentSummary {
+  return { id: item.id, startsAt: item.startsAt }
+}
+```
+
+```ts
+// src/presentation/scheduling/readers/createAppointmentSummaryReader.ts
+import type { GetAgenda } from '@/application/scheduling'
+import type { AppointmentSummaryReader } from '../ports/AppointmentSummaryReader'
+import { mapAppointmentSummary } from '../mappers/mapAppointmentSummary'
 
 export function createAppointmentSummaryReader(getAgenda: GetAgenda): AppointmentSummaryReader {
   return {
     async read(day) {
       const result = await getAgenda.execute(day)
       if (!result.ok) return result
-      return {
-        ok: true,
-        appointments: result.appointments.map(item => ({ id: item.id, startsAt: item.startsAt })),
-      }
+      return { ok: true, appointments: result.appointments.map(mapAppointmentSummary) }
     },
   }
 }
@@ -224,12 +279,13 @@ export function createAppointmentSummaryReader(getAgenda: GetAgenda): Appointmen
 
 ```ts
 // src/presentation/scheduling/index.ts
-export { createAppointmentSummaryReader } from './appointmentSummary'
-export type { AppointmentSummary, AppointmentSummaryReader, SummaryResult } from './appointmentSummary'
+export { createAppointmentSummaryReader } from './readers/createAppointmentSummaryReader'
+export type { AppointmentSummary, SummaryResult } from './contracts/AppointmentSummary'
+export type { AppointmentSummaryReader } from './ports/AppointmentSummaryReader'
 ```
 
 ```ts
-// src/presentation/tickets/readAppointmentSummary.ts
+// src/presentation/tickets/readers/readAppointmentSummary.ts
 import type { AppointmentSummaryReader } from '@/presentation/scheduling'
 
 export async function readAppointmentSummary(reader: AppointmentSummaryReader, day: string) {
@@ -246,30 +302,57 @@ Composition calls Scheduling's public factory with the operation and supplies th
 
 ## F-A2 — Split a God Hook
 
-Use the [canonical agenda core](../presentation-architecture.md#a-small-agenda-operation) and the [F-I1 Hook](#f-i1--compose-a-screen). Add only the HTTP implementation and display formatter.
+Reuse the [canonical agenda core](../presentation-architecture.md#a-small-agenda-operation) and the [F-I1 Hook](#f-i1--compose-a-screen). The integration's [DTO](../../../GLOSSARY.md#data-transfer-object-dto), [Parser](../../../GLOSSARY.md#parser), [Mapper](../../../GLOSSARY.md#mapper) and adapter occupy the responsibility folders from the start.
 
 ```ts
-// src/infrastructure/http/scheduling/HttpAgendaReader.ts
-import { isAppointmentDuration, type Appointment } from '@/domain/scheduling/Appointment'
-import { AgendaUnavailable, type AgendaReader } from '@/application/scheduling/ports/AgendaReader'
+// src/infrastructure/http/scheduling/dto/AgendaApiDto.ts
+export interface AgendaApiDto {
+  appointment_id: string
+  start_time: string
+  minutes: number
+}
+```
 
-export interface AgendaApiDto { appointment_id: string; start_time: string; minutes: number }
+```ts
+// src/infrastructure/http/scheduling/parsers/parseAgendaApiResponse.ts
+import { isAppointmentDuration } from '@/domain/scheduling/Appointment'
+import type { AgendaApiDto } from '../dto/AgendaApiDto'
+
 export function parseAgendaApiResponse(value: unknown): readonly AgendaApiDto[] {
   if (!Array.isArray(value)) throw new Error('Invalid agenda response')
   return value.map((row: unknown) => {
-    if (typeof row !== 'object' || row === null ||
+    // First check the external representation.
+    if (typeof row !== 'object' || row === null || Array.isArray(row) ||
         !('appointment_id' in row) || typeof row.appointment_id !== 'string' || !row.appointment_id ||
         !('start_time' in row) || typeof row.start_time !== 'string' ||
         !Number.isFinite(Date.parse(row.start_time)) ||
-        !('minutes' in row) || !isAppointmentDuration(row.minutes)) {
+        !('minutes' in row) || typeof row.minutes !== 'number') {
       throw new Error('Invalid agenda response')
     }
+    // Reuse Domain's validity decision; do not redefine its minimum here.
+    if (!isAppointmentDuration(row.minutes)) throw new Error('Invalid appointment duration')
     return { appointment_id: row.appointment_id, start_time: row.start_time, minutes: row.minutes }
   })
 }
+```
+
+```ts
+// src/infrastructure/http/scheduling/mappers/mapAgendaApiDto.ts
+import type { Appointment } from '@/domain/scheduling/Appointment'
+import type { AgendaApiDto } from '../dto/AgendaApiDto'
+
 export function mapAgendaApiDto(row: AgendaApiDto): Appointment {
   return { id: row.appointment_id, startsAt: row.start_time, durationMinutes: row.minutes }
 }
+```
+
+```ts
+// src/infrastructure/http/scheduling/adapters/HttpAgendaReader.ts
+import type { Appointment } from '@/domain/scheduling/Appointment'
+import { AgendaUnavailable, type AgendaReader } from '@/application/scheduling/ports/AgendaReader'
+import { parseAgendaApiResponse } from '../parsers/parseAgendaApiResponse'
+import { mapAgendaApiDto } from '../mappers/mapAgendaApiDto'
+
 export class HttpAgendaReader implements AgendaReader {
   constructor(private readonly request: typeof fetch = fetch) {}
   async read(day: string): Promise<readonly Appointment[]> {
@@ -286,7 +369,7 @@ export class HttpAgendaReader implements AgendaReader {
 ```
 
 ```ts
-// src/presentation/scheduling/formatAppointmentTime.ts
+// src/presentation/scheduling/formatters/formatAppointmentTime.ts
 import type { Appointment } from '@/domain/scheduling/Appointment'
 
 export function formatAppointmentTime(
@@ -301,18 +384,28 @@ export function formatAppointmentTime(
 ```
 
 ```ts
-// src/composition/httpAgenda.ts
+// src/composition/scheduling/httpAgenda.ts
 import { GetAgenda } from '@/application/scheduling'
-import { HttpAgendaReader } from '@/infrastructure/http/scheduling/HttpAgendaReader'
+import { HttpAgendaReader } from '@/infrastructure/http/scheduling/adapters/HttpAgendaReader'
 
 export function httpAgenda(request: typeof fetch = fetch) {
   return new GetAgenda(new HttpAgendaReader(request))
 }
 ```
 
-The Hook retains selected day, loading and feedback from F-I1; a component calls the formatter when rendering each accepted appointment. The adapter rejects malformed rows instead of silently filtering them out. Its schema reuses [Domain](../../../GLOSSARY.md#domain)'s duration guard.
+The Page and Hook keep their F-I1 files. To display times, change only `presentation/scheduling/components/AppointmentCard/AppointmentCard.tsx`:
 
-The API row shape, parser and mapper share a file here for a complete focused module; split them into the documented dto/parsers/mappers folders when their change needs justify it. The retained cause is internal; `GetAgenda` and the Hook expose safe feedback. HTTP mocks establish mapping and failure translation, not agreement with a real backend.
+```tsx
+// src/presentation/scheduling/components/AppointmentCard/AppointmentCard.tsx
+import type { Appointment } from '@/domain/scheduling/Appointment'
+import { formatAppointmentTime } from '../../formatters/formatAppointmentTime'
+
+export function AppointmentCard({ appointment }: { appointment: Appointment }) {
+  return <li>{appointment.id} — {formatAppointmentTime(appointment, 'en-GB', 'UTC')}</li>
+}
+```
+
+The Parser checks unknown wire fields and reuses [Domain](../../../GLOSSARY.md#domain)'s duration guard; the Mapper renames accepted fields. Malformed rows reject the read rather than disappearing silently. The adapter retains the cause for internal diagnostics; `GetAgenda` and the Hook return safe feedback. HTTP mocks verify these translations, not agreement with a real backend.
 
 **Exercise.** [F-A2](advanced.md#f-a2--split-a-god-hook)
 
@@ -321,13 +414,25 @@ The API row shape, parser and mapper share a file here for a complete focused mo
 Reuse `AgendaDraft` and `AgendaDraftStorage` from the [canonical state guide](../state-management.md#browser-persistence-is-an-external-detail).
 
 ```ts
-// src/application/scheduling/AgendaDraftOperations.ts
-import type { AgendaDraft, AgendaDraftStorage } from './ports/AgendaDraftStorage'
-
+// src/application/scheduling/errors/DraftStorageUnavailable.ts
 export class DraftStorageUnavailable extends Error {}
+```
+
+```ts
+// src/application/scheduling/contracts/DraftLoadResult.ts
+import type { AgendaDraft } from '../ports/AgendaDraftStorage'
+
 export type DraftLoadResult =
   | { ok: true; draft: AgendaDraft | null }
   | { ok: false; reason: 'draft-unavailable' }
+```
+
+```ts
+// src/application/scheduling/use-cases/AgendaDraftOperations.ts
+import type { AgendaDraft, AgendaDraftStorage } from '../ports/AgendaDraftStorage'
+
+import { DraftStorageUnavailable } from '../errors/DraftStorageUnavailable'
+import type { DraftLoadResult } from '../contracts/DraftLoadResult'
 
 export class AgendaDraftOperations {
   constructor(private readonly storage: AgendaDraftStorage) {}
@@ -349,9 +454,8 @@ export class AgendaDraftOperations {
 ```
 
 ```ts
-// src/infrastructure/browser/scheduling/SessionStorageAgendaDraftStorage.ts
-import type { AgendaDraft, AgendaDraftStorage } from '@/application/scheduling/ports/AgendaDraftStorage'
-import { DraftStorageUnavailable } from '@/application/scheduling/AgendaDraftOperations'
+// src/infrastructure/browser/scheduling/parsers/parseStoredDraft.ts
+import type { AgendaDraft } from '@/application/scheduling/ports/AgendaDraftStorage'
 
 export function parseStoredDraft(value: unknown): AgendaDraft {
   if (typeof value !== 'object' || value === null || Array.isArray(value) ||
@@ -361,6 +465,15 @@ export function parseStoredDraft(value: unknown): AgendaDraft {
   }
   return { day: value.day, note: value.note }
 }
+```
+
+```ts
+// src/infrastructure/browser/scheduling/adapters/SessionStorageAgendaDraftStorage.ts
+import type { AgendaDraft, AgendaDraftStorage } from '@/application/scheduling/ports/AgendaDraftStorage'
+import { DraftStorageUnavailable } from '@/application/scheduling/errors/DraftStorageUnavailable'
+
+import { parseStoredDraft } from '../parsers/parseStoredDraft'
+
 export class SessionStorageAgendaDraftStorage implements AgendaDraftStorage {
   constructor(private readonly storage: Pick<Storage, 'getItem' | 'setItem'>) {}
   async load(): Promise<AgendaDraft | null> {
@@ -379,24 +492,29 @@ export class SessionStorageAgendaDraftStorage implements AgendaDraftStorage {
 ```
 
 ```ts
-// src/presentation/scheduling/draftFeedback.ts
-import type { AgendaDraft } from '@/application/scheduling/ports/AgendaDraftStorage'
-import type { DraftLoadResult } from '@/application/scheduling/AgendaDraftOperations'
+// src/presentation/scheduling/formatters/draftFeedback.ts
+import type { DraftLoadResult } from '@/application/scheduling/contracts/DraftLoadResult'
 
 export function draftFeedback(result: DraftLoadResult) {
   return result.ok
     ? { draft: result.draft, message: result.draft ? 'Draft recovered' : 'No saved draft' }
     : { draft: null, message: 'Draft could not be recovered' }
 }
+```
+
+```ts
+// src/presentation/scheduling/state/agendaDraft.state.ts
+import type { AgendaDraft } from '@/application/scheduling/ports/AgendaDraftStorage'
+
 export function reduceDraft(_state: AgendaDraft, next: AgendaDraft): AgendaDraft {
   return { ...next }
 }
 ```
 
 ```ts
-// src/composition/browserDraft.ts
-import { AgendaDraftOperations } from '@/application/scheduling/AgendaDraftOperations'
-import { SessionStorageAgendaDraftStorage } from '@/infrastructure/browser/scheduling/SessionStorageAgendaDraftStorage'
+// src/composition/scheduling/browserDraft.ts
+import { AgendaDraftOperations } from '@/application/scheduling/use-cases/AgendaDraftOperations'
+import { SessionStorageAgendaDraftStorage } from '@/infrastructure/browser/scheduling/adapters/SessionStorageAgendaDraftStorage'
 
 export function browserDraft(acquire: () => Storage = () => window.sessionStorage) {
   // Even acquiring sessionStorage may throw; defer it into the checked operation.

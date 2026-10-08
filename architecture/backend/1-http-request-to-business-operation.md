@@ -109,4 +109,4 @@ Continue with [plain TypeScript boundaries](2-typescript-first-boundaries.md).
 - [Nest — Controllers](https://docs.nestjs.com/controllers)
 - [Nest — Request lifecycle](https://docs.nestjs.com/faq/request-lifecycle)
 
-[Previous: Module Boundaries and Public APIs](../foundations/module-boundaries-and-public-apis.md) · [Next: TypeScript-First Boundaries](2-typescript-first-boundaries.md)
+[Previous: Backend route](README.md) · [Next: TypeScript-First Boundaries](2-typescript-first-boundaries.md)

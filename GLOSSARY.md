@@ -160,7 +160,7 @@ When an analyst selects **Create Ticket**, some code must check the supplied inf
 
 ## Application Service
 
-Code that coordinates one application operation. For example, `CreateTicketService` may validate the request, call the ticket-creation capability and return the result. It is usually stateless across calls; it coordinates domain behavior but should not invent or take ownership of the ticket's business rules.
+Code that coordinates a use-case command and workflow, including application-level preconditions when needed. A transport parser checks the external HTTP/JSON representation at delivery; the Application Service obtains facts and coordinates work; Domain enforces business invariants.
 
 **Purpose.** Coordinate one cohesive application operation without moving domain invariants into orchestration.
 

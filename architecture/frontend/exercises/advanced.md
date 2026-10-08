@@ -87,7 +87,7 @@ export function reduceDraft(state: Draft, next: Draft) {
 
 **Questions.** Why is recovery an Application capability here? Who interprets malformed saved JSON?
 
-**Expected result.** Saving/recovering works through an injected storage contract. Missing storage returns null; malformed JSON and denied reads/writes produce safe failure feedback. The reducer performs no browser calls.
+**Expected result.** Saving/recovering works through an injected storage contract. A missing saved draft returns null; malformed JSON and denied reads/writes produce safe failure feedback. The reducer performs no browser calls.
 
 **Relevant handbook sections.** [Read the guide](../state-management.md#browser-persistence-is-an-external-detail).
 

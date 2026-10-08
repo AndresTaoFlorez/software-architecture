@@ -16,7 +16,7 @@ A support ticket cannot be assigned after resolution. An analyst also needs the 
 
 A ticket knows its own status. Its supported assignment behavior can reject assignment after resolution. This is **entity behavior**: a business object protects the rules that belong to it.
 
-The [Ticket factory](../../backend/2-typescript-first-boundaries.md) already shows one object enforcing valid creation. The [assignment solution](../../backend/exercises/solutions.md#b-a3--assignment-and-escalation) extends the model for that separate requirement.
+The [Ticket factory](../../backend/2-typescript-first-boundaries.md) already shows one object enforcing valid creation. The [assignment solution](../../backend/exercises/solutions.md#b-a3--assignment-and-escalation) extends that same `domain/tickets/Ticket.ts` with restoration and assignment behavior; it does not introduce a parallel Ticket entity.
 
 ## Decisions involving several facts
 
@@ -73,8 +73,6 @@ An entity keeps its own rules; a domain service expresses a decision spanning su
 ## Verification and limits
 
 Check the decision with plain values: missing skill, escalation without a supervisor and allowed assignment. Check that the workflow does not save a rejected decision and that the entity rejects resolved assignment.
-
-Loading and saving in this teaching example does not solve concurrent assignment. A production guarantee must be specified by the operation's contracts and implemented through suitable persistence control.
 
 Keep this distinction independent of frameworks. Nest [providers](../../backend/3-nestjs-building-blocks.md) can register any of these pieces without deciding their architectural owner.
 

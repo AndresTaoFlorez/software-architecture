@@ -55,7 +55,7 @@ A screen-facing hook can expose `rows`, `busy` and `reload()` while hiding state
 
 ## Read next
 
-Complete the [common ticket route](../../README.md#read-first), then follow:
+Complete the [shared foundations](../../README.md#read-first), then follow this frontend route. Incoming backend HTTP and Nest are optional context, not prerequisites:
 
 1. [Presentation architecture](presentation-architecture.md), then [F-E1: place agenda interaction](exercises/easy.md#f-e1--place-agenda-interaction).
 2. [Frontend integration](ports-and-adapters.md), then [F-E3: receive an API response](exercises/easy.md#f-e3--receive-an-api-response).
@@ -64,6 +64,8 @@ Complete the [common ticket route](../../README.md#read-first), then follow:
 5. [Styling and design systems](styling-and-design-system.md), when the screen needs those decisions.
 
 After the example, compare [styles](../styles/README.md). [MVC/MVVM](../patterns/presentation/README.md) are optional screen-organization continuations. [Facade](../patterns/structural/facade/README.md) is a focused explanation of subsystem collaboration.
+
+For optional server-side context, see the [backend HTTP chapter](../backend/1-http-request-to-business-operation.md).
 
 The [reference case study](reference-case-study.md) applies the ownership questions to a larger reviewed frontend. Use it after the small examples.
 
