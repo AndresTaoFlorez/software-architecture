@@ -66,7 +66,7 @@ export interface Appointment {
   readonly durationMinutes: number
 }
 
-export function isAppointmentDuration(value: unknown): value is number {
+export function isProposedAppointmentDuration(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 20
 }
 ```

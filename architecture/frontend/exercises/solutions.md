@@ -139,25 +139,25 @@ Composition supplies `GetAgenda` with a reader and passes it to the Page; [F-I3]
 
 ## F-I2 — Move a rule out of React
 
-The [canonical Appointment module](../presentation-architecture.md#a-small-agenda-operation) owns `isAppointmentDuration`: the client's minimum duration for a **new** appointment. It is not a rule for whether historical API rows may be displayed.
+The [canonical Appointment module](../presentation-architecture.md#a-small-agenda-operation) owns `isProposedAppointmentDuration`: the client's minimum duration for a **new** appointment. It is not a rule for whether historical API rows may be displayed.
 
 Both UI consumers call the same Domain decision. No Application use case or result wrapper is needed for this pure check:
 
 ```ts
 // src/presentation/scheduling/components/AppointmentCard/durationFeedback.ts
-import { isAppointmentDuration } from '@/domain/scheduling/Appointment'
+import { isProposedAppointmentDuration } from '@/domain/scheduling/Appointment'
 
 export function appointmentCardFeedback(minutes: number): string {
-  return isAppointmentDuration(minutes) ? 'Meets new-booking minimum' : 'Below new-booking minimum'
+  return isProposedAppointmentDuration(minutes) ? 'Meets new-booking minimum' : 'Below new-booking minimum'
 }
 ```
 
 ```ts
 // src/presentation/scheduling/components/AppointmentForm/durationFeedback.ts
-import { isAppointmentDuration } from '@/domain/scheduling/Appointment'
+import { isProposedAppointmentDuration } from '@/domain/scheduling/Appointment'
 
 export function appointmentFormFeedback(value: unknown): string {
-  return isAppointmentDuration(value) ? 'Meets new-booking minimum' : 'Choose a duration for a new booking'
+  return isProposedAppointmentDuration(value) ? 'Meets new-booking minimum' : 'Choose a duration for a new booking'
 }
 ```
 
@@ -296,7 +296,8 @@ export function parseAgendaApiResponse(value: unknown): readonly AgendaApiDto[] 
         !('appointment_id' in row) || typeof row.appointment_id !== 'string' || !row.appointment_id ||
         !('start_time' in row) || typeof row.start_time !== 'string' ||
         !Number.isFinite(Date.parse(row.start_time)) ||
-        !('minutes' in row) || typeof row.minutes !== 'number' || !Number.isFinite(row.minutes)) {
+        !('minutes' in row) || typeof row.minutes !== 'number' ||
+        !Number.isFinite(row.minutes) || row.minutes <= 0) {
       throw new Error('Invalid agenda response')
     }
     return { appointment_id: row.appointment_id, start_time: row.start_time, minutes: row.minutes }
@@ -373,7 +374,7 @@ export function AppointmentCard({ appointment }: { appointment: Appointment }) {
 }
 ```
 
-The Parser checks unknown wire fields, including a finite numeric duration; the Mapper renames accepted fields. A historical 15-minute appointment remains readable. The separate [Domain](../../../GLOSSARY.md#domain) minimum applies when evaluating a **new** appointment (F-I2), not when decoding existing records. Malformed representations reject the read rather than disappearing silently. The adapter retains the cause for internal diagnostics; `GetAgenda` and the Hook return safe feedback. HTTP mocks verify these translations, not agreement with a real backend.
+The Parser checks unknown wire fields, including a finite positive duration; the Mapper renames accepted fields. A historical 15-minute appointment remains readable. The separate [Domain](../../../GLOSSARY.md#domain) minimum applies when evaluating a **new** appointment (F-I2), not when decoding existing records. Malformed representations reject the read rather than disappearing silently. The adapter retains the cause for internal diagnostics; `GetAgenda` and the Hook return safe feedback. HTTP mocks verify these translations, not agreement with a real backend.
 
 **Exercise.** [F-A2](advanced.md#f-a2--split-a-god-hook)
 
