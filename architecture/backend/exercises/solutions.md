@@ -429,6 +429,8 @@ export class AssignTicket {
 }
 ```
 
+This example assumes the ticket is not changed concurrently between loading and saving. In production, the writer must enforce an appropriate concurrency policy (for example, a version-checked update), so a concurrent resolution cannot be overwritten.
+
 Ticket rejects assignment after resolution; the [Domain](../../../GLOSSARY.md#domain) policy decides skill and supervisor eligibility; [Application](../../../GLOSSARY.md#application-layer) obtains facts and saves an accepted change. If several rules fail, this workflow reports the policy rejection first. The update writer remains separate from creation's insert-only `TicketRepository`. HTTP parsing and storage implementations are omitted.
 
 **Exercise.** [B-A3](advanced.md#b-a3--assignment-and-escalation)
