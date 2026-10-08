@@ -7,7 +7,7 @@ An analyst creates a support ticket through HTTP. An operator needs the same act
 - [The problem and its origin](#the-problem-and-its-origin)
 - [Offered and required interactions](#offered-and-required-interactions)
 - [One application, several mechanisms](#one-application-several-mechanisms)
-- [Start with an existing operation](#start-with-an-existing-operation)
+- [Apply the boundary in frontend and backend](#apply-the-boundary-in-frontend-and-backend)
 - [Placement and dependency decisions](#placement-and-dependency-decisions)
 - [When this boundary helps](#when-this-boundary-helps)
 - [What to verify](#what-to-verify)
@@ -49,25 +49,24 @@ flowchart TB
 
 Solid edges are runtime calls, long dashes are source requirements and short dots are startup wiring. The operation calls the supplied repository object; the interface is not another runtime hop.
 
-## Start with an existing operation
+<a id="start-with-an-existing-operation"></a>
 
-Choose the [backend Ticket operation](../../backend/2-typescript-first-boundaries.md) or the [frontend TicketGateway example](../../frontend/ports-and-adapters.md). Both illustrate the same ports-and-adapters relationships; neither requires studying the other. This backend assembly excerpt changes storage without changing creation:
+## Apply the boundary in frontend and backend
 
-```ts
-import { CreateTicket } from '@/application/tickets'
-import { InMemoryTicketRepository } from '@/infrastructure/persistence/tickets/adapters/InMemoryTicketRepository'
+An external mechanism is defined relative to the application: a database is external to the ticket backend, while the backend API is external to the browser client. Each can have its own ports and adapters.
 
-const createTicket = new CreateTicket(new InMemoryTicketRepository(), () => 'T-1')
-const result = await createTicket.execute({ subject: 'Broken PDF', description: '' })
-```
+| Application | Inbound adapter | Offered operation | Required port | Outbound adapter |
+| --- | --- | --- | --- | --- |
+| Backend | HTTP or CLI handler | `CreateTicket.execute(command)` | `TicketRepository.insert(ticket)` | Memory or Prisma repository |
+| Frontend | `useTickets` interaction | `createTicket(input)` | `TicketGateway.create(input)` | `HttpTicketGateway` |
 
-The [CLI exercise](../../backend/exercises/intermediate.md#b-i2--create-from-a-cli) adds another caller. In frontend, an HTTP gateway instead adapts a required remote interaction.
+Both applications protect their operations from the external mechanisms they use. The [backend Ticket walkthrough](../../backend/2-typescript-first-boundaries.md) and [frontend Ticket walkthrough](../../frontend/ports-and-adapters.md) supply the detailed implementations; neither is a prerequisite for this guide. The [CLI exercise](../../backend/exercises/intermediate.md#b-i2--create-from-a-cli) demonstrates a second inbound adapter.
 
 ## Placement and dependency decisions
 
-Keep the creation operation in [Application](../../../GLOSSARY.md#application-layer), ticket validity in [Domain](../../../GLOSSARY.md#domain), incoming HTTP/CLI translation in [Presentation](../../../GLOSSARY.md#presentation-layer) and storage translation in [Infrastructure](../../../GLOSSARY.md#infrastructure). Composition chooses objects. These folders are handbook conventions, not required names or six sides prescribed by [Hexagonal Architecture](../../../GLOSSARY.md#hexagonal-architecture-ports-and-adapters).
+In the backend example, HTTP/CLI translation belongs to [Presentation](../../../GLOSSARY.md#presentation-layer), ticket rules to [Domain](../../../GLOSSARY.md#domain), creation to [Application](../../../GLOSSARY.md#application-layer) and concrete persistence to [Infrastructure](../../../GLOSSARY.md#infrastructure). In the frontend example, `useTickets` is Presentation, `createTicket` is Application and `HttpTicketGateway` is Infrastructure. Composition supplies the selected adapter in either application.
 
-Application owns this repository contract because creation requires it. Concrete storage imports that inward contract. A frontend `TicketGateway` describes a remote interaction; it is not automatically a Repository.
+Concrete adapters depend on the contracts the application requires, not the reverse. These folders are handbook conventions, not names prescribed by [Hexagonal Architecture](../../../GLOSSARY.md#hexagonal-architecture-ports-and-adapters). A frontend `TicketGateway` describes a remote interaction; it is not automatically a Repository.
 
 ## When this boundary helps
 
@@ -77,7 +76,7 @@ Use this separation when the operation must survive changes in callers or integr
 
 ## What to verify
 
-Invoke creation without HTTP; supply memory and observe valid creation and invalid-subject rejection. Check each real adapter against its contract separately. Memory checks do not establish database behavior, authorization or agreement with an external API.
+Invoke the backend operation without an HTTP handler, and the frontend operation without React, using controlled replacements for their required ports. Check each real adapter separately: memory checks do not establish database behavior, and a fake gateway does not establish agreement with the backend API.
 
 ## Continue reading
 

@@ -67,7 +67,7 @@ After the introduction, include linked H2/H3 contents when there are three or mo
 
 Keep the common sequence in the repository README. Teach necessary vocabulary before an exercise. Intermediate and advanced activities show starting code, a requirement and observable results; separate solutions show concrete changed code and brief ownership reasoning.
 
-Give general styles/patterns framework-independent homes. Technology chapters apply the explanation and link to it without copying complete examples.
+Give general styles/patterns framework-independent homes. They must be understandable without completing a frontend or backend route first; use a framework-neutral example or a brief cross-context mapping. Technology chapters apply the explanation and link to it without copying complete examples.
 
 <a id="4-distinguish-rule-types"></a>
 
