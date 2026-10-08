@@ -4,6 +4,8 @@
 
 [Backend route](README.md) · Next: [TypeScript-first boundaries](2-typescript-first-boundaries.md)
 
+An analyst presses Create ticket. Follow the information from that click to the server and back, learning what each step does before introducing architecture names.
+
 **Contents**
 
 - [The analyst sends information](#the-analyst-sends-information)

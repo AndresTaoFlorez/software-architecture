@@ -4,6 +4,8 @@
 
 [Ticket wiring](4-create-ticket-with-nestjs.md) · [Backend route](README.md)
 
+You have followed one ticket through working responsibilities. Now compare the general design choices it illustrates, and see what each architectural style emphasizes.
+
 **Contents**
 
 - [Origins: several answers to related problems](#origins-several-answers-to-related-problems)

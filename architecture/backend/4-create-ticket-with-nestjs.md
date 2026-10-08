@@ -4,6 +4,8 @@
 
 [Nest mechanisms](3-nestjs-building-blocks.md) · [Backend route](README.md) · Next: [Styles](5-architectural-styles-with-nestjs.md)
 
+Connect the ticket operation to Nest and a chosen storage implementation. Trace startup assembly, a request and failure translation without copying business rules into framework code.
+
 **Contents**
 
 - [Requirement and ownership](#requirement-and-ownership)

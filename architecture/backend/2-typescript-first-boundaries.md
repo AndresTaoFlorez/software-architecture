@@ -4,6 +4,8 @@
 
 [HTTP path](1-http-request-to-business-operation.md) · [Backend route](README.md) · Next: [Nest building blocks](3-nestjs-building-blocks.md)
 
+The server must reject malformed input, apply the ticket rule and wait for saving. Build those steps with ordinary TypeScript so you can see their responsibilities before adding a framework.
+
 **Contents**
 
 - [Check what arrived before trusting its type](#check-what-arrived-before-trusting-its-type)

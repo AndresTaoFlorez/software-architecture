@@ -15,6 +15,8 @@ Follow one support request through the common route below. Read the code, identi
 
 The snippets illustrate an application's files. This repository contains documentation, not an executable application. When an exercise uses imports, combine the referenced canonical modules with its changed files in your own temporary project.
 
+On a narrow screen, use the diagram controls to open, zoom and move around a large diagram. Solid arrows show calls, dashed arrows show source dependencies and dotted arrows show startup assembly; folder maps label containment separately.
+
 <a id="where-to-start"></a>
 
 ## Read first
