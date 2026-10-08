@@ -1,5 +1,9 @@
 > [Onion Architecture](README.md) › The Rings.
 
+<a id="3-the-rings-the-four-layers"></a>
+<a id="3-the-rings"></a>
+<a id="3-the-four-layers"></a>
+
 # 1. The Rings
 
 Support requires a valid subject and an initial `open` state for a new ticket. Those decisions remain useful when delivery or storage changes. Onion keeps this domain model independent and puts mechanisms around it.
@@ -7,6 +11,7 @@ Support requires a valid subject and an initial `open` state for a new ticket. T
 The [canonical Ticket](../../backend/2-typescript-first-boundaries.md) owns the source examples. Here each ring explains who changes for a different reason.
 
 <a id="31-domain-core"></a>
+<a id="31-domain-innermost"></a>
 
 ## 1.1 Domain
 
