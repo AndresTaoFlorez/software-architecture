@@ -14,7 +14,7 @@ This folder helps **coding agents working in other applications** use the handbo
 
 1. Place the application and this handbook in accessible, adjacent checkouts. The handbook is **reference documentation**, not a runtime dependency.
 2. Copy [the application AGENTS.md template](templates/AGENTS.md) into the application root. Replace every TODO with real project commands, approved architecture decisions and paths.
-3. For Claude Code, a supported configuration can read the application's `AGENTS.md` directly. If a project `CLAUDE.md` is already loaded, or your Claude session does not load AGENTS.md directly, use the optional [CLAUDE.md import template](templates/CLAUDE.md). Confirm instruction loading in the actual session.
+3. Claude Code 2.1.277 or later can read the application's `AGENTS.md` directly under its default setting when no project `CLAUDE.md` or `CLAUDE.local.md` takes precedence. Otherwise use the optional [CLAUDE.md import template](templates/CLAUDE.md). Confirm instruction loading in the actual session.
 4. Read the application code and ADRs first. Follow the relevant handbook chapter only when the task needs it.
 5. Run the application's actual checks and review the diff. Handbook snippets are illustrations, not evidence that the application works.
 
@@ -58,6 +58,8 @@ git -C ../software-architecture status --short
 
 Record the commit actually read in the implementation or review report. Different SHAs do **not** automatically mean the checkout is wrong: a pinned revision may intentionally lag. To update a clean checkout that tracks `main`, first inspect the changes, then fast-forward it; never overwrite uncommitted work or switch another agent's branch. A newer handbook does not silently overrule approved application contracts or ADRs.
 
+An isolated agent account may make Git reject the sibling checkout as having dubious ownership. If that checkout is trusted, retry the inspection with `git -c safe.directory=<absolute-handbook-path> -C ../software-architecture rev-parse HEAD` for that command. Do not change global Git trust just to inspect the revision.
+
 ## Choose what to read
 
 | Change | Start here |
@@ -87,6 +89,8 @@ The files **here are templates**, not installed skills. Copy a reviewed skill in
 - **Claude Code:** `.claude/skills/<skill-name>/SKILL.md` at the application root.
 
 Choose the appropriate location for each agent. Do not install these under the handbook's root: they would become instructions for agents maintaining the documentation. Review copies when the handbook skill changes; copying both creates two independently maintained copies.
+
+Start a new session in the application and invoke one copied skill explicitly: `$architecture-aware-implementation` or `$architecture-review` in Codex, `/architecture-aware-implementation` or `/architecture-review` in Claude Code. Confirm that the agent loads the application copy of `SKILL.md` and follows its workflow. File presence alone does not establish discovery.
 
 ## Verify the setup
 
