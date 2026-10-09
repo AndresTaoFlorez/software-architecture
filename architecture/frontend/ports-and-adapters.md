@@ -23,6 +23,8 @@ A React ticket screen calls a backend whose response format can change. Keep tha
 
 An analyst creates a support ticket in React. The client's subject feedback should survive an HTTP endpoint or response-format change. This is a frontend application of [Hexagonal Architecture](../styles/hexagonal-architecture/README.md); that guide explains the general model.
 
+The [API Design route](../api-design/README.md) explains the public HTTP contract this adapter consumes. This guide focuses on the frontend's integration boundary and data translation.
+
 `TicketGateway` describes the creation interaction [Application](../../GLOSSARY.md#application-layer) requires: input and promised ticket result. This is an outbound **port**. `HttpTicketGateway` implements it using HTTP and maps `ticket_id` into `id`: an outbound **adapter**.
 
 Composition supplies that object to the operation. The backend is external to this frontend and remains authoritative over persisted tickets.
