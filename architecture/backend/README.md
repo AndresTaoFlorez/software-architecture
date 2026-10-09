@@ -8,7 +8,7 @@ An analyst submits a support ticket. This route follows that request through pla
 - [How to read backend file names](#how-to-read-backend-file-names)
 - [Read in order](#read-in-order)
 
-For general API contract choices before Nest implementation, follow [API Design & Engineering](../api-design/README.md). Its dental-clinic example is separate from this route's Ticket implementation; the shared lesson is where HTTP translation and business decisions belong.
+For general API contract choices before Nest implementation, follow [API Design & Engineering](../api-design/README.md). Its fictional EPS scheduling example is separate from this route's Ticket implementation; the shared lesson is where HTTP translation and business decisions belong.
 
 ## Place your first feature
 

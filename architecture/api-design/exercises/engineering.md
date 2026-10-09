@@ -5,7 +5,7 @@ Read [Contracts and Implementation Boundaries](../contracts-and-boundaries.md), 
 **Contents**
 
 - [A-E1 — Move a booking rule out of the Controller](#a-e1--move-a-booking-rule-out-of-the-controller)
-- [A-E2 — Block cross-clinic access](#a-e2--block-cross-clinic-access)
+- [A-E2 — Block cross-organization access](#a-e2--block-cross-organization-access)
 - [A-E3 — Resolve a simultaneous booking](#a-e3--resolve-a-simultaneous-booking)
 - [A-E4 — Retry and reject a stale edit](#a-e4--retry-and-reject-a-stale-edit)
 - [A-E5 — Find a breaking change](#a-e5--find-a-breaking-change)
@@ -20,37 +20,37 @@ Read [Contracts and Implementation Boundaries](../contracts-and-boundaries.md), 
 ```ts
 async function create(body: any, db: any) {
   if (new Date(body.endsAt) <= new Date(body.startsAt)) return { status: 400 }
-  const overlap = await db.appointments.findOverlap(body.dentistId, body.startsAt, body.endsAt)
+  const overlap = await db.appointments.findOverlap(body.physicianId, body.startsAt, body.endsAt)
   if (overlap) return { status: 409 }
   return { status: 201, body: await db.appointments.insert(body) }
 }
 ```
 
-**Task.** Assign parsing, interval validity, clinic membership, transaction and persistence to their owners. Give exact layer-first file paths and a focused changed code sketch. Preserve a race-safe database backstop.
+**Task.** Assign parsing, interval validity, patient affiliation, site and physician assignment, transaction and persistence to their owners. Give exact layer-first file paths and a focused changed code sketch. Preserve a race-safe database backstop.
 
 **Expected behavior.** Invalid shape fails before the use case; a valid conflicting booking returns `409`; a rule change does not require editing the Controller.
 
 **Verification.** Identify each source import direction and one test per relevant boundary. Compare [A-E1](solutions.md#a-e1--move-a-booking-rule-out-of-the-controller).
 
-## A-E2 — Block cross-clinic access
+## A-E2 — Block cross-organization access
 
 **Prerequisites.** [Scope every object](../security-and-tenancy.md#scope-every-object) and [database defense](../security-and-tenancy.md#database-defense-in-depth).
 
-**Starting situation.** A verified Clinic A user calls `GET /v1/appointments/apt_b`, where `apt_b` belongs to Clinic B. The use case currently calls `repo.findById(appointmentId)` and the Controller later compares `appointment.clinicId` to a `clinicId` field from the query string.
+**Starting situation.** A verified Organization A user calls `GET /v1/appointments/apt_b`, where `apt_b` belongs to Organization B. The use case currently calls `repo.findById(appointmentId)` and the Controller later compares `appointment.organizationId` to an `organizationId` field from the query string.
 
-**Task.** Change the input and repository contract so the lookup is scoped by verified clinic context. State how RLS is set for a transaction and what the HTTP response exposes.
+**Task.** Change the input and repository contract so the lookup is scoped by verified organization context. Also check the user's permission for the appointment's site. State how RLS is set for a transaction and what the HTTP response exposes.
 
-**Expected behavior.** Changing the query string cannot reveal Clinic B data. The app role also fails closed if a tenant predicate is accidentally omitted.
+**Expected behavior.** Changing the query string cannot reveal Organization B data, and an Organization A user without site permission cannot read that site's appointment. The app role also fails closed if a tenant predicate is accidentally omitted.
 
-**Verification.** Specify a positive Clinic A lookup, a cross-clinic lookup and a test with no RLS setting. Compare [A-E2](solutions.md#a-e2--block-cross-clinic-access).
+**Verification.** Specify a positive Organization A lookup, a cross-organization lookup, a same-organization unauthorized-site lookup and a test with no RLS setting. Compare [A-E2](solutions.md#a-e2--block-cross-organization-access).
 
 ## A-E3 — Resolve a simultaneous booking
 
 **Prerequisites.** [Two bookings for one slot](../reliability-and-operations.md#two-bookings-for-one-slot).
 
-**Starting situation.** Two HTTP workers both run `if (!await repo.overlaps(...)) await repo.insert(...)` for `den_42`, `14:00–14:30`. Both see no existing row before either inserts.
+**Starting situation.** Two HTTP workers both run `if (!await repo.overlaps(...)) await repo.insert(...)` for `phy_42`, `14:00–14:30`, at different care sites. Both see no existing row before either inserts.
 
-**Task.** Give the transaction and database constraint that ensure one active appointment, including half-open boundaries and cancellation behavior. Map the losing database outcome to the public response.
+**Task.** Give the transaction and database constraint that ensure one active appointment for the physician across sites, including half-open boundaries and cancellation behavior. Map the losing database outcome to the public response.
 
 **Expected behavior.** Exactly one booking commits; the other receives a `409` Problem Details response without another patient's data.
 
@@ -72,7 +72,7 @@ async function create(body: any, db: any) {
 
 **Prerequisites.** [Contract evolution](../reliability-and-operations.md#contract-evolution-and-governance) and [Describe the agreement](../contracts-and-boundaries.md#describe-the-agreement).
 
-**Starting situation.** `/v1/appointments` has `startsAt` as an RFC 3339 timestamp and optional `notes`. A proposed release makes `notes` required, renames `startsAt` to `startUtc`, adds optional `roomName` to responses and changes the meaning of `date` from clinic-local day to UTC day.
+**Starting situation.** `/v1/appointments` has `startsAt` as an RFC 3339 timestamp and optional `notes`. A proposed release makes `notes` required, renames `startsAt` to `startUtc`, adds optional `roomName` to responses and changes the meaning of `date` from site-local day to UTC day.
 
 **Task.** Classify each change for existing clients, then propose a compatible rollout or a new contract where necessary. Identify a consumer test that could catch one break.
 
@@ -88,7 +88,7 @@ async function create(body: any, db: any) {
 
 **Task.** Specify a contract test that sends a real request to the server boundary for success and occupied-slot failure, validates status, headers and body, and compares the published schema. Add one negative security assertion.
 
-**Expected behavior.** A changed Controller implementation can pass if public behavior stays the same; a response drift or cross-clinic leak fails.
+**Expected behavior.** A changed Controller implementation can pass if public behavior stays the same; a response drift or cross-organization leak fails.
 
 **Verification.** Write executable-looking test pseudocode with clear setup and assertions, and name what still needs a PostgreSQL integration test. Compare [A-E6](solutions.md#a-e6--test-the-contract-from-outside).
 
