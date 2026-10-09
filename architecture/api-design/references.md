@@ -7,6 +7,7 @@ The chapters cite the source beside each technical claim. This page records the 
 - [Protocol and description standards](#protocol-and-description-standards)
 - [Security, implementation and other styles](#security-implementation-and-other-styles)
 - [Published design guidance](#published-design-guidance)
+- [Case-study context](#case-study-context)
 - [Community skills inspected, not installed](#community-skills-inspected-not-installed)
 
 ## Protocol and description standards
@@ -14,7 +15,7 @@ The chapters cite the source beside each technical claim. This page records the 
 - [RFC 3986 — URI Generic Syntax](https://www.rfc-editor.org/rfc/rfc3986.html): URI components and normalization, not plural resource names.
 - [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110.html), [RFC 9111 — HTTP Caching](https://www.rfc-editor.org/rfc/rfc9111.html) and [RFC 9112 — HTTP/1.1](https://www.rfc-editor.org/rfc/rfc9112.html): method, status, representation, cache and HTTP/1.1 message rules.
 - [RFC 5789 — PATCH](https://www.rfc-editor.org/rfc/rfc5789.html), [RFC 7396 — JSON Merge Patch](https://www.rfc-editor.org/rfc/rfc7396.html) and [RFC 6902 — JSON Patch](https://www.rfc-editor.org/rfc/rfc6902.html): patch method and two distinct patch document formats.
-- [RFC 9457 — Problem Details](https://www.rfc-editor.org/rfc/rfc9457.html): interoperable problem representation, not a clinic-specific status taxonomy.
+- [RFC 9457 — Problem Details](https://www.rfc-editor.org/rfc/rfc9457.html): interoperable problem representation, not an organization-specific status taxonomy.
 - [RFC 3339 — Internet Timestamps](https://www.rfc-editor.org/rfc/rfc3339.html): date-time notation used in representations.
 - [RFC 9745 — Deprecation](https://www.rfc-editor.org/rfc/rfc9745.html) and [RFC 8594 — Sunset](https://www.rfc-editor.org/rfc/rfc8594.html): response metadata for lifecycle communication.
 - [OpenAPI Specification 3.1.2](https://spec.openapis.org/oas/v3.1.2.html) and [JSON Schema Draft 2020-12](https://json-schema.org/draft/2020-12): contract description and JSON shape vocabulary. [The OpenAPI version index](https://spec.openapis.org/oas/) also lists later releases; the teaching example deliberately uses the 3.1 family.
@@ -33,6 +34,10 @@ The chapters cite the source beside each technical claim. This page records the 
 - [Google AIP-121](https://google.aip.dev/121) and [AIP-158](https://google.aip.dev/158): Google's resource-oriented and pagination rules for its APIs. They are not IETF requirements for every HTTP API.
 - [Microsoft REST API Guidelines](https://github.com/microsoft/api-guidelines) and [Azure API design](https://learn.microsoft.com/en-us/azure/architecture/best-practices/api-design): organizational guidance and design trade-offs.
 - [Zalando RESTful API Guidelines](https://opensource.zalando.com/restful-api-guidelines/): another public organizational convention set. It differs from some Microsoft and Google choices, especially in versioning and naming.
+
+## Case-study context
+
+- [Colombia's Ministry of Health on the health system](https://www2.minsalud.gov.co/salud/Documents/Contenidos/aseguramiento-salud.aspx): EPS organizations coordinate affiliation and access to covered services; IPS institutions such as clinics and hospitals provide care. The fictional scheduling platform models this division without claiming to implement coverage or clinical workflows.
 
 ## Community skills inspected, not installed
 

@@ -1,23 +1,25 @@
 # API Design & Engineering
 
-A receptionist needs to read a dentist's agenda, book an appointment and know whether the booking succeeded. A useful API gives that client a stable way to ask, a precise meaning for each response and a safe path through later changes. This route teaches those decisions without requiring Nest, React or a particular database.
+A scheduling coordinator needs to read a care site's agenda, find a physician's free time, book an appointment and know whether the booking succeeded. A useful API gives that client a stable way to ask, a precise meaning for each response and a safe path through later changes. This route teaches those decisions without requiring Nest, React or a particular database.
 
 You need basic TypeScript and HTTP curiosity. The shared [Code Placement](../foundations/code-placement.md) and [Dependency Boundaries](../foundations/dependency-boundaries.md) guides help with the implementation chapter. Read this route from top to bottom, or enter at a chapter whose prerequisites you already know.
 
-## The clinic and its contract
+## The health network and its contract
 
-The running example is a scheduling platform. Each [tenant](../../GLOSSARY.md#tenant) is one dental clinic. A clinic has dentists, patients, working hours, unavailable periods and appointments. Clinic users can see only their clinic's data. An appointment occupies a half-open interval, `[start, end)`, for one dentist. Two active appointments for the same dentist cannot overlap. The clinic's time zone is an IANA zone such as `America/Bogota`; stored appointment instants use UTC. These rules stay consistent throughout the route.
+The running example is scheduling for a fictional Colombian *Entidad Promotora de Salud* (EPS). The EPS coordinates appointments for affiliated patients across a provider network; *Instituciones Prestadoras de Servicios de Salud* (IPS), such as clinics and hospitals, provide the care. [Colombia's Ministry of Health](https://www2.minsalud.gov.co/salud/Documents/Contenidos/aseguramiento-salud.aspx) distinguishes these responsibilities. Each [tenant](../../GLOSSARY.md#tenant) is one EPS organization with patients, physicians, care sites, working hours, unavailable periods and appointments. This example covers scheduling; coverage decisions and clinical records would need their own contracts.
 
-The examples use `/v1` as this handbook's illustrative public contract. It is a versioning choice, not an HTTP requirement. A signed-in clinic user obtains the clinic identity from verified server-side context; a caller cannot choose another tenant by changing a request field. A patient identifier in an appointment request is still checked for membership in that clinic.
+An appointment occupies a half-open interval, `[start, end)`, for one physician at one site. Two active appointments for the same physician cannot overlap, even at different sites. In this case, one EPS tenant owns each physician's schedule; a physician scheduled by several independent organizations would need a shared scheduling authority. A site has an IANA time zone such as `America/Bogota`; stored appointment instants use UTC. Organization users see only their organization's data and only sites their role permits. These rules stay consistent throughout the route.
+
+The examples use `/v1` as this handbook's illustrative public contract. It is a versioning choice, not an HTTP requirement. A signed-in user obtains the organization identity and permitted sites from verified server-side context; a caller cannot choose another tenant by changing a request field. A booking also checks the patient's affiliation and the physician's assignment to the selected site.
 
 | Operation | Example | First taught |
 | --- | --- | --- |
-| List and retrieve dentists | `GET /v1/dentists`, `GET /v1/dentists/{dentistId}` | [HTTP and identifiers](http-and-identifiers.md) |
-| Read agenda and availability | `GET /v1/appointments?date=2026-11-12`, `GET /v1/dentists/{dentistId}/availability?date=2026-11-12` | [Resources and operations](resources-and-operations.md) |
+| List and retrieve physicians | `GET /v1/physicians`, `GET /v1/physicians/{physicianId}` | [HTTP and identifiers](http-and-identifiers.md) |
+| Read a site's agenda and availability | `GET /v1/appointments?siteId=site_7&date=2026-11-12`, `GET /v1/physicians/{physicianId}/availability?siteId=site_7&date=2026-11-12` | [Resources and operations](resources-and-operations.md) |
 | Create, reschedule and cancel | `POST /v1/appointments`, `PATCH /v1/appointments/{appointmentId}` | [Resources and operations](resources-and-operations.md) |
 | Prevent overlapping bookings | one transaction and a database constraint | [Reliability and operations](reliability-and-operations.md) |
 
-The dates above are examples. A `date` filter names a calendar day in the clinic's time zone. The API returns appointment times as RFC 3339 timestamps with an offset, and records the clinic time zone separately when a local scheduling decision depends on it.
+The dates above are examples. A `date` filter names a calendar day in the selected site's time zone. The API returns appointment times as RFC 3339 timestamps with an offset and exposes the site's IANA zone when a local scheduling decision depends on it.
 
 ## Read in order
 
@@ -36,7 +38,7 @@ This route separates three kinds of statement:
 
 - **Standard:** a cited specification defines protocol behavior, such as GET's safe semantics or `If-Match` evaluation.
 - **Convention:** a published guideline or this handbook recommends a consistent shape, such as plural collection names.
-- **Decision:** the clinic chooses a contract after considering its consumers and failure modes, such as cursor pagination for an expanding history.
+- **Decision:** the organization chooses a contract after considering its consumers and failure modes, such as cursor pagination for an expanding history.
 
 The [backend route](../backend/README.md) shows how Nest delivers HTTP and composes dependencies. The [frontend integration guide](../frontend/ports-and-adapters.md) shows a client consuming an external API. Both apply the general contract decisions here. The [glossary](../../GLOSSARY.md) gives short reminders, while these chapters own the detailed API explanations.
 

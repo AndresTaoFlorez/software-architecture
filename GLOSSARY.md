@@ -1659,7 +1659,7 @@ The observable agreement between an API provider and its consumers: operations, 
 
 The process of establishing who or what a caller is from a verified credential. It supplies a principal for later access decisions.
 
-**Purpose.** Reject unverified callers. **Example.** A clinic API validates a bearer token's issuer, audience, signature and expiry. [Full explanation](architecture/api-design/security-and-tenancy.md#identity-and-permission).
+**Purpose.** Reject unverified callers. **Example.** The health network API validates a bearer token's issuer, audience, signature and expiry. [Full explanation](architecture/api-design/security-and-tenancy.md#identity-and-permission).
 
 ---
 
@@ -1669,7 +1669,7 @@ The process of establishing who or what a caller is from a verified credential. 
 
 The decision that a verified principal may perform an operation on a specific resource. Authentication alone does not establish this permission.
 
-**Purpose.** Keep clinic and object boundaries intact. **Example.** A Clinic A receptionist cannot read Clinic B's appointment. [Full explanation](architecture/api-design/security-and-tenancy.md#scope-every-object).
+**Purpose.** Keep organization, site and object boundaries intact. **Example.** An Organization A scheduler cannot read Organization B's appointment. [Full explanation](architecture/api-design/security-and-tenancy.md#scope-every-object).
 
 ---
 
@@ -1697,9 +1697,9 @@ A client-supplied token an API can use to recognize a retry of the same operatio
 
 ## Representation
 
-The data and metadata transferred to describe a resource's state in one interaction. A JSON dentist response is one representation; it need not match a database row or domain object.
+The data and metadata transferred to describe a resource's state in one interaction. A JSON physician response is one representation; it need not match a database row or domain object.
 
-**Purpose.** Separate public data from internal storage. **Example.** The clinic's dentist response exposes `id` and `displayName`. [Full explanation](architecture/api-design/resources-and-operations.md#rest-and-resource-meaning). **Source.** [RFC 9110 §3.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-3.2).
+**Purpose.** Separate public data from internal storage. **Example.** The physician response exposes `id` and `displayName`. [Full explanation](architecture/api-design/resources-and-operations.md#rest-and-resource-meaning). **Source.** [RFC 9110 §3.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-3.2).
 
 ---
 
@@ -1707,9 +1707,9 @@ The data and metadata transferred to describe a resource's state in one interact
 
 ## Resource
 
-Something an API identifies and addresses, such as one dentist, a collection of appointments or a computed availability view. Its representation may change over time.
+Something an API identifies and addresses, such as one physician, a collection of appointments or a computed availability view. Its representation may change over time.
 
-**Purpose.** Give interactions a stable target independent of storage tables. **Example.** `/v1/dentists/den_42` identifies a dentist visible within the authorized clinic. [Full explanation](architecture/api-design/resources-and-operations.md#resources-and-relationships). **Source.** [RFC 9110 §3.1](https://www.rfc-editor.org/rfc/rfc9110.html#section-3.1).
+**Purpose.** Give interactions a stable target independent of storage tables. **Example.** `/v1/physicians/phy_42` identifies a physician visible within the authorized organization. [Full explanation](architecture/api-design/resources-and-operations.md#resources-and-relationships). **Source.** [RFC 9110 §3.1](https://www.rfc-editor.org/rfc/rfc9110.html#section-3.1).
 
 ---
 
@@ -1717,8 +1717,8 @@ Something an API identifies and addresses, such as one dentist, a collection of 
 
 ## Tenant
 
-A customer or organization whose data and access are isolated within a shared service. In the case study, each dental clinic is a tenant.
+A customer or organization whose data and access are isolated within a shared service. In the case study, each fictional EPS organization is a tenant.
 
-**Purpose.** State the scope of object access and operational limits. **Example.** A verified clinic identity scopes appointment reads and writes. [Full explanation](architecture/api-design/security-and-tenancy.md#scope-every-object).
+**Purpose.** State the scope of object access and operational limits. **Example.** A verified organization identity scopes appointment reads and writes. [Full explanation](architecture/api-design/security-and-tenancy.md#scope-every-object).
 
 ---
