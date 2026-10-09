@@ -64,7 +64,7 @@ export async function run(args: readonly string[], create: CreateTicket) {
 
 **What you already know.** Read the next-operation example in chapter 2 and HTTP folders in chapter 4.
 
-**Situation.** A receptionist requests GET /agenda?day=2026-10-07.
+**Situation.** A receptionist requests `GET /agenda?day=2026-10-07`. This deliberately simplified route tests parsing and dependency ownership. It is separate from the [clinic's public appointments query](../../api-design/resources-and-operations.md#resources-and-relationships).
 
 **Terms you need.** GetAgenda coordinates a read; AgendaReader describes it; a query [Parser](../../../GLOSSARY.md#parser) checks HTTP query data.
 

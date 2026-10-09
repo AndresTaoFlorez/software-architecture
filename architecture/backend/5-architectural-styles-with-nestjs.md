@@ -66,7 +66,7 @@ Layering and dependency inversion are separate decisions. [Layered Architecture]
 
 Creation can be called through HTTP or a CLI, and storage can use memory or a database. A **port** describes an interaction; an **adapter** connects an external mechanism to it. [Hexagonal Architecture](../styles/hexagonal-architecture/README.md) owns the general explanation; the table below maps this backend example.
 
-**Where are the Ports and Adapters in this example?.**
+**Where are the ports and adapters in this example?**
 
 Paths are relative to `src/`:
 
