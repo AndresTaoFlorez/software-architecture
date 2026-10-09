@@ -1,14 +1,33 @@
-# 4. Create Ticket with NestJS
+<a id="4-create-ticket-with-nestjs"></a>
+
+# Create Ticket with NestJS
 
 [Nest mechanisms](3-nestjs-building-blocks.md) · [Backend route](README.md) · Next: [Styles](5-architectural-styles-with-nestjs.md)
 
-## 1. Requirement and ownership
+Connect the ticket operation to Nest and a chosen storage implementation. Trace startup assembly, a request and failure translation without copying business rules into framework code.
+
+**Contents**
+
+- [Requirement and ownership](#requirement-and-ownership)
+- [Physical structure and dependency decisions](#physical-structure-and-dependency-decisions)
+- [Finish the HTTP boundary](#finish-the-http-boundary)
+- [Wire memory first](#wire-memory-first)
+- [Replace memory when the ticket must survive restart](#replace-memory-when-the-ticket-must-survive-restart)
+- [Three relationships in one system view](#three-relationships-in-one-system-view)
+- [Review changes and failures before calling it maintainable](#review-changes-and-failures-before-calling-it-maintainable)
+- [Verification at the right boundary](#verification-at-the-right-boundary)
+
+<a id="1-requirement-and-ownership"></a>
+
+## Requirement and ownership
 
 Support owns ticket validity. The analyst provides subject/description; the server checks them, creates the ticket, saves it and returns HTTP data. Reuse the [plain modules](2-typescript-first-boundaries.md) and [Nest Pipe](3-nestjs-building-blocks.md#pipe-parse-a-handler-argument).
 
 <a id="physical-structure"></a>
 
-## 2. Physical structure and dependency decisions
+<a id="2-physical-structure-and-dependency-decisions"></a>
+
+## Physical structure and dependency decisions
 
 Prefix these handbook-convention paths with `src/`. Optional access and CLI code belong to their respective examples; retrieval mapping is added only when needed.
 
@@ -35,9 +54,11 @@ Prefix these handbook-convention paths with `src/`. Optional access and CLI code
 | Runtime injection key | `composition/tokens/ticket.tokens.ts` | Names the persistence provider |
 | Startup | `composition/main.ts` | Starts Nest |
 
-Domain imports its own policy; Application imports Domain and its contracts. Infrastructure implements those contracts. Presentation invokes Application's supported API. Composition imports the concrete pieces it assembles.
+Domain imports its own policy; [Application](../../GLOSSARY.md#application-layer) imports Domain and its contracts. [Infrastructure](../../GLOSSARY.md#infrastructure) implements those contracts. [Presentation](../../GLOSSARY.md#presentation-layer) invokes Application's supported API. Composition imports the concrete pieces it assembles.
 
-## 3. Finish the HTTP boundary
+<a id="3-finish-the-http-boundary"></a>
+
+## Finish the HTTP boundary
 
 
 `src/presentation/http/tickets/controllers/TicketsController.ts`:
@@ -73,7 +94,9 @@ export class TicketsController {
 
 The Pipe checks the argument; the operation owns workflow; the mapper selects the response. Nest supplies serialization and its standard exception handling. This example accepts Nest's default error envelope.
 
-## 4. Wire memory first
+<a id="4-wire-memory-first"></a>
+
+## Wire memory first
 
 
 `src/composition/tokens/ticket.tokens.ts`:
@@ -135,9 +158,11 @@ async function bootstrap() {
 void bootstrap()
 ```
 
-Application consumers import `application/tickets`; Nest startup imports `composition/modules`. TypeScript exports expose source symbols and Nest `exports` exposes providers. The [public API guide](../foundations/module-boundaries-and-public-apis.md#9-backend-apis-across-layer-first-capabilities) explains the separate capability boundary.
+[Application](../../GLOSSARY.md#application-layer) consumers import `application/tickets`; Nest startup imports `composition/modules`. TypeScript exports expose source symbols and Nest `exports` exposes providers. The [public API guide](../foundations/module-boundaries-and-public-apis.md#backend-apis-across-layer-first-capabilities) explains the separate capability boundary.
 
-## 5. Replace memory when the ticket must survive restart
+<a id="5-replace-memory-when-the-ticket-must-survive-restart"></a>
+
+## Replace memory when the ticket must survive restart
 
 `PrismaTicketRepository` implements the same contract with durable storage. The architecture-relevant insert is below; generated-client setup and outage classification are omitted from this excerpt.
 
@@ -169,19 +194,22 @@ Use the [official Prisma 7 setup](https://www.prisma.io/docs/orm/v7/prisma-clien
 
 Optional failure handling: a real integration classifies recognized outages, records safe technical diagnostics, then translates them to `TicketPersistenceUnavailable`. The simple insert above propagates errors; it does not implement that classification. [Prisma's error reference](https://www.prisma.io/docs/orm/v7/reference/error-reference) describes technology-specific failures.
 
-## 6. Three relationships in one system view
+<a id="6-three-relationships-in-one-system-view"></a>
+
+## Three relationships in one system view
 
 Solid arrows are runtime calls, long dashes source dependencies, and short dots startup wiring.
 
 ```mermaid
-flowchart LR
-    C["TicketsController / delivery"] -->|"execute"| U["CreateTicket / workflow"]
-    U -->|"create"| D["Ticket / validity"]
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
+    C["TicketsController<br/>delivery"] -->|"execute"| U["CreateTicket<br/>workflow"]
+    U -->|"create"| D["Ticket<br/>validity"]
     U -->|"insert"| I["Persistence implementation"]
-    I -->|"write"| DB["Database / external"]
-    U -. "requires" .-> P["TicketRepository / contract"]
+    I -->|"write"| DB["Database<br/>external"]
+    U -. "requires" .-> P["TicketRepository<br/>contract"]
     I -. "implements" .-> P
-    M["TicketsModule / composition"] -. "supplies operation" .-> C
+    M["TicketsModule<br/>composition"] -. "supplies operation" .-> C
     M -. "supplies repository" .-> U
     M -. "constructs" .-> I
     classDef policy fill:#263238,stroke:#85979e,color:#e4ebee
@@ -194,21 +222,27 @@ flowchart LR
 
 The operation calls the supplied persistence object. The contract records its requirement; startup assembles the objects before requests arrive.
 
-## 7. Review changes and failures before calling it maintainable
+<a id="7-review-changes-and-failures-before-calling-it-maintainable"></a>
+
+## Review changes and failures before calling it maintainable
 
 | Change | Owner |
 | --- | --- |
-| Subject rule or initial state | Domain |
-| Storage schema/technology | Infrastructure and Composition |
-| CLI caller | CLI Presentation and its startup |
-| Another capability needs creation | Tickets' supported Application API |
+| Subject rule or initial state | [Domain](../../GLOSSARY.md#domain) |
+| Storage schema/technology | [Infrastructure](../../GLOSSARY.md#infrastructure) and Composition |
+| CLI caller | CLI [Presentation](../../GLOSSARY.md#presentation-layer) and its startup |
+| Another capability needs creation | Tickets' supported [Application](../../GLOSSARY.md#application-layer) API |
 
 The backend owns persisted ticket decisions. Authentication and delivery limits need their own application requirements; they are outside this creation walkthrough.
 
-## 8. Verification at the right boundary
+<a id="8-verification-at-the-right-boundary"></a>
+
+## Verification at the right boundary
 
 An application checks business rules in isolation, workflow with a supplied repository, HTTP mapping through Nest and persistence against its actual database. These are illustrative snippets, not a deployed backend.
 
 Continue with [styles](5-architectural-styles-with-nestjs.md) and [exercises](exercises/README.md).
 
 [References](references.md)
+
+[Previous: NestJS Building Blocks](3-nestjs-building-blocks.md) · [Next: Business Decisions and Application Workflows](../foundations/domain-modeling/README.md)

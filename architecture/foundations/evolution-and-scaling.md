@@ -7,7 +7,8 @@ Architecture should evolve in response to observed forces, not headcount or line
 There is no defensible rule such as:
 
 ```mermaid
-flowchart LR
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
     N0["10 developers"]
     N1["DI container"]
     N2["50 developers"]
@@ -23,7 +24,24 @@ Those decisions solve different problems and carry different costs.
 
 ---
 
-## 1. Prefer evidence over maturity phases
+**Contents**
+
+- [Prefer evidence over maturity phases](#prefer-evidence-over-maturity-phases)
+- [Manual composition vs. DI container](#manual-composition-vs-di-container)
+- [Layer-first vs. capability-first filesystem](#layer-first-vs-capability-first-filesystem)
+- [Modular monolith before distribution by default](#modular-monolith-before-distribution-by-default)
+- [Bounded contexts are semantic boundaries](#bounded-contexts-are-semantic-boundaries)
+- [Team boundaries and software boundaries influence each other](#team-boundaries-and-software-boundaries-influence-each-other)
+- [Microservices](#microservices)
+- [Microfrontends](#microfrontends)
+- [Shared code vs. platform capability](#shared-code-vs-platform-capability)
+- [Architecture fitness signals](#architecture-fitness-signals)
+- [Review an example under likely change pressure](#review-an-example-under-likely-change-pressure)
+- [Sources](#sources)
+
+<a id="1-prefer-evidence-over-maturity-phases"></a>
+
+## Prefer evidence over maturity phases
 
 Ask what is actually hurting:
 
@@ -42,7 +60,9 @@ The response is not automatic. Each option has trade-offs.
 
 ---
 
-## 2. Manual composition vs. DI container
+<a id="2-manual-composition-vs-di-container"></a>
+
+## Manual composition vs. DI container
 
 A [DI container](../../GLOSSARY.md#di-container) solves object-graph/lifetime/composition problems. It does not make an architecture "enterprise".
 
@@ -66,11 +86,14 @@ Do not switch because the team crossed an arbitrary size.
 
 ---
 
-## 3. Layer-first vs. capability-first filesystem
+<a id="3-layer-first-vs-capability-first-filesystem"></a>
+
+## Layer-first vs. capability-first filesystem
 
 Layer-first structures can be clear in smaller codebases:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     SRC["src/"] --> D["domain/"]
     SRC --> A["application/"]
@@ -81,6 +104,7 @@ flowchart TD
 As a capability grows, feature ownership may become the stronger change axis:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     A["application/"] --> O["orders/"]
     A --> B["billing/"]
@@ -90,6 +114,7 @@ flowchart TD
 or within a [Presentation layer](../../GLOSSARY.md#presentation-layer):
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     P["presentation/"] --> O["orders/"]
     P --> B["billing/"]
@@ -102,7 +127,9 @@ The question is not "which phase are we in?". It is:
 
 ---
 
-## 4. Modular monolith before distribution by default
+<a id="4-modular-monolith-before-distribution-by-default"></a>
+
+## Modular monolith before distribution by default
 
 A process boundary is expensive:
 
@@ -119,15 +146,18 @@ Martin Fowler's "Monolith First" describes the common benefit of discovering sta
 A strong default for many business systems is therefore:
 
 ```mermaid
-flowchart LR
-    M["Modular monolith"] --> API["Explicit module APIs"] --> C["Measure coupling"] --> S["Split deployables only when forces justify it"]
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
+    M["Modular monolith"] --> API["Explicit module APIs"] --> C["Measure coupling"] --> S["Split deployables only when<br/>forces justify it"]
 ```
 
 This is guidance, not a law. Teams with mature distributed-systems capability and already-known boundaries may make a different decision.
 
 ---
 
-## 5. Bounded contexts are semantic boundaries
+<a id="5-bounded-contexts-are-semantic-boundaries"></a>
+
+## Bounded contexts are semantic boundaries
 
 Imagine Support using `Customer` for the person who contacted the help desk, while Billing uses `Customer` for the party responsible for an invoice. Forcing one universal object on both teams may make both models confusing. Each team can define its own meaning and rules within an explicit model boundary, called a [bounded context](../../GLOSSARY.md#bounded-context).
 
@@ -141,7 +171,9 @@ Logical modularity and physical deployment are separate decisions.
 
 ---
 
-## 6. Team boundaries and software boundaries influence each other
+<a id="6-team-boundaries-and-software-boundaries-influence-each-other"></a>
+
+## Team boundaries and software boundaries influence each other
 
 Team Topologies focuses on flow of change and cognitive load rather than organization size alone.
 
@@ -157,7 +189,9 @@ Architecture should reduce unnecessary communication paths, not mirror an org ch
 
 ---
 
-## 7. Microservices
+<a id="7-microservices"></a>
+
+## Microservices
 
 Consider independently deployable services when there is a concrete need such as:
 
@@ -173,7 +207,9 @@ Do not use [microservices](../../GLOSSARY.md#microservice) to repair poor module
 
 ---
 
-## 8. Microfrontends
+<a id="8-microfrontends"></a>
+
+## Microfrontends
 
 [Microfrontends](../../GLOSSARY.md#microfrontend) primarily address **organizational and delivery independence** in large frontend products.
 
@@ -199,7 +235,9 @@ Cam Jackson's Martin Fowler article frames microfrontends around scaling fronten
 
 ---
 
-## 9. Shared code vs. platform capability
+<a id="9-shared-code-vs-platform-capability"></a>
+
+## Shared code vs. platform capability
 
 As systems grow, a giant shared library often becomes a coupling hub.
 
@@ -209,7 +247,9 @@ Possible ownership choices include a feature-local implementation, an explicit r
 
 ---
 
-## 10. Architecture fitness signals
+<a id="10-architecture-fitness-signals"></a>
+
+## Architecture fitness signals
 
 Track evidence such as:
 
@@ -228,7 +268,9 @@ The point is not to optimize a vanity metric. The point is to know **which force
 
 ---
 
-## 11. Review an example under likely change pressure
+<a id="11-review-an-example-under-likely-change-pressure"></a>
+
+## Review an example under likely change pressure
 
 A support platform can have hundreds of files without needing distribution; it can also have only a few files and already suffer from an unsafe business rule. Scale is not a synonym for code size, folder count or the number of interfaces.
 

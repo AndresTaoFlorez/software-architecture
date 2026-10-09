@@ -138,7 +138,7 @@ When a TypeScript tool reads source code, it can turn `import { save } from './t
 
 Code connecting a specific external actor or technology to an application interaction. `TicketsController` invokes creation from HTTP; `PrismaTicketRepository` implements the required persistence interaction. The translation keeps the application's operation independent of that mechanism.
 
-[Full explanation](architecture/backend/5-architectural-styles-with-nestjs.md). **Sources.** [Cockburn: Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/)
+[Full explanation](architecture/styles/hexagonal-architecture/README.md). **Sources.** [Cockburn: Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/)
 
 ---
 
@@ -160,11 +160,13 @@ When an analyst selects **Create Ticket**, some code must check the supplied inf
 
 ## Application Service
 
-Code that coordinates one application operation. For example, `CreateTicketService` may validate the request, call the ticket-creation capability and return the result. It is usually stateless across calls; it coordinates domain behavior but should not invent or take ownership of the ticket's business rules.
+Code that coordinates a use-case command and workflow, including application-level preconditions when needed. A transport parser checks the external HTTP/JSON representation at delivery; the Application Service obtains facts and coordinates work; Domain enforces business invariants.
 
 **Purpose.** Coordinate one cohesive application operation without moving domain invariants into orchestration.
 
 **Example.** `CheckoutService` coordinates inventory, payment and order persistence for the checkout workflow.
+
+[Full explanation](architecture/foundations/domain-modeling/README.md).
 
 **Sources.** [Fowler — Service Layer](https://martinfowler.com/eaaCatalog/serviceLayer.html) · [Microsoft Learn — Tactical DDD](https://learn.microsoft.com/en-us/azure/architecture/microservices/model/tactical-ddd)
 
@@ -298,7 +300,7 @@ A responsibility that appears in many otherwise separate operations. Logging a t
 
 A representation used to carry data across a boundary. `CreateTicketRequestDto` describes accepted HTTP request fields. Its owner is that HTTP boundary; received JSON requires a runtime check before being treated as the DTO.
 
-[Full explanation](architecture/foundations/code-placement.md#8-where-does-a-type-belong). **Sources.** [Fowler: Data Transfer Object](https://martinfowler.com/eaaCatalog/dataTransferObject.html)
+[Full explanation](architecture/foundations/code-placement.md#where-does-a-type-belong). **Sources.** [Fowler: Data Transfer Object](https://martinfowler.com/eaaCatalog/dataTransferObject.html)
 
 ---
 
@@ -480,6 +482,8 @@ Business behavior that does not belong naturally inside any one business object.
 
 **Example.** A route scheduler that reasons about several drones and delivery windows can be a domain service.
 
+[Full explanation](architecture/foundations/domain-modeling/README.md).
+
 **Sources.** [Microsoft Learn — Tactical DDD](https://learn.microsoft.com/en-us/azure/architecture/microservices/model/tactical-ddd)
 
 ---
@@ -577,6 +581,8 @@ An application may need to create tickets regardless of whether requests arrive 
 **Purpose.** Let multiple external actors and mechanisms interact with the same application through ports.
 
 **Example.** The same application port can be driven by an HTTP controller in production and a test harness in tests.
+
+[Full explanation](architecture/styles/hexagonal-architecture/README.md).
 
 **Sources.** [Cockburn — Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/)
 
@@ -772,7 +778,7 @@ A way to keep a screen's rendering separate from the state and operations prepar
 
 **Purpose.** Expose screen-oriented state and commands independently of concrete view controls.
 
-**Example.** A `useClosures()` facade exposes rows, busy state and commands while hiding Redux details from the React View.
+**Example.** A screen interface exposes rows, busy state and commands while hiding Redux details from the React View.
 
 **Sources.** [Fowler — Presentation Model](https://martinfowler.com/eaaDev/PresentationModel.html) · [Fowler — GUI Architectures](https://martinfowler.com/eaaDev/uiArchs.html) · [Smith — WPF Apps With MVVM](https://learn.microsoft.com/en-us/archive/msdn-magazine/2009/february/patterns-wpf-apps-with-the-model-view-viewmodel-design-pattern)
 
@@ -840,7 +846,7 @@ Suppose creating a ticket must send its plain result to a formatter chosen at st
 
 A contract describing an interaction the application requires or offers without choosing the external mechanism. `TicketRepository` describes persistence required by `CreateTicket`; `PrismaTicketRepository` is an implementation. This protects the operation when the implementation changes.
 
-[Full explanation](architecture/backend/5-architectural-styles-with-nestjs.md). **Sources.** [Cockburn: Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/)
+[Full explanation](architecture/styles/hexagonal-architecture/README.md). **Sources.** [Cockburn: Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/)
 
 ---
 
@@ -850,7 +856,7 @@ A contract describing an interaction the application requires or offers without 
 
 The area owning interaction and delivery representations. A frontend Page renders feedback; a backend Controller translates HTTP around an Application operation. This keeps delivery changes separate from business decisions.
 
-[Full explanation](architecture/foundations/code-placement.md#6-presentation). **Sources.** [Fowler: Presentation Domain Data Layering](https://martinfowler.com/bliki/PresentationDomainDataLayering.html)
+[Full explanation](architecture/foundations/code-placement.md#presentation). **Sources.** [Fowler: Presentation Domain Data Layering](https://martinfowler.com/bliki/PresentationDomainDataLayering.html)
 
 ---
 
@@ -906,7 +912,7 @@ The receptionist's agenda screen combines a toolbar, calendar and screen-facing 
 
 **Example.** `presentation/scheduling/pages/AgendaPage.tsx` calls `useAgenda` and composes `AgendaToolbar` with `AgendaCalendar`. A router's required entry file can delegate to this Page. HTTP parsing and authoritative appointment rules retain their other owners.
 
-**Sources.** [React — Describing the UI](https://react.dev/learn/describing-the-ui) · [Handbook — Pages compose](architecture/frontend/presentation-architecture.md#3-pages-compose-features-own-behavior)
+**Sources.** [React — Describing the UI](https://react.dev/learn/describing-the-ui) · [Handbook — Pages compose](architecture/frontend/presentation-architecture.md#pages-compose-features-own-behavior)
 
 ---
 
@@ -944,7 +950,7 @@ A function that receives the previous state and an action describing what happen
 
 An abstraction presenting stored business objects in collection-like terms. `TicketRepository` describes insertion required by the creation workflow; its memory and Prisma implementations perform it. This keeps persistence interaction expressed in inward-owned terms.
 
-[Full explanation](architecture/backend/2-typescript-first-boundaries.md). **Sources.** [Fowler: Repository](https://martinfowler.com/eaaCatalog/repository.html)
+[Full explanation](architecture/patterns/persistence/repository/README.md). **Sources.** [Fowler: Repository](https://martinfowler.com/eaaCatalog/repository.html)
 
 ---
 
@@ -1246,11 +1252,13 @@ Storing the sequence of business events as the authoritative record from which c
 
 ## Facade Pattern
 
-A simpler entry point that hides several internal operations a caller does not need to know. For example, `useTickets()` can expose `tickets`, `busy` and `create()` while internally coordinating state selectors and async actions. The facade simplifies access; it should not become the owner of unrelated business rules.
+A simpler entry point that hides several internal operations a caller does not need to know. For example, `AgendaFacade` coordinates a summary reader and appointment selection through `show(day)`. The facade simplifies access; it should not become the owner of unrelated business rules.
 
 **Purpose.** Give consumers a cohesive interface over several internal collaborators.
 
-**Example.** `useOrders()` can expose `rows`, `busy`, and `cancel()` while hiding Redux selectors, dispatch and thunk lifecycle details.
+**Example.** `AgendaFacade` returns rows and their selected item without requiring its caller to coordinate the two collaborators.
+
+[Full explanation](architecture/patterns/structural/facade/README.md).
 
 **Sources.** [Microsoft Learn — Adapter and Facade patterns](https://learn.microsoft.com/en-us/shows/visual-studio-toolbox/design-patterns-adapterfaade)
 
@@ -1528,7 +1536,7 @@ The framework needs to know which controllers and dependencies belong together a
 
 Code interpreting an incoming representation and returning a checked value or reporting failure. `parseCreateTicketRequest` checks unknown HTTP data and returns its request DTO. The Parser belongs to the boundary whose representation it interprets.
 
-[Full explanation](architecture/backend/2-typescript-first-boundaries.md#1-check-what-arrived-before-trusting-its-type). **Sources.** [TypeScript: Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)
+[Full explanation](architecture/backend/2-typescript-first-boundaries.md#check-what-arrived-before-trusting-its-type). **Sources.** [TypeScript: Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)
 
 ---
 
@@ -1604,6 +1612,8 @@ Ticket input handling, business decisions and storage can be grouped by the diff
 
 **Example.** HTTP code invokes creation behavior, and persistence code stores the ticket. Naming files Controller, Service and Repository does not alone establish good layers or protect domain policy. Open versus closed layers and dependency rules must be specified; layers are not necessarily separately deployed services.
 
+[Full explanation](architecture/styles/layered-architecture/README.md).
+
 **Sources.** [Fowler — Presentation Domain Data Layering](https://martinfowler.com/bliki/PresentationDomainDataLayering.html) · [Backend style comparison](architecture/backend/5-architectural-styles-with-nestjs.md)
 <a id="business-rule"></a>
 
@@ -1611,7 +1621,7 @@ Ticket input handling, business decisions and storage can be grouped by the diff
 
 A decision or constraint from the problem domain. A Ticket subject cannot be blank, and new tickets start `open`. Requiring a JSON string is a transport rule; requiring an authenticated caller is access policy.
 
-[Full explanation](architecture/backend/2-typescript-first-boundaries.md#2-decide-what-a-valid-ticket-means-in-one-place). **Sources.** [Martin: Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+[Full explanation](architecture/backend/2-typescript-first-boundaries.md#decide-what-a-valid-ticket-means-in-one-place). **Sources.** [Martin: Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 
 ---
 

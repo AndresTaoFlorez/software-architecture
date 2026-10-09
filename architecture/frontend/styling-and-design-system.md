@@ -8,15 +8,36 @@ This guide uses Panda CSS for concrete examples; the ownership principles apply 
 
 ---
 
-## 1. Use a layered design-system pipeline
+**Contents**
+
+- [Use a layered design-system pipeline](#use-a-layered-design-system-pipeline)
+  - [Primitive tokens](#primitive-tokens)
+  - [Semantic tokens](#semantic-tokens)
+- [Keep typography reusable](#keep-typography-reusable)
+- [Local atomic slot recipes: sva](#local-atomic-slot-recipes-sva)
+- [Config recipes: shared design-system API](#config-recipes-shared-design-system-api)
+- [One recipe, one owner](#one-recipe-one-owner)
+- [Slot recipes for multipart components](#slot-recipes-for-multipart-components)
+- [Prefer variants over selector escalation](#prefer-variants-over-selector-escalation)
+- [Global styles have one owner](#global-styles-have-one-owner)
+- [Keyframes and reduced motion](#keyframes-and-reduced-motion)
+- [Responsive design](#responsive-design)
+- [Inline styles](#inline-styles)
+- [Design-system folder](#design-system-folder)
+- [Sources](#sources)
+
+<a id="1-use-a-layered-design-system-pipeline"></a>
+
+## Use a layered design-system pipeline
 
 Use explicit ownership and reuse. This is a [dependency graph](../../GLOSSARY.md#dependency-graph) of style definitions, not a requirement that every component pass through every abstraction:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     S["Semantic tokens"] --> P["Primitive tokens"]
-    T["Text / layer styles"] --> S
-    R["Recipes / slot recipes"] --> S
+    T["Text<br/>layer styles"] --> S
+    R["Recipes<br/>slot recipes"] --> S
     C["Component-local styles"] --> S
     C --> T
     C --> R
@@ -67,7 +88,9 @@ A semantic token should usually answer **what the value means**, not merely dupl
 
 ---
 
-## 2. Keep typography reusable
+<a id="2-keep-typography-reusable"></a>
+
+## Keep typography reusable
 
 Panda text styles are intended to capture typographic properties.
 
@@ -101,7 +124,9 @@ Avoid baking layout or contextual color into every text style. Panda's text-styl
 
 ---
 
-## 3. Local atomic slot recipes: `sva`
+<a id="3-local-atomic-slot-recipes-sva"></a>
+
+## Local atomic slot recipes: `sva`
 
 Panda's `sva` creates an [atomic slot recipe](../../GLOSSARY.md#slot-recipe).
 
@@ -132,11 +157,12 @@ export const queryFilters = sva({
 })
 ```
 
-The generated import assumes Panda's `outdir` is `src/styled-system` and our canonical `@/*` alias resolves to `src/*` in both TypeScript and the runtime/bundler. Configure both together; see [source import resolution](../conventions/naming-and-file-placement.md#9-source-imports-and-runtime-resolution). Local `sva` ownership is this repository's default, not a Panda restriction: atomic [recipes](../../GLOSSARY.md#recipe) can also be shared.
+The generated import assumes Panda's `outdir` is `src/styled-system` and our canonical `@/*` alias resolves to `src/*` in both TypeScript and the runtime/bundler. Configure both together; see [source import resolution](../conventions/naming-and-file-placement.md#source-imports-and-runtime-resolution). Local `sva` ownership is this repository's default, not a Panda restriction: atomic [recipes](../../GLOSSARY.md#recipe) can also be shared.
 
 This fits colocated component ownership:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     Q["QueryFilters/"] --> C["QueryFilters.tsx"]
     Q --> S["QueryFilters.styles.ts"]
@@ -148,7 +174,9 @@ Use variants and compound variants to model visual states rather than creating a
 
 ---
 
-## 4. Config recipes: shared design-system API
+<a id="4-config-recipes-shared-design-system-api"></a>
+
+## Config recipes: shared design-system API
 
 Panda also provides `defineRecipe` and `defineSlotRecipe` for config [recipes](../../GLOSSARY.md#recipe) registered in `theme.recipes` / `theme.slotRecipes`.
 
@@ -200,14 +228,17 @@ Panda documents config recipes as useful for design systems, shared presets and 
 
 ---
 
-## 5. One recipe, one owner
+<a id="5-one-recipe-one-owner"></a>
+
+## One recipe, one owner
 
 Do **not** define the same visual [recipe](../../GLOSSARY.md#recipe) twice:
 
 ```mermaid
-flowchart LR
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
     L["QueryFilters.styles.ts"] --> S["sva(...) — local owner"]
-    G["presentation/recipes/..."] --> D["defineSlotRecipe(...) — duplicated owner"]
+    G["presentation/recipes/..."] --> D["defineSlotRecipe(...) —<br/>duplicated owner"]
 ```
 
 That creates two sources of truth.
@@ -215,20 +246,24 @@ That creates two sources of truth.
 Choose based on ownership:
 
 ```mermaid
-flowchart LR
-    L["Feature/component-local visual contract"] --> S["Colocated sva()"]
-    G["Cross-feature design-system contract"] --> R["defineRecipe / defineSlotRecipe"] --> P["Register in Panda config"]
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
+    L["Feature/component-local<br/>visual contract"] --> S["Colocated sva()"]
+    G["Cross-feature design-system<br/>contract"] --> R["defineRecipe<br/>defineSlotRecipe"] --> P["Register in Panda config"]
 ```
 
 Promotion from local to shared should be deliberate. Move the recipe; do not copy it.
 
 ---
 
-## 6. Slot recipes for multipart components
+<a id="6-slot-recipes-for-multipart-components"></a>
+
+## Slot recipes for multipart components
 
 [Slot recipes](../../GLOSSARY.md#slot-recipe) are a strong fit for components whose parts must vary together:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     D["Dialog"] --> B["backdrop"]
     D --> P["positioner"]
@@ -241,6 +276,7 @@ flowchart TD
 or:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     D["DataTable"] --> R["root"]
     D --> T["toolbar"]
@@ -257,7 +293,9 @@ Do not use a slot recipe simply because a component has many DOM nodes. Use it w
 
 ---
 
-## 7. Prefer variants over selector escalation
+<a id="7-prefer-variants-over-selector-escalation"></a>
+
+## Prefer variants over selector escalation
 
 A warning sign:
 
@@ -292,7 +330,9 @@ Treat `!important` as an escape hatch, not a normal specificity strategy.
 
 ---
 
-## 8. Global styles have one owner
+<a id="8-global-styles-have-one-owner"></a>
+
+## Global styles have one owner
 
 If Panda owns tokens and theme conditions, do not create a second handwritten theme in a global CSS file:
 
@@ -331,7 +371,9 @@ Therefore the repository does **not** establish "zero CSS files" as a universal 
 
 ---
 
-## 9. Keyframes and reduced motion
+<a id="9-keyframes-and-reduced-motion"></a>
+
+## Keyframes and reduced motion
 
 If Panda owns the styling system, define reusable animations in the theme:
 
@@ -353,7 +395,9 @@ Animations that encode component-specific choreography may remain colocated with
 
 ---
 
-## 10. Responsive design
+<a id="10-responsive-design"></a>
+
+## Responsive design
 
 Use named breakpoints and mobile-first responsive values when viewport breakpoints are truly the right abstraction:
 
@@ -373,7 +417,9 @@ Breakpoints are design-system decisions, not architectural laws. Do not add inte
 
 ---
 
-## 11. Inline styles
+<a id="11-inline-styles"></a>
+
+## Inline styles
 
 Do not prohibit inline styles categorically.
 
@@ -397,11 +443,14 @@ The distinction is ownership: runtime data may stay runtime; design decisions be
 
 ---
 
-## 12. Design-system folder
+<a id="12-design-system-folder"></a>
+
+## Design-system folder
 
 For a sufficiently large application:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     P["presentation/"] --> D["design-system/"]
     P --> F["scheduling/components/"]
@@ -424,3 +473,5 @@ Do not create a second abstraction layer merely to move `panda.config.ts` into a
 - Panda CSS, Text Styles: https://panda-css.com/docs/theming/text-styles
 - Panda CSS, Global Styles: https://panda-css.com/docs/concepts/writing-styles
 - Panda CSS, Animations/Keyframes: https://panda-css.com/docs/customization/theme#keyframes
+
+[Previous: Advanced frontend Exercises](exercises/advanced.md) · [Next: Reference Case Study: XXI Web UI](reference-case-study.md)

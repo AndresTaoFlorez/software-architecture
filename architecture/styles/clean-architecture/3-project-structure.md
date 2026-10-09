@@ -1,7 +1,9 @@
 > **[Clean Architecture](README.md)** › Project Structure & Conventions.
 
 
-# 3. Project Structure & Conventions
+<a id="3-project-structure--conventions"></a>
+
+# Project Structure & Conventions
 
 Two projects can both have a folder named `domain/`. In one, the rule “shipped orders cannot be cancelled” imports only business code. In the other, that same rule imports a database client. Matching folder names do not make those designs equivalent.
 
@@ -9,11 +11,31 @@ Two projects can both have a folder named `domain/`. In one, the rule “shipped
 
 ---
 
-## 3.1 The folder layout
+**Contents**
+
+- [The folder layout](#the-folder-layout)
+  - [Recommended import matrix](#recommended-import-matrix)
+- [Structure by capability inside a layer](#structure-by-capability-inside-a-layer)
+- [Public module APIs](#public-module-apis)
+- [Structuring the physical Presentation area](#structuring-the-physical-presentation-area)
+- [Styles and animation](#styles-and-animation)
+- [Type ownership](#type-ownership)
+- [Composition](#composition)
+- [Enforce the graph](#enforce-the-graph)
+- [What is architecture vs. convention?](#what-is-architecture-vs-convention)
+  - [Architecture](#architecture)
+  - [Recommended convention](#recommended-convention)
+  - [Framework convention](#framework-convention)
+- [Sources](#sources)
+
+<a id="31-the-folder-layout"></a>
+
+## The folder layout
 
 The canonical handbook mapping puts layers first, with capabilities inside them:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     N0["src/"]
     N1["domain/"]
@@ -37,7 +59,8 @@ The canonical rules for those dependencies live in **[Architecture Foundations](
 ### Recommended import matrix
 
 ```mermaid
-flowchart LR
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
     A["Application"] -. "imports" .-> D["Domain"]
     I["Infrastructure"] -. "imports contracts" .-> A
     I -. "imports data" .-> D
@@ -57,13 +80,16 @@ Long dashes show imports; short dots show startup wiring. Domain may import othe
 
 ---
 
-## 3.2 Structure by capability inside a layer
+<a id="32-structure-by-capability-inside-a-layer"></a>
 
-Layer-first top-level folders are compatible with feature/capability ownership below them. Grow sub-capabilities inside their layer, following [the centralized Scheduling example](../../foundations/code-placement.md#12-grow-capabilities-inside-each-layer); do not build a full architectural stack per entity or table.
+## Structure by capability inside a layer
+
+Layer-first top-level folders are compatible with feature/capability ownership below them. Grow sub-capabilities inside their layer, following [the centralized Scheduling example](../../foundations/code-placement.md#grow-capabilities-inside-each-layer); do not build a full architectural stack per entity or table.
 
 Example:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     N0["domain/"]
     N1["orders/"]
@@ -91,7 +117,9 @@ Avoid generic dumping grounds such as `services/`, `helpers/`, `managers/`, or `
 ---
 
 
-## 3.3 Public module APIs
+<a id="33-public-module-apis"></a>
+
+## Public module APIs
 
 A feature/module should expose an intentional contract and hide internals.
 
@@ -109,7 +137,9 @@ See **[Module Boundaries and Public APIs](../../foundations/module-boundaries-an
 
 <a id="34-structuring-the-outermost-circle-the-presentation-ui"></a>
 
-## 3.4 Structuring the physical Presentation area
+<a id="34-structuring-the-physical-presentation-area"></a>
+
+## Structuring the physical Presentation area
 
 A user interface and an incoming HTTP [Controller](../../../GLOSSARY.md#controller) both translate a caller's interaction into an [Application](../../../GLOSSARY.md#application-layer) operation. That outer responsibility is mapped to `presentation/` in this handbook. Clean does not prescribe its internal React or Nest folder structure.
 
@@ -119,18 +149,23 @@ This generic guide stops at the `presentation/` boundary. Follow [Frontend Archi
 
 <a id="35-styles--animation-keep-them-out-of-the-markup"></a>
 
-## 3.5 Styles and animation
+<a id="35-styles-and-animation"></a>
+
+## Styles and animation
 
 A component's styles exist to render the interaction, so [Presentation](../../../GLOSSARY.md#presentation-layer) owns them. Keep component-specific styles with that component and shared [design-system](../../../GLOSSARY.md#design-system) [recipes](../../../GLOSSARY.md#recipe) with their established visual owner. Detailed placement belongs in [Styling and Design-System Architecture](../../frontend/styling-and-design-system.md); this generic guide does not define a second UI taxonomy.
 
 ---
 
-## 3.6 Type ownership
+<a id="36-type-ownership"></a>
+
+## Type ownership
 
 Types belong to the layer/capability that owns their meaning.
 
 ```mermaid
-flowchart LR
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
     MONEY["Money"] --> D["domain/"]
     CMD["PlaceOrderCommand"] --> A["application/"]
     DTO["ApiOrderDto"] --> I["infrastructure/"]
@@ -143,11 +178,14 @@ A top-level `src/types` directory is rarely a good default because it erases own
 
 ---
 
-## 3.7 Composition
+<a id="37-composition"></a>
+
+## Composition
 
 Keep concrete wiring at an outer bootstrap boundary:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     C["composition/"] --> CT["container.ts"]
 ```
@@ -162,7 +200,9 @@ See **[Composition Root](../../foundations/composition-root.md)**.
 
 <a id="33-imports-as-a-lint-target"></a>
 
-## 3.8 Enforce the graph
+<a id="38-enforce-the-graph"></a>
+
+## Enforce the graph
 
 A [dependency rule](../../../GLOSSARY.md#dependency-rule) that can be automated should be automated.
 
@@ -188,7 +228,9 @@ See **[Checking Architectural Boundaries](../../foundations/architecture-testing
 
 <a id="32-conventions"></a>
 
-## 3.9 What is architecture vs. convention?
+<a id="39-what-is-architecture-vs-convention"></a>
+
+## What is architecture vs. convention?
 
 ### Architecture
 

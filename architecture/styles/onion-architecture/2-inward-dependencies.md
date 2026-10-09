@@ -1,17 +1,37 @@
 > **[Onion Architecture](README.md)** › Inward Dependencies.
 
-# 2. Inward Dependencies
+<a id="2-inward-dependencies"></a>
+
+# Inward Dependencies
+
+A ticket workflow calls a storage object at runtime, but its source code can depend on a contract it owns. This chapter traces both relationships and shows which imports break that boundary.
+
+**Contents**
+
+- [The principle](#the-principle)
+- [Dependency inversion](#dependency-inversion)
+- [Recommended import policy](#recommended-import-policy)
+- [Type imports count](#type-imports-count)
+- [Re-exports do not change ownership](#re-exports-do-not-change-ownership)
+- [External failures](#external-failures)
+- [Presentation and Infrastructure are siblings outside Application](#presentation-and-infrastructure-are-siblings-outside-application)
+- [Adding a capability](#adding-a-capability)
+- [Enforce imports](#enforce-imports)
+- [Sources](#sources)
 
 <a id="2-core-principle-the-dependency-rule"></a>
 <a id="21-the-concentric-model"></a>
 
-## 2.1 The principle
+<a id="21-the-principle"></a>
+
+## The principle
 
 Imagine the rule that rejects a blank ticket subject. If that rule imports a database client, changing the database can force changes in code that only decides whether a ticket is valid. Instead, the database-facing code can know the operation and supply its data without the rule knowing the database.
 
 This is what [Onion Architecture](../../../GLOSSARY.md#onion-architecture) means by protecting the center from outer technology. An arrow below means one source-code area may refer to the code in another; it does not mean every user action must execute in that order.
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart LR
     P["Presentation"] -. "imports operation" .-> A["Application"] -. "imports rules" .-> D["Domain"]
     I["Infrastructure"] -. "imports contract" .-> A
@@ -28,7 +48,9 @@ Runtime flow may call an external system in the opposite direction through an in
 
 <a id="43-the-inversion-gap"></a>
 
-## 2.2 Dependency inversion
+<a id="22-dependency-inversion"></a>
+
+## Dependency inversion
 
 [Application](../../../GLOSSARY.md#application-layer) needs to insert a valid ticket. Its canonical `TicketRepository` describes that capability. The operation names that contract; `PrismaTicketRepository` names the contract too and supplies its technical implementation. Application does not import Prisma. This reversal of the implementation's source dependency is **dependency inversion**.
 
@@ -45,12 +67,13 @@ const createTicket = new CreateTicket(repository, makeId)
 Trace the same objects in one view. Solid lines are runtime calls; long dashes are source dependencies; short dots are startup wiring. `TicketRepository` is not an intermediary runtime object.
 
 ```mermaid
-flowchart LR
-    UC["CreateTicket / operation"] -->|"calls insert"| SQL["PrismaTicketRepository / adapter"]
-    SQL -->|"inserts record"| DB["Database / external system"]
-    SQL -. "implements" .-> PORT["TicketRepository / contract"]
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
+    UC["CreateTicket<br/>operation"] -->|"calls insert"| SQL["PrismaTicketRepository<br/>adapter"]
+    SQL -->|"inserts record"| DB["Database<br/>external system"]
+    SQL -. "implements" .-> PORT["TicketRepository<br/>contract"]
     UC -. "requires" .-> PORT
-    ROOT["Bootstrap / composition"] -. "constructs" .-> SQL
+    ROOT["Bootstrap<br/>composition"] -. "constructs" .-> SQL
     ROOT -. "supplies repository" .-> UC
     linkStyle 0,1 stroke-width:2px
     linkStyle 2,3 stroke-width:1px,stroke-dasharray:6 4
@@ -65,7 +88,9 @@ No contradiction exists because dependency direction and control flow are differ
 
 <a id="41-allowed-and-forbidden-imports"></a>
 
-## 2.3 Recommended import policy
+<a id="23-recommended-import-policy"></a>
+
+## Recommended import policy
 
 | Area | Allowed dependencies | Forbidden by the default policy |
 | --- | --- | --- |
@@ -81,7 +106,9 @@ This table is a documentation convention for implementing Onion cleanly; Palermo
 ---
 
 
-## 2.4 Type imports count
+<a id="24-type-imports-count"></a>
+
+## Type imports count
 
 This still creates coupling:
 
@@ -97,7 +124,9 @@ Architectural rules operate on source dependencies, not only runtime bundle depe
 
 ---
 
-## 2.5 Re-exports do not change ownership
+<a id="25-re-exports-do-not-change-ownership"></a>
+
+## Re-exports do not change ownership
 
 Re-exporting a type does not change who owns its meaning. First consider an invalid outward dependency:
 
@@ -117,21 +146,24 @@ Now consider a deliberately supported inward type. The Tickets application resul
 export type { TicketData } from '@/domain/tickets/Ticket'
 ```
 
-The source dependency points inward and the type still belongs to [Domain](../../../GLOSSARY.md#domain). This is valid when the public contract intentionally supports that representation; it couples consumers to that supported shape. It does not give callers entity mutation methods or permit exporting an [ORM](../../../GLOSSARY.md#orm) row. A stricter application-specific result can instead map selected fields. The [canonical ticket API](../../backend/2-typescript-first-boundaries.md#3-save-without-naming-a-database-in-the-operation) exposes the operation and command/result without adding this optional export.
+The source dependency points inward and the type still belongs to [Domain](../../../GLOSSARY.md#domain). This is valid when the public contract intentionally supports that representation; it couples consumers to that supported shape. It does not give callers entity mutation methods or permit exporting an [ORM](../../../GLOSSARY.md#orm) row. A stricter application-specific result can instead map selected fields. The [canonical ticket API](../../backend/2-typescript-first-boundaries.md#save-without-naming-a-database-in-the-operation) exposes the operation and command/result without adding this optional export.
 
 ---
 
-## 2.6 External failures
+<a id="26-external-failures"></a>
+
+## External failures
 
 Do not force every infrastructure error into a [Domain error](../../../GLOSSARY.md#domain-error).
 
 Classify by meaning:
 
 ```mermaid
-flowchart LR
-    D1["Order cannot be cancelled after shipment"] --> DE["Domain error"]
-    A1["Use case cannot complete because dependency is unavailable"] --> AE["Application error / result"]
-    I1["HTTP 502 / ECONNRESET / SQLSTATE"] --> IE["Infrastructure detail; map before crossing boundaries"]
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
+    D1["Order cannot be cancelled<br/>after shipment"] --> DE["Domain error"]
+    A1["Use case cannot complete<br/>because dependency is<br/>unavailable"] --> AE["Application error<br/>result"]
+    I1["HTTP 502<br/>ECONNRESET / SQLSTATE"] --> IE["Infrastructure detail; map<br/>before crossing boundaries"]
 ```
 
 [Presentation](../../../GLOSSARY.md#presentation-layer) should receive an application/presentation-appropriate failure, not raw Axios/Prisma/driver exceptions.
@@ -140,18 +172,21 @@ flowchart LR
 
 <a id="24-why-this-matters-specifically-on-the-frontend"></a>
 
-## 2.7 Presentation and Infrastructure are siblings outside Application
+<a id="27-presentation-and-infrastructure-are-siblings-outside-application"></a>
+
+## Presentation and Infrastructure are siblings outside Application
 
 Avoid the misleading linear stack:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart LR
     P["Presentation"] -. "imports" .-> A["Application"] -. "forbidden import" .-> I["Infrastructure"] -. "imports" .-> D["Domain"]
 ```
 
 That makes [Application](../../../GLOSSARY.md#application-layer) depend on [Infrastructure](../../../GLOSSARY.md#infrastructure) or suggests Infrastructure is an inner service layer.
 
-The intended model is the inward graph in section 2.1 and the combined call/dependency view in section 2.2. [Presentation](../../../GLOSSARY.md#presentation-layer) and Infrastructure sit outside Application; neither is an obligatory intermediate layer between Application and [Domain](../../../GLOSSARY.md#domain).
+The intended model is the [inward graph](#the-principle) and the [combined call/dependency view](#dependency-inversion). [Presentation](../../../GLOSSARY.md#presentation-layer) and Infrastructure sit outside Application; neither is an obligatory intermediate layer between Application and [Domain](../../../GLOSSARY.md#domain).
 
 Infrastructure implements Application-owned [ports](../../../GLOSSARY.md#port).
 
@@ -159,7 +194,9 @@ Infrastructure implements Application-owned [ports](../../../GLOSSARY.md#port).
 
 <a id="42-adding-a-feature-across-the-four-layers"></a>
 
-## 2.8 Adding a capability
+<a id="28-adding-a-capability"></a>
+
+## Adding a capability
 
 Do not blindly create four files/folders.
 
@@ -177,7 +214,9 @@ A CRUD screen with no meaningful domain policy may need much less structure.
 
 ---
 
-## 2.9 Enforce imports
+<a id="29-enforce-imports"></a>
+
+## Enforce imports
 
 Treat the import matrix as executable policy.
 

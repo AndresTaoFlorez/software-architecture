@@ -1,6 +1,8 @@
 > **[Model-View-ViewModel](README.md)** › [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-mvvm) in React + Redux Toolkit. Full reference list: [References](references.md).
 
-# 5. MVVM in React + Redux Toolkit
+<a id="5-mvvm-in-react--redux-toolkit"></a>
+
+# MVVM in React + Redux Toolkit
 
 Suppose `OrdersPage` needs only `rows`, `isSaving` and `cancelOrder()`. It should not necessarily know which Redux action was dispatched or how the asynchronous request was stored. A public `useOrders()` hook can expose those screen-level values and actions while hiding the internal Redux mechanics.
 
@@ -10,7 +12,21 @@ For the repository's current Redux guidance, also read **[State Management and S
 
 ---
 
-## 5.1 The mapping, in RTK vocabulary
+**Contents**
+
+- [The mapping, in RTK vocabulary](#the-mapping-in-rtk-vocabulary)
+- [RTK Query and the infrastructure seam](#rtk-query-and-the-infrastructure-seam)
+  - [Server-state dominant query](#server-state-dominant-query)
+  - [Policy-bearing operation](#policy-bearing-operation)
+- [The use-case layer is added by Clean/Onion, not Redux or MVVM](#the-use-case-layer-is-added-by-cleanonion-not-redux-or-mvvm)
+- [Selectors reshape Presentation state](#selectors-reshape-presentation-state)
+- [Public facade example](#public-facade-example)
+- [Do not force everything through Redux](#do-not-force-everything-through-redux)
+- [Sources](#sources)
+
+<a id="51-the-mapping-in-rtk-vocabulary"></a>
+
+## The mapping, in RTK vocabulary
 
 A possible mapping:
 
@@ -31,7 +47,9 @@ Redux's official guidance commonly allows components to use typed Redux hooks di
 <a id="52-rtk-query-sits-at-the-infrastructure-seam"></a>
 
 
-## 5.2 RTK Query and the infrastructure seam
+<a id="52-rtk-query-and-the-infrastructure-seam"></a>
+
+## RTK Query and the infrastructure seam
 
 [RTK Query](../../../../GLOSSARY.md#rtk-query) is Redux Toolkit's [server-state](../../../../GLOSSARY.md#server-state) fetching/caching solution.
 
@@ -42,8 +60,9 @@ Its architectural placement depends on what the operation means.
 If a [View](../../../../GLOSSARY.md#view) mainly needs cached remote data, invalidation and re-fetching:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart LR
-    V["View / feature"] --> Q["RTK Query"] --> S["Server"]
+    V["View<br/>feature"] --> Q["RTK Query"] --> S["Server"]
 ```
 
 may be entirely appropriate.
@@ -53,8 +72,9 @@ may be entirely appropriate.
 If the operation contains application policy or must remain transport-independent:
 
 ```mermaid
-flowchart LR
-    V["View"] --> VM["ViewModel / Presentation adapter"] --> A["Application use case"] --> P["Port"]
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
+    V["View"] --> VM["ViewModel<br/>Presentation adapter"] --> A["Application use case"] --> P["Port"]
     I["Infrastructure adapter"] --> P
 ```
 
@@ -66,15 +86,18 @@ Document the chosen boundary.
 
 <a id="53-the-use-case-layer-is-added-not-inherited"></a>
 
-## 5.3 The use-case layer is added by Clean/Onion, not Redux or MVVM
+<a id="53-the-use-case-layer-is-added-by-cleanonion-not-redux-or-mvvm"></a>
+
+## The use-case layer is added by Clean/Onion, not Redux or MVVM
 
 Redux Toolkit does not require an [Application layer](../../../../GLOSSARY.md#application-layer). [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-mvvm) does not require one either.
 
 A Clean/Onion project may deliberately add:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart LR
-    R["Redux thunk / binding"] --> U["Application use case"] --> P["Application port"]
+    R["Redux thunk<br/>binding"] --> U["Application use case"] --> P["Application port"]
     I["Infrastructure adapter"] --> P
 ```
 
@@ -88,7 +111,9 @@ The rule is proportionality.
 
 <a id="54-selectors-are-where-reshape-lives"></a>
 
-## 5.4 Selectors reshape Presentation state
+<a id="54-selectors-reshape-presentation-state"></a>
+
+## Selectors reshape Presentation state
 
 [Selectors](../../../../GLOSSARY.md#selector) are appropriate for derived state:
 
@@ -114,7 +139,9 @@ Move authoritative business rules inward when they must be consistent across int
 
 <a id="55-the-31-example-restated"></a>
 
-## 5.5 Public facade example
+<a id="55-public-facade-example"></a>
+
+## Public facade example
 
 A strict [ViewModel](../../../../GLOSSARY.md#viewmodel)-style boundary excerpt; `useOrdersState` and `useOrdersActions` are existing feature bindings with semantic result contracts:
 
@@ -145,7 +172,9 @@ The [View](../../../../GLOSSARY.md#view) should not need `cancelOrderThunk.fulfi
 
 <a id="56-testing-the-rtk-dividend-and-one-react-tax"></a>
 
-## 5.6 Do not force everything through Redux
+<a id="56-do-not-force-everything-through-redux"></a>
+
+## Do not force everything through Redux
 
 Local component state remains appropriate for:
 

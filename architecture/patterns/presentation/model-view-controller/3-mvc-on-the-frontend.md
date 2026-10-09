@@ -1,6 +1,8 @@
 > **[Model-View-Controller](README.md)** › [MVC](../../../../GLOSSARY.md#model-view-controller-mvc) on the Frontend. Full reference list: [References](references.md).
 
-## 3. MVC on the Frontend
+<a id="3-mvc-on-the-frontend"></a>
+
+# MVC on the Frontend
 
 A React button can both display **Cancel** and handle its own click. That does not tell us whether the project follows classic [MVC](../../../../GLOSSARY.md#model-view-controller-mvc): to answer that, we must identify who interprets the click, who owns the information being changed, and who updates the display.
 
@@ -8,9 +10,17 @@ Modern component frameworks are often described using MVC/[MVVM](../../../../GLO
 
 ---
 
+**Contents**
+
+- [Component frameworks do not automatically implement MVC or MVVM](#component-frameworks-do-not-automatically-implement-mvc-or-mvvm)
+- [The failure mode: the fat component](#the-failure-mode-the-fat-component)
+- [How MVC sits inside Onion and Clean](#how-mvc-sits-inside-onion-and-clean)
+
 <a id="31-a-component-is-closer-to-mvvm-than-to-classic-mvc"></a>
 
-### 3.1 Component frameworks do not automatically implement MVC or MVVM
+<a id="31-component-frameworks-do-not-automatically-implement-mvc-or-mvvm"></a>
+
+## Component frameworks do not automatically implement MVC or MVVM
 
 Vue, React and Svelte provide reactive rendering mechanisms, so developers rarely reproduce the exact
 observer/controller wiring of Smalltalk-era [MVC](../../../../GLOSSARY.md#model-view-controller-mvc). That does **not** make those frameworks [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-mvvm) by default.
@@ -20,12 +30,13 @@ A project may intentionally implement MVC-like controllers, MVVM-like [ViewModel
 a simpler component/state design on top of the same framework.
 
 ```mermaid
-flowchart LR
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
     subgraph Classic["Classic MVC"]
         CV["View"] -->|observes| CM["Model"]
     end
     subgraph Modern["Modern component framework"]
-        T["Template / component"] -->|binds/reacts| S["Reactive state / possible ViewModel"]
+        T["Template<br/>component"] -->|binds/reacts| S["Reactive state<br/>possible ViewModel"]
     end
 ```
 
@@ -35,7 +46,7 @@ Use role names only when the responsibilities really match:
 |---|---|
 | **[View](../../../../GLOSSARY.md#view)** | component/template whose main job is rendering and forwarding intent |
 | **[Controller](../../../../GLOSSARY.md#controller)-like presentation action** | event/action [facade](../../../../GLOSSARY.md#facade-pattern) that interprets a gesture |
-| **ViewModel / Presentation Model** | hook/composable/[store](../../../../GLOSSARY.md#store) facade that exposes view-oriented state and commands |
+| **ViewModel / [Presentation](../../../../GLOSSARY.md#presentation-layer) Model** | hook/composable/[store](../../../../GLOSSARY.md#store) facade that exposes view-oriented state and commands |
 | **[Model](../../../../GLOSSARY.md#model) side** | application/domain capabilities or another non-rendering model — not necessarily one object |
 
 The same application does not need to use all four labels. Prefer the smallest vocabulary that makes
@@ -43,7 +54,9 @@ ownership clearer.
 
 ---
 
-### 3.2 The failure mode: the fat component
+<a id="32-the-failure-mode-the-fat-component"></a>
+
+## The failure mode: the fat component
 
 [MVC](../../../../GLOSSARY.md#model-view-controller-mvc)'s discipline matters most where frameworks make it easy to ignore. The dominant anti-pattern on the
 frontend is the **fat component** — a single file that renders markup, holds business rules, *and* calls
@@ -59,16 +72,19 @@ component focus on rendering and forwarding intent. A read-only reactive compone
 
 ---
 
-### 3.3 How MVC sits inside Onion and Clean
+<a id="33-how-mvc-sits-inside-onion-and-clean"></a>
+
+## How MVC sits inside Onion and Clean
 
 [MVC](../../../../GLOSSARY.md#model-view-controller-mvc) organizes the presentation tier; Onion and Clean organize the whole app. They compose cleanly:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
-    N0["Physical Presentation area (adapter behavior and UI glue)"]
+    N0["Physical Presentation area<br/>(adapter behavior and UI<br/>glue)"]
     N1["View → component template"]
-    N2["Represented state → observable model / state container"]
-    N3["Controller-like action → interprets user intent"]
+    N2["Represented state → observable model<br/>state container"]
+    N3["Controller-like action →<br/>interprets user intent"]
     N4["Application use case"]
     N5["Domain"]
     N3 --> N4 --> N5

@@ -2,7 +2,9 @@
 
 <a id="7-scaling-startup-to-enterprise"></a>
 
-# 7. Evolution and Scaling
+<a id="7-evolution-and-scaling"></a>
+
+# Evolution and Scaling
 
 [Clean Architecture](../../../GLOSSARY.md#clean-architecture) does not define startup, scale-up or enterprise phases, and it does not prescribe team-size thresholds for architectural mechanisms.
 
@@ -25,6 +27,7 @@ The canonical guidance is now centralized in:
 The same use-case boundary can live in:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart LR
     A["One package"] --> B["Module inside a monolith"] --> C["Separate package"] --> D["Independently deployed service"]
 ```
@@ -38,6 +41,7 @@ Moving it across a process boundary is a deployment decision, not proof of bette
 Avoid mechanically creating:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     N0["feature/"]
     N1["entities/"]

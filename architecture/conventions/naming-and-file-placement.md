@@ -2,7 +2,24 @@
 
 A filename should tell a reader what the code does. `GetAgenda` names an operation; `HttpAgendaReader` names its technical implementation. Responsibility determines placement before spelling determines the filename.
 
-## 1. Identifier naming
+**Contents**
+
+- [Identifier naming](#identifier-naming)
+- [React requirements](#react-requirements)
+- [File naming — repository convention](#file-naming--repository-convention)
+  - [Backend names](#backend-names)
+- [Folder naming](#folder-naming)
+- [Ports and adapters](#ports-and-adapters)
+- [Use-case names](#use-case-names)
+- [UI components](#ui-components)
+- [Placement is more important than suffix](#placement-is-more-important-than-suffix)
+  - [Exact owned paths](#exact-owned-paths)
+- [Source imports and runtime resolution](#source-imports-and-runtime-resolution)
+- [Sources](#sources)
+
+<a id="1-identifier-naming"></a>
+
+## Identifier naming
 
 | Identifier | Convention | Example |
 | --- | --- | --- |
@@ -13,11 +30,15 @@ A filename should tell a reader what the code does. `GetAgenda` names an operati
 
 These are handbook conventions except where the framework imposes a requirement.
 
-## 2. React requirements
+<a id="2-react-requirements"></a>
+
+## React requirements
 
 React component names start with a capital letter. Hooks use the `use` prefix and follow React's Rules of Hooks. A file's PascalCase spelling is our convention.
 
-## 3. File naming — repository convention
+<a id="3-file-naming--repository-convention"></a>
+
+## File naming — repository convention
 
 Match a class/component file to its main identifier. Function-oriented files use camelCase. Related state artifacts use a capability prefix, such as `agenda.state.ts`.
 
@@ -39,23 +60,33 @@ Match a class/component file to its main identifier. Function-oriented files use
 
 Repository describes the required persistence interaction; the mechanism prefix identifies its implementation. [Chapter 3](../backend/3-nestjs-building-blocks.md) explains Nest mechanisms.
 
-## 4. Folder naming
+<a id="4-folder-naming"></a>
+
+## Folder naming
 
 Use layers first, capabilities inside them: `domain/tickets/`, `application/tickets/` and the relevant integration or delivery area. [Code Placement](../foundations/code-placement.md) owns the dependency and representation rules.
 
-## 5. Ports and adapters
+<a id="5-ports-and-adapters"></a>
+
+## Ports and adapters
 
 Name a required interaction by purpose: `AgendaReader`, `Clock` or `TicketRepository`. Name its implementation with its mechanism when that adds useful information: `HttpAgendaReader` or `InMemoryTicketRepository`.
 
-## 6. Use-case names
+<a id="6-use-case-names"></a>
+
+## Use-case names
 
 Use actor intent: `CreateTicket`, `GetAgenda` or `CancelOrder` for classes; `createTicket` for an operation implemented as a function. `processStuff` and `GenericService` hide the intent.
 
-## 7. UI components
+<a id="7-ui-components"></a>
+
+## UI components
 
 `AppointmentCard` names the rendered unit. `AgendaPage` names the composed screen; `useAgenda` names its interaction Hook. Reusable primitives can use visual vocabulary such as `Button`.
 
-## 8. Placement is more important than suffix
+<a id="8-placement-is-more-important-than-suffix"></a>
+
+## Placement is more important than suffix
 
 `PrismaTicketRepository` belongs to the persistence integration even when its name includes a business noun.
 
@@ -68,10 +99,10 @@ Prefix paths below with `src/`.
 | Controller | `presentation/http/tickets/controllers/TicketsController.ts` |
 | Guard | `presentation/http/tickets/guards/AuthenticatedGuard.ts` |
 | Pipe | `presentation/http/tickets/pipes/CreateTicketPipe.ts` |
-| HTTP Parser | `presentation/http/tickets/parsers/parseCreateTicketRequest.ts` |
-| Request DTO | `presentation/http/tickets/dto/CreateTicketRequestDto.ts` |
+| HTTP [Parser](../../GLOSSARY.md#parser) | `presentation/http/tickets/parsers/parseCreateTicketRequest.ts` |
+| Request [DTO](../../GLOSSARY.md#data-transfer-object-dto) | `presentation/http/tickets/dto/CreateTicketRequestDto.ts` |
 | Response DTO | `presentation/http/tickets/dto/TicketResponseDto.ts` |
-| Response Mapper | `presentation/http/tickets/mappers/mapCreateTicketResponse.ts` |
+| Response [Mapper](../../GLOSSARY.md#mapper) | `presentation/http/tickets/mappers/mapCreateTicketResponse.ts` |
 | CLI handler | `presentation/cli/tickets/handlers/createTicketCli.ts` |
 | Use case | `application/tickets/use-cases/CreateTicket.ts` |
 | Command/result | `application/tickets/contracts/CreateTicketCommand.ts` and `CreateTicketResult.ts` |
@@ -88,7 +119,9 @@ Prefix paths below with `src/`.
 
 Use the [backend map](../backend/4-create-ticket-with-nestjs.md) and [frontend map](../frontend/presentation-architecture.md) for their concrete relationships.
 
-## 9. Source imports and runtime resolution
+<a id="9-source-imports-and-runtime-resolution"></a>
+
+## Source imports and runtime resolution
 
 The canonical alias is `@/ = src/`. Use it across layers or distant owners; nearby files may use relative imports.
 

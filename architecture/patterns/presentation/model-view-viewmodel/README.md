@@ -7,7 +7,32 @@
 
 ← [Repository home](../../../../README.md) · [Glossary](../../../../GLOSSARY.md) · [Code placement](../../../foundations/code-placement.md) · [Naming](../../../conventions/naming-and-file-placement.md) · [Frontend architecture](../../../frontend/README.md)
 
-## 1. History and origin
+A screen interface may also act as a Facade when it deliberately simplifies collaboration among several subsystem objects. The Hook name alone establishes neither pattern; compare the [independent Facade example](../../structural/facade/README.md).
+
+**Contents**
+
+- [History and origin](#history-and-origin)
+- [What problem does MVVM solve?](#what-problem-does-mvvm-solve)
+- [Fit and cost](#fit-and-cost)
+  - [When MVVM is a strong fit](#when-mvvm-is-a-strong-fit)
+  - [When MVVM is weak or unnecessary](#when-mvvm-is-weak-or-unnecessary)
+- [Mental model and roles](#mental-model-and-roles)
+  - [Model](#model)
+  - [View](#view)
+  - [ViewModel](#viewmodel)
+- [Isolation in a layered React application](#isolation-in-a-layered-react-application)
+- [Physical structure](#physical-structure)
+- [Where does a new function go?](#where-does-a-new-function-go)
+- [Naming](#naming)
+- [First feature end to end](#first-feature-end-to-end)
+- [Testing](#testing)
+- [Trade-offs and failure modes](#trade-offs-and-failure-modes)
+- [Learning path](#learning-path)
+- [Sources](#sources)
+
+<a id="1-history-and-origin"></a>
+
+## History and origin
 
 Martin Fowler described **[Presentation Model](../../../../GLOSSARY.md#presentation-model)** in 2004: an abstraction that contains a [View](../../../../GLOSSARY.md#view)'s state and behavior while remaining independent of concrete UI controls.
 
@@ -18,7 +43,9 @@ Sources:
 - https://martinfowler.com/eaaDev/PresentationModel.html
 - https://learn.microsoft.com/en-us/archive/msdn-magazine/2009/february/patterns-wpf-apps-with-the-model-view-viewmodel-design-pattern
 
-## 2. What problem does MVVM solve?
+<a id="2-what-problem-does-mvvm-solve"></a>
+
+## What problem does MVVM solve?
 
 Imagine an Orders screen with a **Cancel** button. It must show the current status, disable the button while saving, and display a useful error if the operation fails. Putting all this [state management](../../../../GLOSSARY.md#state-management) inside the component that draws buttons and text makes the screen hard to test without rendering it.
 
@@ -39,15 +66,20 @@ Without that separation, stateful UI code easily mixes:
 MVVM separates the rendering surface from the state and behavior needed by that rendering surface.
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart LR
     VIEW["View"] -->|"user intent"| VM["ViewModel"]
     VM -->|"view state"| VIEW
-    VM --> MODEL["Application / Model"]
+    VM --> MODEL["Application<br/>Model"]
 ```
 
 MVVM does not define persistence architecture, domain boundaries, transport [adapters](../../../../GLOSSARY.md#adapter) or deployment.
 
-## 3. When MVVM is a strong fit
+## Fit and cost
+
+<a id="3-when-mvvm-is-a-strong-fit"></a>
+
+### When MVVM is a strong fit
 
 It is useful for:
 
@@ -57,7 +89,9 @@ It is useful for:
 - declarative/reactive frameworks where rendering can bind to a stable view contract;
 - complex forms/workflows where rendering should stay comparatively simple.
 
-## 4. When MVVM is weak or unnecessary
+<a id="4-when-mvvm-is-weak-or-unnecessary"></a>
+
+### When MVVM is weak or unnecessary
 
 A dedicated [ViewModel](../../../../GLOSSARY.md#viewmodel) can be overhead when:
 
@@ -70,44 +104,56 @@ React, Vue and Svelte do **not** become [MVVM](../../../../GLOSSARY.md#model-vie
 
 <a id="the-triad-in-one-picture"></a>
 
-## 5. Mental model and roles
+<a id="5-mental-model-and-roles"></a>
+
+## Mental model and roles
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart LR
     USER["User"] --> VIEW["View"]
     VIEW -->|"intent / command"| VM["ViewModel"]
     VM -->|"display-ready state"| VIEW
-    VM --> MODEL["Model / Application capabilities"]
+    VM --> MODEL["Model<br/>Application capabilities"]
 ```
 
-| Role | Owns | Put here | Do not put here |
-| --- | --- | --- | --- |
-| [View](../../../../GLOSSARY.md#view) | rendering and user gestures | component/template, local visual state | authoritative business rules, transport clients |
-| [ViewModel](../../../../GLOSSARY.md#viewmodel) | view-oriented state and behavior | loading flags, display derivation, commands/[facade](../../../../GLOSSARY.md#facade-pattern), UI-specific orchestration | database/HTTP implementations, business [invariants](../../../../GLOSSARY.md#invariant) |
-| [Model](../../../../GLOSSARY.md#model) | non-View application/domain capabilities | domain/application state and operations according to the wider architecture | concrete View controls |
+### Model
+
+Provide non-View state and operations. In the surrounding application, the cancellation behavior belongs to [Domain](../../../../GLOSSARY.md#domain) and its workflow to [Application](../../../../GLOSSARY.md#application-layer).
+
+### View
+
+Render values and forward user gestures. Concrete components or templates choose the visual controls.
+
+### ViewModel
+
+Prepare display state and commands such as cancel(), busy and errorMessage. The binding connects those values and commands to the View. This role uses application capabilities rather than owning HTTP/database translation or authoritative cancellation rules.
 
 "Model" is overloaded. In a Clean/Onion application it is not automatically identical to `domain/`.
 
 <a id="a-warning-about-the-word-viewmodel"></a>
 
-## 6. Isolation in a layered React application
+<a id="6-isolation-in-a-layered-react-application"></a>
+
+## Isolation in a layered React application
 
 This repository uses a [ViewModel](../../../../GLOSSARY.md#viewmodel)-like **public feature [facade](../../../../GLOSSARY.md#facade-pattern)** when a screen is complex enough to justify it:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     VIEW["React component (View)"]
-    VM["useOrders() (ViewModel / Presentation facade)"]
+    VM["useOrders() (ViewModel<br/>screen interface)"]
     BIND["Presentation state bindings"]
     APP["Application use case"]
     DOMAIN["Domain"]
     INFRA["Infrastructure adapter"]
 
-    VIEW --> VM
-    VM --> BIND
-    VM --> APP
-    APP --> DOMAIN
-    INFRA --> APP
+    VIEW -->|"reads / invokes"| VM
+    VM -->|"reads / dispatches"| BIND
+    VM -->|"invokes"| APP
+    APP -->|"applies rule"| DOMAIN
+    INFRA -. "imports required contracts" .-> APP
 ```
 
 Why isolate it?
@@ -119,7 +165,9 @@ Why isolate it?
 
 A hook is a ViewModel only when it intentionally exposes a view contract. The `use` prefix alone does not create the architectural role.
 
-## 7. Physical structure
+<a id="7-physical-structure"></a>
+
+## Physical structure
 
 Keep the five canonical layers. A hook can expose a [ViewModel](../../../../GLOSSARY.md#viewmodel) while the state it composes stays in the same [Presentation](../../../../GLOSSARY.md#presentation-layer) capability:
 
@@ -137,14 +185,17 @@ Keep the five canonical layers. A hook can expose a [ViewModel](../../../../GLOS
 
 The [frontend guide](../../../frontend/README.md) owns the complete pages/components/hooks/state convention, used from the first capability. Files are added only when needed. [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-mvvm) does not prescribe their spelling; a `use` prefix does not by itself make a hook a ViewModel.
 
-## 8. Where does a new function go?
+<a id="8-where-does-a-new-function-go"></a>
+
+## Where does a new function go?
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     Q{"Why does this function exist?"}
-    Q -->|"Renders / handles local visual gesture"| V["View / components/"]
-    Q -->|"Creates display state or view command"| VM["ViewModel / hooks/"]
-    Q -->|"Business/application workflow"| APP["Application / Domain"]
+    Q -->|"Renders / handles local visual gesture"| V["View<br/>components/"]
+    Q -->|"Creates display state or view command"| VM["ViewModel<br/>hooks/"]
+    Q -->|"Business/application workflow"| APP["Application<br/>Domain"]
     Q -->|"Calls HTTP / DB / SDK"| I["Infrastructure"]
 ```
 
@@ -174,7 +225,9 @@ Types and helpers follow the same ownership rule:
 
 Source references may point from View/[Controller](../../../../GLOSSARY.md#controller) or ViewModel to their inward model/application contract. The represented [Model](../../../../GLOSSARY.md#model) must not name concrete controls. In the strict layering convention here, Presentation cannot import Infrastructure or a container; [type-only imports](../../../../GLOSSARY.md#type-only-import) count. Runtime state notifications are distinct from these source references.
 
-## 9. Naming
+<a id="9-naming"></a>
+
+## Naming
 
 Use **[Naming and File Placement Conventions](../../../conventions/naming-and-file-placement.md)**.
 
@@ -195,9 +248,11 @@ Recommended examples:
 
 The suffixes such as `.selectors.ts` are documentation conventions, not React or [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-mvvm) requirements.
 
-## 10. First feature end to end
+<a id="10-first-feature-end-to-end"></a>
 
-The screen displays progress and a message while Application cancels an order. A ViewModel exposes that screen state and its command; the View binds to the state.
+## First feature end to end
+
+The screen displays progress and a message while [Application](../../../../GLOSSARY.md#application-layer) cancels an order. A [ViewModel](../../../../GLOSSARY.md#viewmodel) exposes that screen state and its command; the View binds to the state.
 
 ```ts
 // presentation/orders/state/CancelOrderViewModel.ts
@@ -231,7 +286,9 @@ The [shared cancellation example](../../../styles/clean-architecture/4-building-
 
 <a id="complete-implementation-with-an-explicit-viewmodel"></a>
 
-## 11. Testing
+<a id="11-testing"></a>
+
+## Testing
 
 | Scope | What to test |
 | --- | --- |
@@ -245,7 +302,9 @@ The point of a ViewModel boundary is that presentation behavior can be tested wi
 
 See **[Testing in MVVM](4-testing-in-mvvm.md)**.
 
-## 12. Trade-offs and failure modes
+<a id="12-trade-offs-and-failure-modes"></a>
+
+## Trade-offs and failure modes
 
 Costs:
 
@@ -266,7 +325,9 @@ Common failures:
 
 <a id="where-to-start"></a>
 
-## 13. Learning path
+<a id="13-learning-path"></a>
+
+## Learning path
 
 1. **[The Three Parts](1-the-three-parts.md)**
 2. **[Binding](2-the-binding.md)**

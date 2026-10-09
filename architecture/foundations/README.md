@@ -1,58 +1,55 @@
+<a id="learning-order"></a>
+
 # Architecture Foundations
 
-Start here after [Code Placement](code-placement.md).
+An analyst sends “The invoice PDF will not download.” The program checks the incoming data, decides whether the ticket is valid and saves it. If the subject rule sits inside the HTTP handler, another caller can bypass it.
 
-These chapters teach the reusable rules shared by Clean, Onion, [Ports & Adapters](../../GLOSSARY.md#hexagonal-architecture-ports-and-adapters), and serious modular applications.
+**Contents**
 
-**Start with one ticket:** the rule “a resolved ticket cannot be assigned again” should not live inside a React button or an HTTP client. Those pieces can call an operation that enforces the rule, but changing the screen or request library should not alter it. The chapters below explain how to keep the rule, the callers, the external integrations, and the code that connects them in the right places.
+- [Give the decisions owners](#give-the-decisions-owners)
+- [Read in order](#read-in-order)
+- [Names you will meet](#names-you-will-meet)
+- [Read later](#read-later)
 
-## Learning order
+<a id="architecture-is-not-folder-names"></a>
 
-1. **[Code Placement](code-placement.md)** — where a function/type/file belongs.
-2. **[Dependency Boundaries](dependency-boundaries.md)** — why dependencies point toward policy.
-3. **[Composition Root](composition-root.md)** — how concrete implementations are assembled.
-4. **[Module Boundaries and Public APIs](module-boundaries-and-public-apis.md)** — how capabilities stay cohesive.
-5. **[Checking Architectural Boundaries](architecture-testing.md)** — how CI protects the [dependency graph](../../GLOSSARY.md#dependency-graph).
-6. **[Evolution and Scaling](evolution-and-scaling.md)** — how architecture evolves from observable forces.
+## Give the decisions owners
 
-## Mental model
+One piece checks whether the request contains strings. Another decides whether a subject is valid. Another stores the resulting ticket. A **responsibility** is the work a piece owns; its owner is the first place to inspect when that decision changes.
 
-```mermaid
-flowchart LR
-    UI["Presentation"] --> APP["Application"]
-    INFRA["Infrastructure"] --> APP
-    APP --> DOMAIN["Domain"]
-    ROOT["Composition"] -. wires .-> UI
-    ROOT -. wires .-> INFRA
-    ROOT -. wires .-> APP
-```
+A **dependency** means code needs another piece to do its work. For example, creation needs the ticket model. A **boundary** separates responsibilities and defines the supported interaction across them.
 
-The important distinction is ownership:
+Before adding folders, ask what changes when the subject rule changes, when storage changes and when a CLI becomes another caller.
 
-| Area | Owns | Should not own |
-| --- | --- | --- |
-| [Domain](../../GLOSSARY.md#domain) | business concepts and [invariants](../../GLOSSARY.md#invariant) | HTTP, UI, Redux, database details |
-| [Application](../../GLOSSARY.md#application-layer) | [use cases](../../GLOSSARY.md#use-case) and required capabilities | concrete [adapters](../../GLOSSARY.md#adapter)/framework code |
-| [Infrastructure](../../GLOSSARY.md#infrastructure) | HTTP/DB/storage/SDK translation | business policy |
-| [Presentation](../../GLOSSARY.md#presentation-layer) | rendering, interaction and view state | authoritative business invariants |
-| Composition | construction/wiring | business decisions |
+## Read in order
 
-## Architecture is not folder names
+1. [Code Placement](code-placement.md): place each decision.
+2. [Dependency Boundaries](dependency-boundaries.md): distinguish source use from runtime calls.
+3. [Composition](composition-root.md): supply concrete implementations.
+4. [Module Boundaries and Public APIs](module-boundaries-and-public-apis.md): let another capability use a supported entry.
 
-A project can contain `domain/`, `application/`, and `infrastructure/` while violating every intended boundary.
+Then choose the [backend](../backend/README.md) or [frontend](../frontend/README.md) route.
 
-The folder structure is useful because it makes ownership visible and mechanically enforceable. The architecture is the responsibility/dependency model behind it.
+<a id="mental-model"></a>
 
-## Use architecture proportionally
+## Names you will meet
 
-More boundaries create more:
+| Name | Work in the ticket example |
+| --- | --- |
+| [Domain](../../GLOSSARY.md#domain) | Decide valid subject and initial state |
+| [Application](../../GLOSSARY.md#application-layer) | Coordinate creating and saving |
+| [Presentation](../../GLOSSARY.md#presentation-layer) | Interpret caller input and translate the result |
+| [Infrastructure](../../GLOSSARY.md#infrastructure) | Implement storage or another external interaction |
+| Composition | Choose objects and connect them at startup |
 
-- interfaces;
-- mappings;
-- files;
-- tests;
-- composition.
+These names help locate owners. They do not require five calls for every request.
 
-That cost is justified when it protects meaningful business policy or volatile external mechanisms.
+<a id="use-architecture-proportionally"></a>
 
-Do not add abstractions merely because a diagram has another box.
+## Read later
+
+[Business decisions and workflows](domain-modeling/README.md) explains entity behavior and services after the ticket example. [Architectural checks](architecture-testing.md) and [evolution](evolution-and-scaling.md) explain how to protect and change established boundaries.
+
+Use separation when it protects independently changing decisions. More folders alone do not establish maintainability.
+
+[Previous: repository introduction](../../README.md) · [Next: Code Placement](code-placement.md)

@@ -1,6 +1,6 @@
 > **[Clean Architecture](README.md)** › References.
 
-## References
+# References
 
 The sources most central to [Clean Architecture](../../../GLOSSARY.md#clean-architecture) are marked ★.
 

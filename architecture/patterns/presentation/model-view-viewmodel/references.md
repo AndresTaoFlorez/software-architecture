@@ -1,10 +1,17 @@
 > **[Model-View-ViewModel](README.md)** › References.
 
-## References
+# References
 
 The sources most central to [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-mvvm) are marked ★.
 
-### Primary sources
+**Contents**
+
+- [Primary sources](#primary-sources)
+- [Ancestry](#ancestry)
+- [The pattern in industry (cited in §3.4)](#the-pattern-in-industry-cited-in-34)
+- [The pattern in Redux Toolkit (cited in §5)](#the-pattern-in-redux-toolkit-cited-in-5)
+
+## Primary sources
 
 - ★ **Gossman, J.** (2005-10-08). *Introduction to [Model](../../../../GLOSSARY.md#model)/[View](../../../../GLOSSARY.md#view)/[ViewModel](../../../../GLOSSARY.md#viewmodel) pattern for building WPF
   apps*. Microsoft Developer Blogs (archived on Microsoft Learn). (The origin of [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-mvvm): "The term
@@ -29,7 +36,7 @@ The sources most central to [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-
   different types of ViewModel consumers.")
   https://learn.microsoft.com/en-us/archive/msdn-magazine/2009/february/patterns-wpf-apps-with-the-model-view-viewmodel-design-pattern
 
-### Ancestry
+## Ancestry
 
 - **Krasner, G. E., & Pope, S. T.** (1988). *A Cookbook for Using the [Model-View-Controller](../../../../GLOSSARY.md#model-view-controller-mvc) User
   Interface Paradigm in Smalltalk-80*. Journal of Object-Oriented Programming, 1(3). (The ancestor
@@ -38,7 +45,7 @@ The sources most central to [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-
   Reusable Object-Oriented Software*. Addison-Wesley. (The [Observer pattern](../../../../GLOSSARY.md#observer-pattern) — the manual mechanism
   binding layers replaced.)
 
-### The pattern in industry (cited in [§3.4](3-mvvm-on-the-frontend.md#34-the-pattern-in-the-wild))
+## The pattern in industry (cited in [§3.4](3-mvvm-on-the-frontend.md#34-the-pattern-in-the-wild))
 
 - **Microsoft.** *The [Model-View-ViewModel](../../../../GLOSSARY.md#model-view-viewmodel-mvvm) Pattern*, in **Enterprise [Application](../../../../GLOSSARY.md#application-layer) Patterns Using
   .NET MAUI**. Microsoft Learn. ("The [view model](../../../../GLOSSARY.md#viewmodel) is unaware of the view"; "don't reference view
@@ -54,7 +61,7 @@ The sources most central to [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-
 - **React documentation.** https://react.dev/ (One-way data flow and hooks — the narrowed-write-path
   end of the binding dial discussed in [The Binding §2.3](2-the-binding.md).)
 
-### The pattern in Redux Toolkit (cited in [§5](5-mvvm-in-react-redux.md))
+## The pattern in Redux Toolkit (cited in [§5](5-mvvm-in-react-redux.md))
 
 - **Redux.** *Redux Style Guide*. redux.js.org. ("Put as Much Logic as Possible in [Reducers](../../../../GLOSSARY.md#reducer)";
   "Use [Selector](../../../../GLOSSARY.md#selector) Functions to Read from [Store](../../../../GLOSSARY.md#store) State" — Redux recommendations, not a prescription of [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-mvvm) or Clean/Onion layers.)
