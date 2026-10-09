@@ -27,6 +27,9 @@ Before editing, read:
 - Keep each guide within its subject. Adjacent disciplines require their own rigorous guide under Extras.
 - Use the TypeScript-first teaching sequence before framework conveniences. Use established infrastructure implementations.
 - Remove example details that do not affect the architectural conclusion.
+- Write in plain, direct, impersonal English. Explain like an experienced engineer: start with the concrete problem, make the decision clear, and state its consequence. Prefer short natural sentences, not conversational address, promotional claims, rhetorical questions or repetitive summaries.
+- Be concise without omitting necessary assumptions, failure cases or trade-offs. Keep a calm teaching voice; do not use jargon to sound authoritative.
+- Use the [Editorial Review Standard](architecture/conventions/editorial-review.md) to diagnose unclear or misleading passages before rewriting. Preserve meaning, useful qualifications and source-backed examples; review each revision in context.
 
 ## Heading and reading structure
 

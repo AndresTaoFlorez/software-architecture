@@ -26,6 +26,8 @@ This is a documentation-only handbook. Contributions must be accurate, source-ba
 
 Assume programming knowledge, but no architecture vocabulary. Explain the decision, its owner and its consequence in familiar language before naming the pattern.
 
+Use plain, practical and mostly impersonal English. Write as a senior engineer documenting a design for another developer: show the problem, explain the choice, and give the consequence. Avoid addressing the reader repeatedly, sales language, invented urgency, formulaic transitions and unnecessary summaries. Short sentences are useful; missing reasoning is not. Keep trade-offs and important caveats when they affect a decision.
+
 <a id="2-required-order-for-every-architecture-guide"></a>
 
 ## Required order for every architecture guide
@@ -140,6 +142,8 @@ A guide teaches its subject. Concurrency, distributed consistency and similar di
 <a id="11-review-checklist--three-passes"></a>
 
 ## Review checklist — three passes
+
+Use the [Editorial Review Standard](architecture/conventions/editorial-review.md) for concrete review criteria, passage-level diagnoses and a correction loop. Do not rewrite text just to reduce word count; preserve distinct explanations and useful qualifications.
 
 1. **Pedagogy:** can the reader explain the decision, trace the example and choose a file's owner? Remove repetition, jargon chains and unnecessary caveats.
 2. **Architecture:** do source dependencies follow the chosen boundaries? Is every rule/value set owned once? Are transport checks distinct from business validity?

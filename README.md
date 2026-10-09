@@ -46,5 +46,6 @@ Read [architectural checks](architecture/foundations/architecture-testing.md) an
 | [API Design & Engineering](architecture/api-design/README.md) | HTTP contracts, resource design, security, evolution and operations |
 | [Conventions](architecture/conventions/README.md) | Naming and handbook structure |
 | [Glossary](GLOSSARY.md) | Short reminders of terms |
-| [Contributing](CONTRIBUTING.md) | The editorial standard |
+| [Contributing](CONTRIBUTING.md) | The editorial standard for this handbook |
+| [Agent onboarding](agent-onboarding/README.md) | Use the handbook from another application's coding agent |
 | [Extras](extras/README.md) | Adjacent disciplines taught separately |
