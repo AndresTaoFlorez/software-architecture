@@ -2,6 +2,8 @@
 
 @AGENTS.md
 
-The application AGENTS.md is the shared engineering policy. This file only makes its use explicit for compatible assistant client configurations that load assistant-instructions.md rather than AGENTS.md. Do not duplicate those rules here.
+This file is an **optional compatibility import** for sessions that load `assistant-instructions.md` instead of the application's `AGENTS.md` directly. Modern compatible assistant client can also read `AGENTS.md` when no project `assistant-instructions.md` takes precedence.
 
-The architecture handbook is an external reference, not the application repository's instruction file. Follow the selective lookup procedure in AGENTS.md. Confirm that @AGENTS.md was loaded before relying on it.
+Keep shared engineering rules in `AGENTS.md`, not duplicated here. If the application already has a `assistant-instructions.md`, add the `@AGENTS.md` import to that existing file instead of overwriting it. Inspect the agent client session context to verify which instruction files loaded.
+
+The sibling software-architecture handbook is a **reference**, not an additional instruction file. Consult it selectively as described in the application `AGENTS.md`.
