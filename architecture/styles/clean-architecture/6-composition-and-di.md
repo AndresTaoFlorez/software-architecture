@@ -2,13 +2,27 @@
 
 <a id="6-composition--dependency-injection"></a>
 
-# 6. Composition and Dependency Injection
+<a id="6-composition-and-dependency-injection"></a>
+
+# Composition and Dependency Injection
 
 The canonical cross-architecture treatment now lives in **[Composition Root and Dependency Injection](../../foundations/composition-root.md)**. This chapter keeps the [Clean Architecture](../../../GLOSSARY.md#clean-architecture) framing.
 
+**Contents**
+
+- [Why composition exists](#why-composition-exists)
+- [Composition is not an exception to the Dependency Rule](#composition-is-not-an-exception-to-the-dependency-rule)
+- [Prefer injection over service location](#prefer-injection-over-service-location)
+- [Manual DI first](#manual-di-first)
+- [Keep the root small](#keep-the-root-small)
+- [One root per executable is reasonable](#one-root-per-executable-is-reasonable)
+- [Sources](#sources)
+
 <a id="61-the-inversion-concretely"></a>
 
-## 6.1 Why composition exists
+<a id="61-why-composition-exists"></a>
+
+## Why composition exists
 
 An inner [use case](../../../GLOSSARY.md#use-case) should depend on a capability it owns:
 
@@ -39,7 +53,9 @@ Something must construct both and connect them. That location is the [Compositio
 
 <a id="64-why-this-is-clean-architectures-signature"></a>
 
-## 6.2 Composition is not an exception to the Dependency Rule
+<a id="62-composition-is-not-an-exception-to-the-dependency-rule"></a>
+
+## Composition is not an exception to the Dependency Rule
 
 The [Composition Root](../../../GLOSSARY.md#composition-root) sits at the outer edge. It is expected to know concrete mechanisms and the abstractions they satisfy.
 
@@ -53,7 +69,9 @@ const app = createApp({ getUser })
 The [use case](../../../GLOSSARY.md#use-case) still does not import `HttpUserRepository`.
 
 
-## 6.3 Prefer injection over service location
+<a id="63-prefer-injection-over-service-location"></a>
+
+## Prefer injection over service location
 
 Avoid:
 
@@ -70,7 +88,9 @@ Prefer explicit constructor/factory dependencies.
 
 <a id="63-when-the-wiring-grows-a-di-container"></a>
 
-## 6.4 Manual DI first
+<a id="64-manual-di-first"></a>
+
+## Manual DI first
 
 A [DI container](../../../GLOSSARY.md#di-container) is not required by [Clean Architecture](../../../GLOSSARY.md#clean-architecture).
 
@@ -83,7 +103,9 @@ const service = new UserService(repository)
 
 Adopt a container when it solves a real object-graph/lifetime/framework problem. Do not use an arbitrary count such as "after N dependencies" as an architectural threshold.
 
-## 6.5 Keep the root small
+<a id="65-keep-the-root-small"></a>
+
+## Keep the root small
 
 The root should assemble the graph, not implement [use cases](../../../GLOSSARY.md#use-case):
 
@@ -91,7 +113,9 @@ Typical [Composition Root](../../../GLOSSARY.md#composition-root) responsibiliti
 
 Business branching belongs elsewhere.
 
-## 6.6 One root per executable is reasonable
+<a id="66-one-root-per-executable-is-reasonable"></a>
+
+## One root per executable is reasonable
 
 A web server, worker, CLI and browser bundle are different executable graphs and can each own a [composition root](../../../GLOSSARY.md#composition-root).
 

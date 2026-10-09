@@ -1,6 +1,6 @@
 > **[Model-View-Controller](README.md)** › References.
 
-## References
+# References
 
 The sources most central to [MVC](../../../../GLOSSARY.md#model-view-controller-mvc) and its variants are marked ★.
 
@@ -19,7 +19,7 @@ The sources most central to [MVC](../../../../GLOSSARY.md#model-view-controller-
   Taligent Inc.
 - **Gossman, J.** (2005). *Introduction to Model/View/[ViewModel](../../../../GLOSSARY.md#viewmodel) pattern for building WPF apps*. Microsoft
   Developer Blogs. (The origin of [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-mvvm).)
-- **Fowler, M.** (2004). *Presentation Model*. martinfowler.com. (The pattern MVVM is based on.)
+- **Fowler, M.** (2004). *[Presentation](../../../../GLOSSARY.md#presentation-layer) Model*. martinfowler.com. (The pattern MVVM is based on.)
   https://martinfowler.com/eaaDev/PresentationModel.html
 - **Vue.js & Pinia documentation.** https://vuejs.org/ · https://pinia.vuejs.org/ (Reactive binding and
   [stores](../../../../GLOSSARY.md#store) — mechanisms that can support several intentional presentation patterns.)

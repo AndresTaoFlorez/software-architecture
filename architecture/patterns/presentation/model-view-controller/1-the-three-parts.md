@@ -1,6 +1,8 @@
 > **[Model-View-Controller](README.md)** › The Three Parts. Full reference list: [References](references.md).
 
-## 1. The Three Parts
+<a id="1-the-three-parts"></a>
+
+# The Three Parts
 
 [MVC](../../../../GLOSSARY.md#model-view-controller-mvc) was first described by Trygve Reenskaug at Xerox PARC in 1979 and codified for Smalltalk-80 by Krasner
 and Pope in 1988 [Reenskaug 1979; Krasner & Pope 1988].
@@ -11,7 +13,11 @@ The durable goal is to keep the information/behavior being represented separate 
 
 ---
 
-### 1.1 Model
+## Roles and responsibilities
+
+<a id="11-model"></a>
+
+### Model
 
 **Responsibility.** Hold the application's data and the rules that govern it, independent of any screen.
 The [Model](../../../../GLOSSARY.md#model) is the part that would still make sense if the UI were deleted.
@@ -56,7 +62,9 @@ presentation concern even when the represented business concepts ultimately come
 
 ---
 
-### 1.2 View
+<a id="12-view"></a>
+
+### View
 
 **Responsibility.** Present the [Model](../../../../GLOSSARY.md#model) to the user. The [View](../../../../GLOSSARY.md#view) reads from the Model and renders it; when the
 Model announces a change, the View redraws.
@@ -70,7 +78,7 @@ Model announces a change, the View redraws.
 discount, validates an order, or talks to a server has absorbed responsibilities that belong to the Model
 and application policy. Fowler's [Passive View](../../../../GLOSSARY.md#passive-view) is a distinct presentation variant: it has no Model access and is driven through a view interface. Classic [MVC](../../../../GLOSSARY.md#model-view-controller-mvc) instead permits the View to observe/read its Model.
 
-The following fragment assumes an existing `.total` element and a `format` display helper; the [landing feature](README.md#10-first-feature-end-to-end) shows the Model observation and Controller interaction.
+The following fragment assumes an existing `.total` element and a `format` display helper; the [landing feature](README.md#first-feature-end-to-end) shows the Model observation and Controller interaction.
 
 **Generic example.** A view that observes and redraws, and delegates intent:
 
@@ -106,7 +114,9 @@ should accomplish. It only reads state and forwards gestures.
 
 ---
 
-### 1.3 Controller
+<a id="13-controller"></a>
+
+### Controller
 
 **Responsibility.** Interpret user input and translate it into operations on the [Model](../../../../GLOSSARY.md#model). The [Controller](../../../../GLOSSARY.md#controller) is
 the part that decides what a gesture *means*.
@@ -142,7 +152,9 @@ design — it is a translator between the user's intent and the Model's vocabula
 
 ---
 
-### 1.4 The one rule that holds it together
+<a id="14-the-one-rule-that-holds-it-together"></a>
+
+## The one rule that holds it together
 
 Strip away the variants and [MVC](../../../../GLOSSARY.md#model-view-controller-mvc) reduces to a single principle: **[separated presentation](../../../../GLOSSARY.md#separated-presentation)** [Fowler]. The
 [Model](../../../../GLOSSARY.md#model) side is kept independent of concrete rendering/input mechanics; the [View](../../../../GLOSSARY.md#view) and [Controller](../../../../GLOSSARY.md#controller) stay focused

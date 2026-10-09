@@ -4,16 +4,33 @@
 <a id="3-the-rings"></a>
 <a id="3-the-four-layers"></a>
 
-# 1. The Rings
+<a id="1-the-rings"></a>
+
+# The Rings
 
 Support requires a valid subject and an initial `open` state for a new ticket. Those decisions remain useful when delivery or storage changes. Onion keeps this domain model independent and puts mechanisms around it.
 
 The [canonical Ticket](../../backend/2-typescript-first-boundaries.md) owns the source examples. Here each ring explains who changes for a different reason.
 
+**Contents**
+
+- [Ring responsibilities](#ring-responsibilities)
+  - [Domain](#domain)
+  - [Application](#application)
+  - [Infrastructure](#infrastructure)
+  - [Presentation (outermost)](#presentation-outermost)
+- [Composition is outside the rings' business policy](#composition-is-outside-the-rings-business-policy)
+- [Cross-cutting concerns still need owners](#cross-cutting-concerns-still-need-owners)
+- [Sources](#sources)
+
 <a id="31-domain-core"></a>
 <a id="31-domain-innermost"></a>
 
-## 1.1 Domain
+## Ring responsibilities
+
+<a id="11-domain"></a>
+
+### Domain
 
 `Ticket.create()` decides valid subject contents and initial state. The vocabulary describes allowed status values; creation selects `open` explicitly. Expanding membership alone defines no state transition.
 
@@ -21,9 +38,11 @@ The business model knows its own rules and avoids Nest, HTTP and database types.
 
 <a id="32-application"></a>
 
-## 1.2 Application
+<a id="12-application"></a>
 
-`CreateTicket` asks Domain to construct a ticket, calls the supplied persistence object and returns an outcome. It owns that workflow and the `TicketRepository` interaction it requires.
+### Application
+
+`CreateTicket` asks [Domain](../../../GLOSSARY.md#domain) to construct a ticket, calls the supplied persistence object and returns an outcome. It owns that workflow and the `TicketRepository` interaction it requires.
 
 ```ts
 // Usage excerpt with a supplied repository and identity generator.
@@ -34,34 +53,41 @@ const result = await createTicket.execute({
 })
 ```
 
-The storage contract belongs inward. Palermo describes repository interfaces near the domain model; [Onion on the backend](7-onion-on-the-backend.md) compares that placement with this Application-owned contract.
+The storage contract belongs inward. Palermo describes repository interfaces near the domain model; [Onion on the backend](7-onion-on-the-backend.md) compares that placement with this [Application](../../../GLOSSARY.md#application-layer)-owned contract.
 
 <a id="33-infrastructure"></a>
 
-## 1.3 Infrastructure
+<a id="13-infrastructure"></a>
+
+### Infrastructure
 
 `PrismaTicketRepository` maps a ticket snapshot to database fields and calls Prisma. `InMemoryTicketRepository` implements the same interaction with process-local storage.
 
-Both refer to the inward-owned contract. Their mechanisms remain outside the policy; Application does not import the concrete implementation.
+Both refer to the inward-owned contract. Their mechanisms remain outside the policy; [Application](../../../GLOSSARY.md#application-layer) does not import the concrete implementation.
 
 A future retrieval operation needs restoration that preserves stored status. Calling the creation factory on a loaded resolved ticket would reset its meaning.
 
 <a id="34-presentation-outermost"></a>
 
-## 1.4 Presentation (outermost)
+<a id="14-presentation-outermost"></a>
+
+### Presentation (outermost)
 
 `TicketHttpHandler` checks request shape, invokes creation and maps the result to HTTP. A CLI translates its own arguments and output around that same operation.
 
-In a browser, Presentation owns screen interaction. Keep the generic map at `presentation/`; use the [frontend](../../frontend/presentation-architecture.md) and [backend](../../backend/README.md) routes for exact delivery folders.
+In a browser, [Presentation](../../../GLOSSARY.md#presentation-layer) owns screen interaction. Keep the generic map at `presentation/`; use the [frontend](../../frontend/presentation-architecture.md) and [backend](../../backend/README.md) routes for exact delivery folders.
 
 <a id="35-composition-is-outside-the-rings-business-policy"></a>
 
-## 1.5 Composition is outside the rings' business policy
+<a id="15-composition-is-outside-the-rings-business-policy"></a>
+
+## Composition is outside the rings' business policy
 
 Startup creates the implementation and supplies it to the operation. This assembly can refer to concrete outer modules.
 
 ```mermaid
-flowchart LR
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
     H["Delivery"] -->|"invokes"| U["CreateTicket"]
     U -->|"calls supplied object"| I["Repository implementation"]
     U -.->|"requires"| P["TicketRepository"]
@@ -78,7 +104,9 @@ Solid arrows show calls, long dashes source relationships and short dots startup
 
 <a id="36-cross-cutting-concerns-still-need-owners"></a>
 
-## 1.6 Cross-cutting concerns still need owners
+<a id="16-cross-cutting-concerns-still-need-owners"></a>
+
+## Cross-cutting concerns still need owners
 
 Access policy, HTTP credentials and visual feedback have different owners even when they affect several operations. Shared use alone does not justify a global utility bucket. [Code Placement](../../foundations/code-placement.md) gives the decision rule.
 

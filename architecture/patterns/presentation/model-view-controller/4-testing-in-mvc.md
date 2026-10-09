@@ -1,10 +1,22 @@
 > **[Model-View-Controller](README.md)** › Testing.
 
-## 4. Testing in MVC
+<a id="4-testing-in-mvc"></a>
+
+# Testing in MVC
 
 Test the responsibilities you actually implemented. A presentation pattern creates useful seams; it does not prescribe a fixed distribution of tests or eliminate rendering risk.
 
-### 4.1 The Model tests like a pure object
+**Contents**
+
+- [The Model tests like a pure object](#the-model-tests-like-a-pure-object)
+- [The Controller tests against a controlled Model](#the-controller-tests-against-a-controlled-model)
+- [The View needs its own tests](#the-view-needs-its-own-tests)
+- [The pyramid, restated for MVC](#the-pyramid-restated-for-mvc)
+- [Sources](#sources)
+
+<a id="41-the-model-tests-like-a-pure-object"></a>
+
+## The Model tests like a pure object
 
 For the cart in [The Three Parts](1-the-three-parts.md), exercise pricing/quantity behavior without a DOM:
 
@@ -21,7 +33,9 @@ Also test change notifications if observation is part of that contract. In a lay
 
 <a id="42-the-controller-tests-against-a-fake-model"></a>
 
-### 4.2 The Controller tests against a controlled Model
+<a id="42-the-controller-tests-against-a-controlled-model"></a>
+
+## The Controller tests against a controlled Model
 
 ```js
 // CartController is the class from The Three Parts.
@@ -39,11 +53,15 @@ This substitute records outcomes. A canned `vi.fn()` answer is a [stub](../../..
 
 <a id="43-the-view-is-the-part-you-test-least"></a>
 
-### 4.3 The View needs its own tests
+<a id="43-the-view-needs-its-own-tests"></a>
+
+## The View needs its own tests
 
 Even a [Passive View](../../../../GLOSSARY.md#passive-view) can bind the wrong value, forward the wrong id, leak subscriptions, mishandle pending state or produce inaccessible controls. Verify initial rendering, model-driven updates, gesture forwarding, cleanup and accessibility. Retain critical integrated journeys for the actual wiring; do not infer that a thin [View](../../../../GLOSSARY.md#view) “barely needs testing”.
 
-### 4.4 The pyramid, restated for MVC
+<a id="44-the-pyramid-restated-for-mvc"></a>
+
+## The pyramid, restated for MVC
 
 | Responsibility | Evidence |
 | --- | --- |

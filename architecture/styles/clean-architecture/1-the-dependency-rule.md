@@ -1,7 +1,9 @@
 > **[Clean Architecture](README.md)** › The [Dependency Rule](../../../GLOSSARY.md#dependency-rule).
 
 
-# 1. The Dependency Rule
+<a id="1-the-dependency-rule"></a>
+
+# The Dependency Rule
 
 Suppose an order cannot be cancelled after shipping. That rule should not import a [React component](../../../GLOSSARY.md#react-component), a database client, or the API's raw response shape. Otherwise a change to those tools can require editing the cancellation rule. The code that receives a click or saves an order may know about that rule; the rule does not need to know about those callers.
 
@@ -11,14 +13,29 @@ This is a question about **source-code dependencies**: which modules refer to or
 
 ---
 
+**Contents**
+
+- [The canonical circles](#the-canonical-circles)
+- [The rule](#the-rule)
+- [Dependency direction is not runtime flow](#dependency-direction-is-not-runtime-flow)
+- [Boundary data](#boundary-data)
+- [What the Dependency Rule does not say](#what-the-dependency-rule-does-not-say)
+- [Practical repository policy](#practical-repository-policy)
+- [Dependency Inversion Principle](#dependency-inversion-principle)
+- [Make the rule executable](#make-the-rule-executable)
+- [Sources](#sources)
+
 <a id="11-the-four-circles"></a>
 
-## 1.1 The canonical circles
+<a id="11-the-canonical-circles"></a>
+
+## The canonical circles
 
 Robert C. Martin's diagram uses:
 
 ```mermaid
-flowchart LR
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
     N0["Entities"]
     N1["Use Cases"]
     N1 -. "depends on" .-> N0
@@ -36,7 +53,9 @@ Martin explicitly notes that the diagram is schematic: an application may have m
 
 <a id="12-the-rule-itself"></a>
 
-## 1.2 The rule
+<a id="12-the-rule"></a>
+
+## The rule
 
 > Source-code dependencies may only point inward, toward higher-level policies.
 
@@ -55,7 +74,9 @@ This includes type-level dependencies.
 
 <a id="13-crossing-the-boundary-dependency-inversion"></a>
 
-## 1.3 Dependency direction is not runtime flow
+<a id="13-dependency-direction-is-not-runtime-flow"></a>
+
+## Dependency direction is not runtime flow
 
 A [use case](../../../GLOSSARY.md#use-case) can invoke a database at runtime without importing the database implementation.
 
@@ -87,12 +108,13 @@ const getUser = makeGetUser({ users })
 Trace the same objects in one view: solid arrows are runtime calls, long dashes are source dependencies, short dots are startup wiring. The contract is not a runtime forwarding object.
 
 ```mermaid
-flowchart LR
-    UC["getUser / operation"] -->|"calls findById"| SQL["SqlUserRepository / adapter"]
-    SQL -->|"queries"| DB["Database / external system"]
-    SQL -. "implements" .-> PORT["UserRepository / contract"]
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
+    UC["getUser<br/>operation"] -->|"calls findById"| SQL["SqlUserRepository<br/>adapter"]
+    SQL -->|"queries"| DB["Database<br/>external system"]
+    SQL -. "implements" .-> PORT["UserRepository<br/>contract"]
     UC -. "requires" .-> PORT
-    ROOT["Bootstrap / composition"] -. "constructs" .-> SQL
+    ROOT["Bootstrap<br/>composition"] -. "constructs" .-> SQL
     ROOT -. "supplies repository" .-> UC
     linkStyle 0,1 stroke-width:2px
     linkStyle 2,3 stroke-width:1px,stroke-dasharray:6 4
@@ -103,7 +125,9 @@ Dependency inversion makes those directions intentionally different.
 
 ---
 
-## 1.4 Boundary data
+<a id="14-boundary-data"></a>
+
+## Boundary data
 
 Martin's original article also warns that data formats owned by an outer mechanism should not cross inward unchanged.
 
@@ -118,8 +142,9 @@ Examples of outer representations:
 Translate at the boundary:
 
 ```mermaid
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
-    DTO["External DTO"] --> MAP["Adapter / mapper"] --> MODEL["Application / domain representation"]
+    DTO["External DTO"] --> MAP["Adapter<br/>mapper"] --> MODEL["Application<br/>domain representation"]
 ```
 
 This does not mean every crossing needs a class. A pure mapping function is often sufficient.
@@ -128,7 +153,9 @@ This does not mean every crossing needs a class. A pure mapping function is ofte
 
 <a id="15-why-this-matters-on-the-frontend"></a>
 
-## 1.5 What the Dependency Rule does **not** say
+<a id="15-what-the-dependency-rule-does-not-say"></a>
+
+## What the Dependency Rule does **not** say
 
 It does not say:
 
@@ -148,12 +175,15 @@ Document those stricter rules as project architecture, not as quotations from [C
 
 ---
 
-## 1.6 Practical repository policy
+<a id="16-practical-repository-policy"></a>
+
+## Practical repository policy
 
 For the application structures documented here, we usually enforce:
 
 ```mermaid
-flowchart LR
+%%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
+flowchart TB
     A["Application"] -. "imports" .-> D["Domain"]
     I["Infrastructure"] -. "imports contracts" .-> A
     I -. "imports data" .-> D
@@ -173,7 +203,9 @@ See **[Dependency Boundaries](../../foundations/dependency-boundaries.md)**.
 
 ---
 
-## 1.7 Dependency Inversion Principle
+<a id="17-dependency-inversion-principle"></a>
+
+## Dependency Inversion Principle
 
 The [Dependency Inversion Principle](../../../GLOSSARY.md#dependency-inversion-principle-dip) and [Clean Architecture](../../../GLOSSARY.md#clean-architecture)'s [Dependency Rule](../../../GLOSSARY.md#dependency-rule) reinforce each other but are not identical statements.
 
@@ -185,7 +217,9 @@ A [port](../../../GLOSSARY.md#port) is useful when it protects policy from a det
 
 <a id="14-the-rule-as-a-check-on-imports"></a>
 
-## 1.8 Make the rule executable
+<a id="18-make-the-rule-executable"></a>
+
+## Make the rule executable
 
 If a project says [Application](../../../GLOSSARY.md#application-layer) cannot import [Infrastructure](../../../GLOSSARY.md#infrastructure), CI should detect the import.
 

@@ -1,8 +1,16 @@
 # Easy frontend Exercises
 
+Identify the owners and relationships in the examples you have just read. Each exercise names its prerequisite guide; compare your answer with the separate solutions afterward.
+
+**Contents**
+
+- [F-E1 — Place agenda interaction](#f-e1--place-agenda-interaction)
+- [F-E2 — State or business responsibility?](#f-e2--state-or-business-responsibility)
+- [F-E3 — Receive an API response](#f-e3--receive-an-api-response)
+
 ## F-E1 — Place agenda interaction
 
-**What you already know.** Read Frontend Presentation Architecture.
+**What you already know.** Read Frontend [Presentation](../../../GLOSSARY.md#presentation-layer) Architecture.
 
 **Situation.** A receptionist opens the agenda and selects an appointment.
 
@@ -20,11 +28,11 @@
 
 ## F-E2 — State or business responsibility?
 
-**What you already know.** Read State Management sections 1–4.
+**What you already know.** Read state responsibility, pure reducers and selectors in [State Management](../state-management.md).
 
 **Situation.** The screen has an open history panel, selected day, loading error and an appointment-eligibility decision.
 
-**Terms you need.** Local state, Presentation state, Application workflow and business rule.
+**Terms you need.** Local state, [Presentation](../../../GLOSSARY.md#presentation-layer) state, [Application](../../../GLOSSARY.md#application-layer) workflow and business rule.
 
 **Given code/files.** isHistoryOpen; selectedDay; busy/error; GetAgenda; appointment eligibility.
 
@@ -42,7 +50,7 @@
 
 **Situation.** The agenda API returns wire fields that differ from the client's result.
 
-**Terms you need.** DTO, Parser and Mapper.
+**Terms you need.** [DTO](../../../GLOSSARY.md#data-transfer-object-dto), [Parser](../../../GLOSSARY.md#parser) and [Mapper](../../../GLOSSARY.md#mapper).
 
 **Given code/files.** AgendaApiDto, parseAgendaApiResponse and mapAgendaApiDto.
 
