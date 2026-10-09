@@ -143,6 +143,8 @@ A Node entry invokes `main(process.argv.slice(2))`, prints the message and sets 
 
 ## B-I3 — Read an agenda
 
+This solution implements the simplified `GET /agenda?day=...` exercise, not the clinic's canonical [public appointments API](../../api-design/resources-and-operations.md#resources-and-relationships). The different route names are intentional.
+
 [Application](../../../GLOSSARY.md#application-layer) owns the read contract and operation. HTTP [Presentation](../../../GLOSSARY.md#presentation-layer) owns query syntax and the response representation. Each listing below names its physical file.
 
 ```ts
