@@ -4,6 +4,15 @@ This standard is for **writing and reviewing the software-architecture handbook*
 
 The goal is not shorter text at any cost. A section is good when a programmer can understand the decision, identify its owner, follow the example and recognize when the advice applies.
 
+**Contents**
+
+- [What good writing does](#what-good-writing-does)
+- [Diagnose before rewriting](#diagnose-before-rewriting)
+- [How to report a finding](#how-to-report-a-finding)
+- [Small example](#small-example)
+- [Review and correction loop](#review-and-correction-loop)
+- [Acceptance questions](#acceptance-questions)
+
 ## What good writing does
 
 Explain as an experienced engineer would explain a design to a colleague, but keep the documentation voice **plain, direct and mostly impersonal**.
