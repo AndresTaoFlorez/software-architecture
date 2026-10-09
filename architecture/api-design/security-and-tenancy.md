@@ -47,6 +47,7 @@ An illustrative policy for a UUID `organization_id` column is:
 
 ```sql
 ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE appointments FORCE ROW LEVEL SECURITY;
 
 CREATE POLICY organization_appointments ON appointments
   USING (organization_id = nullif(current_setting('app.organization_id', true), '')::uuid)

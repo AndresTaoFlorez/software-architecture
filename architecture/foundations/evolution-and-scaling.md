@@ -28,7 +28,7 @@ Those decisions solve different problems and carry different costs.
 
 - [Prefer evidence over maturity phases](#prefer-evidence-over-maturity-phases)
 - [Manual composition vs. DI container](#manual-composition-vs-di-container)
-- [Layer-first vs. capability-first filesystem](#layer-first-vs-capability-first-filesystem)
+- [Group capabilities inside each layer](#group-capabilities-inside-each-layer)
 - [Modular monolith before distribution by default](#modular-monolith-before-distribution-by-default)
 - [Bounded contexts are semantic boundaries](#bounded-contexts-are-semantic-boundaries)
 - [Team boundaries and software boundaries influence each other](#team-boundaries-and-software-boundaries-influence-each-other)
@@ -48,7 +48,7 @@ Ask what is actually hurting:
 | Signal | Possible response |
 | --- | --- |
 | manual object graph is hard to understand/test | improve composition; possibly use a [DI container](../../GLOSSARY.md#di-container) |
-| one capability is scattered across many technical folders | reorganize by feature/capability |
+| one capability's files are hard to locate within a layer | group them by capability within that layer |
 | teams repeatedly edit the same modules | strengthen ownership and module APIs |
 | cross-module dependencies form cycles | redefine boundaries / introduce contracts |
 | release coordination dominates delivery | investigate independently deployable boundaries |
@@ -87,10 +87,11 @@ Do not switch because the team crossed an arbitrary size.
 ---
 
 <a id="3-layer-first-vs-capability-first-filesystem"></a>
+<a id="layer-first-vs-capability-first-filesystem"></a>
 
-## Layer-first vs. capability-first filesystem
+## Group capabilities inside each layer
 
-Layer-first structures can be clear in smaller codebases:
+The handbook puts layers at the top level and groups capabilities inside each layer. This convention still applies as the codebase grows:
 
 ```mermaid
 %%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
@@ -101,7 +102,7 @@ flowchart TD
     SRC --> P["presentation/"]
 ```
 
-As a capability grows, feature ownership may become the stronger change axis:
+Within Application, separate the operations and contracts for each capability:
 
 ```mermaid
 %%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
@@ -111,7 +112,7 @@ flowchart TD
     A --> I["identity/"]
 ```
 
-or within a [Presentation layer](../../GLOSSARY.md#presentation-layer):
+Use the same grouping within [Presentation](../../GLOSSARY.md#presentation-layer):
 
 ```mermaid
 %%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
@@ -121,7 +122,7 @@ flowchart TD
     P --> I["identity/"]
 ```
 
-The question is not "which phase are we in?". It is:
+Subdivide a growing capability within its owning layers, as [Code Placement](code-placement.md#grow-capabilities-inside-each-layer) illustrates. A capability-first top level is another project choice, but growth alone does not require changing the handbook's folder convention. In either layout, ask:
 
 > Which grouping makes code that changes together easiest to own without weakening dependency rules?
 
