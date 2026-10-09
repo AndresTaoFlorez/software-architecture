@@ -43,13 +43,14 @@ Resolve contradictions explicitly. Never rewrite an application to match an illu
 | Task | Start at |
 | --- | --- |
 | Unclear ownership or dependencies | [Foundations](../architecture/foundations/README.md) |
+| API contract, resource design or HTTP semantics | [API Design & Engineering](../architecture/api-design/README.md) |
 | Backend endpoint or use case | [Backend](../architecture/backend/README.md) |
 | Frontend state or integrations | [Frontend](../architecture/frontend/README.md) |
 | Ports, adapters or dependency direction | [Styles](../architecture/styles/README.md) |
 | Repository or presentation patterns | [Patterns](../architecture/patterns/README.md) |
 | Naming and exact placement | [Naming and file placement](../architecture/conventions/naming-and-file-placement.md) |
 
-Read the relevant sections, not the entire handbook. API design material may be added as a dedicated track; until then use the backend HTTP chapters and current standards. Do not assume an unfinished or missing handbook section exists.
+Read the relevant sections, not the entire handbook. Use [API Design & Engineering](../architecture/api-design/README.md) for framework-independent HTTP contracts, resource design, security and API evolution; use the backend route for implementation concerns. Do not assume a handbook example overrides an application's approved API contract.
 
 ## Optional skill
 
