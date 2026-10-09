@@ -26,6 +26,8 @@ This is a documentation-only handbook. Contributions must be accurate, source-ba
 
 Assume programming knowledge, but no architecture vocabulary. Explain the decision, its owner and its consequence in familiar language before naming the pattern.
 
+Use plain, practical and mostly impersonal English. Write as a senior engineer documenting a design for another developer: show the problem, explain the choice, and give the consequence. Avoid addressing the reader repeatedly, sales language, invented urgency, formulaic transitions and unnecessary summaries. Short sentences are useful; missing reasoning is not. Keep trade-offs and important caveats when they affect a decision.
+
 <a id="2-required-order-for-every-architecture-guide"></a>
 
 ## Required order for every architecture guide
