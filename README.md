@@ -29,6 +29,7 @@ On a narrow screen, use the diagram controls to open, zoom and move around a lar
 
 ## Choose your next route
 
+- [API Design & Engineering](architecture/api-design/README.md): learn framework-independent HTTP contracts, resource design, security and evolution before an implementation route.
 - [Backend](architecture/backend/README.md): start with incoming HTTP and plain TypeScript, then continue with Nest, persistence and backend exercises.
 - [Frontend](architecture/frontend/README.md): continue with screens, external integrations, state and frontend exercises.
 
@@ -42,6 +43,7 @@ Read [architectural checks](architecture/foundations/architecture-testing.md) an
 | --- | --- |
 | [Architecture map](architecture/README.md) | The common route and its continuations |
 | [Patterns](architecture/patterns/README.md) | Focused presentation, persistence and structural decisions |
+| [API Design & Engineering](architecture/api-design/README.md) | HTTP contracts, resource design, security, evolution and operations |
 | [Conventions](architecture/conventions/README.md) | Naming and handbook structure |
 | [Glossary](GLOSSARY.md) | Short reminders of terms |
 | [Contributing](CONTRIBUTING.md) | The editorial standard for this handbook |

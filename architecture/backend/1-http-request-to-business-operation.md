@@ -19,6 +19,8 @@ An analyst presses Create ticket. Follow the information from that click to the 
 
 ## The analyst sends information
 
+The framework-independent [API Design route](../api-design/README.md) explains HTTP semantics, resource modeling and contract evolution in detail. This chapter follows the existing Ticket implementation into backend code.
+
 The browser asks the server to create a ticket. HTTP represents that request with a method, target path, headers and body:
 
 ```http

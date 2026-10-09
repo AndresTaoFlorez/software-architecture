@@ -8,7 +8,7 @@ Start with a support request and learn who owns each decision before comparing s
 4. [Composition](foundations/composition-root.md).
 5. [Module Boundaries and Public APIs](foundations/module-boundaries-and-public-apis.md).
 
-Then choose [backend](backend/README.md) or [frontend](frontend/README.md). Their reading maps say when to attempt each exercise level.
+Then choose [API Design & Engineering](api-design/README.md), [backend](backend/README.md) or [frontend](frontend/README.md). The API route is framework-independent; each route gives its own reading order and exercises.
 
 After the example in your chosen route, consult [styles](styles/README.md) or focused [patterns](patterns/README.md). MVC/MVVM are optional frontend continuations. Keep [architectural checks](foundations/architecture-testing.md) and [evolution](foundations/evolution-and-scaling.md) for later.
 
