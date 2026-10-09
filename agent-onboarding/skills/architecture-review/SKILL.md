@@ -15,7 +15,7 @@ A concrete change request, PR/diff or affected feature. Ask for essential missin
 
 1. Read the consuming application's AGENTS.md/CLAUDE.md and relevant ADRs.
 2. Inspect relevant code, callers, tests, schemas and contracts; do not infer architecture from folder names.
-3. Read the handbook README and only the relevant topic pages. If the handbook is unavailable, disclose it.
+3. Confirm the handbook checkout's commit, then read its README and only the relevant topic pages. If unavailable, disclose it; if intentionally pinned behind `main`, do not describe it as the latest handbook.
 4. Evaluate the actual change:
    - Responsibility and invariant ownership.
    - Supported module interfaces and source dependencies.
@@ -25,6 +25,6 @@ A concrete change request, PR/diff or affected feature. Ask for essential missin
    - Scope, test coverage and compatibility with existing consumers.
 5. Check claims against authoritative standards or current vendor docs when version-sensitive.
 6. Run permitted relevant checks, or state precisely why they were not run.
-7. Report findings ordered by severity, with exact file locations, impact and focused remedies. Separate verified defects, risks and optional improvements. State whether approval is recommended and what remains unverified.
+7. Report findings ordered by severity, with exact file locations, impact and focused remedies. Separate verified defects, risks and optional improvements. State which handbook commit was consulted, whether approval is recommended and what remains unverified.
 
 Avoid framework dogma, mandatory abstractions and speculative rewrites. Do not alter files or open PRs unless the task authorizes changes.
