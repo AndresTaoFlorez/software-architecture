@@ -38,7 +38,9 @@ export function AgendaPage() {
 
 **Questions.** Where should selected-day behavior live? Who creates HttpAgendaReader?
 
-**Expected result.** The Page receives GetAgenda, composes controls/calendar and shows loading/error feedback. A day change loads that day. This exercise uses one user-triggered read at a time; overlapping-request coordination is not assessed.
+**Expected result.** The Page receives GetAgenda, composes controls/calendar and shows loading/error feedback. A day change loads the **newly selected** day; the starting handler calls `load()` with the previous rendered `day` value because the state update does not change that closure. Test the requested day, not just whether a request occurred. This exercise uses one user-triggered read at a time; overlapping-request coordination is not assessed.
+
+The starting `/agenda?day=...` URL is an exercise stub, not the [clinic API's published appointments route](../../api-design/resources-and-operations.md#resources-and-relationships).
 
 **Relevant handbook sections.** [Read the guide](../presentation-architecture.md#pages-compose-features-own-behavior).
 
