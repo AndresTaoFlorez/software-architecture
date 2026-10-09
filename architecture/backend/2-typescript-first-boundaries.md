@@ -322,7 +322,7 @@ A server framework registers handlers, a Pipe applies argument parsing, and a co
 
 ### Next operation: reading an agenda
 
-A receptionist requests `GET /agenda?day=2026-10-07`. A **query [Parser](../../GLOSSARY.md#parser)** checks unknown HTTP query data and produces `AgendaQueryDto`. `GetAgenda` coordinates reading that day through an application-owned `AgendaReader` contract.
+For this small boundary exercise, a receptionist requests `GET /agenda?day=2026-10-07`. It is a teaching-only route, **not** the public dental clinic contract defined in [API Design](../api-design/resources-and-operations.md#resources-and-relationships), which uses `GET /v1/appointments?date=...`. A **query [Parser](../../GLOSSARY.md#parser)** checks unknown HTTP query data and produces `AgendaQueryDto`. `GetAgenda` coordinates reading that day through an application-owned `AgendaReader` contract.
 
 `PrismaAgendaReader` implements the read and translates records into `AgendaItem` values. The HTTP handler maps them into `AgendaResponseDto`. The [B-I3 solution](exercises/solutions.md#b-i3--read-an-agenda) shows each owned file. The same ownership rules apply to a read; no business entity is required solely to return a list.
 
