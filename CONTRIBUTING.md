@@ -143,9 +143,9 @@ A guide teaches its subject. Concurrency, distributed consistency and similar di
 
 ## Review checklist — three passes
 
-1. **Pedagogy:** can the reader explain the decision, trace the example and choose a file's owner? Remove repetition, jargon chains and unnecessary caveats.
-
 Use the [Editorial Review Standard](architecture/conventions/editorial-review.md) for concrete review criteria, passage-level diagnoses and a correction loop. Do not rewrite text just to reduce word count; preserve distinct explanations and useful qualifications.
+
+1. **Pedagogy:** can the reader explain the decision, trace the example and choose a file's owner? Remove repetition, jargon chains and unnecessary caveats.
 2. **Architecture:** do source dependencies follow the chosen boundaries? Is every rule/value set owned once? Are transport checks distinct from business validity?
 3. **Consistency:** inspect names, paths, navigation, anchors, glossary links and diagram semantics. Check relative links and use a real Mermaid parser when revising diagrams.
 
