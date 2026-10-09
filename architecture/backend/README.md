@@ -8,6 +8,8 @@ An analyst submits a support ticket. This route follows that request through pla
 - [How to read backend file names](#how-to-read-backend-file-names)
 - [Read in order](#read-in-order)
 
+For general API contract choices before Nest implementation, follow [API Design & Engineering](../api-design/README.md). Its dental-clinic example is separate from this route's Ticket implementation; the shared lesson is where HTTP translation and business decisions belong.
+
 ## Place your first feature
 
 | Layer | Responsibility in this example |
@@ -53,4 +55,4 @@ Complete the [shared foundations](../../README.md#read-first) first. This backen
 
 Then use the [styles map](../styles/README.md) for Layered, Hexagonal, Clean and Onion. The focused [Clean backend](../styles/clean-architecture/8-clean-on-the-backend.md) and [Onion backend](../styles/onion-architecture/7-onion-on-the-backend.md) readings reuse the Ticket example.
 
-[References](references.md) · [Frontend route](../frontend/README.md) · [Architecture](../README.md) · [Glossary](../../GLOSSARY.md)
+[References](references.md) · [API Design](../api-design/README.md) · [Frontend route](../frontend/README.md) · [Architecture](../README.md) · [Glossary](../../GLOSSARY.md)

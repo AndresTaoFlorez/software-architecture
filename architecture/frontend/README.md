@@ -22,6 +22,8 @@ A receptionist changes the selected day, opens an appointment and sees loading f
 
 The backend remains authoritative for persisted behavior. Sending HTTP is an Infrastructure integration; receiving it is backend Presentation.
 
+The framework-independent [API Design & Engineering route](../api-design/README.md) explains the contract this client consumes: HTTP meaning, resource queries, pagination, errors and security. This frontend route explains where the client adapter and screen behavior belong.
+
 ## Recommended source layout
 
 Keep `src/{domain,application,infrastructure,presentation,composition}/`. Inside frontend [Presentation](../../GLOSSARY.md#presentation-layer), group by capability:
@@ -69,4 +71,4 @@ For optional server-side context, see the [backend HTTP chapter](../backend/1-ht
 
 The [reference case study](reference-case-study.md) applies the ownership questions to a larger reviewed frontend. Use it after the small examples.
 
-[Foundations](../foundations/README.md) · [Backend](../backend/README.md) · [Architecture](../README.md) · [Glossary](../../GLOSSARY.md)
+[Foundations](../foundations/README.md) · [API Design](../api-design/README.md) · [Backend](../backend/README.md) · [Architecture](../README.md) · [Glossary](../../GLOSSARY.md)

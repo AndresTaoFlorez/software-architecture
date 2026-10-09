@@ -6,11 +6,14 @@ Compact references support the guides. Link a term on its first meaningful use i
 
 - [Abstract Syntax Tree (AST)](#abstract-syntax-tree-ast)
 - [Adapter](#adapter)
+- [API Contract](#api-contract)
 - [Application Layer](#application-layer)
 - [Application Service](#application-service)
 - [Architectural Boundary](#architectural-boundary)
 - [Architectural Ownership](#architectural-ownership)
 - [Architecture Test](#architecture-test)
+- [Authentication](#authentication)
+- [Authorization](#authorization)
 - [Barrel File](#barrel-file)
 - [Bounded Context](#bounded-context)
 - [Business Rule](#business-rule)
@@ -39,6 +42,7 @@ Compact references support the guides. Link a term on its first meaningful use i
 - [Domain Event](#domain-event)
 - [Domain Service](#domain-service)
 - [Domain-Driven Design (DDD)](#domain-driven-design-ddd)
+- [ETag](#etag)
 - [Event Sourcing](#event-sourcing)
 - [Exception Filter (NestJS)](#nestjs-exception-filter)
 - [Facade Pattern](#facade-pattern)
@@ -54,6 +58,7 @@ Compact references support the guides. Link a term on its first meaningful use i
 - [HTTP Endpoint](#http-endpoint)
 - [HTTP Route](#http-route)
 - [HTTP Router / Routing](#http-routing)
+- [Idempotency Key](#idempotency-key)
 - [Infrastructure](#infrastructure)
 - [Interceptor (NestJS)](#nestjs-interceptor)
 - [Interface Adapter](#interface-adapter)
@@ -93,6 +98,8 @@ Compact references support the guides. Link a term on its first meaningful use i
 - [Recipe](#recipe)
 - [Reducer](#reducer)
 - [Repository Pattern](#repository)
+- [Representation](#representation)
+- [Resource](#resource)
 - [Route Handler](#route-handler)
 - [RTK Query](#rtk-query)
 - [Selector](#selector)
@@ -107,6 +114,7 @@ Compact references support the guides. Link a term on its first meaningful use i
 - [Store](#store)
 - [Stub](#stub)
 - [Supervising Controller](#supervising-controller)
+- [Tenant](#tenant)
 - [Test Double](#test-double)
 - [Test Pyramid](#test-pyramid)
 - [Thunk](#thunk)
@@ -1632,5 +1640,85 @@ A decision or constraint from the problem domain. A Ticket subject cannot be bla
 The authoritative area for a decision, rule, representation or behavior. `Ticket` owns validity, `CreateTicket` the creation workflow, `TicketsController` HTTP translation, and `PrismaTicketRepository` Prisma persistence. When a decision changes, ask which area should change first.
 
 [Full explanation](architecture/foundations/code-placement.md). **Sources.** [Handbook: Code Placement](architecture/foundations/code-placement.md)
+
+---
+
+<a id="api-contract"></a>
+
+## API Contract
+
+The observable agreement between an API provider and its consumers: operations, accepted data, representations, errors, access rules and change promises. A route declaration alone does not state all of it.
+
+**Purpose.** Let clients and servers evolve without guessing about public behavior. **Example.** Booking returns `201` with an appointment URI or a documented `409` problem. [Full explanation](architecture/api-design/contracts-and-boundaries.md#describe-the-agreement).
+
+---
+
+<a id="authentication"></a>
+
+## Authentication
+
+The process of establishing who or what a caller is from a verified credential. It supplies a principal for later access decisions.
+
+**Purpose.** Reject unverified callers. **Example.** A clinic API validates a bearer token's issuer, audience, signature and expiry. [Full explanation](architecture/api-design/security-and-tenancy.md#identity-and-permission).
+
+---
+
+<a id="authorization"></a>
+
+## Authorization
+
+The decision that a verified principal may perform an operation on a specific resource. Authentication alone does not establish this permission.
+
+**Purpose.** Keep clinic and object boundaries intact. **Example.** A Clinic A receptionist cannot read Clinic B's appointment. [Full explanation](architecture/api-design/security-and-tenancy.md#scope-every-object).
+
+---
+
+<a id="etag"></a>
+
+## ETag
+
+An HTTP validator for a selected representation. Clients can send it in a conditional request to revalidate a read or prevent a stale write.
+
+**Purpose.** Coordinate cache validation and optimistic concurrency. **Example.** `If-Match: "apt-71-v3"` rejects a stale appointment edit. [Full explanation](architecture/api-design/reliability-and-operations.md#optimistic-concurrency). **Source.** [RFC 9110 §8.8.3](https://www.rfc-editor.org/rfc/rfc9110.html#section-8.8.3).
+
+---
+
+<a id="idempotency-key"></a>
+
+## Idempotency Key
+
+A client-supplied token an API can use to recognize a retry of the same operation under a documented scope and retention period. The key is an application contract, not an automatic property of POST.
+
+**Purpose.** Avoid duplicate effects after an uncertain response. **Example.** A repeated booking request with the same key replays its recorded result. [Full explanation](architecture/api-design/reliability-and-operations.md#retries-and-duplicate-requests).
+
+---
+
+<a id="representation"></a>
+
+## Representation
+
+The data and metadata transferred to describe a resource's state in one interaction. A JSON dentist response is one representation; it need not match a database row or domain object.
+
+**Purpose.** Separate public data from internal storage. **Example.** The clinic's dentist response exposes `id` and `displayName`. [Full explanation](architecture/api-design/resources-and-operations.md#rest-and-resource-meaning). **Source.** [RFC 9110 §3.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-3.2).
+
+---
+
+<a id="resource"></a>
+
+## Resource
+
+Something an API identifies and addresses, such as one dentist, a collection of appointments or a computed availability view. Its representation may change over time.
+
+**Purpose.** Give interactions a stable target independent of storage tables. **Example.** `/v1/dentists/den_42` identifies a dentist visible within the authorized clinic. [Full explanation](architecture/api-design/resources-and-operations.md#resources-and-relationships). **Source.** [RFC 9110 §3.1](https://www.rfc-editor.org/rfc/rfc9110.html#section-3.1).
+
+---
+
+<a id="tenant"></a>
+
+## Tenant
+
+A customer or organization whose data and access are isolated within a shared service. In the case study, each dental clinic is a tenant.
+
+**Purpose.** State the scope of object access and operational limits. **Example.** A verified clinic identity scopes appointment reads and writes. [Full explanation](architecture/api-design/security-and-tenancy.md#scope-every-object).
 
 ---
