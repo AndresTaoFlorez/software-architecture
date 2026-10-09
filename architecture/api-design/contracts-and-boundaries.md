@@ -16,7 +16,7 @@ Read [Resources and Operations](resources-and-operations.md) and [Code Placement
 
 An API contract states the target and method, authentication, accepted fields, response representations, errors and change policy. **Contract-first** starts by reviewing that observable behavior with consumers, then implements it. **Code-first** derives a description from implemented route declarations and types. Either can work if review, runtime checks and published documentation stay in agreement. Contract-first helps when clients and servers are developed independently; code-first can be efficient for a small internal API with tight ownership. Generated output is evidence of what annotations say, not proof that the handler enforces them.
 
-[OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.2.html) is a machine-readable description format for HTTP APIs. This complete small description covers one clinic read operation; a production contract would add the remaining paths, responses and reusable schemas. The `openapi` value selects the 3.1 family, whose Schema Objects use the OpenAPI JSON Schema dialect based on [JSON Schema Draft 2020-12](https://json-schema.org/draft/2020-12). Schema syntax checks shapes; it cannot decide whether a dentist belongs to the caller's clinic. A `format` such as `date-time` needs deliberate validator configuration because JSON Schema treats format primarily as an annotation by default.
+[OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.2.html) is a machine-readable description format for HTTP APIs. This valid but deliberately partial description shows one clinic read operation; a production contract also needs the omitted failure responses, other paths and reusable schemas. The `openapi` value selects the 3.1 family, whose Schema Objects use the OpenAPI JSON Schema dialect based on [JSON Schema Draft 2020-12](https://json-schema.org/draft/2020-12). Schema syntax checks shapes; it cannot decide whether a dentist belongs to the caller's clinic. A `format` such as `date-time` needs deliberate validator configuration because JSON Schema treats format primarily as an annotation by default.
 
 ```yaml
 openapi: 3.1.0
@@ -59,7 +59,7 @@ The description is a contract artifact, not a framework configuration. It does n
 
 ## Validate at the boundary
 
-The HTTP adapter receives unknown JSON. TypeScript types disappear at runtime, so the request parser checks required strings and RFC 3339 date-time syntax before the [Application](../../GLOSSARY.md#application-layer) operation receives a command. Use a maintained schema validator where it helps; do not write an HTTP parser or duplicate a full validation framework. A focused plain TypeScript guard can teach the mechanism first:
+The HTTP adapter receives unknown JSON. TypeScript types disappear at runtime, so a production request parser must check required strings and RFC 3339 date-time syntax before the [Application](../../GLOSSARY.md#application-layer) operation receives a command. The excerpt below demonstrates only the initial shape check. Use a maintained schema validator where it helps; do not write an HTTP parser or duplicate a full validation framework. A focused plain TypeScript guard can teach the mechanism first:
 
 ```ts
 type CreateAppointmentRequest = {
