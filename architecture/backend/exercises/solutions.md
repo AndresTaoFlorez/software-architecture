@@ -242,7 +242,9 @@ export async function agendaHttp(query: unknown, getAgenda: GetAgenda) {
 import { AgendaReadUnavailable, type AgendaReader } from '@/application/scheduling/ports/AgendaReader'
 
 // Driver-shaped abstraction for this excerpt, not a generated Prisma client.
+export class DatabaseReadUnavailable extends Error {}
 export interface AgendaDatabase {
+  // The concrete database wrapper raises DatabaseReadUnavailable only for recognized read outages.
   list(day: string): Promise<readonly { appointment_id: string; start_time: Date }[]>
 }
 export class PrismaAgendaReader implements AgendaReader {
@@ -250,7 +252,12 @@ export class PrismaAgendaReader implements AgendaReader {
   async read(day: string) {
     let rows: Awaited<ReturnType<AgendaDatabase['list']>>
     try { rows = await this.db.list(day) }
-    catch (cause) { throw new AgendaReadUnavailable('Agenda read failed', { cause }) }
+    catch (cause) {
+      if (cause instanceof DatabaseReadUnavailable) {
+        throw new AgendaReadUnavailable('Agenda read failed', { cause })
+      }
+      throw cause
+    }
     return rows.map(row => ({ id: row.appointment_id, startsAt: row.start_time.toISOString() }))
   }
 }
@@ -270,7 +277,7 @@ export function createAgendaHttp(db: AgendaDatabase) {
 }
 ```
 
-The handler parses before calling the operation: invalid day returns 400 without querying; valid rows map to a 200 response; a known unavailable read becomes 503. Unknown defects propagate. The stored cause stays internal. The query implementation and Nest bindings are omitted; testing this abstraction does not establish a real Prisma integration or its day-filter meaning.
+The handler parses before calling the operation: invalid day returns 400 without querying; valid rows map to a 200 response; a recognized database read outage becomes 503. The concrete database wrapper must identify those outages; unexpected defects propagate. The stored cause stays internal. The query implementation and Nest bindings are omitted; testing this abstraction does not establish a real Prisma integration or its day-filter meaning.
 
 **Exercise.** [B-I3](intermediate.md#b-i3--read-an-agenda)
 
