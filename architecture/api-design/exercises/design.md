@@ -7,17 +7,17 @@ Read [Resources and Operations](../resources-and-operations.md) first. For each 
 - [A-D1 — Correct the resource model](#a-d1--correct-the-resource-model)
 - [A-D2 — Reschedule an appointment safely](#a-d2--reschedule-an-appointment-safely)
 - [A-D3 — Page a growing history](#a-d3--page-a-growing-history)
-- [A-D4 — Interpret a clinic day](#a-d4--interpret-a-clinic-day)
+- [A-D4 — Interpret a site's day](#a-d4--interpret-a-sites-day)
 
 ## A-D1 — Correct the resource model
 
 **Prerequisites.** [Resources and relationships](../resources-and-operations.md#resources-and-relationships).
 
-**Starting situation.** A draft contract has `GET /v1/getDentist?id=den_42`, `GET /v1/dentists/den_42/appointments?date=2026-11-12` for the whole clinic agenda, and `GET /v1/availability?dentistId=den_42&date=2026-11-12` for one dentist's slots.
+**Starting situation.** A draft contract has `GET /v1/getPhysician?id=phy_42`, `GET /v1/physicians/phy_42/appointments?siteId=site_7&date=2026-11-12` for the whole site's agenda, and `GET /v1/availability?physicianId=phy_42&siteId=site_7&date=2026-11-12` for one physician's slots.
 
-**Task.** Give a coherent item URL and a clinic-wide agenda URL. Decide whether the one-dentist availability URL should remain a top-level query or be nested. Defend the decision using the consumer's question, not a rule about pretty URLs.
+**Task.** Give a coherent physician item URL and a site-wide agenda URL. Decide whether the one-physician availability URL should remain a top-level query or be nested. Defend the decision using the consumer's question, not a rule about pretty URLs.
 
-**Expected behavior.** The whole-clinic agenda is not falsely scoped to one dentist; all reads remain inside the authenticated clinic.
+**Expected behavior.** The whole-site agenda is not falsely scoped to one physician; all reads remain inside the authenticated organization and permitted site.
 
 **Verification.** Write three GET requests and one sentence explaining when the alternative availability shape would become useful. Compare [A-D1](solutions.md#a-d1--correct-the-resource-model).
 
@@ -41,20 +41,20 @@ Read [Resources and Operations](../resources-and-operations.md) first. For each 
 
 **Task.** Design the history request and response for this growing collection. Choose a stable sort, page-size cap, continuation field and tenant/filter behavior. State one limitation you still cannot eliminate without snapshot semantics.
 
-**Expected behavior.** The client can continue without parsing cursor internals; a cursor from one clinic cannot expose another clinic's history.
+**Expected behavior.** The client can continue without parsing cursor internals; a cursor from one organization cannot expose another organization's history.
 
 **Verification.** Show page-one and page-two request shapes plus a small JSON response shape. Explain why an ID tie-breaker matters. Compare [A-D3](solutions.md#a-d3--page-a-growing-history).
 
-## A-D4 — Interpret a clinic day
+## A-D4 — Interpret a site's day
 
 **Prerequisites.** [Collections and time](../resources-and-operations.md#collections-and-time).
 
-**Starting situation.** A handler interprets `date=2026-11-12` as `2026-11-12T00:00:00Z` through `2026-11-13T00:00:00Z`, regardless of the clinic's zone.
+**Starting situation.** A handler interprets `siteId=site_7&date=2026-11-12` as `2026-11-12T00:00:00Z` through `2026-11-13T00:00:00Z`, regardless of the site's zone.
 
-**Task.** Explain how to select the clinic's calendar day and which time values the public representation returns. Name the interval boundary convention.
+**Task.** Explain how to select the site's calendar day and which time values the public representation returns. Name the interval boundary convention.
 
-**Expected behavior.** An appointment shortly after local midnight appears on the intended clinic day, including near daylight saving changes.
+**Expected behavior.** An appointment shortly after local midnight appears on the intended site day, including near daylight saving changes.
 
-**Verification.** State the order of conversion and why adding exactly 24 UTC hours can be wrong. Compare [A-D4](solutions.md#a-d4--interpret-a-clinic-day).
+**Verification.** State the order of conversion and why adding exactly 24 UTC hours can be wrong. Compare [A-D4](solutions.md#a-d4--interpret-a-sites-day).
 
 [Previous: Foundations](foundations.md) · [Exercises](README.md) · [Solutions](solutions.md) · [Next: Engineering](engineering.md)
