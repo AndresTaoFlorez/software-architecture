@@ -43,19 +43,21 @@ For a hidden cross-clinic item, this contract returns `404` to avoid confirming 
 
 PostgreSQL Row-Level Security (RLS) can make missing tenant predicates less likely to expose rows. It is a second boundary beneath application authorization. [PostgreSQL's RLS documentation](https://www.postgresql.org/docs/current/ddl-rowsecurity.html) explains policies, default-deny behavior when RLS is enabled without policies, and roles that bypass it.
 
-An illustrative policy for a UUID `clinic_id` column is:
+An illustrative policy for a UUID `clinic_id` column, applied to a pre-existing non-privileged `app_runtime` database role, is:
 
 ```sql
 ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE appointments FORCE ROW LEVEL SECURITY;
 
 CREATE POLICY clinic_appointments ON appointments
+  TO app_runtime
   USING (clinic_id = nullif(current_setting('app.clinic_id', true), '')::uuid)
   WITH CHECK (clinic_id = nullif(current_setting('app.clinic_id', true), '')::uuid);
 ```
 
 The application starts a transaction, sets `app.clinic_id` from verified context with parameterized `select set_config('app.clinic_id', $1, true)`, then performs all tenant-scoped reads and writes on that same transaction connection. The final `true` makes the setting transaction-local. Commit or rollback clears the local context before a pooled connection is reused. If the setting is absent, the expression does not match a clinic row. Apply equivalent policies to other tenant tables that this role can access. This is a deployment-specific PostgreSQL mechanism, not an HTTP or architecture requirement.
 
-Use an application database role without `BYPASSRLS`; table owners normally bypass RLS unless `FORCE ROW LEVEL SECURITY` is used. Migration roles can be more privileged and must not serve requests. Test any `SECURITY DEFINER` functions and privileged maintenance paths separately. RLS does not know that a receptionist may book but a patient may only read, and constraints can reveal information through errors. Application authorization and careful error mapping remain necessary. Tenant context must not be set outside the transaction and trusted to survive arbitrary pool checkout.
+The example enables `FORCE ROW LEVEL SECURITY` so even the table owner is subject to policies, but superusers and roles with `BYPASSRLS` still bypass them. Provision `app_runtime` separately with only the required table privileges, no `BYPASSRLS` and preferably no table ownership. Review **all** applicable policies: permissive policies are combined with OR and an unintended permissive policy can expose rows. Migration roles can be more privileged and must not serve requests. Test any `SECURITY DEFINER` functions and privileged maintenance paths separately. RLS does not know that a receptionist may book but a patient may only read, and constraints can reveal information through errors. Application authorization and careful error mapping remain necessary. Tenant context must not be set outside the transaction and trusted to survive arbitrary pool checkout.
 
 ## Other request threats
 
