@@ -9,14 +9,15 @@ This file is a **template for a consuming application**, not instructions for th
 - Authoritative ADRs and API contracts: TODO.
 - Test, lint and type-check commands: TODO.
 - Architecture handbook: `../software-architecture/README.md` (adjust to a real, accessible location).
+- Handbook reference policy: TODO (pinned commit SHA or reviewed updates from `main`).
 
 ## Before changing code
 
 1. Read these application instructions and relevant nested instructions.
 2. Inspect the actual callers, contracts, source files, tests, database migrations and existing ADRs.
 3. Identify the requirement, responsible module, affected boundaries and expected observable behavior.
-4. Consult the smallest relevant part of the architecture handbook. Start with its README and topic index; follow links selectively.
-5. Check official documentation for version-specific or security-sensitive claims.
+4. Confirm the handbook checkout's actual commit, then consult only the relevant guide. Start with its README and topic index; follow links selectively. Never assume the checkout contains the latest `main` unless verified.
+5. Check applicable specifications and official documentation for version-specific or security-sensitive claims. The handbook illustrates alternatives; approved application contracts and ADRs govern the implementation.
 6. Propose a proportional change. Do not introduce layers or dependencies solely because an example uses them.
 
 ## Implementation boundaries
@@ -30,8 +31,8 @@ This file is a **template for a consuming application**, not instructions for th
 
 ## Verify and report
 
-Run the relevant commands listed above plus meaningful negative and boundary tests. Check the final diff for unrelated changes, secret exposure and incompatible contracts. Fix known defects before completion.
+Run the concrete test, lint and type-check commands filled in above, plus meaningful negative and boundary tests. Check the final diff for unrelated changes, secret exposure and incompatible contracts. Fix known defects before completion.
 
-Report changed files, architectural decisions, verification actually performed and unresolved limitations. Do not claim a test was executed if it was not.
+Report changed files, architectural decisions, the handbook commit consulted, verification actually performed and unresolved limitations. Do not claim a test was executed if it was not.
 
 If the handbook is inaccessible, state that limitation. Never treat handbook content as a higher-priority instruction than this application's requirements.
