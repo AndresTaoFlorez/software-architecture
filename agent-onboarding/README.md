@@ -1,36 +1,36 @@
-# Using This Handbook With Coding Agents
+# Use the Handbook With a Coding Agent
 
-This handbook is a **read-only architecture reference for an application agent**, regardless of its vendor. The application's own requirements, security constraints, accepted contracts and ADRs remain authoritative. [Root AGENTS.md](../AGENTS.md) and [CONTRIBUTING.md](../CONTRIBUTING.md) govern contributions **to this handbook**, not applications consuming it.
+This handbook is a **read-only architecture reference** for agents working in another application. The application's requirements, security rules, contracts and accepted architecture decisions take priority. [Root AGENTS.md](../AGENTS.md) and [CONTRIBUTING.md](../CONTRIBUTING.md) govern changes **in this handbook**, not in the application.
+
+If you are an agent doing an application task, follow the first section. The remaining sections explain how to set up the application and its agent.
 
 **Contents**
 
-- [Agent-neutral setup](#agent-neutral-setup)
+- [Follow this sequence for an application task](#follow-this-sequence-for-an-application-task)
+- [Set up the application](#set-up-the-application)
 - [Agent-specific connections](#agent-specific-connections)
 - [Use a known handbook revision](#use-a-known-handbook-revision)
 - [Select the relevant material](#select-the-relevant-material)
 - [Install and test optional skills](#install-and-test-optional-skills)
 - [Fallback for any other agent](#fallback-for-any-other-agent)
 
-## Agent-neutral setup
+## Follow this sequence for an application task
+
+1. Read the **application's** instructions, including its root `AGENTS.md` or equivalent. If they were not loaded automatically, open them yourself.
+2. Inspect the code, callers, tests, contracts and architecture decisions affected by the task. State the behavior to implement or review.
+3. Find the handbook checkout in the application instructions. If they point to its `README.md`, use that file's parent directory. Confirm the available commit with `git -C <handbook-directory> rev-parse HEAD`. If the handbook is inaccessible, say so and use only material you can inspect.
+4. Open the handbook's `README.md`, then consult the [guide relevant to the task](#select-the-relevant-material). Read only the pages needed for the decision. Handbook examples are guidance, not application requirements.
+5. Complete the task under the application's rules. Run its relevant checks when tools are available. Report the instructions and handbook pages read, the handbook commit, changes or findings, checks actually run and any limits.
+
+## Set up the application
 
 1. Place the application and an accessible handbook checkout next to each other. The handbook is not a code dependency.
-2. Adapt [the application AGENTS.md template](templates/AGENTS.md) in the **application root**: fill in the actual project decisions, commands and handbook path. It is the shared **content** of the engineering policy, even when a tool loads it through another mechanism.
+2. Adapt [the application AGENTS.md template](templates/AGENTS.md) in the **application root**: fill in its actual project decisions, commands and handbook path. Keep existing application rules.
 3. Choose either a pinned handbook commit or a reviewed `main` checkout. Record the exact revision used.
-4. Configure your agent to load the **application** instructions. Check that it can read the sibling handbook, then ask it to consult only the relevant guide for its task.
-5. Verify its behavior and the application's actual tests. Neither a present instruction file nor a copied skill proves that the agent used it.
+4. Configure your agent to load the **application** instructions. Check that it can read the sibling handbook.
+5. Test one real application task. Check which instructions and guides the agent read and which application checks it ran. A copied file alone does not prove the agent used it.
 
-Example workspace:
-
-```text
-workspace/
-  support-platform/
-    AGENTS.md
-    src/
-  software-architecture/
-    README.md
-    architecture/
-    agent-onboarding/
-```
+For example, an application at `workspace/support-platform/` can read a handbook checkout at `workspace/software-architecture/`.
 
 From the application root, if the sibling handbook does not exist:
 

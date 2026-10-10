@@ -5,7 +5,7 @@ description: Review a proposed or implemented application change for responsibil
 
 # Architecture Review
 
-This is a **portable skill template**, not an automatically installed skill. Application-specific instructions and ADRs take precedence; use the handbook for reference, not as a second authority.
+This skill runs in a **consuming application**. Application instructions and ADRs take precedence; use the handbook as a read-only reference.
 
 ## Input
 
