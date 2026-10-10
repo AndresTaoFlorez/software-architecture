@@ -13,6 +13,8 @@ You can already write programs. This handbook helps you decide where a piece of 
 
 Follow one support request through the common route below. Read the code, identify who makes each decision and then learn the formal name. Use the [Glossary](GLOSSARY.md) when you need a reminder; essential terms are explained where they first matter.
 
+Agents working in another application can follow the [agent onboarding guide](agent-onboarding/README.md) to use this handbook as a reference.
+
 The snippets illustrate an application's files. This repository contains documentation, not an executable application. When an exercise uses imports, combine the referenced canonical modules with its changed files in your own temporary project.
 
 On a narrow screen, use the diagram controls to open, zoom and move around a large diagram. Solid arrows show calls, dashed arrows show source dependencies and dotted arrows show startup assembly; folder maps label containment separately.
@@ -47,5 +49,4 @@ Read [architectural checks](architecture/foundations/architecture-testing.md) an
 | [Conventions](architecture/conventions/README.md) | Naming and handbook structure |
 | [Glossary](GLOSSARY.md) | Short reminders of terms |
 | [Contributing](CONTRIBUTING.md) | The editorial standard for this handbook |
-| [Agent onboarding](agent-onboarding/README.md) | Use the handbook from another application's coding agent |
 | [Extras](extras/README.md) | Adjacent disciplines taught separately |
