@@ -31,10 +31,11 @@ The uniform interface includes resource identification, manipulation through rep
 
 ### A hypermedia-driven transition
 
-This separate miniature example uses `text/html` because HTML defines links and form submission. An HTML-capable client enters at the known `/v1/` URI and sends its bearer credential with each request; the server keeps resource state, not a client conversation. The first response identifies the media type, marks this private content non-storable and advertises an application [profile](https://www.rfc-editor.org/rfc/rfc6906.html) that defines the `cancel-appointment` form's business meaning:
+This separate miniature example uses `text/html` because HTML defines links and form submission. The client here is an HTTP client that reads HTML controls and adds its bearer credential to each request. Ordinary browser link navigation and form submission do not add an application's bearer token to the `Authorization` header. The client sends the token only to the trusted API origin, including when following a link or redirect. The server keeps resource state, not a client conversation. The first response identifies the media type, marks this private content non-storable and advertises an application [profile](https://www.rfc-editor.org/rfc/rfc6906.html):
 
 ```http
 GET /v1/ HTTP/1.1
+Host: api.example.test
 Authorization: Bearer <token>
 
 HTTP/1.1 200 OK
@@ -42,18 +43,18 @@ Content-Type: text/html; charset=utf-8
 Cache-Control: no-store
 Link: <https://api.example.test/profiles/appointments>; rel="profile"
 
-<a href="/v1/appointments">View appointments</a>
+<a rel="https://api.example.test/rels/appointments" href="/v1/appointments">View appointments</a>
 ```
 
-This entry link offers navigation; it is not a `collection` relation, which specifically points from a member resource to its collection.
+The profile defines this application-specific relation as the appointment collection and defines `cancel-appointment` as a form that submits `POST` to cancel the represented appointment. These identifiers have no such business meaning in HTML alone. The entry link is not a `collection` relation, which specifically points from a member resource to its collection.
 
-Following that link yields a collection representation with an [item relation](https://www.rfc-editor.org/rfc/rfc6573.html). The client follows the advertised item URI rather than constructing it from an ID:
+Following that link yields a collection representation with an [item relation](https://www.rfc-editor.org/rfc/rfc6573.html). The collection and item responses also identify `text/html`, prohibit storage and advertise the same profile. The client follows the advertised item URI rather than constructing it from an ID:
 
 ```html
 <a rel="item" href="/v1/appointments/apt_71">Appointment at 14:00</a>
 ```
 
-The item representation advertises its collection and, only while the appointment is active, a cancellation control. The application profile defines `cancel-appointment` to mean: an authorized client may submit the form's `POST` to cancel this appointment; when the form is absent, that action is unavailable. HTML defines how the form is submitted. Each request is authorized independently.
+The item representation advertises its collection and, only while the appointment is active, a cancellation control. The profile defines the form's absence as meaning cancellation is unavailable in the current representation. HTML defines how the form is submitted. Each request is authorized independently; a visible form does not guarantee that the appointment remains active when the POST arrives.
 
 ```html
 <a rel="collection" href="/v1/appointments">All appointments</a>
@@ -63,7 +64,7 @@ The item representation advertises its collection and, only while the appointmen
 </form>
 ```
 
-After authorization and a current-state check, a successful submission cancels the appointment and returns [303 See Other](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.4.4) with `Location: /v1/appointments/apt_71`. Following that advertised location retrieves `Status: cancelled`, with no cancellation form. The client needs the entry URI, HTML and the published profile, but no catalog of transition paths. A deployed API must publish the profile at its real URI and define failure and retry behavior. A JSON property named `_links` alone would not define action semantics or establish REST conformance. This HTML example illustrates hypermedia; it does not change the JSON EPS contract used below.
+After authorization and a current-state check, a successful submission cancels the appointment. The server returns [303 See Other](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.4.4) with `Location: /v1/appointments/apt_71`; the client makes an authenticated GET to that location and sees `Status: cancelled`, with no cancellation form. If another request cancelled it first, the server returns `409 Conflict` and a link to the current item. After a lost POST response, the client retrieves the item before deciding whether to retry; it does not blindly repeat a state-changing POST. The published profile must define these outcomes and be available at its real URI. This HTML sequence demonstrates one hypermedia transition, not complete REST conformance. It is separate from the JSON EPS cancellation contract below.
 
 A **[resource](../../GLOSSARY.md#resource)** is whatever the API identifies: a physician, an appointment collection or a computed availability view. Its **[representation](../../GLOSSARY.md#representation)** is the transferable description returned now. A database table is an implementation detail, so one resource can assemble data from several tables. The organization's public appointment model need not expose internal row columns. [Google AIP-121](https://google.aip.dev/121) recommends resource-oriented design for Google's RPC APIs and explicitly notes that it does not mirror database schema; it is guidance, not a rule imposed by HTTP.
 
