@@ -99,7 +99,10 @@ Inspect real application code, callers, tests and approved decisions **before** 
 The skill definitions follow the [Agent Skills specification](https://agentskills.io/specification):
 
 - [Architecture-aware Implementation](skills/architecture-aware-implementation/SKILL.md): implement a bounded feature or refactor without losing existing contracts.
+- [HTTP API Engineering](skills/http-api-engineering/SKILL.md): design, implement, evolve or review an HTTP API with correct protocol semantics and a strict REST check when requested.
 - [Architecture Review](skills/architecture-review/SKILL.md): review a concrete change and report actionable findings without editing it.
+
+Use the generic implementation skill for ordinary application changes, the HTTP API skill when an HTTP contract or endpoint is central to the task, and the review skill for architectural evaluation. The API skill does not turn every HTTP API into REST; it requires hypermedia when REST is claimed.
 
 Copy a reviewed skill directory to the **consuming application**, using the supported path from the table. The copies are independent and need updating if the source skill changes. Do not install them at the handbook root: that would confuse documentation-maintenance agents with application-development agents.
 
@@ -108,7 +111,7 @@ In a **new session**, perform two different checks:
 1. **Explicit invocation:** ask to use the named skill; confirm the agent loads the application's copied `SKILL.md` and follows it.
 2. **Task-based discovery:** describe a relevant task *without naming the skill*; check whether the agent discovers and uses it. If not, rely on explicit invocation rather than claiming automatic selection.
 
-For Codex, explicitly invoke `$architecture-aware-implementation` or `$architecture-review`. For compatible assistant client, use `/architecture-aware-implementation` or `/architecture-review`. Gemini CLI can list available skills with `/skills list`. Other agents may use different commands or require explicit file references.
+For Codex, explicitly invoke `$architecture-aware-implementation`, `$http-api-engineering` or `$architecture-review`. For compatible assistant client, use `/architecture-aware-implementation`, `/http-api-engineering` or `/architecture-review`. Gemini CLI can list available skills with `/skills list`. Other agents may use different commands or require explicit file references.
 
 These are **manual reviewable templates**; no automatic installation or code execution occurs by copying them. If the agent lacks a skill runtime, give it the relevant SKILL.md text as task instructions, subject to its normal trust and permission boundaries.
 

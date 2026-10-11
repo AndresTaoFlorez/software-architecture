@@ -99,6 +99,7 @@ Compact references support the guides. Link a term on its first meaningful use i
 - [Reducer](#reducer)
 - [Repository Pattern](#repository)
 - [Representation](#representation)
+- [Representational State Transfer (REST)](#rest)
 - [Resource](#resource)
 - [Route Handler](#route-handler)
 - [RTK Query](#rtk-query)
@@ -1700,6 +1701,16 @@ A client-supplied token an API can use to recognize a retry of the same operatio
 The data and metadata transferred to describe a resource's state in one interaction. A JSON physician response is one representation; it need not match a database row or domain object.
 
 **Purpose.** Separate public data from internal storage. **Example.** The physician response exposes `id` and `displayName`. [Full explanation](architecture/api-design/resources-and-operations.md#rest-and-resource-meaning). **Source.** [RFC 9110 §3.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-3.2).
+
+---
+
+<a id="rest"></a>
+
+## Representational State Transfer (REST)
+
+An architectural style for distributed hypermedia systems. Its constraints include a uniform interface in which clients discover valid transitions from representations; HTTP methods and resource URLs alone do not establish it.
+
+**Purpose.** Let clients follow server-provided controls while components evolve independently. **Example.** A client enters at a known URI, follows a resource link and submits an action advertised only in the resource's current state. [Full explanation](architecture/api-design/resources-and-operations.md#rest-and-resource-meaning). **Source.** [Fielding, chapter 5](https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm).
 
 ---
 
