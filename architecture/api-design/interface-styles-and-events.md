@@ -2,7 +2,7 @@
 
 The EPS scheduling screen needs immediate confirmation of a booking. A reminder service can learn about that booking later. These consumers have different timing and data needs, so one transport shape need not serve both.
 
-Read [Resources and Operations](resources-and-operations.md) and [Reliability, Evolution and Operations](reliability-and-operations.md) first. This chapter compares interface choices; each choice still needs authorization, contracts and failure handling.
+Read [Resources and Operations](resources-and-operations.md) and [Reliability, Evolution and Operations](reliability-and-operations.md) first. This chapter compares choices from the [different categories introduced in the route](README.md#classify-the-design-choice); each still needs authorization, contracts and failure handling.
 
 **Contents**
 
@@ -12,16 +12,16 @@ Read [Resources and Operations](resources-and-operations.md) and [Reliability, E
 
 ## Choose by consumer interaction
 
-| Interface | Strong fit in the care network | Cost and boundary |
+| Approach or delivery mechanism | Strong fit in the care network | Cost and boundary |
 | --- | --- | --- |
-| HTTP resource API | Scheduling coordinator reads physicians and site agendas, then books or edits appointments | Client may need several requests for a complex screen; resource contract must stay stable |
+| Resource-oriented HTTP API | Scheduling coordinator reads physicians and site agendas, then books or edits appointments | Client may need several requests for a complex screen; resource contract must stay stable |
 | GraphQL | Several UIs need different combinations of organization-owned fields in one query | Resolver authorization, query depth/cost, caching and schema evolution need explicit policy |
 | gRPC | Trusted internal services need typed RPCs, streaming or efficient service-to-service calls | Protobuf and transport tooling shape clients; browser access often needs another edge |
-| Event or webhook | Reminder system reacts after booking without blocking the scheduling coordinator | Delivery is delayed and may repeat or arrive out of order |
+| Event notification or webhook delivery | Reminder system reacts after booking without blocking the scheduling coordinator | Delivery is delayed and may repeat or arrive out of order |
 
 [GraphQL's specification](https://spec.graphql.org/) defines a typed query language and execution model; its [official learning guide](https://graphql.org/learn/queries/) explains client-selected fields. It does not remove object- and field-level authorization. [gRPC's official introduction](https://grpc.io/docs/what-is-grpc/introduction/) explains service definitions, Protocol Buffers and call types. Neither is universally faster or simpler for this organization. Measure consumer needs before adding a second public interface.
 
-The booking command stays synchronous while the caller needs an immediate accepted or rejected slot. A historical import can use an HTTP job resource with `202`, as [the resource chapter](resources-and-operations.md#bulk-and-long-running-work) describes. A real-time agenda screen may later use server-sent events or another push channel to learn that data changed, but it should still reload authoritative state and handle missed messages. An initial scheduling deployment can begin with ordinary polling.
+The booking command stays synchronous while the caller needs an immediate accepted or rejected slot. A historical import can use an HTTP job resource with `202`, as [the resource chapter](resources-and-operations.md#bulk-and-long-running-work) describes. A real-time agenda screen may later use server-sent events or another push channel to learn that data changed, but it should still reload authoritative state and handle missed messages. WebSocket is a persistent bidirectional protocol choice; its [specialized implementation support is coming later](README.md#classify-the-design-choice). An initial scheduling deployment can begin with ordinary polling.
 
 ## Deliver a booking event
 

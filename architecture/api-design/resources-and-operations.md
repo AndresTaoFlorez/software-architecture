@@ -7,6 +7,7 @@ Read [HTTP and Identifiers](http-and-identifiers.md) first. This chapter owns th
 **Contents**
 
 - [REST and resource meaning](#rest-and-resource-meaning)
+  - [A hypermedia-driven transition](#a-hypermedia-driven-transition)
 - [Resources and relationships](#resources-and-relationships)
 - [Create and change appointments](#create-and-change-appointments)
 - [Collections and time](#collections-and-time)
@@ -15,7 +16,55 @@ Read [HTTP and Identifiers](http-and-identifiers.md) first. This chapter owns th
 
 ## REST and resource meaning
 
-REST is an [architectural style](https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm) for networked hypermedia systems. Fielding derives client-server separation, stateless interactions, cache constraints, a uniform interface, layered systems and optional code on demand. The uniform interface includes resource identification, manipulation through representations, self-descriptive messages and hypermedia that lets a client discover valid state transitions. A JSON API with tidy nouns and HTTP verbs can be useful while implementing only some of those constraints. Call it an HTTP API or a REST-style API when hypermedia is absent; do not imply that plural paths alone establish REST.
+[REST](../../GLOSSARY.md#rest) is [Fielding's architectural style](https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm) for distributed hypermedia systems. Its constraints shape how clients, servers and intermediaries interact:
+
+| Constraint | Consequence for an appointment interface |
+| --- | --- |
+| Client–server | A client handles its interaction state; the server owns appointment resources. They can evolve separately. |
+| Stateless interactions | Each request carries the information needed to understand it, including credentials and preconditions; the server may still store resource state. |
+| Cache | Responses state whether and how they can be reused. Private appointment data must not be reused across users or organizations. |
+| Uniform interface | Resources have identifiers and are manipulated through representations. Messages describe their own semantics with methods, media types and metadata; representations provide controls for discovering valid next actions. |
+| Layered system | A client can communicate through gateways or caches without knowing the origin server's internal topology. |
+| Code-on-demand | Downloaded client code is permitted but **optional**; this example needs none. |
+
+The uniform interface includes resource identification, manipulation through representations, self-descriptive messages and **hypermedia as the engine of application state**. Hypermedia is required for a REST claim, not an optional improvement. An HTTP API can be well designed without meeting every REST constraint. A resource-oriented HTTP API uses resource identities and HTTP semantics but may have clients hardcode its application-specific transitions; call it a **resource-oriented HTTP API**, not REST, in that case. [Fielding's clarification](https://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven) explains why a client must discover transitions from server-provided controls.
+
+### A hypermedia-driven transition
+
+This separate miniature example uses `text/html` because HTML defines links and form submission. The client here is an HTTP client that reads HTML controls and adds its bearer credential to each request. Ordinary browser link navigation and form submission do not add an application's bearer token to the `Authorization` header. The client sends the token only to the trusted API origin, including when following a link or redirect. The server keeps resource state, not a client conversation. The first response identifies the media type, marks this private content non-storable and advertises an application [profile](https://www.rfc-editor.org/rfc/rfc6906.html):
+
+```http
+GET /v1/ HTTP/1.1
+Host: api.example.test
+Authorization: Bearer <token>
+
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=utf-8
+Cache-Control: no-store
+Link: <https://api.example.test/profiles/appointments>; rel="profile"
+
+<a rel="https://api.example.test/rels/appointments" href="/v1/appointments">View appointments</a>
+```
+
+The profile defines this application-specific relation as the appointment collection and defines `cancel-appointment` as a form that submits `POST` to cancel the represented appointment. These identifiers have no such business meaning in HTML alone. The entry link is not a `collection` relation, which specifically points from a member resource to its collection.
+
+Following that link yields a collection representation with an [item relation](https://www.rfc-editor.org/rfc/rfc6573.html). The collection and item responses also identify `text/html`, prohibit storage and advertise the same profile. The client follows the advertised item URI rather than constructing it from an ID:
+
+```html
+<a rel="item" href="/v1/appointments/apt_71">Appointment at 14:00</a>
+```
+
+The item representation advertises its collection and, only while the appointment is active, a cancellation control. The profile defines the form's absence as meaning cancellation is unavailable in the current representation. HTML defines how the form is submitted. Each request is authorized independently; a visible form does not guarantee that the appointment remains active when the POST arrives.
+
+```html
+<a rel="collection" href="/v1/appointments">All appointments</a>
+<p>Status: active</p>
+<form id="cancel-appointment" method="post" action="/v1/appointments/apt_71/cancellations">
+  <button type="submit">Cancel appointment</button>
+</form>
+```
+
+After authorization and a current-state check, a successful submission cancels the appointment. The server returns [303 See Other](https://www.rfc-editor.org/rfc/rfc9110.html#section-15.4.4) with `Location: /v1/appointments/apt_71`; the client makes an authenticated GET to that location and sees `Status: cancelled`, with no cancellation form. If another request cancelled it first, the server returns `409 Conflict` and a link to the current item. After a lost POST response, the client retrieves the item before deciding whether to retry; it does not blindly repeat a state-changing POST. The published profile must define these outcomes and be available at its real URI. This HTML sequence demonstrates one hypermedia transition, not complete REST conformance. It is separate from the JSON EPS cancellation contract below.
 
 A **[resource](../../GLOSSARY.md#resource)** is whatever the API identifies: a physician, an appointment collection or a computed availability view. Its **[representation](../../GLOSSARY.md#representation)** is the transferable description returned now. A database table is an implementation detail, so one resource can assemble data from several tables. The organization's public appointment model need not expose internal row columns. [Google AIP-121](https://google.aip.dev/121) recommends resource-oriented design for Google's RPC APIs and explicitly notes that it does not mirror database schema; it is guidance, not a rule imposed by HTTP.
 
