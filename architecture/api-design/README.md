@@ -4,6 +4,29 @@ A scheduling coordinator needs to read a care site's agenda, find a physician's 
 
 You need basic TypeScript and HTTP curiosity. The shared [Code Placement](../foundations/code-placement.md) and [Dependency Boundaries](../foundations/dependency-boundaries.md) guides help with the implementation chapter. Read this route from top to bottom, or enter at a chapter whose prerequisites you already know.
 
+**Contents**
+
+- [Classify the design choice](#classify-the-design-choice)
+- [The health network and its contract](#the-health-network-and-its-contract)
+- [Read in order](#read-in-order)
+- [How to read the rules](#how-to-read-the-rules)
+
+## Classify the design choice
+
+An **HTTP API** exposes a public contract through HTTP methods, targets, fields and representations. A **resource-oriented HTTP API** organizes that contract around resource identities. Both descriptions can apply without establishing REST. These terms answer different design questions:
+
+| Kind of choice | Meaning |
+| --- | --- |
+| **Architectural style** | [REST](../../GLOSSARY.md#rest) constrains a distributed hypermedia system: client–server separation, stateless interactions, cache behavior, a uniform interface with hypermedia, and layers. Code-on-demand is optional. HTTP, JSON, CRUD paths, OpenAPI and a backend framework do not establish REST by themselves. |
+| **Interface approach** | A resource-oriented HTTP interface names resources and uses HTTP semantics; an RPC interface exposes operations. [GraphQL](https://spec.graphql.org/) defines a query language, type system and execution model. [gRPC](https://grpc.io/docs/what-is-grpc/introduction/) is an RPC framework. These choices do not all occupy one architectural category. |
+| **Protocol** | [HTTP](https://www.rfc-editor.org/rfc/rfc9110.html) carries request and response semantics. [WebSocket](https://www.rfc-editor.org/rfc/rfc6455.html) supports a persistent, bidirectional connection. WebSocket is a protocol, not an architectural style competing with REST. |
+| **Communication pattern** | Request–response, client polling, server push or streaming, asynchronous messaging, event notifications and webhooks describe how participants exchange information. A pattern still needs a concrete protocol and delivery contract. |
+| **Contract description** | [OpenAPI](https://spec.openapis.org/oas/latest.html) describes HTTP APIs; it neither validates requests at runtime nor proves REST conformance. [AsyncAPI](https://www.asyncapi.com/docs/reference/specification/v3.0.0) can describe message-driven interfaces. |
+
+Request–response waits for a reply; polling repeats requests for changes. Server push or streaming sends updates over an open interaction. Asynchronous messaging lets a sender proceed before a separate consumer finishes. An event notification says something happened; a webhook delivers a notification as an HTTP callback. The [interface chapter](interface-styles-and-events.md#choose-by-consumer-interaction) examines those consumer needs. The [resource chapter](resources-and-operations.md#rest-and-resource-meaning) explains REST's constraints and shows a state transition discovered through hypermedia.
+
+**WebSocket: Coming soon — specialized implementation support is not yet available.** This handbook can discuss WebSocket conceptually, but the [HTTP API engineering skill](../../agent-onboarding/skills/http-api-engineering/SKILL.md) does not implement WebSocket endpoints or validate persistent bidirectional connections. Applications may use WebSocket through separately designed and tested work; this limitation does not prohibit it.
+
 ## The health network and its contract
 
 The running example is scheduling for a fictional Colombian *Entidad Promotora de Salud* (EPS). The EPS coordinates appointments for affiliated patients across a provider network; *Instituciones Prestadoras de Servicios de Salud* (IPS), such as clinics and hospitals, provide the care. [Colombia's Ministry of Health](https://www2.minsalud.gov.co/salud/Documents/Contenidos/aseguramiento-salud.aspx) distinguishes these responsibilities. Each [tenant](../../GLOSSARY.md#tenant) is one EPS organization with patients, physicians, care sites, working hours, unavailable periods and appointments. This example covers scheduling; coverage decisions and clinical records would need their own contracts.
