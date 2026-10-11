@@ -16,10 +16,13 @@ The chapters cite the source beside each technical claim. This page records the 
 - [RFC 9110 — HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110.html), [RFC 9111 — HTTP Caching](https://www.rfc-editor.org/rfc/rfc9111.html) and [RFC 9112 — HTTP/1.1](https://www.rfc-editor.org/rfc/rfc9112.html): method, status, representation, cache and HTTP/1.1 message rules.
 - [RFC 5789 — PATCH](https://www.rfc-editor.org/rfc/rfc5789.html), [RFC 7396 — JSON Merge Patch](https://www.rfc-editor.org/rfc/rfc7396.html) and [RFC 6902 — JSON Patch](https://www.rfc-editor.org/rfc/rfc6902.html): patch method and two distinct patch document formats.
 - [RFC 9457 — Problem Details](https://www.rfc-editor.org/rfc/rfc9457.html): interoperable problem representation, not an organization-specific status taxonomy.
+- [RFC 8288 — Web Linking](https://www.rfc-editor.org/rfc/rfc8288.html), [RFC 6573 — Item and Collection](https://www.rfc-editor.org/rfc/rfc6573.html) and [RFC 6906 — Profile](https://www.rfc-editor.org/rfc/rfc6906.html): link relations and a way to advertise application-specific representation semantics. The latter two are informational, not HTTP requirements.
+- [HTML Standard — Forms](https://html.spec.whatwg.org/multipage/forms.html#the-form-element) and [RFC 6455 — WebSocket](https://www.rfc-editor.org/rfc/rfc6455.html): HTML's link/form controls and WebSocket's persistent bidirectional protocol.
 - [RFC 3339 — Internet Timestamps](https://www.rfc-editor.org/rfc/rfc3339.html): date-time notation used in representations.
 - [RFC 9745 — Deprecation](https://www.rfc-editor.org/rfc/rfc9745.html) and [RFC 8594 — Sunset](https://www.rfc-editor.org/rfc/rfc8594.html): response metadata for lifecycle communication.
 - [OpenAPI Specification 3.1.2](https://spec.openapis.org/oas/v3.1.2.html) and [JSON Schema Draft 2020-12](https://json-schema.org/draft/2020-12): contract description and JSON shape vocabulary. [The OpenAPI version index](https://spec.openapis.org/oas/) also lists later releases; the teaching example deliberately uses the 3.1 family.
 - [Fielding's REST dissertation, chapter 5](https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm): the original REST constraints and their rationale.
+- [Fielding — REST APIs must be hypertext-driven](https://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven): clarification that REST clients discover application state transitions through hypertext controls.
 
 ## Security, implementation and other styles
 
