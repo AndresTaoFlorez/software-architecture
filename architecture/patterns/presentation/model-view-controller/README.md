@@ -13,6 +13,7 @@ A user edits an order on a screen. Separate displaying the current information, 
 
 - [History and origin](#history-and-origin)
 - [What problem does MVC solve?](#what-problem-does-mvc-solve)
+- [MVC across client and server](#mvc-across-client-and-server)
 - [Fit and cost](#fit-and-cost)
   - [When MVC is a strong fit](#when-mvc-is-a-strong-fit)
   - [When MVC is a weak fit or poor label](#when-mvc-is-a-weak-fit-or-poor-label)
@@ -49,7 +50,7 @@ Consider an order screen with a **Cancel** button. The screen must show the curr
 
 In classic [MVC](../../../../GLOSSARY.md#model-view-controller-mvc), the **[Model](../../../../GLOSSARY.md#model)** represents the relevant information and behavior, the **[View](../../../../GLOSSARY.md#view)** displays it, and the **[Controller](../../../../GLOSSARY.md#controller)** interprets the user's action. In a classic interactive implementation, the displayed screen can observe changes to the represented information and redraw. This separation is called **[separated presentation](../../../../GLOSSARY.md#separated-presentation)**. It is about UI responsibilities, not a mandatory three-folder structure for an entire backend.
 
-The diagram shows runtime interactions in the observer-based variant. Solid arrows represent input, calls and display; they do not specify source dependencies.
+The diagram shows runtime interactions in the observer-based interactive variant described by [Fowler](https://martinfowler.com/eaaDev/uiArchs.html#ModelViewController). It does not describe a server request. Solid arrows represent input, calls and display; they do not specify source dependencies.
 
 ```mermaid
 %%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
@@ -65,6 +66,25 @@ flowchart TB
 The Model calls registered listeners without naming a concrete View. After a notification, the View reads the current state and renders it. The Controller does not have to redraw each affected screen. [The Flow](2-the-flow.md#the-classic-cycle) shows the sequence in time.
 
 MVC does not define database architecture, application-layer [ports](../../../../GLOSSARY.md#port), deployment topology or domain boundaries. It is primarily a presentation pattern.
+
+## MVC across client and server
+
+Cancelling an order can update an open screen or submit a request that returns a new HTML page. Both arrangements separate represented information, display and input handling. Their collaborators and update mechanisms differ, so the same three names do not imply the same sequence.
+
+| Context | Input handling | Display and updates | Source |
+| --- | --- | --- | --- |
+| Classic interactive MVC | A Controller interprets a gesture and invokes Model behavior. | A View observes Model changes, reads its state and redraws. Several Views can remain open. | [Fowler: Smalltalk MVC](https://martinfowler.com/eaaDev/uiArchs.html#ModelViewController) |
+| Server-rendered web MVC | An HTTP request reaches a Controller, which works with the Model and selects a View. | The View renders supplied data into HTML for that response. It normally has no ongoing subscription to the Model. | [ASP.NET Core: MVC pattern](https://learn.microsoft.com/en-us/aspnet/core/mvc/overview?view=aspnetcore-10.0#mvc-pattern), [Rails: request cycle](https://guides.rubyonrails.org/action_controller_overview.html#introduction) |
+| Modern component frontend, such as React | Event handlers request state changes; a separate Controller is an application design choice. | Components render props and state. React documents one-way data flow, rather than prescribing MVC roles. | [React: Thinking in React](https://react.dev/learn/thinking-in-react) |
+| JSON API, such as a Nest endpoint | An HTTP Controller handles a request and returns a result. | Nest can serialize returned objects to JSON without rendering an HTML View. | [Nest: Controllers](https://docs.nestjs.com/controllers#routing) |
+
+In server-rendered MVC, the Controller selects the View and supplies its data. The View consumes that data to render; it is not a required intermediary through which the Controller changes business state. [ASP.NET Core documents both relationships](https://learn.microsoft.com/en-us/aspnet/core/mvc/overview?view=aspnetcore-10.0#controller-responsibilities).
+
+Desktop, mobile and browser are execution environments, not MVC variants. The actual roles and update mechanism determine the pattern. [MVP and MVVM](2-the-flow.md#the-variants-change-more-than-one-connection) provide other arrangements for interactive screens.
+
+A browser frontend and a backend API can choose their own internal structures. Their HTTP exchange does not make the browser one server-side MVC View or create a shared in-memory Model. For the Nest examples in this handbook, “HTTP Controller and response mapping” describes the delivery boundary more precisely than assuming a complete MVC triad. The [backend route](../../../backend/README.md) explains that boundary.
+
+The diagrams and TypeScript feature on this page use the observer-based interactive arrangement. [The Flow](2-the-flow.md#server-rendered-web-mvc) separately traces a server-rendered request. Neither arrangement prescribes the handbook's physical folders.
 
 ## Fit and cost
 
