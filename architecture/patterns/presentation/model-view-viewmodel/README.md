@@ -13,6 +13,7 @@ A screen interface may also act as a Facade when it deliberately simplifies coll
 
 - [History and origin](#history-and-origin)
 - [What problem does MVVM solve?](#what-problem-does-mvvm-solve)
+- [MVVM across UI platforms and server code](#mvvm-across-ui-platforms-and-server-code)
 - [Fit and cost](#fit-and-cost)
   - [When MVVM is a strong fit](#when-mvvm-is-a-strong-fit)
   - [When MVVM is weak or unnecessary](#when-mvvm-is-weak-or-unnecessary)
@@ -65,6 +66,8 @@ Without that separation, stateful UI code easily mixes:
 
 MVVM separates the rendering surface from the state and behavior needed by that rendering surface.
 
+The diagram shows an interactive screen's state and commands, not a server request lifecycle or source imports. State reaches the View through a binding mechanism; the ViewModel does not have to call concrete controls. This follows [Gossman's original formulation](https://learn.microsoft.com/en-us/archive/blogs/johngossman/introduction-to-modelviewviewmodel-pattern-for-building-wpf-apps).
+
 ```mermaid
 %%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart LR
@@ -74,6 +77,23 @@ flowchart LR
 ```
 
 MVVM does not define persistence architecture, domain boundaries, transport [adapters](../../../../GLOSSARY.md#adapter) or deployment.
+
+## MVVM across UI platforms and server code
+
+An Orders screen can show `busy`, display an error and invoke `cancel()` on desktop, mobile or in a browser. MVVM gives those screen values and operations an owner separate from the controls. The platform determines how the View receives changes and sends user intent; it does not change the need to identify those responsibilities.
+
+| Context | Mechanism and scope | Source |
+| --- | --- | --- |
+| WPF and .NET MAUI | Declarative Views bind to ViewModel properties and commands. Change notifications update the controls. | [Gossman: WPF MVVM](https://learn.microsoft.com/en-us/archive/blogs/johngossman/introduction-to-modelviewviewmodel-pattern-for-building-wpf-apps), [.NET MAUI: MVVM](https://learn.microsoft.com/en-us/dotnet/architecture/maui/mvvm) |
+| Android | A screen-level ViewModel exposes UI state and handles events. Android recommends unidirectional data flow: state reaches the UI and events return to the state owner. This is compatible with MVVM separation, without prescribing WPF binding. | [Android: UI layer](https://developer.android.com/topic/architecture/ui-layer) |
+| React frontend | Props/state drive rendering and handlers receive events. A Hook or state holder can deliberately expose a ViewModel contract; using React alone does not establish that role. | [React: Thinking in React](https://react.dev/learn/thinking-in-react) |
+| Server-rendered MVC | A Controller can populate a type called `ViewModel` with data for a template. That name alone does not establish an interactive MVVM arrangement with commands and ongoing state synchronization. | [ASP.NET Core: Model responsibilities](https://learn.microsoft.com/en-us/aspnet/core/mvc/overview?view=aspnetcore-10.0#model-responsibilities) |
+
+The server-side distinction follows from comparing the documented roles: an `OrderPageViewModel` containing a status label for one HTML response can be a page data object. An interactive ViewModel exposing `busy`, errors and `cancel()` also owns screen behavior. The class name is insufficient to decide which arrangement exists.
+
+A frontend ViewModel can invoke application behavior backed by a remote API. Its screen state belongs to the frontend; the backend independently handles requests and enforces its rules. Returning JSON, naming a response type `ViewModel`, or serving an MVVM client does not make the backend itself MVVM. The [MVC client/server comparison](../model-view-controller/README.md#mvc-across-client-and-server) explains those delivery arrangements.
+
+Two-way binding is optional. [WPF supports several binding directions](https://learn.microsoft.com/en-us/dotnet/desktop/wpf/data/#direction-of-the-data-flow); commands and explicit events can carry user intent separately. [The Binding](2-the-binding.md) explains synchronization and cleanup. The TypeScript examples here illustrate the interactive contract without requiring WPF or Android APIs.
 
 ## Fit and cost
 
