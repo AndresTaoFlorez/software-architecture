@@ -1,9 +1,9 @@
 ---
-name: architecture-review
+name: editorial-review
 description: Review a proposed or implemented application change for responsibility ownership, contracts, dependencies, API behavior, security boundaries and test evidence. Use when asked for an architectural review, not for every trivial edit.
 ---
 
-# Architecture Review
+# Editorial Review
 
 This skill runs in a **consuming application**. Application instructions and ADRs take precedence; use the handbook as a read-only reference.
 

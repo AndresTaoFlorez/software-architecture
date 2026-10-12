@@ -1,9 +1,9 @@
 ---
-name: architecture-aware-implementation
+name: onboarding
 description: Implement a focused application feature or refactor while preserving its approved architecture, public contracts and tests. Use when a coding task crosses modules, HTTP boundaries, domain rules or persistence.
 ---
 
-# Architecture-aware Implementation
+# Onboarding
 
 This skill runs in a **consuming application**. The handbook is a read-only design reference, not an instruction to reorganize the application. Read application instructions and approved ADRs before consulting it.
 
