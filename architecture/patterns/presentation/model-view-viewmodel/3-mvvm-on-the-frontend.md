@@ -156,10 +156,12 @@ See **[Frontend Architecture](../../../frontend/README.md)** for the repository'
 
 ## Related implementations in the wild
 
+The [platform and server comparison](README.md#mvvm-across-ui-platforms-and-server-code) separates interactive ViewModels from data types used by server templates. A frontend and its backend can use different internal patterns.
+
 The following ecosystems use concepts compatible with [MVVM](../../../../GLOSSARY.md#model-view-viewmodel-mvvm) or [Presentation Model](../../../../GLOSSARY.md#presentation-model), but they should not be used to claim all modern UI frameworks "are MVVM":
 
-- **Microsoft/.NET UI** has explicit MVVM guidance and a long MVVM lineage.
-- **Android** recommends UI state holders such as `ViewModel` and unidirectional data flow. This is compatible with MVVM-like separation but Android's architecture guidance is broader than one historical pattern name.
+- **Microsoft/.NET UI** has explicit [MVVM guidance for .NET MAUI](https://learn.microsoft.com/en-us/dotnet/architecture/maui/mvvm) and a long MVVM lineage.
+- **Android** recommends [UI state holders such as `ViewModel` and unidirectional data flow](https://developer.android.com/topic/architecture/ui-layer). This is compatible with MVVM-like separation but Android's architecture guidance is broader than one historical pattern name.
 - **Airbnb Mavericks** uses immutable state + [ViewModel](../../../../GLOSSARY.md#viewmodel) concepts on Android.
 - **Vue** historically documents MVVM inspiration while explicitly saying Vue is not strictly associated with MVVM.
 

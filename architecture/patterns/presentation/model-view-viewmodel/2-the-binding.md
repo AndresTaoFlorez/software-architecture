@@ -21,6 +21,8 @@ Suppose the [ViewModel](../../../../GLOSSARY.md#viewmodel) sets `isSaving = true
 
 ## The MVVM cycle
 
+This sequence illustrates an interactive View and its ViewModel. It does not describe rendering one server response from a data object named `ViewModel`; the [platform and server comparison](README.md#mvvm-across-ui-platforms-and-server-code) explains that distinction. Frameworks supply different synchronization mechanisms, such as [.NET MAUI property notifications and command binding](https://learn.microsoft.com/en-us/dotnet/architecture/maui/mvvm).
+
 ```mermaid
 %%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 sequenceDiagram

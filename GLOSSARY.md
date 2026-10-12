@@ -789,6 +789,8 @@ A way to keep a screen's rendering separate from the state and operations prepar
 
 **Example.** A screen interface exposes rows, busy state and commands while hiding Redux details from the React View.
 
+[Platform and server differences](architecture/patterns/presentation/model-view-viewmodel/README.md#mvvm-across-ui-platforms-and-server-code). A server template's data type named `ViewModel` does not by itself establish MVVM.
+
 **Sources.** [Fowler — Presentation Model](https://martinfowler.com/eaaDev/PresentationModel.html) · [Fowler — GUI Architectures](https://martinfowler.com/eaaDev/uiArchs.html) · [Smith — WPF Apps With MVVM](https://learn.microsoft.com/en-us/archive/msdn-magazine/2009/february/patterns-wpf-apps-with-the-model-view-viewmodel-design-pattern)
 
 ---
