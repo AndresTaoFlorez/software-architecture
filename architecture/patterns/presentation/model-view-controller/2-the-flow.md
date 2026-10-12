@@ -13,12 +13,14 @@ The diagram below shows **events and calls over time**, not which source files i
 - [The classic cycle](#the-classic-cycle)
 - [Why the Observer link is the hard part](#why-the-observer-link-is-the-hard-part)
 - [The variants change more than one connection](#the-variants-change-more-than-one-connection)
-- [Server-side "MVC" is a different animal](#server-side-mvc-is-a-different-animal)
+- [Server-rendered web MVC](#server-rendered-web-mvc)
 - [Sources](#sources)
 
 <a id="21-the-classic-cycle"></a>
 
 ## The classic cycle
+
+This sequence describes a screen that remains open and observes its Model, as explained in [Fowler's account of Smalltalk MVC](https://martinfowler.com/eaaDev/uiArchs.html#ModelViewController). It is not a general request lifecycle for every framework named MVC.
 
 ```mermaid
 %%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
@@ -63,9 +65,22 @@ Fowler distinguishes several presentation approaches. They share separation goal
 
 <a id="24-server-side-mvc-is-a-different-animal"></a>
 
-## Server-side "MVC" is a different animal
+<a id="server-side-mvc-is-a-different-animal"></a>
 
-A web controller often receives one HTTP request, invokes application behavior, and selects a template or response. A server-rendered [View](../../../../GLOSSARY.md#view) normally renders once rather than observing a long-lived interactive [Model](../../../../GLOSSARY.md#model). Explain the actual request lifecycle instead of applying the Smalltalk cycle literally.
+## Server-rendered web MVC
+
+A cancellation form submits an HTTP request. In a server-rendered MVC arrangement:
+
+1. Routing selects a Controller action for the request.
+2. The Controller invokes the operation that attempts cancellation and obtains its outcome.
+3. The Controller selects a View and supplies the information to display.
+4. The View renders HTML, which the server sends to the browser.
+
+This is one illustrative rendering path; a Controller can instead redirect or return another response. [ASP.NET Core describes Controller selection of Views](https://learn.microsoft.com/en-us/aspnet/core/mvc/overview?view=aspnetcore-10.0#mvc-pattern); [Rails describes the request cycle and rendering](https://guides.rubyonrails.org/action_controller_overview.html#introduction).
+
+The template normally finishes its work for that response. It does not remain subscribed to the server Model as an open Smalltalk View would. A later browser update requires another interaction or an explicitly added update mechanism.
+
+A JSON API can omit HTML rendering altogether. For example, [Nest serializes returned objects to JSON](https://docs.nestjs.com/controllers#routing). Having an HTTP Controller alone does not establish classic MVC. The [client/server comparison](README.md#mvc-across-client-and-server) distinguishes this delivery boundary from an interactive frontend's own presentation design.
 
 Next: **[MVC on the Frontend](3-mvc-on-the-frontend.md)** — intentional responsibility boundaries inside modern component frameworks.
 
@@ -76,3 +91,6 @@ Next: **[MVC on the Frontend](3-mvc-on-the-frontend.md)** — intentional respon
 - [Fowler — Passive View](https://martinfowler.com/eaaDev/PassiveScreen.html)
 - [Fowler — Supervising Controller](https://martinfowler.com/eaaDev/SupervisingPresenter.html)
 - [Fowler — Presentation Model](https://martinfowler.com/eaaDev/PresentationModel.html)
+- [ASP.NET Core — MVC pattern](https://learn.microsoft.com/en-us/aspnet/core/mvc/overview?view=aspnetcore-10.0#mvc-pattern)
+- [Rails — Action Controller Overview](https://guides.rubyonrails.org/action_controller_overview.html#introduction)
+- [Nest — Controllers](https://docs.nestjs.com/controllers#routing)
