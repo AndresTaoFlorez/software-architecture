@@ -14,4 +14,4 @@ Use this prompt **in a consuming application** when the agent does not reliably 
 
 If the agent has **no filesystem access**, supply redacted application instructions and relevant code and handbook excerpts. It can review supplied material, but cannot verify the live repository, its commit or its tests.
 
-For agents without skill discovery, you can also supply the [implementation skill](../skills/architecture-aware-implementation/SKILL.md) or [review skill](../skills/architecture-review/SKILL.md) as task instructions. This does not install the skill or grant permissions.
+For agents without skill discovery, supply the relevant template as task instructions: [Onboarding](../skills/onboarding/SKILL.md) for application implementation, [API Design](../skills/api-design/SKILL.md) for HTTP API work, or [Editorial Review](../skills/editorial-review/SKILL.md) for architectural review of an application change. This does not install the skill or grant permissions.

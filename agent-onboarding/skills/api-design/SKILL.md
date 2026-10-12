@@ -1,9 +1,9 @@
 ---
-name: http-api-engineering
+name: api-design
 description: Design, implement, extend, refactor, or review HTTP APIs when public contracts, protocol semantics, security, compatibility, or a strict REST claim matter. Use for HTTP endpoint work; GraphQL, gRPC, and WebSocket implementation need their own workflows.
 ---
 
-# HTTP API Engineering
+# API Design
 
 Use this skill in a **consuming application**. Its instructions and approved architecture decisions govern the work. The software-architecture handbook is a read-only reference: find its checkout from the application's instructions, record the commit actually read, and consult only relevant pages under `architecture/api-design/`. Do not assume NestJS, Express, Fastify, Prisma, or any other stack.
 

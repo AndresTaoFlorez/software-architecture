@@ -25,7 +25,7 @@ An **HTTP API** exposes a public contract through HTTP methods, targets, fields 
 
 Request–response waits for a reply; polling repeats requests for changes. Server push or streaming sends updates over an open interaction. Asynchronous messaging lets a sender proceed before a separate consumer finishes. An event notification says something happened; a webhook delivers a notification as an HTTP callback. The [interface chapter](interface-styles-and-events.md#choose-by-consumer-interaction) examines those consumer needs. The [resource chapter](resources-and-operations.md#rest-and-resource-meaning) explains REST's constraints and shows a state transition discovered through hypermedia.
 
-**WebSocket: Coming soon — specialized implementation support is not yet available.** This handbook can discuss WebSocket conceptually, but the [HTTP API engineering skill](../../agent-onboarding/skills/http-api-engineering/SKILL.md) does not implement WebSocket endpoints or validate persistent bidirectional connections. Applications may use WebSocket through separately designed and tested work; this limitation does not prohibit it.
+**WebSocket: Coming soon — specialized implementation support is not yet available.** This handbook can discuss WebSocket conceptually, but the [API Design skill](../../agent-onboarding/skills/api-design/SKILL.md) does not implement WebSocket endpoints or validate persistent bidirectional connections. Applications may use WebSocket through separately designed and tested work; this limitation does not prohibit it.
 
 ## The health network and its contract
 

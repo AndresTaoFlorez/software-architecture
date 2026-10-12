@@ -96,13 +96,21 @@ Inspect real application code, callers, tests and approved decisions **before** 
 
 ## Install and test optional skills
 
-The handbook uses its own [Editorial Review skill](../.agents/skills/editorial-review/SKILL.md) for documentation changes. The skills below are templates for agents working in consuming applications.
+The handbook uses its own [Editorial Review skill](../.agents/skills/editorial-review/SKILL.md) for documentation changes. The `editorial-review` template below has the same name but reviews application changes. The two definitions have separate scopes; select the file for the repository being worked on.
 
 The skill definitions follow the [Agent Skills specification](https://agentskills.io/specification):
 
-- [Architecture-aware Implementation](skills/architecture-aware-implementation/SKILL.md): implement a bounded feature or refactor without losing existing contracts.
-- [HTTP API Engineering](skills/http-api-engineering/SKILL.md): design, implement, evolve or review an HTTP API with correct protocol semantics and a strict REST check when requested.
-- [Architecture Review](skills/architecture-review/SKILL.md): review a concrete change and report actionable findings without editing it.
+- [Onboarding](skills/onboarding/SKILL.md): implement a bounded application feature or refactor without losing existing contracts. Its scope includes implementation after initial setup.
+- [API Design](skills/api-design/SKILL.md): design, implement, evolve or review an HTTP API with correct protocol semantics and a strict REST check when requested.
+- [Editorial Review](skills/editorial-review/SKILL.md): review a concrete application change for architectural correctness and report actionable findings without editing it.
+
+These template names match the agent roles. Existing copies remain independent: replace the old skill directory with the renamed directory in the consuming application and update any saved invocations or explicit paths. Use this mapping:
+
+| Previous name | Current name |
+| --- | --- |
+| `architecture-aware-implementation` | `onboarding` |
+| `http-api-engineering` | `api-design` |
+| `architecture-review` | `editorial-review` |
 
 Use the generic implementation skill for ordinary application changes, the HTTP API skill when an HTTP contract or endpoint is central to the task, and the review skill for architectural evaluation. The API skill does not turn every HTTP API into REST; it requires hypermedia when REST is claimed.
 
@@ -113,7 +121,7 @@ In a **new session**, perform two different checks:
 1. **Explicit invocation:** ask to use the named skill; confirm the agent loads the application's copied `SKILL.md` and follows it.
 2. **Task-based discovery:** describe a relevant task *without naming the skill*; check whether the agent discovers and uses it. If not, rely on explicit invocation rather than claiming automatic selection.
 
-For Codex, explicitly invoke `$architecture-aware-implementation`, `$http-api-engineering` or `$architecture-review`. For compatible assistant client, use `/architecture-aware-implementation`, `/http-api-engineering` or `/architecture-review`. Gemini CLI can list available skills with `/skills list`. Other agents may use different commands or require explicit file references.
+For Codex, explicitly invoke `$onboarding`, `$api-design` or `$editorial-review`. For clients that support skill slash commands, use `/onboarding`, `/api-design` or `/editorial-review`. Gemini CLI can list available skills with `/skills list`. Other agents may use different commands or require explicit file references.
 
 These are **manual reviewable templates**; no automatic installation or code execution occurs by copying them. If the agent lacks a skill runtime, give it the relevant SKILL.md text as task instructions, subject to its normal trust and permission boundaries.
 
