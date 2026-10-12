@@ -49,17 +49,20 @@ Consider an order screen with a **Cancel** button. The screen must show the curr
 
 In classic [MVC](../../../../GLOSSARY.md#model-view-controller-mvc), the **[Model](../../../../GLOSSARY.md#model)** represents the relevant information and behavior, the **[View](../../../../GLOSSARY.md#view)** displays it, and the **[Controller](../../../../GLOSSARY.md#controller)** interprets the user's action. In a classic interactive implementation, the displayed screen can observe changes to the represented information and redraw. This separation is called **[separated presentation](../../../../GLOSSARY.md#separated-presentation)**. It is about UI responsibilities, not a mandatory three-folder structure for an entire backend.
 
-In the diagram, follow the user's action through the Controller and Model. The dotted connection indicates that the View can be notified when the represented information changes; the diagram is a conceptual interaction, not a source-import policy.
+The diagram shows runtime interactions in the observer-based variant. Solid arrows represent input, calls and display; they do not specify source dependencies.
 
 ```mermaid
 %%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
-flowchart LR
-    USER["User"] --> CONTROLLER["Controller"]
-    CONTROLLER --> MODEL["Model"]
-    MODEL --> VIEW["View"]
-    VIEW --> USER
-    MODEL -. "change notification / observation" .-> VIEW
+flowchart TB
+    USER["User"] -->|"Cancel click"| CONTROLLER["Controller"]
+    CONTROLLER -->|"cancel(id)"| MODEL["Model"]
+    MODEL -->|"notify listeners"| VIEW["View"]
+    VIEW -->|"read state"| MODEL
+    VIEW -->|"render status"| USER
+    linkStyle 0,1,2,3,4 stroke-width:2px
 ```
+
+The Model calls registered listeners without naming a concrete View. After a notification, the View reads the current state and renders it. The Controller does not have to redraw each affected screen. [The Flow](2-the-flow.md#the-classic-cycle) shows the sequence in time.
 
 MVC does not define database architecture, application-layer [ports](../../../../GLOSSARY.md#port), deployment topology or domain boundaries. It is primarily a presentation pattern.
 
@@ -98,14 +101,14 @@ Modern React/Vue/Svelte applications can apply separated-presentation ideas with
 
 ## Mental model and roles
 
+Both View and Controller use the Model API. Dashed arrows below show these source dependencies; View/Controller wiring is omitted.
+
 ```mermaid
 %%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
-flowchart LR
-    U["User"] --> C["Controller"]
-    C --> M["Model"]
-    M --> V["View"]
-    V --> U
-    M -. "observed change" .-> V
+flowchart BT
+    V["View"] -. "uses" .-> M["Model API"]
+    C["Controller"] -. "uses" .-> M
+    linkStyle 0,1 stroke-width:1px,stroke-dasharray:6 4
 ```
 
 ### Model
