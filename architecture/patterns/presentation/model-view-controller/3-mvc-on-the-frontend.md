@@ -8,6 +8,8 @@ A React button can both display **Cancel** and handle its own click. That does n
 
 Modern component frameworks are often described using MVC/[MVVM](../../../../GLOSSARY.md#model-view-viewmodel-mvvm) vocabulary, but a framework does not choose one historical presentation pattern for the application. This page focuses on the useful distinction between rendering, interpreting user intent, and the application/model capabilities those interactions use.
 
+The [client/server comparison](README.md#mvc-across-client-and-server) distinguishes an interactive screen from a server-rendered View and a JSON API. React's own [Thinking in React](https://react.dev/learn/thinking-in-react) teaches components, props, state and one-way data flow. Calling an event handler a Controller is a design interpretation, not a React requirement.
+
 ---
 
 **Contents**

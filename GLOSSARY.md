@@ -775,7 +775,7 @@ A way to separate three jobs in an interactive screen: a Model represents releva
 
 **Example.** The Controller interprets a click, updates the Model, and the View reflects the change.
 
-**Sources.** [Fowler — GUI Architectures](https://martinfowler.com/eaaDev/uiArchs.html)
+[Client/server differences](architecture/patterns/presentation/model-view-controller/README.md#mvc-across-client-and-server). **Sources.** [Fowler — GUI Architectures](https://martinfowler.com/eaaDev/uiArchs.html) · [ASP.NET Core — MVC pattern](https://learn.microsoft.com/en-us/aspnet/core/mvc/overview?view=aspnetcore-10.0#mvc-pattern)
 
 ---
 
