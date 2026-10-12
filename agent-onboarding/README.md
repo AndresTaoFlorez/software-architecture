@@ -96,6 +96,8 @@ Inspect real application code, callers, tests and approved decisions **before** 
 
 ## Install and test optional skills
 
+The handbook uses its own [Editorial Review skill](../.agents/skills/editorial-review/SKILL.md) for documentation changes. The skills below are templates for agents working in consuming applications.
+
 The skill definitions follow the [Agent Skills specification](https://agentskills.io/specification):
 
 - [Architecture-aware Implementation](skills/architecture-aware-implementation/SKILL.md): implement a bounded feature or refactor without losing existing contracts.
