@@ -8,7 +8,18 @@ Before editing, read:
 4. [Code Placement](architecture/foundations/code-placement.md)
 5. [Guide Template](architecture/conventions/architecture-guide-template.md)
 
-For maintainer work, load the matching repository skill: [Onboarding](.agents/skills/maintainer-onboarding/SKILL.md), [API Design](.agents/skills/maintainer-api-design/SKILL.md), or [Editorial Review](.agents/skills/maintainer-editorial-review/SKILL.md). The skills in `agent-onboarding/skills` are templates for applications that consume the handbook.
+For maintainer work, load the skill for the assigned role:
+
+| Role | Responsibility | Skill |
+| --- | --- | --- |
+| `main` | Coordinate design, implementation, specialist review, validation and delivery | [Active Building](.agents/skills/active-building/SKILL.md) |
+| `onboarding` | Maintain consuming-project guidance, adapters and application-facing skill templates | [Maintainer Onboarding](.agents/skills/maintainer-onboarding/SKILL.md) |
+| `api-design` | Maintain canonical API design and engineering guidance | [Maintainer API Design](.agents/skills/maintainer-api-design/SKILL.md) |
+| `editorial-review` | Independently review editorial quality, technical accuracy and consistency | [Maintainer Editorial Review](.agents/skills/maintainer-editorial-review/SKILL.md) |
+
+`main` is the coordinating agent in the current conversation. These are four responsibilities, not four permanently running models or Git branches. For substantial coordinated design or implementation, the three specialists contribute bounded initial assessments while `main` develops the proposal. A specialist with no relevant impact reports that once. Review continues at coherent milestones, with one writer per file and independent review of the final candidate. Ordinary questions and small standalone edits do not require a team.
+
+Active Building is reusable coordination guidance; this role mapping is specific to handbook maintenance. The skills in `agent-onboarding/skills` are templates for applications that consume the handbook.
 
 **Contents**
 
