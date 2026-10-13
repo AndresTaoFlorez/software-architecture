@@ -15,7 +15,7 @@ A concrete change request, PR/diff or affected feature. Ask for essential missin
 
 1. Read the consuming application's AGENTS.md/assistant-instructions.md and relevant ADRs.
 2. Inspect relevant code, callers, tests, schemas and contracts; do not infer architecture from folder names.
-3. Confirm the handbook checkout's commit, then read its README and only the relevant topic pages. If unavailable, disclose it; if intentionally pinned behind `main`, do not describe it as the latest handbook.
+3. Compare the handbook checkout's commit with the application's recorded revision policy, then read its README and only the relevant topic pages. Disclose an unavailable or mismatched revision before relying on it; if intentionally pinned behind `main`, do not describe it as the latest handbook.
 4. Evaluate the actual change:
    - Responsibility and invariant ownership.
    - Supported module interfaces and source dependencies.

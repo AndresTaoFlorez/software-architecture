@@ -5,7 +5,7 @@ description: Design, implement, extend, refactor, or review HTTP APIs when publi
 
 # API Design
 
-Use this skill in a **consuming application**. Its instructions and approved architecture decisions govern the work. The software-architecture handbook is a read-only reference: find its checkout from the application's instructions, record the commit actually read, and consult only relevant pages under `architecture/api-design/`. Do not assume NestJS, Express, Fastify, Prisma, or any other stack.
+Use this skill in a **consuming application**. Its instructions and approved architecture decisions govern the work. The software-architecture handbook is a read-only reference: find its checkout from the application's instructions, compare its commit with the recorded revision policy, then read the handbook README and relevant pages under `architecture/api-design/`. Report an inaccessible or mismatched revision before relying on it. Do not assume NestJS, Express, Fastify, Prisma, or any other stack.
 
 ## Understand the operation
 
