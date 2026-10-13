@@ -11,7 +11,7 @@ This skill runs in a **consuming application**. The handbook is a read-only desi
 
 1. State the requested observable behavior and how to verify it. Identify callers, public contracts, data migrations and failure cases.
 2. Read the relevant implementation, tests and application instructions. Do not infer ownership from a folder name alone.
-3. Confirm the handbook checkout is accessible and record the exact commit read. Consult its README and only the pages needed for the change. If unavailable, state that.
+3. Confirm the handbook checkout is accessible and compare its commit with the application's recorded revision policy. Consult its README and only the pages needed for the change. If the source is unavailable or the revision differs, report that before relying on it.
 4. Distinguish framework requirements, standards, application decisions and handbook recommendations. Preserve accepted design decisions unless the task authorizes changing them.
 5. Choose the smallest complete change. Describe affected files, responsibilities, dependencies and any compatibility risks. Avoid introducing speculative abstractions.
 

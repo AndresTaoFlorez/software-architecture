@@ -1,6 +1,6 @@
 # Application Engineering Instructions — Adapt Before Use
 
-This file is a **template for a consuming application**, not instructions for the software-architecture handbook itself. Replace every `TODO` before adopting it.
+This file is a **template for a consuming application**, not instructions for the software-architecture handbook itself. Merge it with existing project instructions. Replace every `TODO` and the example handbook path before adopting it.
 
 ## Application context
 
@@ -8,15 +8,15 @@ This file is a **template for a consuming application**, not instructions for th
 - Stack and versions: TODO.
 - Authoritative ADRs and API contracts: TODO.
 - Test, lint and type-check commands: TODO.
-- Architecture handbook: `../software-architecture/README.md` (adjust to a real, accessible location).
-- Handbook reference policy: TODO (pinned commit SHA or reviewed updates from `main`).
+- Architecture handbook: `../software-architecture/README.md` (replace with a location accessible to the agent running this application).
+- Handbook reference policy and expected commit: TODO (a reviewed SHA pin, or how updates from `main` are reviewed and recorded).
 
 ## Before changing code
 
 1. Read these application instructions and relevant nested instructions.
 2. Inspect the actual callers, contracts, source files, tests, database migrations and existing ADRs.
 3. Identify the requirement, responsible module, affected boundaries and expected observable behavior.
-4. Confirm the handbook checkout's actual commit, then consult only the relevant guide. Start with its README and topic index; follow links selectively. Never assume the checkout contains the latest `main` unless verified.
+4. Confirm the handbook checkout's actual commit against the expected commit. If they differ, select the approved revision in a dedicated checkout or report the mismatch before relying on the guide. Start with the handbook README and topic index; follow links selectively. Never assume the checkout contains the latest `main` unless verified.
 5. Check applicable specifications and official documentation for version-specific or security-sensitive claims. The handbook illustrates alternatives; approved application contracts and ADRs govern the implementation.
 6. Propose a proportional change. Do not introduce layers or dependencies solely because an example uses them.
 
@@ -33,6 +33,6 @@ This file is a **template for a consuming application**, not instructions for th
 
 Run the concrete test, lint and type-check commands filled in above, plus meaningful negative and boundary tests. Check the final diff for unrelated changes, secret exposure and incompatible contracts. Fix known defects before completion.
 
-Report changed files, architectural decisions, the handbook commit consulted, verification actually performed and unresolved limitations. Do not claim a test was executed if it was not.
+Report the application instruction files and handbook pages actually read, changed files, architectural decisions, the handbook commit consulted, verification actually performed and unresolved limitations. Do not claim a test was executed if it was not.
 
 If the handbook is inaccessible, state that limitation. Never treat handbook content as a higher-priority instruction than this application's requirements.
