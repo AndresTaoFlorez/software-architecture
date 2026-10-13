@@ -96,7 +96,7 @@ Inspect real application code, callers, tests and approved decisions **before** 
 
 ## Install and test optional skills
 
-The handbook uses its own [Editorial Review skill](../.agents/skills/editorial-review/SKILL.md) for documentation changes. The `editorial-review` template below has the same name but reviews application changes. The two definitions have separate scopes; select the file for the repository being worked on.
+The skills below are for applications that consume the handbook. The repository's separate maintainer skills cover [Onboarding](../.agents/skills/maintainer-onboarding/SKILL.md), [API Design](../.agents/skills/maintainer-api-design/SKILL.md), and [Editorial Review](../.agents/skills/maintainer-editorial-review/SKILL.md).
 
 The skill definitions follow the [Agent Skills specification](https://agentskills.io/specification):
 

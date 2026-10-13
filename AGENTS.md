@@ -8,6 +8,8 @@ Before editing, read:
 4. [Code Placement](architecture/foundations/code-placement.md)
 5. [Guide Template](architecture/conventions/architecture-guide-template.md)
 
+For maintainer work, load the matching repository skill: [Onboarding](.agents/skills/maintainer-onboarding/SKILL.md), [API Design](.agents/skills/maintainer-api-design/SKILL.md), or [Editorial Review](.agents/skills/maintainer-editorial-review/SKILL.md). The skills in `agent-onboarding/skills` are templates for applications that consume the handbook.
+
 **Contents**
 
 - [Editorial rules](#editorial-rules)
