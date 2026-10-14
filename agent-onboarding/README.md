@@ -109,7 +109,7 @@ Inspect real application code, callers, tests and approved decisions **before** 
 
 ## Install and test optional skills
 
-The skills below are for applications that consume the handbook. The repository's separate maintainer skills cover [Onboarding](../.agents/skills/maintainer-onboarding/SKILL.md), [API Design](../.agents/skills/maintainer-api-design/SKILL.md), and [Editorial Review](../.agents/skills/maintainer-editorial-review/SKILL.md).
+The skills below are for applications that consume the handbook.
 
 The skill definitions follow the [Agent Skills specification](https://agentskills.io/specification):
 
