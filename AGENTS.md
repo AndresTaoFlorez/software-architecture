@@ -66,3 +66,9 @@ Before editing, read:
 ## Documentation-only repository
 
 Do not add package managers, test runners, build scripts, generated-document tooling or mirrored complete examples. The handbook contains illustrative source code, not a runnable project.
+
+## Progress publication
+
+GitHub is the source of truth for task progress. For every coherent, persistent change, run the relevant checks, commit it, and push it to the active task PR branch before starting another change. Do not accumulate unpublished local changes across stages or wait until the entire task is finished. Temporary diagnostics may remain outside the repository; version any relevant findings, verified results, or decisions that are part of the deliverable. At the end of each stage, report the published commit SHA and PR link. If a stage made no persistent change, say so and do not create an empty commit. A stage is not complete until its deliverable commit is present on GitHub.
+
+The coordinator must independently verify that each specialist's claimed change is committed and pushed to the intended PR branch, and inspect the published commit or PR diff; a progress report alone is not evidence of publication. User authorization to implement includes committing and pushing within the active PR's scope, but never authorizes merging. Do not force-push, rewrite history, or publish outside the authorized branch; stop and report a concrete blocker if safe publication is not possible.
