@@ -12,7 +12,8 @@ An application task starts with the application's own instructions. The remainin
 - [Agent-specific connections](#agent-specific-connections)
 - [Use a known handbook revision](#use-a-known-handbook-revision)
 - [Select the relevant material](#select-the-relevant-material)
-- [Use and test the available skill](#install-and-test-optional-skills)
+- [Use and test the available skill](#use-and-test-the-available-skill)
+- [Proposed public skills](#proposed-public-skills)
 - [Fallback for any other agent](#fallback-for-any-other-agent)
 
 ## Follow this sequence for an application task
