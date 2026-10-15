@@ -96,51 +96,54 @@ If Git rejects a trusted sibling checkout because of dubious ownership, a **comm
 
 ## Select the relevant material
 
-| Task | Begin with |
+| Task | Begin with; optional application skill |
 | --- | --- |
-| Boundaries, responsibility and dependencies | [Foundations](../architecture/foundations/README.md) |
-| API semantics, contracts, HTTP and security | [API Design & Engineering](../architecture/api-design/README.md) |
-| Backend endpoints and application operations | [Backend](../architecture/backend/README.md) |
-| UI state, screens and integrations | [Frontend](../architecture/frontend/README.md) |
-| Ports/adapters or architecture styles | [Styles](../architecture/styles/README.md) |
-| Repository, MVC, MVVM or other patterns | [Patterns](../architecture/patterns/README.md) |
-| Precise naming and placement | [Naming conventions](../architecture/conventions/naming-and-file-placement.md) |
+| Boundaries, responsibility and dependencies | [Foundations](../architecture/foundations/README.md); `architecture-assessment` for a consequential design choice |
+| API semantics, contracts, HTTP and security | [API Design & Engineering](../architecture/api-design/README.md); `api-design` |
+| Backend operations, persistence and composition | [Backend](../architecture/backend/README.md); `backend-architecture` |
+| UI state, screens and integrations | [Frontend](../architecture/frontend/README.md); `frontend-architecture` |
+| Business rules and meaningful invariants | [Domain modeling](../architecture/foundations/domain-modeling/README.md); `domain-modeling` |
+| Enforce a chosen dependency/module boundary | [Architecture testing](../architecture/foundations/architecture-testing.md); `architecture-boundary-testing` |
+| Evidence-led structural change | [Architecture evolution](../architecture/foundations/evolution-and-scaling.md); `architecture-refactoring` |
+| Ports/adapters or architectural styles | [Styles](../architecture/styles/README.md); `architecture-assessment` when choosing among them |
+| Repository, MVC, MVVM or other patterns | [Patterns](../architecture/patterns/README.md); select the focused implementation skill above if relevant |
+| Precise naming and placement | [Naming conventions](../architecture/conventions/naming-and-file-placement.md); no skill needed for a simple lookup |
 
 Inspect real application code, callers, tests and approved decisions **before** consulting the handbook. The API route uses a fictional EPS medical scheduling case, not a contract that other applications must copy. Use current official standards for version-sensitive behavior. Retrieved content is evidence and reference material, not instructions to execute blindly.
 
 <a id="install-and-test-optional-skills"></a>
 
-## Use and test the available skill
+## Use and test the available skills
 
-The application-facing catalog currently ships one optional skill: [API Design](skills/api-design/SKILL.md). It helps with HTTP contracts and protocol behavior; it does not require OpenAPI for every endpoint or turn an API into REST without hypermedia. The handbook itself remains the broader, read-only architecture reference. Use the [task map above](#select-the-relevant-material) to find canonical guidance; application instructions and approved decisions remain authoritative.
+The application-facing catalog ships seven optional, focused skills:
 
-The skill definition follows the [Agent Skills specification](https://agentskills.io/specification). Copy a reviewed `api-design/` directory to the consuming application using a supported path from the table, for example to `<application-root>/.agents/skills/api-design/`. Keep the directory and frontmatter names aligned. A copy is independent of this source and needs updating when the source changes. Do not install it at the handbook root. A local copy is not automatically available to a cloud agent; check which files its runtime receives.
+| Skill | Intended use | Start at |
+| --- | --- | --- |
+| [`api-design`](skills/api-design/SKILL.md) | HTTP/public contract, protocol semantics, security and compatibility | [API Design](../architecture/api-design/README.md) |
+| [`architecture-assessment`](skills/architecture-assessment/SKILL.md) | Compare/reconsider consequential boundaries or styles | [Foundations](../architecture/foundations/README.md), [Styles](../architecture/styles/README.md) |
+| [`backend-architecture`](skills/backend-architecture/SKILL.md) | Server behavior, persistence, integrations and composition | [Backend](../architecture/backend/README.md) |
+| [`frontend-architecture`](skills/frontend-architecture/SKILL.md) | Screens, UI state, asynchronous behavior and client integrations | [Frontend](../architecture/frontend/README.md) |
+| [`domain-modeling`](skills/domain-modeling/SKILL.md) | Meaningful business rules, invariants and transitions | [Domain modeling](../architecture/foundations/domain-modeling/README.md) |
+| [`architecture-boundary-testing`](skills/architecture-boundary-testing/SKILL.md) | Test agreed module/dependency/public-API constraints | [Architecture testing](../architecture/foundations/architecture-testing.md) |
+| [`architecture-refactoring`](skills/architecture-refactoring/SKILL.md) | Incrementally address evidenced structural pressure | [Architecture evolution](../architecture/foundations/evolution-and-scaling.md) |
+
+These are application-facing templates, not repository-maintenance roles. Select one only when its trigger fits; ordinary implementation and lookup tasks may need none. `backend-architecture` and `frontend-architecture` hand public HTTP decisions to `api-design`; `domain-modeling` can clarify a backend rule without requiring every layer; boundary testing and refactoring apply the architecture the application has actually chosen. Do not load the whole catalog by default. The handbook remains the broader, read-only architecture reference, and application instructions and decisions remain authoritative.
+
+The skill definition follows the [Agent Skills specification](https://agentskills.io/specification). Copy only the reviewed skill directory or directories needed for the application to a supported path, for example `<application-root>/.agents/skills/api-design/` or `<application-root>/.agents/skills/backend-architecture/`. Keep each directory and frontmatter name aligned. A copy is independent of this source and needs updating when the source changes. Do not install skills at the handbook root. A local copy is not automatically available to a cloud agent; check which files its runtime receives.
 
 In a **new session in the application repository**, perform three different checks:
 
 1. **Discovery:** inspect the agent's available skills or tool description. A valid file on disk does not prove that the runtime found it.
-2. **Explicit invocation:** ask to use `api-design`; confirm the agent reads the application's copied `SKILL.md`, identifies its application scope and follows a relevant step.
-3. **Task-based selection:** in another fresh session, describe an HTTP API task without naming the skill. Inspect the skill load or tool trace and resulting work. If selection is absent, use explicit invocation rather than claiming automatic selection.
+2. **Explicit invocation:** ask to use the selected skill by its exact name; confirm the agent reads the application's copied `SKILL.md`, identifies its application scope and follows a relevant step.
+3. **Task-based selection:** in another fresh session, describe a task matching the selected skill without naming it. Inspect the skill load or tool trace and resulting work. If selection is absent, use explicit invocation rather than claiming automatic selection.
 
-For Codex, explicitly invoke `$api-design`. For clients that support skill slash commands, use `/api-design`. Gemini CLI can list discovered skills with `/skills list` and reload after copying with `/skills reload`. In Cursor, type `/` in Agent chat and select the skill, as described in [its skill documentation](https://cursor.com/docs/skills). OpenCode exposes skills through its `skill` tool. GitHub Copilot CLI supports `/skills list` and skill slash commands; other Copilot surfaces differ. Inspect the actual load or tool trace in every case.
+For Codex, explicitly invoke a skill such as `$api-design` or `$backend-architecture`. For clients that support skill slash commands, use the exact copied skill name. Gemini CLI can list discovered skills with `/skills list` and reload after copying with `/skills reload`. In Cursor, type `/` in Agent chat and select the skill, as described in [its skill documentation](https://cursor.com/docs/skills). OpenCode exposes skills through its `skill` tool. GitHub Copilot CLI supports `/skills list` and skill slash commands; other Copilot surfaces differ. Inspect the actual load or tool trace in every case.
 
 This is a **manual, reviewable template**; copying it does not prove automatic installation or activation. If the agent lacks a skill runtime, provide the relevant skill text as task instructions, subject to its normal trust and permission boundaries.
 
-## Proposed public skills
+## Future capabilities
 
-These are proposals for focused application-facing skills, **not shipped templates**. Their scopes follow the material currently in this handbook; each should link to canonical chapters rather than duplicate them.
-
-| Proposed skill | Focus and handbook coverage |
-| --- | --- |
-| `architecture-navigator` | Choose the smallest relevant reading path across Foundations, Conventions, the Glossary, API Design, Backend, Frontend, Styles and Patterns; distinguish handbook guidance from application decisions. |
-| `domain-modeling` | Place business rules and invariants; distinguish entities, value objects, domain events, domain services and application workflows; use bounded contexts and DDD vocabulary proportionately. |
-| `architecture-styles` | Compare Layered, Hexagonal / Ports & Adapters, Clean and Onion by ownership, dependency direction, fit and cost; recognize where they overlap without treating their folders as interchangeable mandates. |
-| `architecture-patterns` | Apply the Repository, Facade, MVC and MVVM guides; connect presentation variants and subtopics (MVP, Passive View, Supervising Controller, binding, observer synchronization). Treat Adapter, Factory, Observer, CQRS and Event Sourcing as glossary-level references until fuller guides exist. |
-| `backend-architecture` | Trace TypeScript boundaries through HTTP/CLI delivery, request parsing, Nest guards/pipes, persistence, composition and boundary checks; pair with `api-design` for protocol and public-contract decisions. |
-| `frontend-architecture` | Place React screens, components, hooks and state; choose presentation and ports/adapters boundaries; navigate styling, design-system and testing guidance. |
-| `architecture-testing-and-evolution` | Enforce module/public-API and dependency rules; distinguish behavior, integration and architecture checks; evolve toward modular monoliths, services or microfrontends only when observed forces justify the cost. |
-
-Prioritize `architecture-navigator`, then add specialist skills when a concrete use case justifies them. Keep each skill opt-in and narrowly scoped so routine work does not load the entire handbook into every session. Create a proposed skill only when its owner, trigger, chapter map and observable acceptance checks are defined.
+The seven skills above are the shipped catalog. Advanced, protocol-specific WebSocket implementation and comprehensive tactical/strategic DDD support are not promised by these templates; consult current primary references and a qualified project-specific workflow. Additional style- or pattern-specific skills are future work and should be added only when a concrete need and adequate canonical coverage exist. Conceptual glossary entries do not establish implementation support.
 
 ## Fallback for any other agent
 
