@@ -7,6 +7,8 @@ Read [Resources and Operations](resources-and-operations.md) and [Code Placement
 **Contents**
 
 - [Describe the agreement](#describe-the-agreement)
+  - [Read the physician operation](#read-the-physician-operation)
+  - [Require a booking body](#require-a-booking-body)
 - [Validate at the boundary](#validate-at-the-boundary)
 - [Trace one booking](#trace-one-booking)
 - [Place the files](#place-the-files)
@@ -14,9 +16,11 @@ Read [Resources and Operations](resources-and-operations.md) and [Code Placement
 
 ## Describe the agreement
 
-An API contract states the target and method, authentication, accepted fields, response representations, errors and change policy. **Contract-first** starts by reviewing that observable behavior with consumers, then implements it. **Code-first** derives a description from implemented route declarations and types. Either can work if review, runtime checks and published documentation stay in agreement. Contract-first helps when clients and servers are developed independently; code-first can be efficient for a small internal API with tight ownership. Generated output is evidence of what annotations say, not proof that the handler enforces them.
+An [API contract](../../GLOSSARY.md#api-contract) states the target and method, authentication, accepted fields, response representations, errors and change policy. **Contract-first** starts by reviewing that observable behavior with consumers, then implements it. **Code-first** derives a description from implemented route declarations and types. Either can work if review, runtime checks and published documentation stay in agreement. Contract-first helps when clients and servers are developed independently; code-first can be efficient for a small internal API with tight ownership. Generated output is evidence of what annotations say, not proof that the handler enforces them.
 
-[OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.2.html) is a machine-readable description format for HTTP APIs. This complete small description covers one physician read operation; a production contract would add the remaining paths, responses and reusable schemas. The `openapi` value selects the 3.1 family, whose Schema Objects use the OpenAPI JSON Schema dialect based on [JSON Schema Draft 2020-12](https://json-schema.org/draft/2020-12). Schema syntax checks shapes; it cannot decide whether a physician belongs to the caller's organization. A `format` such as `date-time` needs deliberate validator configuration because JSON Schema treats format primarily as an annotation by default.
+### Read the physician operation
+
+The client needs a physician's identity and display name. [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.2.html) gives tools a machine-readable description of that HTTP operation. This small document covers one physician read; a production contract would add the remaining paths and full response coverage.
 
 ```yaml
 openapi: 3.1.0
@@ -55,7 +59,51 @@ components:
       scheme: bearer
 ```
 
-The description is a contract artifact, not a framework configuration. It does not choose how the bearer token is verified, how tenant membership is resolved or where data is stored. A generated client can provide typed calls for `getPhysician`, but its types cannot validate an untrusted response at runtime. Generated SDKs also couple consumers to generator versions and may require regeneration for contract changes; publish a stable SDK only when maintenance and release ownership are clear.
+`openapi: 3.1.0` identifies the specification version used to interpret the document. `info.version: 1.0.0` versions the document, not the OAS specification or necessarily the API itself. The `/v1` path is this EPS API's public versioning choice. Changing one does not update the others. This example deliberately stays in the 3.1 family; adopting a newer OAS version needs a reason and verified support from the tools and consumers that use the description.
+
+Read the operation from the target to its outcomes:
+
+1. `/v1/physicians/{physicianId}` and `get` describe the target and HTTP method. `operationId: getPhysician` names the operation for tools, not necessarily a server function. If supplied, an operation ID must be unique within the API.
+2. `name: physicianId` with `in: path` describes the placeholder. OpenAPI requires path parameters to have `required: true`; its schema says the value is a string. This GET describes no request body.
+3. `responses` maps status codes to outcomes. The `'200'` entry describes an `application/json` response whose object must contain string fields `id` and `displayName`. The `'404'` entry describes the absence of a visible physician, but does not specify an error body. A production description should cover success and known errors, including authentication and authorization failures, rather than assume these two entries cover every outcome.
+4. `components.securitySchemes` defines the bearer mechanism; the operation's `security` entry applies it. `bearerAuth: []` requires that scheme without listing additional roles. This empty array does not allow anonymous access.
+
+The description is a contract artifact, not a framework configuration. It does not choose how the bearer token is verified, how [tenant membership and object permission](security-and-tenancy.md#identity-and-permission) are checked or where data is stored. A generated client can provide typed calls for `getPhysician`, but its types cannot validate an untrusted response at runtime. Generated SDKs also couple consumers to generator versions and may require regeneration for contract changes; publish a stable SDK only when maintenance and release ownership are clear.
+
+### Require a booking body
+
+The [appointment creation request](resources-and-operations.md#create-and-change-appointments) sends five fields as JSON. Unlike the physician GET, `POST /v1/appointments` needs a body. This JSON fragment shows its `requestBody` entry within an Operation Object, using the same OAS 3.1 syntax; it is not a complete document:
+
+```json
+{
+  "requestBody": {
+    "required": true,
+    "content": {
+      "application/json": {
+        "schema": {
+          "type": "object",
+          "required": ["physicianId", "patientId", "siteId", "startsAt", "endsAt"],
+          "properties": {
+            "physicianId": { "type": "string" },
+            "patientId": { "type": "string" },
+            "siteId": { "type": "string" },
+            "startsAt": { "type": "string", "format": "date-time" },
+            "endsAt": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+`requestBody.required: true` requires the body itself. If that `required` field is omitted, the body is optional. The schema's `required` array instead lists members that must be present in the supplied object. Declaring `properties` alone does not require those members. A missing body and a body missing `startsAt` therefore fail different requirements. These are EPS input choices expressed through OAS, not requirements that HTTP imposes on every POST.
+
+The 3.1 Schema Object uses the OpenAPI JSON Schema dialect based on [JSON Schema Draft 2020-12](https://json-schema.org/draft/2020-12). Here, `type: string` excludes a numeric or null timestamp. `format: date-time` identifies the expected notation, but format checking depends on validator support and configuration because format is an annotation by default. Check an invalid timestamp explicitly. This schema does not reject blank IDs, decide patient affiliation or enforce interval order and non-overlap; the [boundary and business checks below](#validate-at-the-boundary) remain necessary.
+
+The request's `content.application/json` describes its media type; HTTP `Content-Type` identifies the content actually sent. Response `content` entries describe response media types, while the client's `Accept` expresses its preferences. OpenAPI ignores ordinary header parameter definitions for `Content-Type`, `Accept` and `Authorization`; use `content` and security declarations instead.
+
+For this EPS create operation, describe `'201'` with its `Location` response header and `application/json` appointment representation. Known failures include `'400'` for malformed input or an invalid timestamp, `'409'` for a booking conflict and `'422'` for an invalid interval, with the organization's [problem representations](resources-and-operations.md#error-contract) under `application/problem+json`. Those meanings come from the EPS contract and HTTP semantics, not from adding entries to `responses`. Description and schema checks must be complemented by tests of actual status, headers, media type, body and access decisions.
 
 ## Validate at the boundary
 

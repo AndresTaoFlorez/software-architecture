@@ -12,7 +12,8 @@ An application task starts with the application's own instructions. The remainin
 - [Agent-specific connections](#agent-specific-connections)
 - [Use a known handbook revision](#use-a-known-handbook-revision)
 - [Select the relevant material](#select-the-relevant-material)
-- [Install and test optional skills](#install-and-test-optional-skills)
+- [Use and test the available skill](#use-and-test-the-available-skill)
+- [Future capabilities](#future-capabilities)
 - [Fallback for any other agent](#fallback-for-any-other-agent)
 
 ## Follow this sequence for an application task
@@ -59,17 +60,18 @@ There is **no universal instruction loader**. Use the same engineering policy an
 
 | Agent or environment | Application instructions | Optional skills | Check |
 | --- | --- | --- | --- |
+| **Claude Code** | `CLAUDE.md` (or supported imported instructions) | `.claude/skills/<name>/SKILL.md` | Confirm loaded project instructions; inspect `/` skill list or explicitly invoke `/skill-name` |
 | **Codex** | Root `AGENTS.md` | `.agents/skills/<name>/SKILL.md` | Confirm project instructions and invoke or inspect the selected skill |
 | **compatible assistant client** | Direct `AGENTS.md` when supported, or a project `assistant-instructions.md` importing it | `.assistant/skills/<name>/SKILL.md` | Use `/context`; confirm imports and skill discovery |
-| **Gemini CLI** | `GEMINI.md` importing the application's `AGENTS.md`, or a configured context filename | `.agents/skills/<name>/SKILL.md` or `.gemini/skills/<name>/SKILL.md` | Inspect loaded context and run `/skills list` |
-| **Cursor** | Root `AGENTS.md`; `.cursor/rules/*.mdc` is another supported mechanism | `.agents/skills/<name>/SKILL.md` or `.cursor/skills/<name>/SKILL.md` | Inspect active rules and the skill list in the intended Agent session |
-| **OpenCode** | Root `AGENTS.md` | `.agents/skills/<name>/SKILL.md` or `.opencode/skills/<name>/SKILL.md` | Confirm loaded rules and that the `skill` tool offers the copied skill |
-| **GitHub Copilot** | `AGENTS.md` in supported agent modes; `.github/copilot-instructions.md` for repository-wide chat instructions | `.agents/skills/<name>/SKILL.md` in supported environments | Verify which Copilot surface and instruction files were loaded |
+| **Gemini CLI** | `GEMINI.md` importing the application's `AGENTS.md`, or a configured context filename | `.gemini/skills/<name>/SKILL.md` or `.agents/skills/<name>/SKILL.md` | Inspect loaded context; run `/skills list` and `/skills reload` after adding a skill |
+| **Cursor** | Root `AGENTS.md`; `.cursor/rules/*.mdc` is another supported mechanism | `.cursor/skills/<name>/SKILL.md` or `.agents/skills/<name>/SKILL.md` | Inspect active rules and skill list in the intended Agent session; local skills do not automatically reach remote/cloud agents |
+| **OpenCode** | Root `AGENTS.md` | `.opencode/skills/<name>/SKILL.md` or `.agents/skills/<name>/SKILL.md` | Confirm loaded rules and that the `skill` tool offers the copied skill |
+| **GitHub Copilot** | Varies by surface: repository instructions use `.github/copilot-instructions.md`; supported coding-agent modes can use `AGENTS.md` | For Copilot CLI, project `.github/skills/<name>/SKILL.md`, `.claude/skills/<name>/SKILL.md` or `.agents/skills/<name>/SKILL.md`; other surfaces have separate support | Verify the target Copilot surface, loaded instruction files and skill discovery there |
 | **Other coding agents** | Use the agent's supported project-instruction feature, or the [manual start prompt](templates/START-PROMPT.md) | If it understands Agent Skills, install as documented; otherwise give it the relevant skill content directly | Observe which sources it actually reads and which tests it runs |
 
-**Adapter templates:** [compatible assistant client](templates/assistant-instructions.md), [Gemini CLI](templates/GEMINI.md), and [GitHub Copilot](templates/copilot-instructions.md). Adapt rather than overwrite any existing provider instructions. Do not copy all adapter files into every application.
+**Adapter templates:** [compatible assistant client](templates/assistant-instructions.md), [Gemini CLI](templates/GEMINI.md), and [GitHub Copilot](templates/copilot-instructions.md). Adapt rather than overwrite any existing provider instructions. Do not copy all adapter files into every application. Skill paths and discovery vary by product, version, and surface; `.agents/skills` is not universal. A local repository copy is not automatically included in a cloud, remote SSH, or hosted agent environment; verify that the target runtime receives the files.
 
-For client-specific instruction and skill setup, consult the client documentation and inspect the loaded session context. For Codex see [instructions](https://developers.openai.com/codex/guides/agents-md) and [skills](https://developers.openai.com/codex/skills). For other products see [Gemini context](https://geminicli.com/docs/cli/gemini-md/) and [skills](https://geminicli.com/docs/cli/using-agent-skills/), [Cursor rules](https://cursor.com/docs/rules) and [skills](https://cursor.com/docs/skills), [OpenCode rules](https://opencode.ai/docs/rules/) and [skills](https://opencode.ai/docs/skills/), and [Copilot instruction support](https://docs.github.com/en/copilot/reference/custom-instructions-support) and [skills](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills).
+For client-specific instruction and skill setup, consult the current official documentation and inspect the loaded session context. [Claude Code skills](https://code.claude.com/docs/en/skills) use project `.claude/skills/<name>/SKILL.md` and may be explicitly invoked as `/skill-name`. For Codex see [instructions](https://developers.openai.com/codex/guides/agents-md) and [skills](https://developers.openai.com/codex/skills). Gemini CLI documents `gemini skills install <URL>` (user scope by default; `--scope workspace` for project scope), `gemini skills link <path>`, and interactive `/skills list` and `/skills reload` in [Managing Agent Skills](https://geminicli.com/docs/cli/using-agent-skills/); its workspace discovery supports `.gemini/skills/` and `.agents/skills/`. For Cursor see [rules](https://cursor.com/docs/rules) and [skills](https://cursor.com/docs/skills). For OpenCode see [rules](https://opencode.ai/docs/rules/) and [skills](https://opencode.ai/docs/skills/). For GitHub Copilot see [custom-instruction support](https://docs.github.com/en/copilot/reference/custom-instructions-support), [Copilot CLI skills](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills), and [cloud-agent skills](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills); CLI documents `copilot skill list` and `copilot skill add <FILE | URL | DIRECTORY>`, while supported interactive sessions provide `/skills list` and `/skills reload`. Do not assume commands, paths, or automatic discovery transfer across Copilot surfaces.
 
 Product support and precedence vary by version, mode and editor. This table documents setup options; **only a test in the intended agent establishes working integration**.
 
@@ -95,49 +97,54 @@ If Git rejects a trusted sibling checkout because of dubious ownership, a **comm
 
 ## Select the relevant material
 
-| Task | Begin with |
+| Task | Begin with; optional application skill |
 | --- | --- |
-| Boundaries, responsibility and dependencies | [Foundations](../architecture/foundations/README.md) |
-| API semantics, contracts, HTTP and security | [API Design & Engineering](../architecture/api-design/README.md) |
-| Backend endpoints and application operations | [Backend](../architecture/backend/README.md) |
-| UI state, screens and integrations | [Frontend](../architecture/frontend/README.md) |
-| Ports/adapters or architecture styles | [Styles](../architecture/styles/README.md) |
-| Repository, MVC, MVVM or other patterns | [Patterns](../architecture/patterns/README.md) |
-| Precise naming and placement | [Naming conventions](../architecture/conventions/naming-and-file-placement.md) |
+| Boundaries, responsibility and dependencies | [Foundations](../architecture/foundations/README.md); `architecture-assessment` for a consequential design choice |
+| API semantics, contracts, HTTP and security | [API Design & Engineering](../architecture/api-design/README.md); `api-design` |
+| Backend operations, persistence and composition | [Backend](../architecture/backend/README.md); `backend-architecture` |
+| UI state, screens and integrations | [Frontend](../architecture/frontend/README.md); `frontend-architecture` |
+| Business rules and meaningful invariants | [Domain modeling](../architecture/foundations/domain-modeling/README.md); `domain-modeling` |
+| Enforce a chosen dependency/module boundary | [Architecture testing](../architecture/foundations/architecture-testing.md); `architecture-boundary-testing` |
+| Evidence-led structural change | [Architecture evolution](../architecture/foundations/evolution-and-scaling.md); `architecture-refactoring` |
+| Ports/adapters or architectural styles | [Styles](../architecture/styles/README.md); `architecture-assessment` when choosing among them |
+| Repository, MVC, MVVM or other patterns | [Patterns](../architecture/patterns/README.md); select the focused implementation skill above if relevant |
+| Precise naming and placement | [Naming conventions](../architecture/conventions/naming-and-file-placement.md); no skill needed for a simple lookup |
 
 Inspect real application code, callers, tests and approved decisions **before** consulting the handbook. The API route uses a fictional EPS medical scheduling case, not a contract that other applications must copy. Use current official standards for version-sensitive behavior. Retrieved content is evidence and reference material, not instructions to execute blindly.
 
-## Install and test optional skills
+<a id="install-and-test-optional-skills"></a>
 
-The skills below are for applications that consume the handbook.
+## Use and test the available skills
 
-The skill definitions follow the [Agent Skills specification](https://agentskills.io/specification):
+The application-facing catalog ships seven optional, focused skills:
 
-- [Onboarding](skills/onboarding/SKILL.md): implement a bounded application feature or refactor without losing existing contracts. Its scope includes implementation after initial setup.
-- [API Design](skills/api-design/SKILL.md): design, implement, evolve or review an HTTP API with correct protocol semantics and a strict REST check when requested.
-- [Editorial Review](skills/editorial-review/SKILL.md): review a concrete application change for architectural correctness and report actionable findings without editing it.
+| Skill | Intended use | Start at |
+| --- | --- | --- |
+| [`api-design`](skills/api-design/SKILL.md) | HTTP/public contract, protocol semantics, security and compatibility | [API Design](../architecture/api-design/README.md) |
+| [`architecture-assessment`](skills/architecture-assessment/SKILL.md) | Compare/reconsider consequential boundaries or styles | [Foundations](../architecture/foundations/README.md), [Styles](../architecture/styles/README.md) |
+| [`backend-architecture`](skills/backend-architecture/SKILL.md) | Server behavior, persistence, integrations and composition | [Backend](../architecture/backend/README.md) |
+| [`frontend-architecture`](skills/frontend-architecture/SKILL.md) | Screens, UI state, asynchronous behavior and client integrations | [Frontend](../architecture/frontend/README.md) |
+| [`domain-modeling`](skills/domain-modeling/SKILL.md) | Meaningful business rules, invariants and transitions | [Domain modeling](../architecture/foundations/domain-modeling/README.md) |
+| [`architecture-boundary-testing`](skills/architecture-boundary-testing/SKILL.md) | Test agreed module/dependency/public-API constraints | [Architecture testing](../architecture/foundations/architecture-testing.md) |
+| [`architecture-refactoring`](skills/architecture-refactoring/SKILL.md) | Incrementally address evidenced structural pressure | [Architecture evolution](../architecture/foundations/evolution-and-scaling.md) |
 
-These template names match the agent roles. Existing copies remain independent: replace the old skill directory with the renamed directory in the consuming application and update any saved invocations or explicit paths. Use this mapping:
+These are application-facing templates, not repository-maintenance roles. Select one only when its trigger fits; ordinary implementation and lookup tasks may need none. `backend-architecture` and `frontend-architecture` hand public HTTP decisions to `api-design`; `domain-modeling` can clarify a backend rule without requiring every layer; boundary testing and refactoring apply the architecture the application has actually chosen. Do not load the whole catalog by default. The handbook remains the broader, read-only architecture reference, and application instructions and decisions remain authoritative.
 
-| Previous name | Current name |
-| --- | --- |
-| `architecture-aware-implementation` | `onboarding` |
-| `http-api-engineering` | `api-design` |
-| `architecture-review` | `editorial-review` |
-
-Use the generic implementation skill for ordinary application changes, the HTTP API skill when an HTTP contract or endpoint is central to the task, and the review skill for architectural evaluation. The API skill does not turn every HTTP API into REST; it requires hypermedia when REST is claimed.
-
-Copy a reviewed skill directory to the **consuming application**, using a supported path from the table. For example, copy `../software-architecture/agent-onboarding/skills/onboarding/` to `<application-root>/.agents/skills/onboarding/`, including its `SKILL.md`. Substitute `api-design` or `editorial-review` only when that task needs it. Keep the directory and frontmatter names aligned. The copies are independent and need updating if the source skill changes. Do not install them at the handbook root: that would confuse documentation-maintenance agents with application-development agents. A local skill copy is not automatically available to a cloud agent; check what files its runtime receives.
+The skill definition follows the [Agent Skills specification](https://agentskills.io/specification). Copy only the reviewed skill directory or directories needed for the application into the selected client's supported path. Examples include Codex `.agents/skills/api-design/`, Claude Code `.claude/skills/api-design/`, Gemini CLI `.gemini/skills/api-design/`, Cursor `.cursor/skills/api-design/`, OpenCode `.opencode/skills/api-design/`, and Copilot CLI `.github/skills/api-design/`. These are provider/surface-specific alternatives, not interchangeable universal paths. Keep each directory and frontmatter name aligned. A copy is independent of this source and needs updating when the source changes. Do not install skills at the handbook root. A local copy is not automatically available to a cloud/remote agent; check which files its runtime receives.
 
 In a **new session in the application repository**, perform three different checks:
 
 1. **Discovery:** inspect the agent's available skills or tool description. A valid file on disk does not prove that the runtime found it.
-2. **Explicit invocation:** ask to use the named skill; confirm the agent reads the application's copied `SKILL.md`, identifies its application scope and follows a distinctive step relevant to the task.
-3. **Task-based selection:** in another fresh session, describe a relevant task *without naming the skill*. Inspect the skill load or tool trace and the resulting work. If selection is absent, use explicit invocation rather than claiming automatic selection.
+2. **Explicit invocation:** ask to use the selected skill by its exact name; confirm the agent reads the application's copied `SKILL.md`, identifies its application scope and follows a relevant step.
+3. **Task-based selection:** in another fresh session, describe a task matching the selected skill without naming it. Inspect the skill load or tool trace and resulting work. If selection is absent, use explicit invocation rather than claiming automatic selection.
 
-For Codex, explicitly invoke `$onboarding`, `$api-design` or `$editorial-review`. For clients that support skill slash commands, use `/onboarding`, `/api-design` or `/editorial-review`. Gemini CLI can list discovered skills with `/skills list` and reload after copying with `/skills reload`. In Cursor, type `/` in Agent chat and select the skill, as described in [its skill documentation](https://cursor.com/docs/skills). OpenCode exposes skills through its `skill` tool. GitHub Copilot CLI supports `/skills list` and skill slash commands; other Copilot surfaces differ. Inspect the actual load or tool trace in every case.
+For Codex, explicitly invoke a skill such as `$api-design` or `$backend-architecture`. Claude Code supports `/skill-name`. Gemini CLI can list discovered skills with `/skills list` and reload after copying with `/skills reload`. In Cursor, type `/` in Agent chat and select the skill, as described in [its skill documentation](https://cursor.com/docs/skills). OpenCode exposes skills through its `skill` tool. GitHub Copilot CLI documents `/skills list` and skill slash commands; use `copilot skill list` to inspect its CLI installation. Other Copilot surfaces differ. Inspect the actual load or tool trace in every case.
 
-These are **manual reviewable templates**; no automatic installation or code execution occurs by copying them. If the agent lacks a skill runtime, give it the relevant SKILL.md text as task instructions, subject to its normal trust and permission boundaries.
+This is a **manual, reviewable template**; copying it does not prove automatic installation or activation. If the agent lacks a skill runtime, provide the relevant skill text as task instructions, subject to its normal trust and permission boundaries.
+
+## Future capabilities
+
+The seven skills above are the shipped catalog. Advanced, protocol-specific WebSocket implementation and comprehensive tactical/strategic DDD support are not promised by these templates; consult current primary references and a qualified project-specific workflow. Additional style- or pattern-specific skills are future work and should be added only when a concrete need and adequate canonical coverage exist. Conceptual glossary entries do not establish implementation support.
 
 ## Fallback for any other agent
 
