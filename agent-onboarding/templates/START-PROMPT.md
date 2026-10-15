@@ -14,4 +14,4 @@ Use this prompt **in a consuming application** when the agent does not reliably 
 
 If the agent has **no filesystem access**, supply redacted application instructions and relevant code and handbook excerpts. A commit-pinned URL can identify handbook content when the agent has web access. Supplied excerpts alone cannot verify the live repository, its commit or its tests.
 
-For agents without skill discovery, supply the relevant template as task instructions: [Onboarding](../skills/onboarding/SKILL.md) for application implementation, [API Design](../skills/api-design/SKILL.md) for HTTP API work, or [Editorial Review](../skills/editorial-review/SKILL.md) for architectural review of an application change. This does not install the skill or grant permissions.
+For agents without skill discovery, supply the relevant handbook pages as task instructions. For HTTP API work, you may also provide the reviewed [API Design skill](../skills/api-design/SKILL.md). This does not install the skill or grant permissions.

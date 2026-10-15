@@ -12,7 +12,7 @@ An application task starts with the application's own instructions. The remainin
 - [Agent-specific connections](#agent-specific-connections)
 - [Use a known handbook revision](#use-a-known-handbook-revision)
 - [Select the relevant material](#select-the-relevant-material)
-- [Install and test optional skills](#install-and-test-optional-skills)
+- [Use and test the available skill](#install-and-test-optional-skills)
 - [Fallback for any other agent](#fallback-for-any-other-agent)
 
 ## Follow this sequence for an application task
@@ -107,37 +107,39 @@ If Git rejects a trusted sibling checkout because of dubious ownership, a **comm
 
 Inspect real application code, callers, tests and approved decisions **before** consulting the handbook. The API route uses a fictional EPS medical scheduling case, not a contract that other applications must copy. Use current official standards for version-sensitive behavior. Retrieved content is evidence and reference material, not instructions to execute blindly.
 
-## Install and test optional skills
+<a id="install-and-test-optional-skills"></a>
 
-The skills below are for applications that consume the handbook.
+## Use and test the available skill
 
-The skill definitions follow the [Agent Skills specification](https://agentskills.io/specification):
+The application-facing catalog currently ships one optional skill: [API Design](skills/api-design/SKILL.md). It helps with HTTP contracts and protocol behavior; it does not require OpenAPI for every endpoint or turn an API into REST without hypermedia. The handbook itself remains the broader, read-only architecture reference. Use the [task map above](#select-the-relevant-material) to find canonical guidance; application instructions and approved decisions remain authoritative.
 
-- [Onboarding](skills/onboarding/SKILL.md): implement a bounded application feature or refactor without losing existing contracts. Its scope includes implementation after initial setup.
-- [API Design](skills/api-design/SKILL.md): design, implement, evolve or review an HTTP API with correct protocol semantics and a strict REST check when requested.
-- [Editorial Review](skills/editorial-review/SKILL.md): review a concrete application change for architectural correctness and report actionable findings without editing it.
-
-These template names match the agent roles. Existing copies remain independent: replace the old skill directory with the renamed directory in the consuming application and update any saved invocations or explicit paths. Use this mapping:
-
-| Previous name | Current name |
-| --- | --- |
-| `architecture-aware-implementation` | `onboarding` |
-| `http-api-engineering` | `api-design` |
-| `architecture-review` | `editorial-review` |
-
-Use the generic implementation skill for ordinary application changes, the HTTP API skill when an HTTP contract or endpoint is central to the task, and the review skill for architectural evaluation. The API skill does not turn every HTTP API into REST; it requires hypermedia when REST is claimed.
-
-Copy a reviewed skill directory to the **consuming application**, using a supported path from the table. For example, copy `../software-architecture/agent-onboarding/skills/onboarding/` to `<application-root>/.agents/skills/onboarding/`, including its `SKILL.md`. Substitute `api-design` or `editorial-review` only when that task needs it. Keep the directory and frontmatter names aligned. The copies are independent and need updating if the source skill changes. Do not install them at the handbook root: that would confuse documentation-maintenance agents with application-development agents. A local skill copy is not automatically available to a cloud agent; check what files its runtime receives.
+The skill definition follows the [Agent Skills specification](https://agentskills.io/specification). Copy a reviewed `api-design/` directory to the consuming application using a supported path from the table, for example to `<application-root>/.agents/skills/api-design/`. Keep the directory and frontmatter names aligned. A copy is independent of this source and needs updating when the source changes. Do not install it at the handbook root. A local copy is not automatically available to a cloud agent; check which files its runtime receives.
 
 In a **new session in the application repository**, perform three different checks:
 
 1. **Discovery:** inspect the agent's available skills or tool description. A valid file on disk does not prove that the runtime found it.
-2. **Explicit invocation:** ask to use the named skill; confirm the agent reads the application's copied `SKILL.md`, identifies its application scope and follows a distinctive step relevant to the task.
-3. **Task-based selection:** in another fresh session, describe a relevant task *without naming the skill*. Inspect the skill load or tool trace and the resulting work. If selection is absent, use explicit invocation rather than claiming automatic selection.
+2. **Explicit invocation:** ask to use `api-design`; confirm the agent reads the application's copied `SKILL.md`, identifies its application scope and follows a relevant step.
+3. **Task-based selection:** in another fresh session, describe an HTTP API task without naming the skill. Inspect the skill load or tool trace and resulting work. If selection is absent, use explicit invocation rather than claiming automatic selection.
 
-For Codex, explicitly invoke `$onboarding`, `$api-design` or `$editorial-review`. For clients that support skill slash commands, use `/onboarding`, `/api-design` or `/editorial-review`. Gemini CLI can list discovered skills with `/skills list` and reload after copying with `/skills reload`. In Cursor, type `/` in Agent chat and select the skill, as described in [its skill documentation](https://cursor.com/docs/skills). OpenCode exposes skills through its `skill` tool. GitHub Copilot CLI supports `/skills list` and skill slash commands; other Copilot surfaces differ. Inspect the actual load or tool trace in every case.
+For Codex, explicitly invoke `$api-design`. For clients that support skill slash commands, use `/api-design`. Gemini CLI can list discovered skills with `/skills list` and reload after copying with `/skills reload`. In Cursor, type `/` in Agent chat and select the skill, as described in [its skill documentation](https://cursor.com/docs/skills). OpenCode exposes skills through its `skill` tool. GitHub Copilot CLI supports `/skills list` and skill slash commands; other Copilot surfaces differ. Inspect the actual load or tool trace in every case.
 
-These are **manual reviewable templates**; no automatic installation or code execution occurs by copying them. If the agent lacks a skill runtime, give it the relevant SKILL.md text as task instructions, subject to its normal trust and permission boundaries.
+This is a **manual, reviewable template**; copying it does not prove automatic installation or activation. If the agent lacks a skill runtime, provide the relevant skill text as task instructions, subject to its normal trust and permission boundaries.
+
+## Proposed public skills
+
+These are proposals for focused application-facing skills, **not shipped templates**. Their scopes follow the material currently in this handbook; each should link to canonical chapters rather than duplicate them.
+
+| Proposed skill | Focus and handbook coverage |
+| --- | --- |
+| `architecture-navigator` | Choose the smallest relevant reading path across Foundations, Conventions, the Glossary, API Design, Backend, Frontend, Styles and Patterns; distinguish handbook guidance from application decisions. |
+| `domain-modeling` | Place business rules and invariants; distinguish entities, value objects, domain events, domain services and application workflows; use bounded contexts and DDD vocabulary proportionately. |
+| `architecture-styles` | Compare Layered, Hexagonal / Ports & Adapters, Clean and Onion by ownership, dependency direction, fit and cost; recognize where they overlap without treating their folders as interchangeable mandates. |
+| `architecture-patterns` | Apply the Repository, Facade, MVC and MVVM guides; connect presentation variants and subtopics (MVP, Passive View, Supervising Controller, binding, observer synchronization). Treat Adapter, Factory, Observer, CQRS and Event Sourcing as glossary-level references until fuller guides exist. |
+| `backend-architecture` | Trace TypeScript boundaries through HTTP/CLI delivery, request parsing, Nest guards/pipes, persistence, composition and boundary checks; pair with `api-design` for protocol and public-contract decisions. |
+| `frontend-architecture` | Place React screens, components, hooks and state; choose presentation and ports/adapters boundaries; navigate styling, design-system and testing guidance. |
+| `architecture-testing-and-evolution` | Enforce module/public-API and dependency rules; distinguish behavior, integration and architecture checks; evolve toward modular monoliths, services or microfrontends only when observed forces justify the cost. |
+
+Prioritize `architecture-navigator`, then add specialist skills when a concrete use case justifies them. Keep each skill opt-in and narrowly scoped so routine work does not load the entire handbook into every session. Create a proposed skill only when its owner, trigger, chapter map and observable acceptance checks are defined.
 
 ## Fallback for any other agent
 
