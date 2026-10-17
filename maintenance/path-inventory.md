@@ -1,15 +1,15 @@
 # Repository Path Inventory — Handbook Recovery
 
 **Revision inventoried:** `033c6616fb56c0f2a801e1127e681c7eb6b2ad64` (2026-10-16; `git ls-files`).
-**Coverage meaning:** every listed path is inventoried. “Full” means the named bounded slice was read; it does not certify every topic in that file. All other paths remain pending content review. The seven consumer-skill files are path-counted, not runtime-validated.
+**Coverage meaning:** every listed path is inventoried. “Full” means the named bounded slice was read; it does not certify every topic in that file. P1-03/P1-04 readings use `17030a0`; P1-05 coverage comes from the independent static assessment at `033c661`, with F1 checked again in the current candidate. No consumer skill was runtime-activated. All other paths remain pending content review.
 
-**Total at the assessment base:** 111 tracked Markdown paths; seven consumer skills. No untracked files are included. Reconciliation counted 111 tracked paths and 111 table rows before this inventory was added; this count check does not establish programmatic set equality. Adding this file introduces one additional Markdown path, without changing the historical inventory scope.
+**Total at the assessment base:** 111 tracked Markdown paths; seven consumer skills. Independent verification established exact set equality with the historical tracked paths, without duplicates, missing or extra rows. Published `17030a0` contains this inventory as one additional Markdown path; the historical scope remains unchanged.
 
 ## Repository root (4)
 
 | Path | Coverage status |
 | --- | --- |
-| `AGENTS.md` | Full — P1-01 rules/navigation; explicitly approved site-only policy correction is present in candidate |
+| `AGENTS.md` | Full — P1-01 rules/navigation; site-only policy correction published in `17030a0` |
 | `CONTRIBUTING.md` | Full — P1-01; tooling boundary |
 | `GLOSSARY.md` | Inventory only; content review pending |
 | `README.md` | Full — P1-01 route verification |
@@ -29,7 +29,7 @@
 | `architecture/foundations/code-placement.md` | Full — P1-02 bounded review |
 | `architecture/foundations/composition-root.md` | Full — P1-02 bounded review |
 | `architecture/foundations/dependency-boundaries.md` | Full — P1-02 bounded review |
-| `architecture/foundations/domain-modeling/README.md` | Inventory only; content review pending |
+| `architecture/foundations/domain-modeling/README.md` | Full — P1-03 ownership, vocabulary and learning route; linked skill not runtime-tested |
 | `architecture/foundations/evolution-and-scaling.md` | Full — P1-02 bounded review |
 | `architecture/foundations/module-boundaries-and-public-apis.md` | Full — initial sample; M-01 withdrawn |
 
@@ -88,35 +88,35 @@
 
 | Path | Coverage status |
 | --- | --- |
-| `architecture/frontend/README.md` | Inventory only; content review pending |
-| `architecture/frontend/exercises/README.md` | Inventory only; content review pending |
-| `architecture/frontend/exercises/advanced.md` | Inventory only; content review pending |
-| `architecture/frontend/exercises/easy.md` | Inventory only; content review pending |
-| `architecture/frontend/exercises/intermediate.md` | Inventory only; content review pending |
-| `architecture/frontend/exercises/solutions.md` | Inventory only; content review pending |
-| `architecture/frontend/ports-and-adapters.md` | Inventory only; content review pending |
-| `architecture/frontend/presentation-architecture.md` | Inventory only; content review pending |
-| `architecture/frontend/reference-case-study.md` | Inventory only; content review pending |
-| `architecture/frontend/references.md` | Inventory only; content review pending |
-| `architecture/frontend/state-management.md` | Inventory only; content review pending |
-| `architecture/frontend/styling-and-design-system.md` | Full — initial sample; D-01 withdrawn |
+| `architecture/frontend/README.md` | Full — P1-03 route, ownership and backend distinction |
+| `architecture/frontend/exercises/README.md` | Full — P1-03 exercise sequence |
+| `architecture/frontend/exercises/advanced.md` | Full — P1-03 public entry, God Hook and draft requirements |
+| `architecture/frontend/exercises/easy.md` | Full — P1-03 placement and representation requirements |
+| `architecture/frontend/exercises/intermediate.md` | Full — P1-03 composition, domain rule and reader replacement |
+| `architecture/frontend/exercises/solutions.md` | Full — P1-03 all nine answers; static tracing, no React/storage execution |
+| `architecture/frontend/ports-and-adapters.md` | Full — P1-03 HTTP/parser/mapper, contracts and startup versus calls |
+| `architecture/frontend/presentation-architecture.md` | Full — P1-03 presentation ownership and canonical agenda core |
+| `architecture/frontend/reference-case-study.md` | Full — P1-03/P1-04 responsibility and excerpt ownership; FLOW-01 legend; no runtime/visual check |
+| `architecture/frontend/references.md` | Full — P1-03 reference list; selected external sources only |
+| `architecture/frontend/state-management.md` | Full — P1-03 state ownership and external persistence boundary |
+| `architecture/frontend/styling-and-design-system.md` | Full — P1-04 Panda semantics and file ownership; D-01 withdrawn; no generated-CSS check |
 
 ## Backend (12)
 
 | Path | Coverage status |
 | --- | --- |
-| `architecture/backend/1-http-request-to-business-operation.md` | Inventory only; content review pending |
-| `architecture/backend/2-typescript-first-boundaries.md` | Inventory only; content review pending |
-| `architecture/backend/3-nestjs-building-blocks.md` | Inventory only; content review pending |
-| `architecture/backend/4-create-ticket-with-nestjs.md` | Inventory only; content review pending |
-| `architecture/backend/5-architectural-styles-with-nestjs.md` | Inventory only; content review pending |
-| `architecture/backend/README.md` | Inventory only; content review pending |
-| `architecture/backend/exercises/README.md` | Inventory only; content review pending |
-| `architecture/backend/exercises/advanced.md` | Inventory only; content review pending |
-| `architecture/backend/exercises/easy.md` | Inventory only; content review pending |
-| `architecture/backend/exercises/intermediate.md` | Inventory only; content review pending |
-| `architecture/backend/exercises/solutions.md` | Inventory only; content review pending |
-| `architecture/backend/references.md` | Inventory only; content review pending |
+| `architecture/backend/1-http-request-to-business-operation.md` | Full — P1-03 request-to-operation ownership |
+| `architecture/backend/2-typescript-first-boundaries.md` | Full — P1-03 parser/domain/constant separation and repository failures |
+| `architecture/backend/3-nestjs-building-blocks.md` | Full — P1-03 lifecycle, provider tokens and module visibility |
+| `architecture/backend/4-create-ticket-with-nestjs.md` | Full — P1-03 memory/Prisma wiring, failures and diagram semantics |
+| `architecture/backend/5-architectural-styles-with-nestjs.md` | Full — P1-03 framework mechanisms versus architectural policies |
+| `architecture/backend/README.md` | Full — P1-03 learning sequence and prerequisites |
+| `architecture/backend/exercises/README.md` | Full — P1-03 exercise sequence |
+| `architecture/backend/exercises/advanced.md` | Full — P1-03 capability API, integration and assignment requirements |
+| `architecture/backend/exercises/easy.md` | Full — P1-03 responsibility and validation questions |
+| `architecture/backend/exercises/intermediate.md` | Full — P1-03 endpoint composition and replacement requirements |
+| `architecture/backend/exercises/solutions.md` | Full — P1-03 all nine answers; static tracing, no Nest/database execution |
+| `architecture/backend/references.md` | Full — P1-03 reference list; selected external sources only |
 
 ## API design (13)
 
@@ -149,13 +149,13 @@
 
 | Path | Coverage status |
 | --- | --- |
-| `agent-onboarding/skills/api-design/SKILL.md` | Inventory only; content review pending |
-| `agent-onboarding/skills/architecture-assessment/SKILL.md` | Inventory only; content review pending |
-| `agent-onboarding/skills/architecture-boundary-testing/SKILL.md` | Inventory only; content review pending |
-| `agent-onboarding/skills/architecture-refactoring/SKILL.md` | Inventory only; content review pending |
-| `agent-onboarding/skills/backend-architecture/SKILL.md` | Inventory only; content review pending |
-| `agent-onboarding/skills/domain-modeling/SKILL.md` | Inventory only; content review pending |
-| `agent-onboarding/skills/frontend-architecture/SKILL.md` | Inventory only; content review pending |
+| `agent-onboarding/skills/api-design/SKILL.md` | Full — P1-05 independent static assessment and three scenarios; F1 sentence corrected; no activation |
+| `agent-onboarding/skills/architecture-assessment/SKILL.md` | Full — P1-05 independent static assessment and three scenarios; no activation |
+| `agent-onboarding/skills/architecture-boundary-testing/SKILL.md` | Full — P1-05 independent static assessment and three scenarios; no activation |
+| `agent-onboarding/skills/architecture-refactoring/SKILL.md` | Full — P1-05 independent static assessment and three scenarios; no activation |
+| `agent-onboarding/skills/backend-architecture/SKILL.md` | Full — P1-05 independent static assessment and three scenarios; no activation |
+| `agent-onboarding/skills/domain-modeling/SKILL.md` | Full — P1-05 independent static assessment and three scenarios; no activation |
+| `agent-onboarding/skills/frontend-architecture/SKILL.md` | Full — P1-05 independent static assessment and three scenarios; no activation |
 
 ## Onboarding templates (5)
 

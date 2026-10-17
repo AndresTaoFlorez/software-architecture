@@ -190,7 +190,7 @@ This is a conceptual target for future projects. It is not a migration command f
 
 ## Canonical flow
 
-Source-contract dependencies are solid arrows; executable assembly is dashed. These are **not** runtime calls:
+Solid arrows show runtime calls or reads, long dashes show source-contract relationships, and short dots show startup construction or supply:
 
 ```mermaid
 %%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
