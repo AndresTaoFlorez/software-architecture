@@ -12,7 +12,7 @@ An application task starts with the application's own instructions. The remainin
 - [Agent-specific connections](#agent-specific-connections)
 - [Use a known handbook revision](#use-a-known-handbook-revision)
 - [Select the relevant material](#select-the-relevant-material)
-- [Use and test the available skill](#use-and-test-the-available-skill)
+- [Use and test the available skills](#use-and-test-the-available-skills)
 - [Future capabilities](#future-capabilities)
 - [Fallback for any other agent](#fallback-for-any-other-agent)
 

@@ -151,7 +151,7 @@ Use the [Editorial Review Standard](architecture/conventions/editorial-review.md
 
 Authors may validate snippets temporarily on their own machines. Describe exactly what was checked; do not imply the handbook runs tests or contains an executable application.
 
-Do not add package managers, test runners, build scripts, generated mirrors or documentation tooling. A future change of repository mission requires an explicit decision.
+Keep handbook snippets illustrative; do not turn the handbook into a runnable sample application or mirror canonical content into generated source. The specifically authorized static Astro + Starlight documentation site is a separate delivery project: its dedicated site project may contain the minimum package manifest and lockfile, build and test tooling needed for that site, with narrowly scoped GitHub Actions in `.github/workflows/` for pull-request checks and deployment from `main`. Keep canonical Markdown and skills at their existing paths. This exception does not authorize a runtime backend, database, authentication, analytics, CMS, SPA or general-purpose tooling; other mission changes require a separate explicit decision.
 
 <a id="12-canonical-architecture-guide-template"></a>
 

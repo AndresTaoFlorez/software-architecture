@@ -28,7 +28,7 @@ Before adding folders, ask what changes when the subject rule changes, when stor
 3. [Composition](composition-root.md): supply concrete implementations.
 4. [Module Boundaries and Public APIs](module-boundaries-and-public-apis.md): let another capability use a supported entry.
 
-Then choose the [backend](../backend/README.md) or [frontend](../frontend/README.md) route.
+After the shared foundations, [API Design & Engineering](../api-design/README.md) covers framework-independent HTTP contracts and boundaries. Continue with the [backend](../backend/README.md) or [frontend](../frontend/README.md) route for an implementation.
 
 <a id="mental-model"></a>
 
