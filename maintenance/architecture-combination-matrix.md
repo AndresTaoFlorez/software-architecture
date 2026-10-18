@@ -13,6 +13,8 @@ The first [shop rehearsal](agent-design-evaluation.md) inspected one coherent de
 
 Each pair keeps the product requirements stable while changing explicit design constraints. Style names and pattern choices are intentionally prompted in this test; this does not measure spontaneous style selection. Repository, reader, gateway and Facade decisions require a concrete reason. A justified rejection of a requested combination is valid when the requirements do not support it.
 
+The table uses “same product” to keep the public overview compact. Candidate inputs must expand that shorthand into the complete paired baseline and exclusions; a fresh conversation cannot inherit the preceding row. Missing baseline information invalidates the comparison and requires a corrected fresh input, rather than being scored as a consumer-guidance defect.
+
 | Case | Product and architecture constraints | Alternative and challenge |
 | --- | --- | --- |
 | L1 | Reporting: closed Layered backend, server-rendered web MVC. Public read-only product sales totals; date/category filters, pagination and empty/error states. One maintained SQL report store; no editable business objects, authentication or checkout. | Compare an open-layer variant. Evaluate a Repository per report table and a pass-through Facade. |
@@ -53,7 +55,7 @@ The following results refer to frozen responses, independently reviewed against 
 | Case | Frozen response | Independent verdict and decisive evidence |
 | --- | --- | --- |
 | L1 | [Attempt 01](design-rehearsals/l1-attempt-01.md) | PASS, design-only: preserves closed Business-to-Data-Access dependency, request/response MVC and pure reporting projection; rejects per-table Repositories and a forwarding Facade. Source, browser and failure traces agree. |
-| L2 | Pending | Not yet evaluated |
+| L2 | [Attempt 01](design-rehearsals/l2-attempt-01.md), invalid input | No acceptance: the controller supplied “same reporting product” without sales/date/category/pagination/no-auth baseline. Candidate explicitly noted missing product facts, added access machinery and omitted those report details. DIP/MVVM mechanisms were coherent, but this is not a valid paired comparison. Fresh corrected input required. |
 | H1 | Pending | Not yet evaluated |
 | H2 | Pending | Not yet evaluated |
 | C1 | Pending | Not yet evaluated |
@@ -61,6 +63,6 @@ The following results refer to frozen responses, independently reviewed against 
 | O1 | Pending | Not yet evaluated |
 | O2 | Pending | Not yet evaluated |
 
-No substantive defect or guidance correction was demonstrated by L1. Its unresolved accounting/calendar definitions are explicit assumptions to resolve before implementing aggregation; the design verdict does not verify a database or rendered page. Later cases remain pending until their actual answers are reviewed.
+No substantive consumer-guidance defect was demonstrated by L1 or the invalid L2 input. L1's unresolved accounting/calendar definitions are explicit assumptions to resolve before implementing aggregation. L2 exposed a controller preparation error; the preparation procedure now explicitly requires a self-contained baseline, and unstarted paired inputs are expanded before launch. The invalid response remains frozen as evidence. A design verdict does not verify a database or rendered page; later attempts remain pending until their actual answers are reviewed.
 
 This is a deliberately selected coverage matrix, not every Cartesian combination of all patterns, all technologies or all requirements. It includes style/pattern combinations, alternatives, mixed frontend/backend constraints and rejection challenges. It does not establish implementation quality, automatic skill selection, model comparisons, statistical reliability or causal improvement over earlier guidance.
