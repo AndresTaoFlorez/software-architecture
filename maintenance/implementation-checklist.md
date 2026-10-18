@@ -1,31 +1,32 @@
 # Handbook Recovery and Website — Implementation Checklist
 
-This checklist tracks the authorized two-phase assignment. `DONE` requires artifact/check/commit evidence; full reading is not full-topic certification. Published baseline: `17030a0`; the current bounded audit is a local candidate awaiting independent review and publication.
+This checklist tracks specification §§0–5. `DONE` requires artifact/check/commit evidence; full reading is not certification. Published base: `4e1419b` on PR #22. The Phase I integration candidate awaits Codex's exact-commit verdict and publication; Phase II has not started.
 
 | ID | Status | Owner | Evidence / next verifiable step |
 | --- | --- | --- | --- |
-| INIT-01 | DONE | active-building | Initialization gate, accepted task execution and independent review are recorded. Delivery-branch HEAD and published `17030a0` match; initialization no longer blocks bounded audits. |
-| INIT-02 | DONE | active-building | Existing draft PR #22 contains the initial audit and inventory. Independent verification established exact equality with the 111 tracked Markdown paths at `033c661`, without duplicate, missing or extra rows. Published `17030a0` passed a provisional 112-file / 2,635-link check. This does not close Phase I. |
-| AUD-01 | IN PROGRESS | active-building | Findings, withdrawn concerns and bounded frontend/backend/domain plus consumer-skill evidence are recorded in [the audit](handbook-audit.md). Pending paths remain explicit in [the inventory](path-inventory.md). |
-| P1-01 | IN PROGRESS | active-building | NAV-01/NAV-02, onboarding navigation and the site-only tooling clarification were independently reviewed and published in `17030a0`. Broader editorial/organization coverage remains incomplete. |
-| P1-02 | IN PROGRESS | active-building | Six foundation chapters have bounded full-read evidence; no defect was demonstrated there. Continue styles, patterns and deeper module-growth assessment; retain independent-review requirements. |
-| P1-03 | IN PROGRESS | active-building | All 12 frontend pages, 12 backend pages and domain-modeling README read in full at `17030a0`. Static traces cover ownership, validation, source/runtime/startup, failures, rule/integration/growth changes and exercise answers. FLOW-01 corrects a contradictory diagram legend in this candidate. API/pattern coverage, transfer tests and independent candidate review remain. |
-| P1-04 | IN PROGRESS | active-building | Panda tokens, recipes, slot recipes and text styles compared with handbook excerpts/path ownership; correct material preserved. Framework sources support the assessed semantics. Documentation-only examples need no physical application files. Runtime/generated-CSS and rendered visual checks were not performed; no site implementation is certified. |
-| P1-05 | IN PROGRESS | onboarding | Independent static full-read assessment of seven skills and 21 hypothetical scenarios integrated into the audit/inventory. F1 corrected only in the API skill's REST verification sentence; F2 is already published. Consumer activation and transfer/runtime evidence remain pending. |
-| P1-GATE | TODO | active-building | Require transfer tests, independent review, consistency evidence and resolution of high-severity findings. No complete Phase I claim follows from this slice. |
-| P2-01 | TODO | active-building | After Phase I gate, record supported Astro/Starlight ADR and prove canonical-source loader, routes, links, anchors, assets, diagrams and compatibility. |
-| P2-02 | TODO | active-building | Verify responsive accessible reader navigation, search, TOC, theme and diagram interactions; document styling choice. |
-| P2-03 | TODO | active-building | Document and test the site's actual modules, responsibilities, flows and architectural case study. |
-| P2-04 | TODO | active-building | Verify lockfile-based CI/build and main-only Pages workflow, permissions, base path and human settings prerequisites. |
-| P2-GATE | TODO | active-building | Complete section 4.6 test matrix with evidence/limits; verify PR checks. Deployment remains pending merge and a successful post-merge run. |
-| QA-01 | TODO | editorial-review | Independently review exact candidate artifacts for pedagogy, technical architecture and site/accessibility/deployment scopes; state expertise/tool limits. |
-| QA-02 | TODO | active-building | Resolve actionable reviewed findings and revalidate changed scope; reassess after two substantive unresolved correction rounds. |
-| OPS-01 | IN PROGRESS | active-building | Baseline `17030a0` is published on draft PR #22. This audit candidate requires independent review/publication on that branch; no merge is authorized. |
-| OPS-02 | TODO | active-building | Verify task-owned volatile processes/outcomes and preserve existing profiles, sessions, tasks, memory and worktrees; make no merge/live-deployment claim. |
+| INIT-01 | DONE | active-building | Delivery checkout/branch preserved; fetched published base `4e1419b` matches HEAD before integration. No new worktree. |
+| INIT-02 | DONE | active-building | PR #22 contains initial audit/checklist and exact 111-path historical inventory. `17030a0` had provisional 112-file / 2,635-link evidence, not rendering proof. |
+| AUD-01 | IN PROGRESS | active-building | [Audit](handbook-audit.md) integrates all scoped assessments; [inventory](path-inventory.md) records paths/bases. Final consistency/verdict pending (§2). |
+| P1-01 | IN PROGRESS | active-building | Conventions retained after review; NAV-01/NAV-02/POL-01 and onboarding F2 published in `17030a0`. Final integrated acceptance pending (§§3.1/3.3). |
+| P1-02 | IN PROGRESS | active-building | Foundations and all 22 styles read; distinct constraints, module growth and public APIs retained. Independent transfer recorded; candidate gate pending (§3.2). |
+| P1-03 | IN PROGRESS | active-building | Full-read frontend/backend/domain/API/pattern/glossary coverage integrated. FLOW-01 published in `e32c7bc`; API-01–04 in `4e1419b`. MVVM contract/tests corrected in candidate; independent recheck pending (§3.2). |
+| P1-04 | IN PROGRESS | active-building | Panda source/ownership assessment retained; TextStyles label corrected only. Prior Mermaid diagnostic covers light/dark 1440/390px, not GitHub/site. Final recheck pending (§3.2). |
+| P1-05 | IN PROGRESS | onboarding | Seven skills, five templates and onboarding README read; 21 static positive/negative/ambiguous scenarios. F1 published in `e32c7bc`, F2 in `17030a0`; no consumer runtime. Acceptance of explicit runtime limits pending (§3.4). |
+| P1-GATE | IN PROGRESS | active-building | Three independent new-domain transfers recorded. Codex must inspect exact commit, check inventory/links/anchors and corrected snippets, resolve exceptions, then issue verdict. Not DONE (§3.5). |
+| P2-01 | TODO | active-building | After P1 verdict: supported-version ADR, canonical-source adapter and route/link/anchor tests (§§4.1–4.2). |
+| P2-02 | TODO | active-building | Reader UX, styling choice, responsive/a11y/search/diagram evidence (§§4.3/4.6). |
+| P2-03 | TODO | active-building | Minimal site modules, actual flows and tested architectural case study (§4.4). |
+| P2-04 | TODO | active-building | Lockfile, PR checks, main-only Pages workflow and human settings prerequisites (§4.5). |
+| P2-GATE | TODO | active-building | Complete §4.6 matrix; deployment pending human merge and successful deployment run. |
+| QA-01 | IN PROGRESS | editorial-review | Independent scoped assessments integrated; exact integration commit and later site review still required. |
+| QA-02 | IN PROGRESS | active-building | Focused API/MVVM/TextStyles corrections recorded; candidate revalidation/verdict pending. |
+| OPS-01 | IN PROGRESS | active-building | One PR/branch; candidate committed without push for Codex review/publication. No merge (§§1/6). |
+| OPS-02 | IN PROGRESS | active-building | Existing checkout/resources preserved; no task-owned background process launched. Final project inventory remains (§§1/7). |
 
 ## Findings disposition
 
-- Corrected and published in `17030a0`: NAV-01, NAV-02, POL-01 and onboarding F2.
-- Corrected in this candidate: FLOW-01 (case-study legend) and onboarding F1 (protected authentication with permitted anonymity).
-- Withdrawn: M-01, H-01 and D-01; context and diagram semantics do not support the reported concerns.
-- Pending: unreviewed content, transfer/runtime/visual evidence, independent candidate review, Phase I gate, Phase II, publication/PR checks and post-merge deployment verification. Initialization is not a current blocker.
+- Published: NAV-01/NAV-02/POL-01/F2 (`17030a0`), FLOW-01/F1 (`e32c7bc`), API-01 HIGH and API-02–04 MEDIUM (`4e1419b`).
+- Candidate: MVVM MEDIUM, TextStyles LOW; independent verdict pending.
+- Withdrawn: M-01/H-01/D-01. Panda's advice to avoid layout/color in text styles is source-supported; no attribution defect remains.
+- Not executed: consumer activation, PostgreSQL/HTTP races, generated Panda CSS or website checks. Transfer is one independent agent's conceptual evidence, not human/runtime proof. Approval-blocked scripts await Codex; no bypass. These limits do not imply executable handbook examples are required.
+- Phase I is not certified. Phase II, final PR checks and post-merge deployment remain outstanding.

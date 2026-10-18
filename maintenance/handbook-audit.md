@@ -24,13 +24,13 @@
 | `architecture/foundations/evolution-and-scaling.md` | Evidence-led growth and deployment boundaries | Read in full for P1-02 | Compared growth signals, module ownership and distribution trade-offs; no defect demonstrated in this slice. |
 | `architecture/foundations/architecture-testing.md` | Enforceable architectural checks | Read in full for P1-02 | Compared AST/graph/API checks and stated limits; no defect demonstrated in this slice. |
 | `architecture/styles/hexagonal-architecture/README.md` | Ports/adapters and source/runtime/composition diagram | Read in full | Review of reported concern H-01 below; no demonstrated defect. |
-| `architecture/frontend/styling-and-design-system.md` | Token/style ownership and Panda CSS applications | Read in full for P1-04 | D-01 withdrawn; official Panda semantics compared below; no generated-CSS check. |
+| `architecture/frontend/styling-and-design-system.md` | Token/style ownership and Panda CSS applications | Read in full for P1-04 | D-01 withdrawn; TextStyles corrected in candidate; no generated-CSS check. |
 | All 12 `architecture/frontend/` pages | Presentation, integrations, state, styling, case study, references and exercises | Read in full for P1-03/P1-04 | Per-path scope in inventory; FLOW-01 corrected; static reasoning only. |
 | All 12 `architecture/backend/` pages | TypeScript boundaries, Nest mechanisms, creation, style choices, references and exercises | Read in full for P1-03 | Per-path scope in inventory; no Nest/database execution. |
 | `architecture/foundations/domain-modeling/README.md` | Vocabulary, ownership and learning route | Read in full for P1-03 | Linked consumer skill assessed statically, not activated. |
 | Seven consumer `SKILL.md` files | Triggers, responsibilities, procedures and verification limits | Independent full-read static assessment | P1-05 integration below; 21 hypothetical scenarios, no consumer runtime. |
-| `maintenance/path-inventory.md` | All 111 tracked Markdown paths and bounded-read status | Inventoried | Path-only coverage map; all unmarked files remain pending content review. |
-| Remaining canonical chapters, exercises, diagrams and references | Not assessed or awaiting deeper review | Pending | The path inventory identifies unreviewed files; full reads do not imply complete verification. |
+| `maintenance/path-inventory.md` | All 111 historical tracked Markdown paths and bounded-read status | Inventoried | Per-path full-read coverage, with assessment bases and verification limits. |
+| Styles, API, patterns, glossary, Extras and onboarding templates/index | Independent full-read assessments integrated below | Static coverage complete for the historical inventory | Full reads do not imply complete verification; final candidate checks and independent gate verdict remain pending. |
 
 ## Reported concerns verified against the actual text
 
@@ -98,8 +98,7 @@ None. This does not conflict with the later P1-01 findings above and is not evid
 - P1-02 bounded foundations slice read in full: `code-placement.md`, `dependency-boundaries.md`, `composition-root.md`, `module-boundaries-and-public-apis.md`, `evolution-and-scaling.md`, and `architecture-testing.md`. The slice compared ownership rules, source/runtime/composition distinctions, public API guidance and growth criteria; no new demonstrated defect was found. This does not certify the remaining styles, patterns, examples or application guides.
 - P1-02 style-map pass read in full: `architecture/styles/README.md` and the Layered, Hexagonal, Clean and Onion guide entry pages. Compared route wording, boundary terminology, implementation links and distinctions among the four styles; no new demonstrated defect was found in these entry-page/navigation slices. This is not a review of the numbered Clean and Onion chapters, the standalone Layered and Hexagonal guides, their references, or all diagrams/examples.
 - A temporary local checker scanned 11 Markdown files (the four principal root/maps plus all seven foundation files) and resolved 249 local links/fragments with zero reported errors. It approximates GitHub heading slugs and checks file/anchor existence only; it does not test GitHub rendering, external URLs, Mermaid rendering, or links elsewhere in the repository. Re-run an authoritative site-wide check when the relevant content and site implementation exist.
-- Review the inventoried paths and all required handbook areas, exercises, links/anchors, diagrams, sources, and seven consumer skills in bounded slices.
-- Continue deeper requirement coverage beyond the recorded bounded reads, including architectural styles/patterns, frontend/backend/API and consumer integration.
+- Subsequent full-read assessments below supersede earlier pending content-read scopes. Link/anchor, diagram, source and runtime limits remain distinct from reading coverage.
 - Independent verification established exact equality between the 111 historical tracked Markdown paths and inventory rows, including seven consumer skills, without duplicates, missing or extra rows. The inventory describes its base before adding itself. The three changed navigation destinations were manually inspected; no headings or legacy IDs were changed.
 - Independent review of `033c661..17030a0` recorded a clean diff check and a provisional scan of 112 Markdown files / 2,635 local links. The fetched delivery-branch head matches published `17030a0`. File/fragment resolution does not establish rendering, external-source correctness, diagram readability, exercise execution, accessibility or transfer/comprehension.
 - Initialization is no longer a blocker to bounded audits. The published corrections and inventory do not complete the audit or Phase I gate.
@@ -119,7 +118,7 @@ Assessment base: `17030a0fea5f357d7c846f060c01559eb728bd37`. All 12 frontend pag
 
 ### FLOW-01 — Contradictory case-study diagram legend — LOW
 
-`architecture/frontend/reference-case-study.md`, “Canonical flow”: the legend called solid edges source dependencies and denied runtime calls, although those edges say “calls” / “reads / invokes”; source-contract edges use `6 4` dashes and construction uses `2 5` dots. Correct only the legend to runtime calls/reads, source-contract relationships and startup supply. Nodes, edges and anchors stay unchanged. Static comparison with the adjacent runtime explanation and frontend/backend diagrams supports the correction; no rendered visual check was performed.
+Published in `e32c7bc`. `architecture/frontend/reference-case-study.md`, “Canonical flow”: the legend called solid edges source dependencies and denied runtime calls, although those edges say “calls” / “reads / invokes”; source-contract edges use `6 4` dashes and construction uses `2 5` dots. The correction changes only the legend to runtime calls/reads, source-contract relationships and startup supply. Nodes, edges and anchors stay unchanged. Static comparison with the adjacent runtime explanation and frontend/backend diagrams supports the correction; no rendered visual check was performed.
 
 ### Panda and framework source checks
 
@@ -131,6 +130,41 @@ Assessment base: `17030a0fea5f357d7c846f060c01559eb728bd37`. All 12 frontend pag
 
 An independent static assessment at `033c661` read all seven consumer skills in full, plus onboarding instructions/templates. It evaluated triggers, exclusions, root/revision resolution, proportionality, responsibility ownership and verification limits. Three hypothetical scenarios per skill (positive, negative, ambiguous; 21 total) were reasoned through, not executed in consuming clients. Preserve the six unaffected skills and the existing supported-entry/revision safeguards.
 
-- **F1 — LOW, corrected in this candidate:** `agent-onboarding/skills/api-design/SKILL.md`, REST verification, required authentication on every request, including contractually anonymous resources. Replace only that sentence: supply authentication independently for protected requests, preserve allowed anonymity and never forward credentials to untrusted links/redirects. Static acceptance: all three conditions remain explicit. No anonymous/protected HTTP flow was executed.
+- **F1 — LOW, published in `e32c7bc`:** `agent-onboarding/skills/api-design/SKILL.md`, REST verification, required authentication on every request, including contractually anonymous resources. Replace only that sentence: supply authentication independently for protected requests, preserve allowed anonymity and never forward credentials to untrusted links/redirects. Static acceptance: all three conditions remain explicit. No anonymous/protected HTTP flow was executed.
 - **F2 — LOW, already published:** onboarding contents used singular `skill` against the plural heading. `17030a0` contains the corrected plural anchor; no second patch is needed.
-- Format review was manual; no automatic discovery, explicit activation, client selection, adapter integration, database/security guarantee or runtime compatibility was demonstrated. P1-05's static assessment is recorded; consuming-application activation and transfer evidence remain pending. P1-GATE stays open.
+- Format review was manual; no automatic discovery, explicit activation, client selection, adapter integration, database/security guarantee or runtime compatibility was demonstrated. Independent transfer evidence follows; consumer-runtime behavior remains unverified. P1-GATE stays open.
+
+## Phase I integration candidate
+
+Independent full reads cover 22 styles and 13 API pages at `17030a0`, plus 19 patterns pages, the glossary and Extras at `e32c7bc`. Styles preserve distinct constraints, folder conventions and source/runtime/composition semantics. Patterns preserve MVC variants, MVVM binding/lifetime, Facade coordination and Repository limits. Five onboarding templates and its README were read at `033c661`; no template rewrite is justified. See the inventory for exact paths/bases.
+
+### Demonstrated defects and corrections
+
+| ID / severity | Location and impact | Correction / verification scope |
+| --- | --- | --- |
+| API-01 / HIGH | `interface-styles-and-events.md`, “Deliver a booking event”: recording an ID before its effect can lose processing after a crash | `4e1419b`: atomic ID/effect or durable inbox; external idempotency; crash/redelivery checks specified, not run |
+| API-02 / MEDIUM | API `exercises/solutions.md`, A-E3: catching `23P01` leaves PostgreSQL's transaction aborted | `4e1419b`: rollback before translating the named exclusion; retry/rollback checks specified, not run |
+| API-03 / MEDIUM | `http-and-identifiers.md`, “Status and cache meaning”: optional 401 challenge violates HTTP | `4e1419b`: required applicable `WWW-Authenticate`; header assertion specified |
+| API-04 / MEDIUM | `reliability-and-operations.md`, “Optimistic concurrency”: edit-only revisions miss represented changes | `4e1419b`: strong validators cover all observable changes and variants; revalidation checks specified |
+| TextStyles / LOW | Styling pipeline: “Text layer styles” conflates Panda APIs | Candidate: only `T["Text styles"]`; retain valid advice to avoid layout/color |
+| MVVM / MEDIUM | `1-the-three-parts.md` consumes `Promise<void>` as `result.ok`; testing chapter masks it | Candidate: await completion, show success; tests resolve without value and reject; Clean contract unchanged |
+
+API paths are under `architecture/api-design/`; MVVM paths under `architecture/patterns/presentation/model-view-viewmodel/`. These are technical contradictions, not folder conventions. FLOW-01 and F1 were published in `e32c7bc`.
+
+### Independent learning transfer
+
+An independent agent first read only the three assigned conceptual pages, without the writer's rationale or verdict. Its answers defined participants, traced responsibilities, applied a new domain and identified counterexamples:
+
+| Reading | New application / counterexample |
+| --- | --- |
+| Hexagonal | Audiovisual ingest receives `RecordingStore`; console entry reuses policy, storage replacement changes adapter/startup. An ornamental port around an imported SDK fails the boundary. |
+| Module APIs | Library Circulation calls Catalog's public reservation entry; internal subdivisions stay private. Reexporting everything or deep imports do not protect internals. |
+| Styling | Weather alerts use semantic hazard tokens and a local urgency recipe; promote only an established shared contract. Domain-owned colors and duplicated registered recipes violate ownership. |
+
+This demonstrates one agent's conceptual transfer, not human learning or client execution.
+
+### Sources and gate limits
+
+Reviewers selectively consulted Cockburn, Martin, Palermo, Fowler, Gossman, Microsoft, TypeScript, Nest and official Panda guidance. API checks used RFC 9110 §§8.8.1/11.6.1/15.5.2, PostgreSQL transactions/RLS and Idempotent Consumer. Existing guide citations remain authoritative links; not every external URL was verified.
+
+Codex reported Mermaid 12.2.0 diagnostic rendering of the proposed styling diagram in light/dark at 1440/390px with complete labels and no page overflow. This is not GitHub or website evidence. Local script execution was approval-blocked; no bypass was attempted. Final link/anchor/inventory checks, snippet execution and independent exact-commit verdict remain for Codex. No consumer runtime, PostgreSQL, Panda CSS generation or site execution is claimed. P1-GATE remains IN PROGRESS until that verdict and publication.

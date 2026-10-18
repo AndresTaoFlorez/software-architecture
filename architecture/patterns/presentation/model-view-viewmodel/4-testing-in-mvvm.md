@@ -31,10 +31,17 @@ test('shows pending state and the application outcome', async () => {
   const vm = new CancelOrderViewModel(() => pending)
   const operation = vm.cancel('1')
   expect(vm.busy).toBe(true)
-  complete({ ok: false, reason: 'shipped' })
+  complete()
   await operation
   expect(vm.busy).toBe(false)
-  expect(vm.message).toBe('Cannot cancel: shipped')
+  expect(vm.message).toBe('Cancelled')
+})
+
+test('shows failure and clears pending state when the application rejects', async () => {
+  const vm = new CancelOrderViewModel(async () => { throw new Error('Save failed') })
+  await vm.cancel('1')
+  expect(vm.busy).toBe(false)
+  expect(vm.message).toBe('Unexpected failure')
 })
 ```
 

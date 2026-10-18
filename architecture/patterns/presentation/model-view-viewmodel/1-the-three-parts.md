@@ -61,8 +61,8 @@ export class CancelOrderViewModel {
     if (this.busy) return
     this.busy = true; this.message = ''; this.#changed()
     try {
-      const result = await this.#cancelOrder(id)
-      this.message = result.ok ? 'Cancelled' : `Cannot cancel: ${result.reason}`
+      await this.#cancelOrder(id)
+      this.message = 'Cancelled'
     } catch {
       this.message = 'Unexpected failure'
     } finally {
@@ -72,7 +72,7 @@ export class CancelOrderViewModel {
 }
 ```
 
-`cancelOrder` has the application contract from [the complete feature](../../../styles/clean-architecture/4-building-a-feature.md). State and command outcomes are testable without a DOM. A binding must subscribe, render the initial state and unsubscribe; mutating this class does not magically rerender React.
+`cancelOrder` has the application contract from [the complete feature](../../../styles/clean-architecture/4-building-a-feature.md): `Promise<void>`, completing without a value on success and rejecting on failure. State and command outcomes are testable without a DOM. A binding must subscribe, render the initial state and unsubscribe; mutating this class does not magically rerender React.
 
 WPF ViewModels may use `ICommand` and notification contracts; independence from concrete controls does not mean total UI-toolkit independence. A React [custom Hook](../../../../GLOSSARY.md#custom-hook) may intentionally own the same presentation role while depending on React and needing a React test harness.
 
