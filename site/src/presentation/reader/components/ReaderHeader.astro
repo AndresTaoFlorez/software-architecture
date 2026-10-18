@@ -1,10 +1,19 @@
 ---
-import Header from '@astrojs/starlight/components/Header.astro';
+import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
+import Search from '@astrojs/starlight/components/Search.astro';
+import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
 import ThemeSelect from '../../theme/ThemeSelect.astro';
 ---
-<Header {...Astro.props} />
-<div class="mobile-theme"><ThemeSelect {...Astro.props} /></div>
+<div class="reader-header">
+  <div class="reader-title"><SiteTitle {...Astro.props} /></div>
+  <Search {...Astro.props} />
+  <div class="reader-social"><SocialIcons {...Astro.props} /></div>
+  <div class="reader-theme"><ThemeSelect {...Astro.props} /></div>
+</div>
 <style>
-  .mobile-theme { position: fixed; right: 1rem; bottom: 1rem; z-index: 20; padding: .5rem; border: 1px solid var(--reader-border); border-radius: .4rem; background: var(--reader-surface); color: var(--sl-color-text); }
-  @media (min-width: 50rem) { .mobile-theme { display: none; } }
+  .reader-header { display: flex; align-items: center; gap: var(--sl-nav-gap); height: 100%; }
+  .reader-title { min-width: 0; flex: 1; overflow: clip; padding: .25rem; margin: -.25rem; }
+  .reader-theme { flex: none; }
+  .reader-social { display: none; }
+  @media (min-width: 50rem) { .reader-social { display: flex; } }
 </style>

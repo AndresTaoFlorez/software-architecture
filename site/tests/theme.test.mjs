@@ -38,7 +38,7 @@ test('built header includes native desktop and mobile System controls', async ()
   const dom = new JSDOM(await readFile('dist/index.html', 'utf8'));
   const pickers = [...dom.window.document.querySelectorAll('starlight-theme-select select')];
   assert.ok(pickers.length >= 2);
-  assert.ok(dom.window.document.querySelector('.mobile-theme starlight-theme-select'));
+  assert.ok(dom.window.document.querySelector('.reader-theme starlight-theme-select'));
   for (const picker of pickers) {
     assert.equal(picker.querySelector('option[value="auto"]').textContent.trim(), 'System');
     assert.ok(picker.querySelector('option[value="dark"]'));

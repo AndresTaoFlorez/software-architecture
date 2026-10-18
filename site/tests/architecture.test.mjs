@@ -19,7 +19,7 @@ async function sources(dir) {
 }
 test('source boundaries include reexports and dynamic imports', async () => {
   for (const path of await sources(src)) {
-    const owner = relative(src, path).split('/');
+    const owner = relative(src, path).split(/[\\/]/);
     const text = await readFile(path, 'utf8');
     const ast = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     const imports = [];
@@ -34,7 +34,7 @@ test('source boundaries include reexports and dynamic imports', async () => {
     walk(ast);
     for (const specifier of imports) {
       if (specifier.startsWith('.')) await access(resolve(dirname(path), specifier));
-      const target = specifier.startsWith('.') ? relative(src, resolve(dirname(path), specifier)).split('/') : [];
+      const target = specifier.startsWith('.') ? relative(src, resolve(dirname(path), specifier)).split(/[\\/]/) : [];
       if (owner[0] === 'domain') assert.ok(target[0] === 'domain', `${path}: external dependency ${specifier}`);
       if (owner[0] === 'presentation') {
         assert.ok(!['infrastructure', 'composition'].includes(target[0]), `${path}: outward coupling ${specifier}`);
