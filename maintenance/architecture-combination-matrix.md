@@ -56,7 +56,7 @@ The following results refer to frozen responses, independently reviewed against 
 | --- | --- | --- |
 | L1 | [Attempt 01](design-rehearsals/l1-attempt-01.md) | PASS, design-only: preserves closed Business-to-Data-Access dependency, request/response MVC and pure reporting projection; rejects per-table Repositories and a forwarding Facade. Source, browser and failure traces agree. |
 | L2 | [Attempt 01](design-rehearsals/l2-attempt-01.md), invalid input | No acceptance: the controller supplied “same reporting product” without sales/date/category/pagination/no-auth baseline. Candidate explicitly noted missing product facts, added access machinery and omitted those report details. DIP/MVVM mechanisms were coherent, but this is not a valid paired comparison. Fresh corrected input required. |
-| H1 | Pending | Not yet evaluated |
+| H1 | [Attempt 01](design-rehearsals/h1-attempt-01.md) | PASS, design-only: Identifies offered operations and required adapters, shares HTTP and CLI rules, and implements classic Model notifications with View subscriptions. Distinguishes gateway from Repository and rejects interface-per-file ceremony. |
 | H2 | Pending | Not yet evaluated |
 | C1 | Pending | Not yet evaluated |
 | C2 | Pending | Not yet evaluated |
