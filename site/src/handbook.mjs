@@ -110,7 +110,10 @@ export function handbookLoader() {
           const filePath = resolve(root, path);
           const body = await readFile(filePath, 'utf8');
           const id = route(path) || 'index';
-          const data = await parseData({ id, filePath, data: { title: titleOf(body) } });
+          const data = await parseData({ id, filePath, data: {
+            title: titleOf(body),
+            editUrl: 'https://github.com/AndresTaoFlorez/software-architecture/edit/main/' + path,
+          } });
           const rendered = await renderMarkdown(body, { fileURL: pathToFileURL(filePath) });
           entries.push({ id, data, body, filePath: relative(resolve(root, 'site'), filePath), rendered, digest: generateDigest(body) });
         }

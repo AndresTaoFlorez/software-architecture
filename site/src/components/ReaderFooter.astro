@@ -1,0 +1,49 @@
+---
+import Footer from '@astrojs/starlight/components/Footer.astro';
+---
+<Footer {...Astro.props} />
+<script>
+  import { openDiagram } from '../diagrams/controls.mjs';
+  const figures = [...document.querySelectorAll<HTMLElement>('.reader-diagram')];
+  if (figures.length) {
+    const dark = () => document.documentElement.dataset.theme === 'dark';
+    let revision = 0;
+    async function render() {
+      const current = ++revision;
+      try {
+        const { default: mermaid } = await import('mermaid');
+        mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: dark() ? 'dark' : 'default', suppressErrorRendering: true });
+        for (const [index, figure] of figures.entries()) {
+          const preview = figure.querySelector<HTMLElement>('.diagram-preview')!;
+          const status = figure.querySelector<HTMLElement>('.diagram-status')!;
+          const button = figure.querySelector<HTMLButtonElement>('button')!;
+          try {
+            const source = figure.querySelector('code')!.textContent!;
+            const { svg } = await mermaid.render(`mermaid-${current}-${index}`, source);
+            if (current !== revision) return;
+            preview.innerHTML = svg;
+            preview.hidden = false;
+            button.hidden = false;
+            button.onclick = () => openDiagram(figure, button);
+            status.textContent = 'Use Expand diagram for full-size labels and keyboard zoom/pan.';
+          } catch {
+            if (current !== revision) return;
+            preview.hidden = true;
+            button.hidden = true;
+            status.textContent = 'Diagram rendering failed. The complete source remains available below.';
+            figure.querySelector<HTMLDetailsElement>('details')!.open = true;
+          }
+        }
+      } catch {
+        for (const figure of figures) {
+          figure.querySelector('.diagram-status')!.textContent = 'Renderer unavailable. Read the complete diagram source below.';
+          figure.querySelector<HTMLDetailsElement>('details')!.open = true;
+        }
+      }
+    }
+    void render();
+    let timer: ReturnType<typeof setTimeout>;
+    new MutationObserver(() => { clearTimeout(timer); timer = setTimeout(() => void render(), 100); })
+      .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  }
+</script>
