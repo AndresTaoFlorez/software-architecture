@@ -77,3 +77,40 @@ test('injected renderer rejects stale theme results and preserves source on fail
   assert.ok(unsubscribed);
   dom.window.close();
 });
+
+test('a later diagram finishing does not close another figure modal', { timeout: 10000 }, async () => {
+  const markup = n => `<figure><figcaption>Diagram ${n}</figcaption><div class="diagram-preview"></div><button hidden>Expand</button><p class="diagram-status"></p><details><code>flowchart LR; A--&gt;B</code></details></figure>`;
+  const dom = new JSDOM(markup(1) + markup(2));
+  const previousDocument = globalThis.document;
+  globalThis.document = dom.window.document;
+  dom.window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
+  dom.window.HTMLDialogElement.prototype.close = function () { this.open = false; this.dispatchEvent(new dom.window.Event('close')); };
+  const figures = [...document.querySelectorAll('figure')];
+  let releaseSecond, secondStarted, changed, calls = 0;
+  const started = new Promise(resolve => { secondStarted = resolve; });
+  const cleanup = mountDiagrams(figures, {
+    theme: () => 'light',
+    subscribe(fn) { changed = fn; return () => {}; },
+    renderer: { render(_source, id) {
+      if (++calls === 2) return new Promise(resolve => { releaseSecond = resolve; secondStarted(); });
+      return Promise.resolve(`<svg id="${id}"></svg>`);
+    } },
+  });
+  try {
+    await started;
+    figures[0].querySelector('button').click();
+    const dialog = document.querySelector('.diagram-dialog');
+    assert.ok(dialog.open);
+    releaseSecond('<svg id="second"></svg>');
+    await Promise.resolve();
+    assert.ok(dialog.open, 'Another figure must not own this modal');
+    const closed = new Promise(resolve => dialog.addEventListener('close', resolve, { once: true }));
+    changed();
+    await closed;
+    assert.equal(document.activeElement, figures[0].querySelector('button'));
+  } finally {
+    cleanup();
+    dom.window.close();
+    globalThis.document = previousDocument;
+  }
+});

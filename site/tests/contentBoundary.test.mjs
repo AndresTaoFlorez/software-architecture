@@ -1,10 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, symlink, rm, readFile } from 'node:fs/promises';
+import { mkdtemp, symlink, rm, rmdir, readFile } from 'node:fs/promises';
 import { relative, resolve } from 'node:path';
 import { createHandbookMarkdown } from '../src/presentation/content/index.mjs';
 import { resolveTarget, root } from '../src/infrastructure/handbook/astroHandbook.mjs';
 import { JSDOM } from 'jsdom';
+import { unified } from 'unified';
+import remarkParse from 'remark-parse';
+import { visit } from 'unist-util-visit';
 
 test('presentation transforms targets through the supplied resolver', () => {
   const calls = [];
@@ -24,7 +27,10 @@ test('filesystem resolver rejects symlink escape', async () => {
     await symlink(resolve(root, '..'), resolve(directory, 'outside'), process.platform === 'win32' ? 'junction' : 'dir');
     const target = relative(root, resolve(directory, 'outside')).replaceAll('\\', '/');
     assert.throws(() => resolveTarget(target, 'README.md', target), /escapes repository/);
-  } finally { await rm(directory, { recursive: true, force: true }); }
+  } finally {
+    await rm(resolve(directory, 'outside'), { force: true });
+    await rmdir(directory);
+  }
 });
 
 test('site dependency and delivery diagrams parse', async () => {
@@ -35,8 +41,11 @@ test('site dependency and delivery diagrams parse', async () => {
     const { default: mermaid } = await import('mermaid');
     mermaid.initialize({ startOnLoad: false, securityLevel: 'strict' });
     const text = await readFile(new URL('../ARCHITECTURE.md', import.meta.url), 'utf8');
-    const diagrams = [...text.matchAll(/```mermaid\n([\s\S]*?)```/g)];
+    const diagrams = [];
+    visit(unified().use(remarkParse).parse(text), 'code', node => {
+      if (node.lang === 'mermaid') diagrams.push(node.value);
+    });
     assert.equal(diagrams.length, 2);
-    for (const [, source] of diagrams) await mermaid.parse(source);
+    for (const source of diagrams) await mermaid.parse(source);
   } finally { dom.window.close(); }
 });

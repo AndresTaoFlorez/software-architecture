@@ -1,5 +1,10 @@
 import { move, keyActions } from '../state/diagram.state.mjs';
 
+const dialogs = new WeakMap();
+export function closeDiagramFor(figure) {
+  dialogs.get(figure)?.close();
+}
+
 export function openDiagram(figure, trigger) {
   const dialog = document.createElement('dialog');
   dialog.className = 'diagram-dialog';
@@ -43,6 +48,7 @@ export function openDiagram(figure, trigger) {
     update(action);
   });
   dialog.addEventListener('close', () => {
+    dialogs.delete(figure);
     if (originalWidth === null) svg.removeAttribute('width');
     else svg.setAttribute('width', originalWidth);
     // A theme change may already have rendered a replacement behind the modal.
@@ -52,6 +58,7 @@ export function openDiagram(figure, trigger) {
   }, { once: true });
   dialog.append(toolbar, help, viewport);
   document.body.append(dialog);
+  dialogs.set(figure, dialog);
   dialog.showModal();
   viewport.focus();
 }

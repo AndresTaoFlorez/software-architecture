@@ -1,4 +1,4 @@
-import { openDiagram } from './components/DiagramDialog.mjs';
+import { openDiagram, closeDiagramFor } from './components/DiagramDialog.mjs';
 /**
  * Renderer is supplied by composition; this capability knows no Mermaid API.
  * @param {HTMLElement[]} figures
@@ -18,7 +18,7 @@ export function mountDiagrams(figures, { renderer, theme, subscribe }) {
         const svg = await renderer.render(figure.querySelector('code').textContent, 'mermaid-' + current + '-' + index, theme());
         if (current !== revision) return;
         // Close before replacing the SVG, preserving native focus/identity behavior.
-        figure.ownerDocument.querySelector('.diagram-dialog')?.close();
+        closeDiagramFor(figure);
         preview.innerHTML = svg;
         preview.hidden = false;
         button.hidden = false;
