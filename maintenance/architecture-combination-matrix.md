@@ -57,7 +57,7 @@ The following results refer to frozen responses, independently reviewed against 
 | L1 | [Attempt 01](design-rehearsals/l1-attempt-01.md) | PASS, design-only: preserves closed Business-to-Data-Access dependency, request/response MVC and pure reporting projection; rejects per-table Repositories and a forwarding Facade. Source, browser and failure traces agree. |
 | L2 | [Attempt 01, invalid input](design-rehearsals/l2-attempt-01.md); [Attempt 02](design-rehearsals/l2-attempt-02.md) | PASS, design-only: Complete public reporting scope, inward-owned reader and separate MVVM state/commands/binding. Explains the concrete dependency changes when removing DIP and rejects Repository semantics for a projection reader. Corrected fresh input at `d9a861cc7189ac988ed03e133ce6c765047afaf6`; attempt 01 remains invalid, not a pass. |
 | H1 | [Attempt 01](design-rehearsals/h1-attempt-01.md) | PASS, design-only: Identifies offered operations and required adapters, shares HTTP and CLI rules, and implements classic Model notifications with View subscriptions. Distinguishes gateway from Repository and rejects interface-per-file ceremony. |
-| H2 | Pending | Not yet evaluated |
+| H2 | [Attempt 01](design-rehearsals/h2-attempt-01.md) | PASS, design-only: Preserves Hexagonal operations and MVVM state/commands, justifies the selected-detail Facade collaboration, and declines an artificial client Domain or Onion relabeling without actual policy. |
 | C1 | Pending | Not yet evaluated |
 | C2 | Pending | Not yet evaluated |
 | O1 | Pending | Not yet evaluated |
