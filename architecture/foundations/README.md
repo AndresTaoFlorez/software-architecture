@@ -28,7 +28,7 @@ Before adding folders, ask what changes when the subject rule changes, when stor
 3. [Composition](composition-root.md): supply concrete implementations.
 4. [Module Boundaries and Public APIs](module-boundaries-and-public-apis.md): let another capability use a supported entry.
 
-Then choose the [backend](../backend/README.md) or [frontend](../frontend/README.md) route.
+After the shared foundations, [API Design & Engineering](../api-design/README.md) covers framework-independent HTTP contracts and boundaries. Continue with the [backend](../backend/README.md) or [frontend](../frontend/README.md) route for an implementation.
 
 <a id="mental-model"></a>
 
@@ -51,5 +51,7 @@ These names help locate owners. They do not require five calls for every request
 [Business decisions and workflows](domain-modeling/README.md) explains entity behavior and services after the ticket example. [Architectural checks](architecture-testing.md) and [evolution](evolution-and-scaling.md) explain how to protect and change established boundaries.
 
 Use separation when it protects independently changing decisions. More folders alone do not establish maintainability.
+
+Before implementing a consequential design, use [Architecture Design Review](architecture-design-review.md) to connect requirements and sources to concrete owners, contracts, behavior traces and proposed checks. A folder map alone cannot establish those decisions.
 
 [Previous: repository introduction](../../README.md) · [Next: Code Placement](code-placement.md)

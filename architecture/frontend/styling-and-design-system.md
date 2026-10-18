@@ -36,7 +36,7 @@ Use explicit ownership and reuse. This is a [dependency graph](../../GLOSSARY.md
 %%{init: {"htmlLabels": false, "flowchart": {"htmlLabels": false, "nodeSpacing": 28, "rankSpacing": 48, "diagramPadding": 20, "wrappingWidth": 280}, "sequence": {"wrap": true, "diagramMarginX": 20, "diagramMarginY": 20}}}%%
 flowchart TD
     S["Semantic tokens"] --> P["Primitive tokens"]
-    T["Text<br/>layer styles"] --> S
+    T["Text styles"] --> S
     R["Recipes<br/>slot recipes"] --> S
     C["Component-local styles"] --> S
     C --> T

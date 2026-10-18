@@ -1,0 +1,13 @@
+.reader-diagram { margin: 1.5rem 0; border: 1px solid var(--sl-color-gray-5); padding: 1rem; border-radius: .4rem; }
+.reader-diagram figcaption { font-weight: 600; margin-bottom: .75rem; }
+.diagram-preview { overflow: auto; max-width: 100%; }
+.diagram-preview svg { display: block; height: auto; max-width: 100%; margin: auto; }
+.reader-diagram button, .diagram-dialog button { padding: .45rem .75rem; color: var(--sl-color-text); background: var(--reader-surface); border: 1px solid var(--reader-border); border-radius: .3rem; cursor: pointer; }
+.reader-diagram button:focus-visible, .diagram-dialog :focus-visible { outline: 3px solid var(--sl-color-accent); outline-offset: 3px; }
+.diagram-status { font-size: .875rem; }
+.diagram-dialog { color: var(--sl-color-text); background: var(--sl-color-bg); width: 96vw; max-width: 96vw; height: 94dvh; max-height: 94dvh; padding: 1rem; border: 1px solid var(--reader-border); }
+.diagram-dialog::backdrop { background: var(--reader-backdrop); }
+.diagram-toolbar { display: flex; flex-wrap: wrap; gap: .5rem; }
+.diagram-viewport { overflow: auto; height: calc(100% - 10rem); min-height: 8rem; padding: 2rem; }
+.diagram-canvas { width: max-content; min-width: 100%; transform-origin: top left; }
+.diagram-canvas svg { max-width: none !important; height: auto; }

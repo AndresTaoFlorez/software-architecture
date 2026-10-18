@@ -127,11 +127,17 @@ Keep `starts_at < ends_at` and the `(organization_id, physician_id, tstzrange(st
 
 ```ts
 // src/infrastructure/persistence/appointments/PostgresAppointmentRepository.ts
-async function insertBooking(transaction: Transaction, scopedInput: ScopedInput) {
+// Focused method excerpt; Database supplies the transaction helper.
+async withTransaction(
+  organizationId: string,
+  work: (tx: Transaction) => Promise<CreateAppointmentResult>
+): Promise<CreateAppointmentResult> {
   try {
-    return await transaction.insertAppointment(scopedInput)
+    return await this.database.withTransaction(organizationId, work)
   } catch (error) {
-    if (typeof error === 'object' && error !== null && 'code' in error && error.code === '23P01') {
+    if (typeof error === 'object' && error !== null &&
+        'code' in error && error.code === '23P01' &&
+        'constraint' in error && error.constraint === 'no_active_physician_overlap') {
       return { ok: false, reason: 'slot-unavailable' }
     }
     throw error
@@ -139,7 +145,9 @@ async function insertBooking(transaction: Transaction, scopedInput: ScopedInput)
 }
 ```
 
-The HTTP mapper returns `409` with a `slot-unavailable` problem and no competing patient's details. In an integration test, synchronize two create attempts on separate database connections, start them together and assert one committed active row and one `409`. A fake port has no PostgreSQL exclusion behavior and cannot prove the race outcome.
+The `Database` helper sets transaction-local organization context, invokes `work` on that connection, commits on success, and rolls back before rejecting on failure. The A-E1 callback retains its facts and policy checks and calls `tx.insert`; an insert error must escape that callback and reach the helper. Only after rollback does the adapter method above translate the expected exclusion failure. Catching it inside the callback does not repair PostgreSQL's aborted transaction. Continuing in that transaction would require a prior savepoint and `ROLLBACK TO`, as [PostgreSQL's transaction guide](https://www.postgresql.org/docs/current/tutorial-transactions.html) explains. The driver-specific transaction types, helper implementation and class wiring are omitted.
+
+The HTTP mapper returns `409` with a `slot-unavailable` problem and no competing patient's details. In an integration test, synchronize two create attempts on separate database connections, start them together and assert one committed active row and one `409`. Make a test write earlier in the losing transaction and assert that it also rolls back, with no partial outbox or retry-result records. Verify rollback completes before the conflict is returned, then reuse the connection for a new valid transaction and assert it commits. Unexpected database failures must propagate rather than become `409`. A fake port has no PostgreSQL exclusion behavior and cannot prove the race outcome.
 
 ### A-E4 — Retry and reject a stale edit
 

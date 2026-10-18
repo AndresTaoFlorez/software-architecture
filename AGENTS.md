@@ -15,6 +15,7 @@ Before editing, read:
 - [Architecture and structure](#architecture-and-structure)
 - [Diagrams and review](#diagrams-and-review)
 - [Documentation-only repository](#documentation-only-repository)
+- [Progress publication](#progress-publication)
 
 ## Editorial rules
 
@@ -65,7 +66,7 @@ Before editing, read:
 
 ## Documentation-only repository
 
-Do not add package managers, test runners, build scripts, generated-document tooling or mirrored complete examples. The handbook contains illustrative source code, not a runnable project.
+The handbook contains illustrative source code, not a runnable sample application. The authorized Astro + Starlight documentation site may have a dedicated `site/` project with its package manifest, lockfile, build and test tooling, plus narrowly scoped GitHub Actions for PR checks and deployment from `main`. Canonical Markdown and consumer skills remain at their existing paths; generated site content must not become a second editable source. This exception does not authorize a runtime backend, database, authentication, analytics service, CMS, SPA or general-purpose tooling.
 
 ## Progress publication
 

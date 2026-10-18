@@ -1,0 +1,19 @@
+---
+import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
+import Search from '@astrojs/starlight/components/Search.astro';
+import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
+import ThemeSelect from '../../theme/ThemeSelect.astro';
+---
+<div class="reader-header">
+  <div class="reader-title"><SiteTitle {...Astro.props} /></div>
+  <Search {...Astro.props} />
+  <div class="reader-social"><SocialIcons {...Astro.props} /></div>
+  <div class="reader-theme"><ThemeSelect {...Astro.props} /></div>
+</div>
+<style>
+  .reader-header { display: flex; align-items: center; gap: var(--sl-nav-gap); height: 100%; }
+  .reader-title { min-width: 0; flex: 1; overflow: clip; padding: .25rem; margin: -.25rem; }
+  .reader-theme { flex: none; }
+  .reader-social { display: none; }
+  @media (min-width: 50rem) { .reader-social { display: flex; } }
+</style>

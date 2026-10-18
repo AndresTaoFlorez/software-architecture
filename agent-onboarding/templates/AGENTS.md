@@ -20,6 +20,10 @@ This file is a **template for a consuming application**, not instructions for th
 5. Check applicable specifications and official documentation for version-specific or security-sensitive claims. The handbook illustrates alternatives; approved application contracts and ADRs govern the implementation.
 6. Propose a proportional change. Do not introduce layers or dependencies solely because an example uses them.
 
+## Design-only work
+
+When only an architecture scheme is requested, follow `architecture/foundations/architecture-design-review.md` in the verified handbook. Describe the relevant frontend/backend owners, proposed subfolders and important contracts; trace source dependencies, runtime calls and composition separately. Justify consequential choices and omissions with application requirements and specific source sections, marking conventions and design inferences. Include failure paths, change impact and proposed checks. Do not create application source, dependencies or infrastructure. A new project has no existing tests to run; a coherent plan does not prove runtime behavior.
+
 ## Implementation boundaries
 
 - Follow approved application architecture and module public APIs.
@@ -31,7 +35,7 @@ This file is a **template for a consuming application**, not instructions for th
 
 ## Verify and report
 
-Run the concrete test, lint and type-check commands filled in above, plus meaningful negative and boundary tests. Check the final diff for unrelated changes, secret exposure and incompatible contracts. Fix known defects before completion.
+For authorized implementation, run the concrete test, lint and type-check commands filled in above, plus meaningful negative and boundary tests. Check the final diff for unrelated changes, secret exposure and incompatible contracts. Fix known defects before completion. For design-only work, label checks as proposed and report only source/review verification actually performed.
 
 Report the application instruction files and handbook pages actually read, changed files, architectural decisions, the handbook commit consulted, verification actually performed and unresolved limitations. Do not claim a test was executed if it was not.
 

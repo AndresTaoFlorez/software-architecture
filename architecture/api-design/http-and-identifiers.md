@@ -80,7 +80,7 @@ HTTP status codes state the general outcome. The API's body explains specific er
 | `202 Accepted` | Work was accepted but has not finished |
 | `204 No Content` | A completed operation has no response content |
 | `400 Bad Request` | The request cannot be processed because its shape or syntax is invalid |
-| `401 Unauthorized` | Authentication is required or credentials are invalid; an applicable challenge may be required |
+| `401 Unauthorized` | Authentication is required or credentials are invalid; the response must include `WWW-Authenticate` with at least one applicable challenge |
 | `403 Forbidden` | The verified caller lacks permission |
 | `404 Not Found` | No resource is exposed at that target, including when policy deliberately hides existence |
 | `409 Conflict` | A booking conflicts with current scheduling state |
@@ -89,6 +89,8 @@ HTTP status codes state the general outcome. The API's body explains specific er
 | `429 Too Many Requests` | The caller exceeded a request limit |
 
 These mappings are organization decisions within the status definitions. A malformed timestamp is different from a well-formed appointment that overlaps a booked interval. The former fails transport parsing; the latter fails a business rule and is represented here as `409`. A client should branch on status and a documented machine-readable problem type, not parse English text. [Problem Details](resources-and-operations.md#error-contract) owns the error body.
+
+The `401` challenge is an HTTP requirement, not an organization choice: [RFC 9110 §11.6.1](https://www.rfc-editor.org/rfc/rfc9110.html#section-11.6.1) requires at least one challenge applicable to the target resource. For this bearer-protected API, `WWW-Authenticate: Bearer` names the applicable scheme. When checking missing or invalid credentials through HTTP, assert `401`, the applicable `WWW-Authenticate` challenge and no organization data, rather than checking only an error body.
 
 A response to GET can be stored or reused only under HTTP cache rules and the server's policy. Organization data is user-specific, so this route uses `Cache-Control: private, no-cache`: a private cache may store it but must revalidate before reuse. `no-store` is the stronger choice when storing sensitive content is unacceptable. A shared cache must not reuse one organization's response for another. [RFC 9111](https://www.rfc-editor.org/rfc/rfc9111.html) defines cache behavior; the [operations chapter](reliability-and-operations.md#caching-performance-and-visibility) applies it.
 
