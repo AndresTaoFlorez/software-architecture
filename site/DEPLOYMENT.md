@@ -19,10 +19,11 @@ npm exec --yes --package=npm@10.8.2 -- npm ci --ignore-scripts
 npm run check
 npm run build
 npm test
+npm run test:watcher
 npm run smoke
 ```
 
-The explicit npm package avoids changing a developer's global installation. CI installs that same npm version into its disposable runner. `npm ci` fails on a manifest/lockfile mismatch. Dependency lifecycle scripts are disabled; the clean build below confirms this works with the current lockfile. No lint/format command is configured or claimed.
+The explicit npm package avoids changing a developer's global installation. CI installs that same npm version into its disposable runner. `npm ci` fails on a manifest/lockfile mismatch. Dependency lifecycle scripts are disabled; the clean build below confirms this works with the current lockfile. The watcher check runs sequentially after unit tests: it owns an isolated dev-server port, creates/changes/deletes one unique temporary canonical document, verifies HTTP output and cleans both file and process in `finally`. It does not test browser HMR. No lint/format command is configured or claimed.
 
 Verified on Linux Node 22.22.1/npm 10.8.2 and Windows Node 24.18.0/npm 11.16.0: clean install, Astro check and directed TypeScript checks, 93-page build, 24 tests and HTTP smoke passed. Tests cover 92 reader pages, 5,156 links/fragments, canonical diagrams, ownership boundaries and interaction regressions. The smoke owns a foreground preview on port 4322 (`--ignore-lock`) and stops it afterward. It requests six representative routes and ten generated/search assets under the production base. Keep that port free. HTTP checks do not establish browser accessibility; see [independent browser evidence and limits](VERIFICATION.md).
 
