@@ -13,6 +13,7 @@
     "preview": "astro preview",
     "check": "astro check && tsc -p tsconfig.contracts.json",
     "test": "node --test tests/*.test.mjs",
+    "test:watcher": "node tests/watch.mjs",
     "smoke": "node tests/smoke.mjs"
   },
   "dependencies": {

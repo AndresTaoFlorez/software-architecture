@@ -41,6 +41,8 @@ jobs:
         run: npm run build
       - name: Test content, routes, links and anchors
         run: npm test
+      - name: Test real development filesystem watcher
+        run: npm run test:watcher
       - name: Smoke test production preview
         run: npm run smoke
       - name: Upload validated Pages artifact
