@@ -1,7 +1,7 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import { unified } from '@astrojs/markdown-remark';
-import { handbookMarkdown } from '../infrastructure/handbook/astroHandbook.mjs';
+import { handbookMarkdown } from './handbook.mjs';
 import { diagramMarkdown } from '../presentation/diagrams/markdown.mjs';
 
 export const siteConfig = defineConfig({

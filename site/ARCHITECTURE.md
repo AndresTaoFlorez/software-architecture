@@ -2,9 +2,35 @@
 
 Canonical Markdown stays at the repository root. Astro 7.4.0 and Starlight 0.42.6 read it directly; generated content is not editable source. The reader applies the handbook's frontend ownership rules with native Astro components and browser APIs. A static deployment does not exempt its UI from those rules.
 
+## Contents
+
+- [Ownership and dependencies](#ownership-and-dependencies)
+- [Styling](#styling)
+- [Guide-to-code evidence](#guide-to-code-evidence)
+- [Three change scenarios](#three-change-scenarios)
+- [Canonical content and delivery](#canonical-content-and-delivery)
+- [Sources](#sources)
+
 ## Ownership and dependencies
 
-`src/domain/handbook/pages.mjs` owns which canonical documents are reader pages, stable route spelling and collision rejection. It imports neither filesystem nor Astro. `src/infrastructure/handbook/astroHandbook.mjs` discovers real files, enforces repository containment, adapts the Content Layer loader and transforms Markdown. It reuses the canonical route policy. `src/content.config.ts` is a framework entry; `astro.config.mjs` delegates startup to `src/composition/site.mjs`. The compatibility `src/handbook.mjs` entry preserves existing tooling imports, not another implementation.
+`src/domain/handbook/pages.mjs` owns which canonical documents are reader pages, stable route spelling and collision rejection. It imports neither filesystem nor Astro. `src/infrastructure/handbook/astroHandbook.mjs` discovers files, resolves directory READMEs, enforces real-path containment (including symlinks) and adapts the Content Layer loader. `src/presentation/content/index.mjs` owns parsed titles, heading IDs, legacy aliases and link representations. It receives file identity and target resolution rather than importing filesystem code. Both reuse the canonical route policy. `src/composition/handbook.mjs` supplies those collaborators and gives title extraction to the loader. `src/content.config.ts` and `astro.config.mjs` are framework entries delegating to composition. The compatibility `src/handbook.mjs` entry preserves existing tooling imports, not another implementation.
+
+```mermaid
+flowchart TD
+  Site["composition/site.mjs"] -. imports .-> Wiring["composition/handbook.mjs"]
+  Wiring -. imports .-> Content["Presentation/content"]
+  Wiring -. imports .-> Files["Infrastructure/handbook"]
+  Wiring == supplies resolver ==> Content
+  Wiring == supplies title extraction ==> Files
+  Content -. imports .-> Policy["Domain/handbook/pages"]
+  Files -. imports .-> Policy
+  Reader["composition/reader.mjs"] == supplies renderer ==> UI["Presentation/diagrams"]
+  Reader -. imports .-> Renderer["Infrastructure/mermaid"]
+  UI -. type contract .-> Contract["diagrams/contracts.ts"]
+  Renderer -. type contract .-> Contract
+```
+
+Dashed arrows are source dependencies; thick arrows are composition supplying collaborators. At runtime the Markdown transformer calls its supplied resolver, and the loader calls supplied title extraction. Neither consumer imports the other's concrete implementation. Placement follows meaning, even with a single consumer; reuse is not a prerequisite for separating presentation from filesystem effects.
 
 Inside Presentation, diagrams, theme and reader are separate capabilities. `presentation/diagrams/index.mjs` exposes only `mountDiagrams`; its renderer dependency promises `render(source, id, resolvedTheme): Promise<string>` containing sanitized SVG. Composition supplies `infrastructure/mermaid/createMermaidRenderer.mjs`. That adapter owns Mermaid loading, strict security and serialization of its global initialization/render calls. A failed render does not poison later calls. The UI does not import Mermaid or discover its dependencies through a service locator.
 
@@ -37,7 +63,7 @@ All paths in the first column are relative to `architecture/frontend/`; implemen
 | `exercises/advanced.md` | No cross-capability private state import; effects outside reducer | AST public-entry checks and state I/O prohibition |
 | `exercises/solutions.md` | Explicit assembly, preserved internal facts and safe integration failure feedback | Stale render/failure disclosure test; 76 canonical Mermaid parser regressions |
 
-The AST test covers static imports, reexports and literal dynamic imports in JS/TS. Astro syntax is not a complete TypeScript program: Astro check/build complements this test, but a dedicated Astro-script extraction boundary test remains a concrete improvement. Folder names alone are not the evidence.
+The boundary test uses the installed Astro compiler's structured AST for frontmatter and scripts (including literal script sources), and TypeScript's AST for JS/TS. Negative fixtures exercise imports, reexports, dynamic imports and private capability access with Windows and POSIX paths; nonliteral dynamic imports fail closed. This is not a general module resolver: aliases, CommonJS require and arbitrary computed runtime loading are outside its current scope. `npm run check` also runs a directed TypeScript contract project: the Mermaid implementation and pure transitions use checked JSDoc, and compile-negative fixtures ensure the renderer return type, consumer options and numeric view state stay enforced. No mass JS conversion is required.
 
 ## Three change scenarios
 
@@ -47,15 +73,29 @@ The AST test covers static imports, reexports and literal dynamic imports in JS/
 
 ## Canonical content and delivery
 
+A canonical edit is not deployed by editing generated HTML. The same route policy and transformations run in PR validation and again after the authorized merge to `main`:
+
+```mermaid
+flowchart TD
+  Edit["Canonical Markdown change"] -->|loader and route policy| Build["Astro build: site/dist"]
+  Build -->|fresh HTML| Links["build.test: routes, IDs, links"]
+  Links -->|validated artifact| Render["Preview and browser render review"]
+  Render -->|human-authorized PR merge| Main["main push"]
+  Main -->|site.yml checks rebuild and retest| Artifact["Actions Pages artifact"]
+  Artifact -->|deploy job needs checks| Pages["GitHub Pages"]
+```
+
+Solid arrows show delivery order, not source imports. PR checks never upload the production Pages artifact. Only a `main` push that passes the workflow's check/build/test/smoke steps uploads `site/dist`; deployment consumes that artifact with scoped Pages permissions. The browser review and merge authorization are human acceptance steps, not checks this local run can claim. A rejected route collision or unresolved link stops validation before publication.
+
 The loader derives the title from the first parsed H1, preserves its anchor, allocates repeated-heading IDs before removing the visible source H1 and retains distinct legacy aliases. Relative Markdown targets must exist and stay inside the repository. README routes map to their directory; glossary maps to `/glossary/`; non-reader targets open GitHub main. The complete snapshot validates before store replacement; watcher updates are serialized. Canonical sources, anchors and diagram text were not edited.
 
 Run from `site/`: `npm ci --ignore-scripts`, `npm run check`, `npm run build`, `npm test`, `npm run smoke`. Build tests inspect a fresh artifact. The current checks retain 92 reader pages plus 404, 5,156 local links/fragments and 76 Mermaid sources. The HTTP smoke covers six representative pages and ten assets. Native theme tests execute the installed provider/select scripts with DOM simulation: saved dark selection, explicit light override, System preference changes and synchronized pickers. They do not establish browser layout, native focus trapping or visual contrast.
 
 Author-side browser verification was unavailable: Chromium on the VPS lacked `libatk-1.0.so.0`. Codex independently observed native dark selection persisting after reload in Windows Edge. That inspection found the floating mobile picker obscured article text; the picker now belongs to the header. Final layout, theme rerender, keyboard, contrast and reduced-motion checks remain required for the corrected artifact. No unrelated system dependency was installed.
 
-Remaining implementation gaps: the filesystem/Markdown/Content Layer adapter is still one cohesive but broad module; split Markdown presentation transformation from filesystem lookup if a second consumer makes that boundary useful. Native Starlight storage-denial behavior is inherited, not replaced with a competing provider. The System label uses the native translation collection, not a replacement select implementation. These limits do not exempt the site from the architecture; they identify the next review decisions.
+Native Starlight storage-denial behavior remains inherited, not replaced with a competing provider. The System label uses the native translation collection. The new boundary diagrams have parser verification only; final browser layout/light-dark/narrow inspection remains independent acceptance work.
 
-The build still warns about large Mermaid chunks, the native 404 fallback. Installation on Node 22.22.1/npm 9.2.0 emits engine warnings; use supported npm 10.8.2 for release reproduction. Ten moderate dependency audit findings remain from the previous increment; this change does not claim to resolve them. See [deployment and recovery](DEPLOYMENT.md). No merge, Pages settings or production deployment is performed here.
+The build still warns about large Mermaid chunks and the native 404 fallback. This increment ran check/build/tests/smoke on Node 22.22.1 with temporary npm 10.8.2 (`npm exec --yes --package=npm@10.8.2 -- npm ...`), without changing global configuration or dependencies. Ten moderate dependency audit findings were reported in the previous increment; the audit was not rerun here. See [deployment and recovery](DEPLOYMENT.md). No merge, Pages settings or production deployment is performed here.
 
 ## Sources
 

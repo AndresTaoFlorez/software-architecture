@@ -1,4 +1,8 @@
-/** Implements the diagram capability's render(source, id, theme) interaction. */
+// @ts-check
+/**
+ * @param {() => Promise<{ default: Pick<import('mermaid').Mermaid, 'initialize' | 'render'> }>} load
+ * @returns {import('../../presentation/diagrams/contracts').DiagramRenderer}
+ */
 export function createMermaidRenderer(load = () => import('mermaid')) {
   let queue = Promise.resolve();
   return {
@@ -8,7 +12,7 @@ export function createMermaidRenderer(load = () => import('mermaid')) {
         mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: theme === 'dark' ? 'dark' : 'default', suppressErrorRendering: true });
         return (await mermaid.render(id, source)).svg;
       });
-      queue = result.catch(() => {});
+      queue = result.then(() => {}, () => {});
       return result;
     },
   };

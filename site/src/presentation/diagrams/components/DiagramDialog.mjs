@@ -24,7 +24,7 @@ export function openDiagram(figure, trigger) {
   if (naturalWidth) svg.setAttribute('width', String(naturalWidth));
   canvas.append(svg);
   viewport.append(canvas);
-  let view = move({}, 'reset');
+  let view = move({ scale: 1, x: 0, y: 0 }, 'reset');
   const update = action => {
     view = move(view, action);
     canvas.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.scale})`;

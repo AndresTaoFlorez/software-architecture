@@ -1,5 +1,10 @@
 import { openDiagram } from './components/DiagramDialog.mjs';
-/** Renderer is supplied by composition; this capability knows no Mermaid API. */
+/**
+ * Renderer is supplied by composition; this capability knows no Mermaid API.
+ * @param {HTMLElement[]} figures
+ * @param {import('./contracts').DiagramOptions} options
+ * @returns {() => void}
+ */
 export function mountDiagrams(figures, { renderer, theme, subscribe }) {
   let revision = 0;
   let timer;

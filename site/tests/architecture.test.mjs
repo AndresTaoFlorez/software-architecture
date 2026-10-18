@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, readdir, access } from 'node:fs/promises';
 import { resolve, relative, dirname } from 'node:path';
-import ts from 'typescript';
+import { importsOf, assertBoundary } from './sourceBoundaries.mjs';
 import { JSDOM } from 'jsdom';
 import { mountDiagrams } from '../src/presentation/diagrams/index.mjs';
 import { createMermaidRenderer } from '../src/infrastructure/mermaid/createMermaidRenderer.mjs';
@@ -21,30 +21,11 @@ test('source boundaries include reexports and dynamic imports', async () => {
   for (const path of await sources(src)) {
     const owner = relative(src, path).split(/[\\/]/);
     const text = await readFile(path, 'utf8');
-    const ast = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-    const imports = [];
-    function walk(node) {
-      if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier) imports.push(node.moduleSpecifier.text);
-      if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
-        assert.ok(ts.isStringLiteral(node.arguments[0]), 'Dynamic import must be statically resolvable');
-        imports.push(node.arguments[0].text);
-      }
-      ts.forEachChild(node, walk);
-    }
-    walk(ast);
-    for (const specifier of imports) {
+    for (const specifier of await importsOf(path, text)) {
       if (specifier.startsWith('.')) await access(resolve(dirname(path), specifier));
-      const target = specifier.startsWith('.') ? relative(src, resolve(dirname(path), specifier)).split(/[\\/]/) : [];
-      if (owner[0] === 'domain') assert.ok(target[0] === 'domain', `${path}: external dependency ${specifier}`);
-      if (owner[0] === 'presentation') {
-        assert.ok(!['infrastructure', 'composition'].includes(target[0]), `${path}: outward coupling ${specifier}`);
-        assert.notEqual(specifier, 'mermaid');
-        if (target[0] === 'presentation' && target[1] !== owner[1]) {
-          assert.ok(target.at(-1) === 'index.mjs' || (target[1] === 'theme' && target.at(-1) === 'ThemeSelect.astro'), `Private capability import: ${specifier}`);
-        }
-      }
+      assertBoundary(path, specifier, src);
     }
-    if (owner.includes('state')) assert.doesNotMatch(text, /\b(document|window|localStorage|sessionStorage)\b|\bimport\s*\(/);
+    if (owner.includes('state')) assert.doesNotMatch(text, /\b(document|window|localStorage|sessionStorage)\b/);
   }
 });
 test('visual transitions are immutable and unknown actions preserve values', () => {

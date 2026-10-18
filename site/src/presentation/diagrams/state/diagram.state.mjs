@@ -1,3 +1,9 @@
+// @ts-check
+/**
+ * @param {import('../contracts').DiagramView} view
+ * @param {string} action
+ * @returns {import('../contracts').DiagramView}
+ */
 export function move(view, action) {
   const next = { ...view };
   if (action === 'in') next.scale = Math.min(4, view.scale * 1.25);
