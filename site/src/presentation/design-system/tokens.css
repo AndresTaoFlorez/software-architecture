@@ -1,0 +1,12 @@
+:root {
+  --reader-blue-950: #141d28; --reader-blue-900: #1d2a39; --reader-blue-800: #233548;
+  --reader-paper-50: #fafbfc; --reader-paper-100: #eef2f6;
+  --reader-gold-300: #ece0b8; --reader-gold-400: #d3b35b; --reader-gold-800: #705917; --reader-gold-950: #3c321a; --reader-gold-50: #f2e8ca;
+  --sl-color-accent-low: var(--reader-blue-800); --sl-color-accent: var(--reader-gold-400); --sl-color-accent-high: var(--reader-gold-300);
+  --sl-color-bg: var(--reader-blue-950); --sl-color-bg-nav: var(--reader-blue-900);
+  --reader-surface: var(--sl-color-bg-nav); --reader-border: var(--sl-color-gray-3); --reader-backdrop: rgb(0 0 0 / .7);
+}
+:root[data-theme='light'] {
+  --sl-color-accent-low: var(--reader-gold-50); --sl-color-accent: var(--reader-gold-800); --sl-color-accent-high: var(--reader-gold-950);
+  --sl-color-bg: var(--reader-paper-50); --sl-color-bg-nav: var(--reader-paper-100);
+}

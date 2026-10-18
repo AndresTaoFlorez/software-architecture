@@ -5,8 +5,9 @@ import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import { visit } from 'unist-util-visit';
 import { JSDOM } from 'jsdom';
-import { diagramMarkdown } from '../src/diagrams/markdown.mjs';
-import { move, keyActions, openDiagram } from '../src/diagrams/controls.mjs';
+import { diagramMarkdown } from '../src/presentation/diagrams/markdown.mjs';
+import { move, keyActions } from '../src/presentation/diagrams/state/diagram.state.mjs';
+import { openDiagram } from '../src/presentation/diagrams/components/DiagramDialog.mjs';
 import { pagePaths, root } from '../src/handbook.mjs';
 
 test('diagram transformation escapes source and excludes only raw code from search', () => {

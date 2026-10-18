@@ -1,19 +1,4 @@
-:root { --sl-color-accent-low: #233548; --sl-color-accent: #d3b35b; --sl-color-accent-high: #ece0b8; --sl-color-bg: #141d28; --sl-color-bg-nav: #1d2a39; }
-:root[data-theme='light'] { --sl-color-accent-low: #f2e8ca; --sl-color-accent: #705917; --sl-color-accent-high: #3c321a; --sl-color-bg: #fafbfc; --sl-color-bg-nav: #eef2f6; }
-.sl-markdown-content table { display: block; max-width: 100%; overflow-x: auto; }
-.sl-markdown-content pre { max-width: 100%; overflow-x: auto; }
-.sl-markdown-content, .content-panel, main { min-width: 0; }
-.reader-diagram { margin: 1.5rem 0; border: 1px solid var(--sl-color-gray-5); padding: 1rem; border-radius: .4rem; }
-.reader-diagram figcaption { font-weight: 600; margin-bottom: .75rem; }
-.diagram-preview { overflow: auto; max-width: 100%; }
-.diagram-preview svg { display: block; height: auto; max-width: 100%; margin: auto; }
-.reader-diagram button, .diagram-dialog button { padding: .45rem .75rem; color: var(--sl-color-text); background: var(--sl-color-bg-nav); border: 1px solid var(--sl-color-gray-3); border-radius: .3rem; cursor: pointer; }
-.reader-diagram button:focus-visible, .diagram-dialog :focus-visible { outline: 3px solid var(--sl-color-accent); outline-offset: 3px; }
-.diagram-status { font-size: .875rem; }
-.diagram-dialog { color: var(--sl-color-text); background: var(--sl-color-bg); width: 96vw; max-width: 96vw; height: 94dvh; max-height: 94dvh; padding: 1rem; border: 1px solid var(--sl-color-gray-3); }
-.diagram-dialog::backdrop { background: rgb(0 0 0 / .7); }
-.diagram-toolbar { display: flex; flex-wrap: wrap; gap: .5rem; }
-.diagram-viewport { overflow: auto; height: calc(100% - 10rem); min-height: 8rem; padding: 2rem; }
-.diagram-canvas { width: max-content; min-width: 100%; transform-origin: top left; }
-.diagram-canvas svg { max-width: none !important; height: auto; }
-@media (prefers-reduced-motion: reduce) { .reader-diagram *, .diagram-dialog * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+@import '../presentation/design-system/tokens.css';
+@import '../presentation/design-system/global.css';
+@import '../presentation/reader/reader.css';
+@import '../presentation/diagrams/diagrams.css';

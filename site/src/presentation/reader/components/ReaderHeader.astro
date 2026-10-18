@@ -1,0 +1,10 @@
+---
+import Header from '@astrojs/starlight/components/Header.astro';
+import ThemeSelect from '../../theme/ThemeSelect.astro';
+---
+<Header {...Astro.props} />
+<div class="mobile-theme"><ThemeSelect {...Astro.props} /></div>
+<style>
+  .mobile-theme { position: fixed; right: 1rem; bottom: 1rem; z-index: 20; padding: .5rem; border: 1px solid var(--reader-border); border-radius: .4rem; background: var(--reader-surface); color: var(--sl-color-text); }
+  @media (min-width: 50rem) { .mobile-theme { display: none; } }
+</style>
