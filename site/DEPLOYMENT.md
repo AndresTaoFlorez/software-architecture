@@ -24,7 +24,7 @@ npm run smoke
 
 The explicit npm package avoids changing a developer's global installation. CI installs that same npm version into its disposable runner. `npm ci` fails on a manifest/lockfile mismatch. Dependency lifecycle scripts are disabled; the clean build below confirms this works with the current lockfile. No lint/format command is configured or claimed.
 
-Verified locally with Node 22.22.1 and npm 10.8.2: clean installation without engine warnings; Astro check had zero errors/warnings/hints; build emitted 93 HTML pages including the fallback 404; nine tests passed, covering 92 reader pages and 4,686 local links/fragments. The HTTP smoke starts and stops an Astro preview child process on localhost port 4322. It requests six representative routes (landing, glossary, frontend, backend, style and deeply nested exercise solution), eight generated assets and the Pagefind JavaScript entry, all with the production base. Keep port 4322 free. It checks successful HTTP responses, HTML headings and nonempty non-HTML assets. Full search interaction, accessibility and diagram rendering are not established by these requests.
+Verified on Linux Node 22.22.1/npm 10.8.2 and Windows Node 24.18.0/npm 11.16.0: clean install, Astro check and directed TypeScript checks, 93-page build, 24 tests and HTTP smoke passed. Tests cover 92 reader pages, 5,156 links/fragments, canonical diagrams, ownership boundaries and interaction regressions. The smoke owns a foreground preview on port 4322 (`--ignore-lock`) and stops it afterward. It requests six representative routes and ten generated/search assets under the production base. Keep that port free. HTTP checks do not establish browser accessibility; see [independent browser evidence and limits](VERIFICATION.md).
 
 For manual preview, run `npm run preview -- --host 127.0.0.1` after building, then open the printed address with `/software-architecture/` appended if necessary. A build is required before tests or preview; a stale `dist` is not evidence for changed content. A negative smoke run temporarily removed the generated Pagefind entry: the check failed with HTTP 404 as expected, and the asset was restored. Standalone actionlint 1.7.12 passed the workflow (download SHA-256 matched the official release asset digest); this author-side check is not an extra configured CI command.
 
@@ -38,7 +38,7 @@ The official `withastro/action` v6 at `3eafd002e65cc31b4f0eae0bb05450d521562247`
 
 ## Human activation and release
 
-No repository settings or branch rules were changed. The task handoff records Pages as already using GitHub Actions. An unauthenticated Pages API request here returned 404, so this worker cannot independently confirm that private setting; this is not evidence of a missing site. Public read-only API calls confirmed `main` is unprotected and the ruleset list is empty. `gh` is not installed in this environment.
+No repository settings or branch rules were changed. Codex's authenticated read-only Pages inspection confirmed `build_type: workflow` and the expected project URL. Read-only inspection found `main` unprotected and no rulesets. The proposed human activation order below remains necessary; inspection is not a production deployment receipt.
 
 An owner/admin should perform this sequence:
 
