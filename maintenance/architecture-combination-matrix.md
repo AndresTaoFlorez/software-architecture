@@ -59,7 +59,7 @@ The following results refer to frozen responses, independently reviewed against 
 | H1 | [Attempt 01](design-rehearsals/h1-attempt-01.md) | PASS, design-only: Identifies offered operations and required adapters, shares HTTP and CLI rules, and implements classic Model notifications with View subscriptions. Distinguishes gateway from Repository and rejects interface-per-file ceremony. |
 | H2 | [Attempt 01](design-rehearsals/h2-attempt-01.md) | PASS, design-only: Preserves Hexagonal operations and MVVM state/commands, justifies the selected-detail Facade collaboration, and declines an artificial client Domain or Onion relabeling without actual policy. |
 | C1 | [Attempt 01](design-rehearsals/c1-attempt-01.md) | PASS, design-only: Clean policy and workflow remain inward, classic MVC uses real subscriptions, and the return-result/output-port comparison keeps presenter implementation outside Application. Approval checks, revisions and retry receipts have explicit owners. |
-| C2 | Pending | Not yet evaluated |
+| C2 | [Attempt 01](design-rehearsals/c2-attempt-01.md) | PASS, design-only: Specifies open Layered frontend with DIP and real MVVM bindings, demonstrates selection/loading Facade collaboration, preserves atomic approval policy, and rejects ORM result leakage and mandatory server ViewModel. |
 | O1 | Pending | Not yet evaluated |
 | O2 | Pending | Not yet evaluated |
 
