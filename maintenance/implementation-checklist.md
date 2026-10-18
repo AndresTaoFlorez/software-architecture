@@ -1,6 +1,6 @@
 # Handbook Recovery and Website — Implementation Checklist
 
-This checklist tracks specification §§0–5. `DONE` requires artifact/check/commit evidence; full reading is not certification. Phase I acceptance applies to published `4ea5c57` on PR #22, with the explicit limits in the audit. Phase II has not started.
+This checklist tracks specification §§0–5. `DONE` requires artifact/check/commit evidence; full reading is not certification. Phase I acceptance applies to published `4ea5c57` on PR #22, with the explicit limits in the audit. Phase II is in progress; local site evidence does not certify deployment or reader UX.
 
 | ID | Status | Owner | Evidence / next verifiable step |
 | --- | --- | --- | --- |
@@ -16,7 +16,7 @@ This checklist tracks specification §§0–5. `DONE` requires artifact/check/co
 | P2-01 | TODO | active-building | After P1 verdict: supported-version ADR, canonical-source adapter and route/link/anchor tests (§§4.1–4.2). |
 | P2-02 | TODO | active-building | Reader UX, styling choice, responsive/a11y/search/diagram evidence (§§4.3/4.6). |
 | P2-03 | TODO | active-building | Minimal site modules, actual flows and tested architectural case study (§4.4). |
-| P2-04 | TODO | active-building | Lockfile, PR checks, main-only Pages workflow and human settings prerequisites (§4.5). |
+| P2-04 | IN PROGRESS | active-building | `site/package-lock.json`, `.github/workflows/site.yml` and [delivery instructions](../site/DEPLOYMENT.md) implemented. Node 22.22.1/npm 10.8.2 clean install, Astro check, 93-page build, nine tests (92 pages/4,686 links) and HTTP smoke (six pages/nine assets) passed locally. Main unprotected/rulesets empty confirmed read-only; Pages source comes from task handoff, local unauthenticated API returned 404. Independent review/push, remote PR check and post-merge deploy remain pending (§4.5). |
 | P2-GATE | TODO | active-building | Complete §4.6 matrix; deployment pending human merge and successful deployment run. |
 | QA-01 | IN PROGRESS | editorial-review | Independent scoped assessments integrated; exact integration commit and later site review still required. |
 | QA-02 | IN PROGRESS | active-building | Focused API/MVVM/TextStyles corrections recorded; candidate revalidation/verdict pending. |
