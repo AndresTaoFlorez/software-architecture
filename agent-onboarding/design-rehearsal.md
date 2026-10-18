@@ -27,6 +27,8 @@ Use the same scenario for a correction round. This example is deliberately small
 
 The request deliberately asks for reasoning. It tests explicit use of supplied skills and references; it does not establish automatic skill selection, unprompted citation behavior or general implementation competence. Different product constraints need their own scenario rather than silently expanding this one.
 
+For broader coverage, a [style and pattern combination matrix](../maintenance/architecture-combination-matrix.md) records separate cases for each documented style, presentation-pattern alternatives and challenged combinations. In such a comparison, the assigned style is an explicit experiment constraint rather than an unprompted choice. Check its fit and actual mechanism; permit justified rejection and overlapping constraints instead of forcing identical architecture labels onto every product.
+
 ## Review and repeat
 
 Review against [Architecture Design Review](../architecture/foundations/architecture-design-review.md). Check citations in the actual pinned files, then inspect ownership, contracts and the traced behavior. A general source list cannot replace decision-level reasoning. Accept justified omissions; reject hidden coordination, unsupported guarantees and architectural vocabulary without a mechanism.
