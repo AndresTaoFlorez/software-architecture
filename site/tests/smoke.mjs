@@ -5,7 +5,7 @@ import { parse } from 'parse5';
 import { base } from '../src/handbook.mjs';
 
 const origin = 'http://127.0.0.1:4322';
-const server = spawn(process.execPath, ['node_modules/astro/bin/astro.mjs', 'preview', '--host', '127.0.0.1', '--port', '4322'], { stdio: 'pipe' });
+const server = spawn(process.execPath, ['node_modules/astro/bin/astro.mjs', 'preview', '--host', '127.0.0.1', '--port', '4322', '--ignore-lock'], { stdio: 'pipe' });
 let logs = '';
 server.stdout.on('data', chunk => { logs += chunk; });
 server.stderr.on('data', chunk => { logs += chunk; });

@@ -63,16 +63,18 @@ test('canonical corpus has unique routes and no maintainer pages', async () => {
   assert.equal(routeMap(paths).size, paths.length);
   assert.ok(!paths.includes('architecture/conventions/editorial-review.md'));
 });
-test('watch registers canonical paths and serializes change events', async () => {
+test('watch registers canonical paths and serializes change events', { timeout: 30000 }, async () => {
   const { EventEmitter } = await import('node:events');
   const { handbookLoader } = await import('../src/handbook.mjs');
   const watcher = new EventEmitter();
   let watched;
   watcher.add = paths => { watched = paths; };
   let snapshots = 0;
+  let completed;
+  const completion = new Promise(resolve => { completed = resolve; });
   const errors = [];
   await handbookLoader().load({
-    store: { clear() { snapshots++; }, set() {} },
+    store: { clear() { snapshots++; if (snapshots === 4) completed(); }, set() {} },
     parseData: async ({ data }) => data,
     renderMarkdown: async () => ({ html: '', metadata: {} }),
     generateDigest: body => String(body.length), watcher,
@@ -81,7 +83,7 @@ test('watch registers canonical paths and serializes change events', async () =>
   const { resolve } = await import('node:path');
   assert.ok(watched.includes(resolve(root, 'README.md')));
   for (const event of ['add', 'change', 'unlink']) watcher.emit(event, `${root}/README.md`);
-  for (let tries = 0; snapshots < 4 && tries < 200; tries++) await new Promise(resolve => setTimeout(resolve, 10));
+  await completion;
   assert.equal(snapshots, 4);
   assert.deepEqual(errors, []);
 });

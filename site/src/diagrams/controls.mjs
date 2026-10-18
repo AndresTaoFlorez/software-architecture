@@ -27,7 +27,9 @@ export function openDiagram(figure, trigger) {
   viewport.setAttribute('aria-describedby', help.id);
   const canvas = document.createElement('div');
   canvas.className = 'diagram-canvas';
-  const svg = figure.querySelector('svg').cloneNode(true);
+  const svg = figure.querySelector('svg');
+  const originalParent = svg.parentElement;
+  const originalWidth = svg.getAttribute('width');
   const naturalWidth = svg.viewBox?.baseVal?.width;
   if (naturalWidth) svg.setAttribute('width', String(naturalWidth));
   canvas.append(svg);
@@ -50,7 +52,14 @@ export function openDiagram(figure, trigger) {
     event.preventDefault();
     update(action);
   });
-  dialog.addEventListener('close', () => { dialog.remove(); trigger.focus(); }, { once: true });
+  dialog.addEventListener('close', () => {
+    if (originalWidth === null) svg.removeAttribute('width');
+    else svg.setAttribute('width', originalWidth);
+    // A theme change may already have rendered a replacement behind the modal.
+    if (!originalParent.querySelector('svg')) originalParent.append(svg);
+    dialog.remove();
+    trigger.focus();
+  }, { once: true });
   dialog.append(toolbar, help, viewport);
   document.body.append(dialog);
   dialog.showModal();

@@ -41,20 +41,29 @@ test('all canonical Mermaid fences parse using the installed renderer', async ()
 });
 
 test('keyboard controls, bounded zoom, modal close and focus restore', () => {
-  const dom = new JSDOM('<figure><figcaption>Ownership</figcaption><svg></svg><button>Expand</button></figure>');
+  const dom = new JSDOM('<figure><figcaption>Ownership</figcaption><div class="diagram-preview"><svg id="ownership" width="100%"><title id="ownership-title">Ownership</title></svg></div><button>Expand</button></figure>');
   globalThis.document = dom.window.document;
   const figure = document.querySelector('figure');
   const trigger = document.querySelector('button');
   dom.window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
   dom.window.HTMLDialogElement.prototype.close = function () { this.dispatchEvent(new dom.window.Event('close')); };
   openDiagram(figure, trigger);
+  assert.equal(document.querySelectorAll('#ownership').length, 1);
+  assert.equal(document.querySelectorAll('#ownership-title').length, 1);
   const viewport = document.querySelector('.diagram-viewport');
   assert.equal(document.activeElement, viewport);
   viewport.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
   assert.ok(document.querySelector('.diagram-canvas').style.transform.includes('40px'));
   document.querySelector('.diagram-toolbar button:last-child').click();
   assert.equal(document.querySelector('dialog'), null);
+  assert.equal(figure.querySelector('.diagram-preview svg').getAttribute('width'), '100%');
   assert.equal(document.activeElement, trigger);
+  openDiagram(figure, trigger);
+  const replacement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  figure.querySelector('.diagram-preview').append(replacement);
+  document.querySelector('.diagram-toolbar button:last-child').click();
+  assert.equal(figure.querySelectorAll('svg').length, 1);
+  assert.equal(figure.querySelector('svg'), replacement);
   assert.equal(move({ scale: 4, x: 0, y: 0 }, 'in').scale, 4);
   assert.equal(move({ scale: .25, x: 0, y: 0 }, 'out').scale, .25);
   assert.deepEqual(move({}, 'reset'), { scale: 1, x: 0, y: 0 });
