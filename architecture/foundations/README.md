@@ -52,4 +52,6 @@ These names help locate owners. They do not require five calls for every request
 
 Use separation when it protects independently changing decisions. More folders alone do not establish maintainability.
 
+Before implementing a consequential design, use [Architecture Design Review](architecture-design-review.md) to connect requirements and sources to concrete owners, contracts, behavior traces and proposed checks. A folder map alone cannot establish those decisions.
+
 [Previous: repository introduction](../../README.md) · [Next: Code Placement](code-placement.md)

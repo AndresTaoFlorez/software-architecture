@@ -13,6 +13,7 @@ An application task starts with the application's own instructions. The remainin
 - [Use a known handbook revision](#use-a-known-handbook-revision)
 - [Select the relevant material](#select-the-relevant-material)
 - [Use and test the available skills](#use-and-test-the-available-skills)
+- [Evaluate a design before implementation](#evaluate-a-design-before-implementation)
 - [Future capabilities](#future-capabilities)
 - [Fallback for any other agent](#fallback-for-any-other-agent)
 
@@ -141,6 +142,12 @@ In a **new session in the application repository**, perform three different chec
 For Codex, explicitly invoke a skill such as `$api-design` or `$backend-architecture`. Claude Code supports `/skill-name`. Gemini CLI can list discovered skills with `/skills list` and reload after copying with `/skills reload`. In Cursor, type `/` in Agent chat and select the skill, as described in [its skill documentation](https://cursor.com/docs/skills). OpenCode exposes skills through its `skill` tool. GitHub Copilot CLI documents `/skills list` and skill slash commands; use `copilot skill list` to inspect its CLI installation. Other Copilot surfaces differ. Inspect the actual load or tool trace in every case.
 
 This is a **manual, reviewable template**; copying it does not prove automatic installation or activation. If the agent lacks a skill runtime, provide the relevant skill text as task instructions, subject to its normal trust and permission boundaries.
+
+## Evaluate a design before implementation
+
+Discovery and activation establish that instructions were loaded. They do not establish that an architecture response applies them. For a consequential new design, use [Architecture Design Review](../architecture/foundations/architecture-design-review.md) to inspect ownership, proposed paths/contracts, source dependencies, runtime calls, composition, failure behavior and change impact before implementation. Require sources for decisions, including how the cited principle applies; separate application requirements, handbook conventions and design inferences.
+
+The [fresh-session design rehearsal](design-rehearsal.md) tests this with a fictional frontend/backend scheme, without building another application. Keep candidate context free of previous attempts, review the actual answer, correct demonstrated guidance defects and repeat from a new session. Record the inspected revision and verification limits. This supplements the runtime setup checks; it does not prove automatic skill selection or implementation quality.
 
 ## Future capabilities
 
