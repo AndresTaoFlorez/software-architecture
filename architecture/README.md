@@ -14,4 +14,6 @@ After the example in your chosen route, consult [styles](styles/README.md) or fo
 
 [Conventions](conventions/README.md) and the [Glossary](../GLOSSARY.md) are references.
 
+[Architecture prompts](prompts/README.md) help select a design conversation by style and pattern, with expected response shapes and a repeatable design regression suite.
+
 [Repository home](../README.md)

@@ -9,6 +9,8 @@ The first [shop rehearsal](agent-design-evaluation.md) inspected one coherent de
 - [Independent review](#independent-review)
 - [Results and limits](#results-and-limits)
 
+Future runs use the reusable [prompt catalog and regression suite](../architecture/prompts/regression.md). The descriptions and responses below preserve this historical run; they are not a second editable suite definition.
+
 ## Frozen cases
 
 Each pair keeps the product requirements stable while changing explicit design constraints. Style names and pattern choices are intentionally prompted in this test; this does not measure spontaneous style selection. Repository, reader, gateway and Facade decisions require a concrete reason. A justified rejection of a requested combination is valid when the requirements do not support it.

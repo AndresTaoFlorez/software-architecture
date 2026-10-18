@@ -149,6 +149,8 @@ Discovery and activation establish that instructions were loaded. They do not es
 
 The [fresh-session design rehearsal](design-rehearsal.md) tests this with a fictional frontend/backend scheme, without building another application. Keep candidate context free of previous attempts, review the actual answer, correct demonstrated guidance defects and repeat from a new session. Record the inspected revision and verification limits. This supplements the runtime setup checks; it does not prove automatic skill selection or implementation quality.
 
+The [prompt catalog](../architecture/prompts/README.md) provides copyable style/pattern requests and illustrative response shapes. The [repeatable regression suite](../architecture/prompts/regression.md) adds self-contained cases, change-based rerun selection, a reviewer prompt and a result template. Historical responses remain in the maintenance ledger; future scenarios have one editable home in the suite.
+
 ## Future capabilities
 
 The seven skills above are the shipped catalog. Advanced, protocol-specific WebSocket implementation and comprehensive tactical/strategic DDD support are not promised by these templates; consult current primary references and a qualified project-specific workflow. Additional style- or pattern-specific skills are future work and should be added only when a concrete need and adequate canonical coverage exist. Conceptual glossary entries do not establish implementation support.
