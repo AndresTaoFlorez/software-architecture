@@ -8,6 +8,7 @@ The first [shop rehearsal](agent-design-evaluation.md) inspected one coherent de
 - [Candidate request](#candidate-request)
 - [Independent review](#independent-review)
 - [Results and limits](#results-and-limits)
+- [Run summary and mechanical verification](#run-summary-and-mechanical-verification)
 
 Future runs use the reusable [prompt catalog and regression suite](../architecture/prompts/regression.md). The descriptions and responses below preserve this historical run; they are not a second editable suite definition.
 
@@ -65,6 +66,20 @@ The following results refer to frozen responses, independently reviewed against 
 | O1 | [Attempt 01](design-rehearsals/o1-attempt-01.md) | PASS, design-only: Keeps domain behavior independent, obtains renewal facts in Application, restores stored state without ORM imports, and specifies one shared transaction guard across all relevant loan/hold writers. MVC notifications and alternatives remain explicit. |
 | O2 | [Attempt 01](design-rehearsals/o2-attempt-01.md) | PASS, design-only: Uses justified domain-owned loan Repository, separate projections and Hexagonal MVVM gateway, demonstrates Facade collaboration, and compares Clean by actual contract ownership. States all-writer locking and rejects per-table architecture stacks and Facade policy accumulation. |
 
-No substantive consumer-guidance defect was demonstrated by L1 or the invalid L2 input. L1's unresolved accounting/calendar definitions are explicit assumptions to resolve before implementing aggregation. L2 exposed a controller preparation error; the preparation procedure now explicitly requires a self-contained baseline, and unstarted paired inputs are expanded before launch. The invalid response remains frozen as evidence. A design verdict does not verify a database or rendered page; later attempts remain pending until their actual answers are reviewed.
+L1's unresolved accounting/calendar definitions are explicit assumptions to resolve before implementing aggregation. L2 exposed a controller preparation error; the preparation procedure now explicitly requires a self-contained baseline, and the remaining paired inputs were expanded before launch. The invalid response remains frozen as evidence. A design verdict does not verify a database or rendered page.
 
 This is a deliberately selected coverage matrix, not every Cartesian combination of all patterns, all technologies or all requirements. It includes style/pattern combinations, alternatives, mixed frontend/backend constraints and rejection challenges. It does not establish implementation quality, automatic skill selection, model comparisons, statistical reliability or causal improvement over earlier guidance.
+
+## Run summary and mechanical verification
+
+All eight cases have independently accepted design-only responses under their stated assumptions. Nine complete responses are preserved: eight accepted case results plus L2 attempt 01, which remains invalid input. One provider-limited Clean dispatch produced no answer; it was restarted in a fresh conversation and was not counted as a design failure or pass. No application was implemented. Each final response was independently reviewed against the six frozen criteria; the controller separately checked the 108 reference-file hashes, exact three copied skills and unchanged four-file consumer workspace.
+
+The only failed comparison demonstrated a controller fixture defect: shorthand omitted the product baseline. The preparation rule and fixture assembly were corrected, the invalid artifact retained and L2 repeated from a fresh context. No substantive consumer architecture-guidance defect was demonstrated by the accepted responses. Reviewer findings in the newly authored prompt catalog concerned clarity, rerun selection, reference isolation and contents; they were corrected before publication.
+
+The reusable [catalog](../architecture/prompts/README.md) and [suite](../architecture/prompts/regression.md) were added in [`2e154f0`](https://github.com/AndresTaoFlorez/software-architecture/commit/2e154f0a0f9adc0035cf2d0ec417faf3845240ff). These new templates received independent document/procedure review. They were not the exact supplied prompts for this historical run: case references remain the earlier pinned revisions in the table. The ledger therefore does not claim full semantic-suite acceptance at the new catalog revision. Future runs use the versioned, self-contained suite and its result format.
+
+Windows verification of the catalog/navigation increment passed Astro plus directed TypeScript checking (33 files, zero diagnostics), production build (102 pages including 404) and all 24 existing site tests. The generated-output check covered 101 reader pages and 5,454 local links/fragments; 76 canonical Mermaid diagrams and the two unchanged site diagrams parsed. No diagrams or visual styles were changed and no new visual inspection was performed. The existing large Mermaid chunk and native 404-entry warnings remain.
+
+One earlier [CI run](https://github.com/AndresTaoFlorez/software-architecture/actions/runs/39153630699) timed out waiting for filesystem unlink to remove the dev-reader route. A [later head](https://github.com/AndresTaoFlorez/software-architecture/actions/runs/39153784970) passed with unchanged watcher implementation; this does not establish a fix for the intermittent behavior. That runtime verification limit is separate from these design verdicts. The watcher was not disabled or weakened for this work.
+
+PR #22 was merged by the maintainer at `a3947dc`; the merge commit's [main workflow](https://github.com/AndresTaoFlorez/software-architecture/actions/runs/39155741714) succeeded. Later case evidence and the prompt catalog are on the continuation branch, with the merged main history incorporated. They are not part of that completed workflow or its deployment. No new PR or merge is represented as having occurred.
