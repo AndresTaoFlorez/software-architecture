@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
+import { pathToFileURL } from 'node:url';
+import { resolve } from 'node:path';
 import { root, route, routeMap, pagePaths, titleOf, rewriteLink, handbookMarkdown } from '../src/handbook.mjs';
 
 test('stable routes and collision rejection', () => {
@@ -23,6 +25,29 @@ test('links retain base and fragments, maintainers use GitHub', () => {
   assert.equal(rewriteLink('#legacy', 'README.md'), '#legacy');
   assert.equal(rewriteLink('https://example.com/a.md', 'README.md'), 'https://example.com/a.md');
   assert.throws(() => rewriteLink('../outside.md', 'README.md'), /escapes/);
+});
+test('all relative destinations exist, including GitHub fallbacks', () => {
+  for (const url of ['../MISSING.md', 'backend/MISSING.md', '../missing.svg', '../missing-directory/']) {
+    assert.throws(() => rewriteLink(url, 'architecture/README.md'), /Missing link target/);
+  }
+  assert.equal(rewriteLink('CONTRIBUTING.md#sources', 'README.md'), 'https://github.com/AndresTaoFlorez/software-architecture/blob/main/CONTRIBUTING.md#sources');
+  assert.equal(rewriteLink('architecture/backend/?view=all#core-model', 'README.md'), '/software-architecture/architecture/backend/?view=all#core-model');
+  assert.equal(rewriteLink('.', 'architecture/README.md'), '/software-architecture/architecture/');
+  assert.equal(rewriteLink('?view=all#legacy', 'README.md'), '/software-architecture/?view=all#legacy');
+});
+test('H1 and repeated heading slugs survive the actual Astro renderer', async () => {
+  const { createMarkdownProcessor } = await import('@astrojs/markdown-remark');
+  const { parse } = await import('parse5');
+  const processor = await createMarkdownProcessor({ remarkPlugins: [handbookMarkdown] });
+  const { code, metadata } = await processor.render('# Title\n\n<a id="title"></a>\n\n## Title\n\n## Title\n\n<a id="legacy"></a>\n\n## Section\n\n<a id="section"></a>', { fileURL: pathToFileURL(resolve(root, 'README.md')) });
+  const ids = [];
+  function collect(node) {
+    for (const attr of node.attrs ?? []) if (attr.name === 'id') ids.push(attr.value);
+    for (const child of node.childNodes ?? []) collect(child);
+  }
+  collect(parse(code));
+  assert.deepEqual(ids, ['title', 'title-1', 'title-2', 'legacy', 'section']);
+  assert.deepEqual(metadata.headings.map(h => h.slug), ['title-1', 'title-2', 'section']);
 });
 test('one visible H1 removed, title anchor and explicit legacy anchor preserved', () => {
   const processor = unified().use(remarkParse).use(handbookMarkdown);

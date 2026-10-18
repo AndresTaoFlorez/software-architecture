@@ -1,15 +1,16 @@
 import { posix, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readFile, readdir } from 'node:fs/promises';
+import { existsSync, realpathSync, statSync } from 'node:fs';
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import { toString } from 'mdast-util-to-string';
 import { visit } from 'unist-util-visit';
-import GithubSlugger, { slug } from 'github-slugger';
+import GithubSlugger from 'github-slugger';
 
 export const root = fileURLToPath(new URL('../../', import.meta.url));
 export const base = '/software-architecture/';
-const github = 'https://github.com/AndresTaoFlorez/software-architecture/blob/feat/handbook-recovery-astro-site/';
+const github = 'https://github.com/AndresTaoFlorez/software-architecture/blob/main/';
 const excluded = new Set([
   'architecture/conventions/architecture-guide-template.md',
   'architecture/conventions/editorial-review.md',
@@ -40,8 +41,15 @@ export function rewriteLink(url, source) {
   if (/^(?:[a-z][a-z0-9+.-]*:|\/\/|#|\/)/i.test(url)) return url;
   const match = url.match(/^([^?#]*)(\?[^#]*)?(#.*)?$/);
   const [, pathname, query = '', fragment = ''] = match;
-  const target = posix.normalize(posix.join(posix.dirname(source), decodeURIComponent(pathname)));
-  if (target === '..' || target.startsWith('../')) throw new Error(`Link escapes repository: ${url}`);
+  let target = pathname ? posix.normalize(posix.join(posix.dirname(source), decodeURIComponent(pathname))) : source;
+  if (target === '..' || target.startsWith('../') || posix.isAbsolute(target)) throw new Error(`Link escapes repository: ${url}`);
+  const targetPath = resolve(root, target);
+  if (!existsSync(targetPath)) throw new Error(`Missing link target: ${source} -> ${url}`);
+  if (statSync(targetPath).isDirectory() && existsSync(resolve(targetPath, 'README.md'))) {
+    target = posix.join(target, 'README.md');
+  }
+  const realTarget = relative(realpathSync(root), realpathSync(resolve(root, target)));
+  if (realTarget === '..' || realTarget.startsWith('..\\') || realTarget.startsWith('../')) throw new Error(`Link escapes repository: ${url}`);
   if (isPage(target)) return `${base}${route(target)}${route(target) ? '/' : ''}${query}${fragment}`;
   return github + target.split('/').map(encodeURIComponent).join('/') + query + fragment;
 }
@@ -49,22 +57,28 @@ export function handbookMarkdown() {
   return (tree, file) => {
     const source = relative(root, file.path).split('\\').join('/');
     if (!isPage(source)) return;
+    // Allocate IDs before removing H1: repeated headings must retain source slugs.
+    const slugger = new GithubSlugger();
+    const headingIds = new Set();
+    visit(tree, 'heading', node => {
+      const id = slugger.slug(toString(node));
+      node.data ??= {};
+      node.data.hProperties = { ...node.data.hProperties, id };
+      headingIds.add(id);
+    });
+    // GitHub permits redundant explicit anchors; HTML requires unique IDs.
+    // Keep the heading target and remove only an identical, empty alias.
+    visit(tree, 'html', node => {
+      node.value = node.value.replace(/<a id="([^"]+)">/g, (anchor, id) => headingIds.has(id) ? '<a>' : anchor);
+    });
     let removed = false;
     // Preserve links to the source title while Starlight supplies the visible H1.
     tree.children = tree.children.map(node => {
       if (!removed && node.type === 'heading' && node.depth === 1) {
         removed = true;
-        return { type: 'html', value: `<a id="${slug(toString(node))}"></a>` };
+        return { type: 'html', value: `<a id="${node.data.hProperties.id}"></a>` };
       }
       return node;
-    });
-    const slugger = new GithubSlugger();
-    const headingIds = new Set();
-    visit(tree, 'heading', node => headingIds.add(slugger.slug(toString(node))));
-    // GitHub permits redundant explicit anchors; HTML requires unique IDs.
-    // Keep the heading target and remove only an identical, empty alias.
-    visit(tree, 'html', node => {
-      node.value = node.value.replace(/<a id="([^"]+)">/g, (anchor, id) => headingIds.has(id) ? '<a>' : anchor);
     });
     visit(tree, node => {
       if (node.type === 'link' || node.type === 'definition' || node.type === 'image') {

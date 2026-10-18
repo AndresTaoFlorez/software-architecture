@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { parse } from 'parse5';
-import { pagePaths, route, base } from '../src/handbook.mjs';
+import { pagePaths, route, base, rewriteLink } from '../src/handbook.mjs';
 
 const dist = new URL('../dist/', import.meta.url);
 function elements(node) {
@@ -25,6 +25,14 @@ test('built reader routes, no duplicated title, unique IDs, local links and frag
   for (const [path, { links }] of pages) {
     for (const raw of links) {
       const url = new URL(raw, `https://andrestaoflorez.github.io${path}`);
+      const repositoryPrefix = '/AndresTaoFlorez/software-architecture/blob/';
+      if (url.origin === 'https://github.com' && url.pathname.startsWith(repositoryPrefix)) {
+        assert.ok(url.pathname.startsWith(`${repositoryPrefix}main/`), `${path}: stable fallback branch`);
+        const target = url.pathname.slice(`${repositoryPrefix}main/`.length);
+        assert.doesNotThrow(() => rewriteLink(target, 'README.md'), `${path}: existing fallback ${raw}`);
+        checked++;
+        continue;
+      }
       if (url.origin !== 'https://andrestaoflorez.github.io' || !url.pathname.startsWith(base)) continue;
       if (/\.(css|js|svg|png|ico|xml)$/.test(url.pathname)) continue;
       const target = pages.get(url.pathname);
