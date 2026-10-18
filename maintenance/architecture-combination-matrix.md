@@ -48,6 +48,19 @@ Inspect the actual sources and frozen answer. If a substantive defect appears, r
 
 ## Results and limits
 
-The cases above are frozen test inputs; they are not results. Candidate responses and independent verdicts will be added as execution completes. A result is design-only and scoped to its exact reference revision and assumptions.
+The following results refer to frozen responses, independently reviewed against the six criteria before publication. All attempts use input revision `1c9deb1558b9d50737d6979dabab308350468c67` unless a row states otherwise. The controller additionally checks reference hashes, exact skill copies and an unchanged four-file consumer workspace. Read inventories are candidate self-reports, not independently captured full tool transcripts.
+
+| Case | Frozen response | Independent verdict and decisive evidence |
+| --- | --- | --- |
+| L1 | [Attempt 01](design-rehearsals/l1-attempt-01.md) | PASS, design-only: preserves closed Business-to-Data-Access dependency, request/response MVC and pure reporting projection; rejects per-table Repositories and a forwarding Facade. Source, browser and failure traces agree. |
+| L2 | Pending | Not yet evaluated |
+| H1 | Pending | Not yet evaluated |
+| H2 | Pending | Not yet evaluated |
+| C1 | Pending | Not yet evaluated |
+| C2 | Pending | Not yet evaluated |
+| O1 | Pending | Not yet evaluated |
+| O2 | Pending | Not yet evaluated |
+
+No substantive defect or guidance correction was demonstrated by L1. Its unresolved accounting/calendar definitions are explicit assumptions to resolve before implementing aggregation; the design verdict does not verify a database or rendered page. Later cases remain pending until their actual answers are reviewed.
 
 This is a deliberately selected coverage matrix, not every Cartesian combination of all patterns, all technologies or all requirements. It includes style/pattern combinations, alternatives, mixed frontend/backend constraints and rejection challenges. It does not establish implementation quality, automatic skill selection, model comparisons, statistical reliability or causal improvement over earlier guidance.
