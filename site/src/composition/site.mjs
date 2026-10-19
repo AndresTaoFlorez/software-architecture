@@ -22,6 +22,7 @@ export const siteConfig = defineConfig({
         ['Foundations', 'architecture/foundations'],
         ['Styles', 'architecture/styles'],
         ['Patterns', 'architecture/patterns'],
+        ['Architecture prompts', 'architecture/prompts'],
         ['Frontend', 'architecture/frontend'],
         ['Backend', 'architecture/backend'],
         ['API', 'architecture/api-design'],

@@ -15,6 +15,8 @@ Follow one support request through the common route below. Read the code, identi
 
 Agents working in another application can follow the [agent onboarding guide](agent-onboarding/README.md) to use this handbook as a reference.
 
+The [architecture prompt catalog](architecture/prompts/README.md) offers style selection, copyable design requests and illustrative response shapes. Its [regression suite](architecture/prompts/regression.md) repeats source-backed design checks after guidance changes.
+
 The snippets illustrate an application's files. This repository contains documentation, not an executable application. When an exercise uses imports, combine the referenced canonical modules with its changed files in your own temporary project.
 
 On a narrow screen, use the diagram controls to open, zoom and move around a large diagram. Solid arrows show calls, dashed arrows show source dependencies and dotted arrows show startup assembly; folder maps label containment separately.
