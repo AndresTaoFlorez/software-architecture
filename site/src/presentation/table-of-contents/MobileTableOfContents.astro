@@ -1,0 +1,24 @@
+---
+import TocList from './TocList.astro';
+const { toc } = Astro.locals.starlightRoute;
+---
+{toc && <nav data-reader-toc aria-labelledby="reader-toc-mobile-title">
+  <details>
+    <summary id="reader-toc-mobile-title">
+      <span class="toggle">{Astro.locals.t('tableOfContents.onThisPage')} <span aria-hidden="true">⌄</span></span>
+      <span data-current-heading>{toc.items[0]?.text}</span>
+    </summary>
+    <div class="dropdown"><TocList items={toc.items} /></div>
+  </details>
+</nav>}
+<style>
+  nav { position: fixed; z-index: var(--sl-z-index-toc); top: calc(var(--sl-nav-height) - 1px); inset-inline: 0; border-top: 1px solid var(--sl-color-gray-5); background: var(--sl-color-bg-nav); }
+  @media (min-width: 50rem) { nav { inset-inline-start: var(--sl-content-inline-start, 0); } }
+  summary { display: flex; gap: .5rem; align-items: center; height: var(--sl-mobile-toc-height); padding: .5rem 1rem; border-bottom: 1px solid var(--sl-color-hairline-shade); font-size: var(--sl-text-xs); outline-offset: var(--sl-outline-offset-inside); cursor: pointer; list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  .toggle { flex-shrink: 0; border: 1px solid var(--sl-color-gray-5); border-radius: .5rem; padding: .5rem .75rem; line-height: 1; background: var(--sl-color-black); }
+  details[open] .toggle { border-color: var(--sl-color-accent); }
+  [data-current-heading] { white-space: nowrap; text-overflow: ellipsis; overflow: hidden; color: var(--sl-color-white); }
+  .dropdown { max-height: calc(85vh - var(--sl-nav-height) - var(--sl-mobile-toc-height)); overflow-y: auto; background: var(--sl-color-black); box-shadow: var(--sl-shadow-md); border: 1px solid var(--sl-color-gray-6); overscroll-behavior: contain; }
+  .dropdown :global(a) { padding-block: .5rem; border-top: 1px solid var(--sl-color-gray-6); font-size: var(--sl-text-sm); text-decoration: none; outline-offset: var(--sl-outline-offset-inside); }
+</style>

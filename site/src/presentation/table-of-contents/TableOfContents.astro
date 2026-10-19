@@ -1,0 +1,8 @@
+---
+import TocList from './TocList.astro';
+const { toc } = Astro.locals.starlightRoute;
+---
+{toc && <nav data-reader-toc aria-labelledby="reader-toc-title">
+  <h2 id="reader-toc-title">{Astro.locals.t('tableOfContents.onThisPage')}</h2>
+  <TocList items={toc.items} />
+</nav>}
