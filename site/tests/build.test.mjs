@@ -8,6 +8,23 @@ const dist = new URL('../dist/', import.meta.url);
 function elements(node) {
   return [node, ...(node.childNodes ?? []).flatMap(elements)];
 }
+
+test('built sidebar contains every reader page and no empty disclosure groups', async () => {
+  const html = await readFile(new URL('index.html', dist), 'utf8');
+  const sidebar = elements(parse(html)).find(node =>
+    node.attrs?.some(attr => attr.name === 'class' && attr.value.split(' ').includes('sidebar-content')));
+  assert.ok(sidebar, 'Sidebar is present');
+  const nodes = elements(sidebar);
+  for (const group of nodes.filter(node => node.tagName === 'details')) {
+    assert.ok(elements(group).some(node => node.tagName === 'a'), 'Disclosure group must contain navigation links');
+  }
+  const links = new Set(nodes.filter(node => node.tagName === 'a')
+    .flatMap(node => node.attrs.filter(attr => attr.name === 'href').map(attr => attr.value)));
+  for (const source of await pagePaths()) {
+    const path = route(source);
+    assert.ok(links.has(`${base}${path}${path ? '/' : ''}`), `Sidebar includes ${source}`);
+  }
+});
 test('built reader routes, no duplicated title, unique IDs, local links and fragments', async () => {
   const pages = new Map();
   for (const source of await pagePaths()) {
