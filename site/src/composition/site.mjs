@@ -1,8 +1,11 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import { unified } from '@astrojs/markdown-remark';
-import { handbookMarkdown } from './handbook.mjs';
+import { handbookMarkdown, pagePaths } from './handbook.mjs';
+import { sidebarItems } from './sidebar.mjs';
 import { diagramMarkdown } from '../presentation/diagrams/markdown.mjs';
+
+const paths = await pagePaths();
 
 export const siteConfig = defineConfig({
   site: 'https://andrestaoflorez.github.io',
@@ -26,15 +29,15 @@ export const siteConfig = defineConfig({
         ['Frontend', 'architecture/frontend'],
         ['Backend', 'architecture/backend'],
         ['API', 'architecture/api-design'],
-      ].map(([label, directory]) => ({ label, items: [{ autogenerate: { directory } }] })),
+      ].map(([label, directory]) => ({ label, items: sidebarItems(directory, paths) })),
       { label: 'Design Systems', link: '/architecture/frontend/styling-and-design-system/' },
       { label: 'Exercises', items: [
         { label: 'Frontend exercises', link: '/architecture/frontend/exercises/' },
         { label: 'Backend exercises', link: '/architecture/backend/exercises/' },
         { label: 'API exercises', link: '/architecture/api-design/exercises/' },
       ] },
-      { label: 'Conventions', items: [{ autogenerate: { directory: 'architecture/conventions' } }] },
-      { label: 'Extras', items: [{ autogenerate: { directory: 'extras' } }] },
+      { label: 'Conventions', items: sidebarItems('architecture/conventions', paths) },
+      { label: 'Extras', items: sidebarItems('extras', paths) },
     ],
   })],
 });
