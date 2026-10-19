@@ -15,7 +15,7 @@ export const siteConfig = defineConfig({
   integrations: [starlight({
     title: 'Software Architecture',
     customCss: ['./src/styles/reader.css'],
-    components: { Footer: './src/composition/ReaderFooter.astro', Header: './src/presentation/reader/components/ReaderHeader.astro', ThemeSelect: './src/presentation/theme/ThemeSelect.astro' },
+    components: { TableOfContents: './src/presentation/table-of-contents/TableOfContents.astro', MobileTableOfContents: './src/presentation/table-of-contents/MobileTableOfContents.astro', Footer: './src/composition/ReaderFooter.astro', Header: './src/presentation/reader/components/ReaderHeader.astro', ThemeSelect: './src/presentation/theme/ThemeSelect.astro' },
     social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/AndresTaoFlorez/software-architecture' }],
     sidebar: [
       { label: 'Learn — reading route', link: '/' },

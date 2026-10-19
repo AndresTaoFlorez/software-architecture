@@ -3,6 +3,7 @@ import ReaderFooter from '../presentation/reader/components/ReaderFooter.astro';
 ---
 <ReaderFooter {...Astro.props} />
 <script>
+  import './tableOfContents.mjs';
   import { startReader } from './reader.mjs';
   startReader(document);
 </script>
